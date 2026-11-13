@@ -3,3 +3,6 @@
 
 /** Logo, cover, and up to four gallery photos in one go. */
 export const MAX_PHOTOS_PER_IMPORT = 6
+
+/** Most photos one read offers. Here, not in read-site, so client code can use it without the HTML parser. */
+export const MAX_PHOTO_CANDIDATES = 24

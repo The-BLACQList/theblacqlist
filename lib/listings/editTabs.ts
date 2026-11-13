@@ -13,6 +13,7 @@ export const EDIT_TABS = [
   { id: 'contact', label: 'Contact & buttons' },
   { id: 'media', label: 'Photos & video' },
   { id: 'services', label: 'Services' },
+  { id: 'social', label: 'Social & links' },
   { id: 'more', label: 'More' },
 ] as const
 
@@ -27,7 +28,8 @@ export const TAB_SECTIONS: Record<EditTabId, readonly string[]> = {
   contact: ['contact', 'hours', 'main-button'],
   media: ['photos', 'video'],
   services: ['services', 'details'],
-  more: ['social', 'links', 'faq', 'partnerships', 'google'],
+  social: ['social', 'links'],
+  more: ['faq', 'partnerships', 'google'],
 }
 
 /** The order of the one long scroll a new page keeps. Same cards as the tabs. */
@@ -84,4 +86,10 @@ export function tabsWithChanges(dirtyIds: readonly string[]): Set<EditTabId> {
     if (tab) out.add(tab)
   }
   return out
+}
+
+/** The tab after this one, for the "Next" button at the end of a tab. Null on the last. */
+export function nextTab(id: EditTabId): (typeof EDIT_TABS)[number] | null {
+  const i = EDIT_TABS.findIndex((t) => t.id === id)
+  return i >= 0 ? (EDIT_TABS[i + 1] ?? null) : null
 }

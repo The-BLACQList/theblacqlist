@@ -14,6 +14,8 @@ import { getOwnerSession } from '@/lib/dashboard/guard'
 import { isFeatureEnabled } from '@/lib/env'
 import { aiQuota, canAccess } from '@/lib/stripe/features'
 import { createClient } from '@/lib/supabase/server'
+import { MAX_SITE_TEXT } from '@/lib/import/read-site'
+import { ownerRejectionMessage } from '@/lib/ai/sanitize'
 
 /**
  * The writing-help result for Edit content and Analytics (ticket 138). The card
@@ -46,6 +48,10 @@ export type GenerateSuggestionState =
  * Runs the mock path unless `ANTHROPIC_API_KEY` and `AI_MONTHLY_CEILING_USD`
  * are both set (see `resolveProvider`). `sample` is passed back so the card can
  * label a mock result honestly rather than assuming which one ran.
+ *
+ * `site_text` (optional, About only): visible text from the owner's website,
+ * sent by the edit page's "Import from my website" so the About can be drafted
+ * from it. Capped at MAX_SITE_TEXT here and sanitized again in buildPromptVars.
  */
 export async function generateSuggestionAction(
   _prev: GenerateSuggestionState,
@@ -83,8 +89,13 @@ export async function generateSuggestionAction(
     return { error: 'Writing help comes with Starter.', code: 'locked' }
   }
 
-  const context = await loadGenerateContext(listingId)
-  if (!context) return { error: 'Listing not found.', code: 'invalid' }
+  const loaded = await loadGenerateContext(listingId)
+  if (!loaded) return { error: 'Listing not found.', code: 'invalid' }
+  const siteText =
+    agent.agentType === 'listing_description'
+      ? formData.get('site_text')?.toString().trim().slice(0, MAX_SITE_TEXT) || null
+      : null
+  const context = siteText ? { ...loaded, siteText } : loaded
 
   // The owner's name is read only so it can be taken out of their text before
   // the prompt is built. If it cannot be read, nothing is sent (fail closed).
@@ -118,9 +129,13 @@ export async function generateSuggestionAction(
         // Owners never see a dollar figure for this.
         return { error: 'Writing help is paused for now. Try again later.', code: 'paused', allowance }
       case 'rejected':
+        // A refusal or an empty answer means the page gave too little to write
+        // from; say what helps. Anything else stays vague (see ownerRejectionMessage).
         return {
           error:
-            "That suggestion didn't pass our checks, so we threw it away. Try again or write your own.",
+            result.reason === 'refusal' || result.reason === 'empty'
+              ? ownerRejectionMessage('refusal')
+              : "That suggestion didn't pass our checks, so we threw it away. Try again or write your own.",
           code: 'rejected',
           allowance,
         }

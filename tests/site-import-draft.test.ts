@@ -34,6 +34,7 @@ function findings(over: Partial<SiteFindings> = {}): SiteFindings {
     photos: [],
     suggestedLogo: null,
     suggestedCover: null,
+    siteText: null,
     ...over,
   }
 }

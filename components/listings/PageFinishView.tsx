@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
-import { Info, Radio } from 'lucide-react'
+import { ArrowRight, Info, Radio } from 'lucide-react'
 import type { FinishData } from '@/lib/listings/finishData'
 import { computePageChecklist } from '@/lib/ai/checklist'
 import { creatorChecklistFacts } from '@/lib/listings/creatorAttributes'
@@ -41,13 +41,15 @@ import { CLOSING_NOTE, type InitialSuggestions, type WritingAllowance } from '@/
 import type { TextField } from '@/lib/ai/onboardingCards'
 import { OnboardingDrafts } from './finish/OnboardingDrafts'
 import { EditTabs, panelId, tabId } from './finish/EditTabs'
+import { MoreBelow } from './finish/MoreBelow'
 import { SiteImport, type ImportSaved } from './finish/SiteImport'
-import { photoRoom, type ImportCard, type PageNow } from '@/lib/import/ownerImport'
-import { MAX_PHOTOS_PER_IMPORT } from '@/lib/import/limits'
+import { photoRoom, previewContact, type ImportCard, type PageNow } from '@/lib/import/ownerImport'
+import { MAX_PHOTO_CANDIDATES } from '@/lib/import/limits'
 import type { WeeklyHours } from '@/types'
 import {
   DEFAULT_TAB,
   EDIT_TABS,
+  nextTab,
   SCROLL_ORDER,
   TAB_SECTIONS,
   tabForAnchor,
@@ -123,7 +125,7 @@ function bumpCards(m: Mounts, cards: readonly ImportCard[]): Mounts {
 function Anchor({ id, children }: { id: string; children: React.ReactNode }) {
   return (
     // tabIndex -1 lets the strength bars move focus here (see goToSection).
-    <div id={id} tabIndex={-1} className="scroll-mt-24 rounded-xl outline-none transition-shadow">
+    <div id={id} tabIndex={-1} className="scroll-mt-32 md:scroll-mt-36 rounded-xl outline-none transition-shadow">
       {children}
     </div>
   )
@@ -296,6 +298,20 @@ export function PageFinishView({
     },
     locationLabel: data.locationLabel,
   }
+
+  // What the edit page's preview adds below About (part C feedback): the
+  // photos the page shows and its contact details, so an import is visible
+  // here as soon as it saves. Rebuilt from `data` on each refresh.
+  const previewExtras =
+    mode === 'edit'
+      ? {
+          photoUrls: data.media
+            .filter((m) => m.is_approved === true && !hidden.hiddenIds.has(m.id))
+            .slice(0, 4)
+            .map((m) => `${storageUrl}/listing-media/${m.file_path}`),
+          contact: previewContact(importNow, data.entityType !== 'creator'),
+        }
+      : {}
 
   const helpReady = writingHelp?.allowance.state === 'ready'
   const initial = writingHelp?.initial ?? {}
@@ -516,7 +532,7 @@ export function PageFinishView({
 
   const body =
     mode === 'edit' ? (
-      <div ref={tabsTopRef} className="flex scroll-mt-4 flex-col gap-6">
+      <div ref={tabsTopRef} className="flex scroll-mt-16 flex-col gap-6 md:scroll-mt-20">
         <EditTabs active={tab} onSelect={selectTab} />
         {EDIT_TABS.map((t) => (
           // Every panel stays mounted, so edits in a closed tab are kept and
@@ -530,11 +546,30 @@ export function PageFinishView({
             className="flex flex-col gap-6"
           >
             {cards(TAB_SECTIONS[t.id])}
+            {nextTab(t.id) && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = nextTab(t.id)
+                    if (next) selectTab(next.id)
+                  }}
+                  className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-charcoal/20 bg-white px-4 font-subhead text-sm font-semibold text-brand-black hover:bg-charcoal/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold/60"
+                >
+                  Next: {nextTab(t.id)?.label}
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </button>
+              </div>
+            )}
           </div>
         ))}
+        <MoreBelow watch={tab} />
       </div>
     ) : (
-      cards(SCROLL_ORDER)
+      <>
+        {cards(SCROLL_ORDER)}
+        <MoreBelow />
+      </>
     )
 
 
@@ -600,7 +635,13 @@ export function PageFinishView({
                   hasHours: data.entityType !== 'creator',
                 }}
                 hasCover={data.coverImagePath !== null}
-                photoRoom={photoRoom(photoLimit(tier), data.media.length, MAX_PHOTOS_PER_IMPORT)}
+                photoRoom={photoRoom(photoLimit(tier), data.media.length, MAX_PHOTO_CANDIDATES)}
+                photoPlan={{
+                  limit: photoLimit(tier),
+                  upgradeTo: moreOffer,
+                  nextLimit: moreOffer ? photoLimit(moreOffer.toLowerCase()) : null,
+                }}
+                aboutLocked={writingHelp?.allowance.state === 'locked'}
                 onSaved={onImported}
               />
             )}
@@ -630,7 +671,7 @@ export function PageFinishView({
               <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-charcoal-soft">
                 {asideLabel}
               </p>
-              <LivePagePreview {...preview} />
+              <LivePagePreview {...preview} {...previewExtras} />
             </div>
           </aside>
         </div>

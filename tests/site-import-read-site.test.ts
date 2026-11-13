@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { decodeHtml, hasUsefulFindings, readSite } from '@/lib/import/read-site'
+import { decodeHtml, hasUsefulFindings, readSite, titleName, widthFromUrl } from '@/lib/import/read-site'
 
 // Saved pages stand in for owners' sites. No live site is ever fetched in CI.
 
@@ -244,5 +244,112 @@ describe('decodeHtml', () => {
 
   it('falls back to utf-8 for an unknown label', () => {
     expect(decodeHtml(Buffer.from('<meta charset="nonsense"><p>ok</p>'))).toContain('ok')
+  })
+})
+
+// A Web.com / FatCow builder page, cut down from a real bakery's site: a title
+// that starts with "Home", gallery photos in divs, and settings in window._site.
+const CDN = 'https://images.builderservices.io/s/cdn/v1.0/i/m?url=https%3A%2F%2Fstorage.example.com%2F'
+const BUILDER = `<!doctype html>
+<html><head><title>Home - Sweet Rise Bakery</title></head>
+<body>
+<header><nav><ul><li>Home page link</li><li>Our cakes menu</li></ul></nav>
+  <img class="kv-ee-logo-image" src="${CDN}logo1&amp;methods=resize%2C500%2C5000">
+  <h3 class="kv-ee-logo-title">Sweet Rise Bakery</h3>
+</header>
+<main>
+  <h2>Welcome to Sweet Rise</h2>
+  <p>Sweet Rise Bakery is a family bakery in SW Atlanta. We make custom cakes, cupcakes and cookies.</p>
+  <div role="img" data-src="${CDN}aaa&amp;methods=resize%2C60%2C5000" data-src-normal="${CDN}aaa&amp;methods=resize%2C600%2C5000" data-src-retina="${CDN}aaa&amp;methods=resize%2C900%2C5000"></div>
+  <div role="img" data-src="${CDN}bbb&amp;methods=crop%2C0%25%2C3%25%7Cresize%2C60%2C5000" data-src-retina="${CDN}bbb&amp;methods=crop%2C0%25%2C3%25%7Cresize%2C900%2C5000"></div>
+  <div class="loading-spinner" data-src="${CDN}spin&amp;methods=resize%2C900%2C5000"></div>
+  <div style="background-image: url('https://cdn.example.com/hero.jpg?w=1600')"></div>
+</main>
+<footer><p>Copyright Sweet Rise Bakery, all rights reserved forever.</p></footer>
+<script>window._site={"metadata":{"siteName":"Sweet Rise Bakery"},"globalBinding":{"companyName":"Sweet Rise Bakery","phone":"\u202d(404) 555-0123\u202c","address":{"street":"10 Campbellton Rd SW","zip":"30311","city":"Atlanta","state":"GA","country":"US"},"openingHours":{"mon":[{"description":"Closed"}],"tue":[{"opening":"12:00pm","closing":"06:00pm"}],"sat":[{"opening":"10:00am","closing":"02:00pm"}]}}};</script>
+</body></html>`
+
+describe('readSite on a website builder page', () => {
+  const f = readSite(BUILDER, 'https://www.sweetrise.com/')
+
+  it('takes the name from the title, not the "Home" in it', () => {
+    expect(f.name).toBe('Sweet Rise Bakery')
+  })
+
+  it('finds gallery photos in divs at their largest size, and skips spinners', () => {
+    const photos = f.photos.filter((p) => p.kind === 'photo')
+    expect(photos.map((p) => p.width)).toEqual([900, 900, 1600])
+    expect(photos[0]?.url).toContain('aaa')
+    expect(photos[0]?.url).toContain('resize%2C900')
+    expect(f.photos.some((p) => p.url.includes('spin'))).toBe(false)
+    expect(f.suggestedLogo).toContain('logo1')
+  })
+
+  it('reads the address, hours and phone from the builder data', () => {
+    expect(f.address).toEqual({ street: '10 Campbellton Rd SW', city: 'Atlanta', state: 'GA', zip: '30311' })
+    expect(f.hours?.tuesday).toEqual({ open: '12:00', close: '18:00', closed: false })
+    expect(f.hours?.saturday).toEqual({ open: '10:00', close: '14:00', closed: false })
+    expect(f.hours?.monday.closed).toBe(true)
+    expect(f.hours?.sunday.closed).toBe(true)
+    expect(f.phones).toEqual(['(404) 555-0123'])
+  })
+
+  it('keeps the visible text, without menus or footers, and uses the first paragraph as About', () => {
+    expect(f.siteText).toContain('custom cakes, cupcakes and cookies')
+    expect(f.siteText).not.toContain('Our cakes menu')
+    expect(f.siteText).not.toContain('Copyright')
+    expect(f.about).toBe('Sweet Rise Bakery is a family bakery in SW Atlanta. We make custom cakes, cupcakes and cookies.')
+  })
+
+  it('a broken _site is ignored', () => {
+    const broken = BUILDER.replace('window._site={', 'window._site={oops')
+    const g = readSite(broken, 'https://www.sweetrise.com/')
+    expect(g.name).toBe('Sweet Rise Bakery')
+    expect(g.address).toBeNull()
+  })
+})
+
+describe('titleName', () => {
+  it('drops words that name the page', () => {
+    expect(titleName('Home - Cakes & Treats of Atlanta')).toBe('Cakes & Treats of Atlanta')
+    expect(titleName('Welcome | Glow Salon')).toBe('Glow Salon')
+    expect(titleName('Glow Salon | Natural Hair in Atlanta')).toBe('Glow Salon')
+  })
+
+  it('prefers the segment the page names elsewhere', () => {
+    expect(titleName('Natural Hair in Atlanta | Glow Salon', ['Glow Salon'])).toBe('Glow Salon')
+    expect(titleName('Home - Cakes &amp; Treats', ['cakes & treats'])).toBe('Cakes &amp; Treats')
+  })
+
+  it('keeps names that only start with a generic word, and hyphenated names', () => {
+    expect(titleName('Main Street Cafe')).toBe('Main Street Cafe')
+    expect(titleName('Home Sweet Home Bakery - Decatur')).toBe('Home Sweet Home Bakery')
+    expect(titleName('Jean-Paul Bistro')).toBe('Jean-Paul Bistro')
+  })
+
+  it('falls back to the title when every part is generic', () => {
+    expect(titleName('Home')).toBe('Home')
+  })
+
+  it('a generic title is no name at all', () => {
+    const f = readSite('<title>Home</title><p>Nothing else to see on this page at all, really.</p>', 'https://x.com/')
+    expect(f.name).toBeNull()
+  })
+})
+
+describe('widthFromUrl', () => {
+  it('reads the width each image host was asked for', () => {
+    expect(widthFromUrl(`${CDN}a&methods=crop%2C0%25%7Cresize%2C900%2C5000`)).toBe(900)
+    expect(widthFromUrl('https://static.wixstatic.com/media/a.jpg/v1/fill/w_980,h_600,al_c/a.jpg')).toBe(980)
+    expect(widthFromUrl('https://images.squarespace-cdn.com/a/b.jpg?format=1500w')).toBe(1500)
+    expect(widthFromUrl('https://img1.wsimg.com/isteam/ip/abc/x.jpg/:/rs=w:1200,h:600')).toBe(1200)
+    expect(widthFromUrl('https://cdn.shopify.com/s/files/1/cake_800x.jpg?v=1')).toBe(800)
+    expect(widthFromUrl('https://cdn.example.com/a.jpg?w=640')).toBe(640)
+    expect(widthFromUrl('https://cdn.example.com/a.jpg?width=720')).toBe(720)
+  })
+
+  it('returns null when the URL says nothing', () => {
+    expect(widthFromUrl('https://cdn.example.com/a.jpg')).toBeNull()
+    expect(widthFromUrl('not a url')).toBeNull()
   })
 })

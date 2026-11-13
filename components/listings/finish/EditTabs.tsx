@@ -53,7 +53,7 @@ export function EditTabs({ active, onSelect }: Props) {
       role="tablist"
       aria-label="Edit your page"
       onKeyDown={onKeyDown}
-      className="sticky top-2 z-10 flex gap-1 overflow-x-auto rounded-xl border border-charcoal/10 bg-white p-1 shadow-sm"
+      className="sticky top-16 md:top-20 z-10 flex gap-1 overflow-x-auto rounded-xl border border-charcoal/10 bg-white p-1 shadow-sm"
     >
       {EDIT_TABS.map((t) => {
         const selected = t.id === active

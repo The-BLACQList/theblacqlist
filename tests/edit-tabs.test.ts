@@ -37,6 +37,8 @@ describe('tabForAnchor', () => {
     expect(tabForAnchor('main-button')).toBe('contact')
     expect(tabForAnchor('faq')).toBe('more')
     expect(tabForAnchor('services')).toBe('services')
+    expect(tabForAnchor('links')).toBe('social')
+    expect(tabForAnchor('social')).toBe('social')
   })
 
   it('returns null for anything else', () => {
@@ -69,7 +71,7 @@ describe('initialTab', () => {
 
 describe('tabsWithChanges', () => {
   it('marks the tabs holding unsaved cards', () => {
-    expect([...tabsWithChanges(['about', 'hours', 'social'])].sort()).toEqual(['basics', 'contact', 'more'])
+    expect([...tabsWithChanges(['about', 'hours', 'social'])].sort()).toEqual(['basics', 'contact', 'social'])
     expect(tabsWithChanges([]).size).toBe(0)
     expect(tabsWithChanges(['unknown']).size).toBe(0)
   })
@@ -90,6 +92,13 @@ describe('wiring', () => {
     const view = read('components/listings/PageFinishView.tsx')
     expect(view).toMatch(/<ProfileSaveProvider[^>]*reveal=\{reveal\}/)
     expect(view).toMatch(/<StrengthMeter[^>]*showSection=\{reveal\}/)
+  })
+
+  it('the tab row sits below the site header, and long tabs say there is more', () => {
+    expect(read('components/listings/finish/EditTabs.tsx')).toMatch(/sticky top-16 md:top-20/)
+    const view = read('components/listings/PageFinishView.tsx')
+    expect(view).toMatch(/<MoreBelow watch=\{/)
+    expect(view).toMatch(/Next: \{/)
   })
 
   it('keeps every panel mounted, so edits in a closed tab survive', () => {

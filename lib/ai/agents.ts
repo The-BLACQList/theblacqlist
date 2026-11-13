@@ -85,7 +85,7 @@ export const AI_AGENTS: readonly AgentDefinition[] = [
     templateKey: 'LISTING_DESCRIPTION',
     suggestionType: 'listing_description',
     label: 'Business description',
-    blurb: 'A 150–250 word description of what you do and why to come to you.',
+    blurb: 'Two or three short paragraphs on what you do and why to come to you.',
     modelTier: 'quality',
     applyTarget: { table: 'listing_details_business', column: 'description' },
     maxOutputChars: 2000,
@@ -216,7 +216,16 @@ export const MOCK_MODEL = 'mock-v1'
  * answer one time in five.
  */
 export function promptVersionOf(agent: AgentDefinition): string {
-  return `${agent.templateKey}@3`
+  return `${agent.templateKey}@${PROMPT_VERSION_OVERRIDES[agent.templateKey] ?? 3}`
+}
+
+/**
+ * Templates changed since @3. LISTING_DESCRIPTION@4 (2026-11-13): paragraphs,
+ * search words, services, attributes and the owner's website text, and no
+ * longer refuses a thin page.
+ */
+const PROMPT_VERSION_OVERRIDES: Partial<Record<AgentDefinition['templateKey'], number>> = {
+  LISTING_DESCRIPTION: 4,
 }
 
 // Fails the build (via the test suite) if an agent names a template that the

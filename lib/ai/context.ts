@@ -11,6 +11,11 @@
  * explicit, and the privacy audit (V2-Mock gate 2) is two files: this one and
  * `buildPromptVars`.
  *
+ * Also read (2026-11-13, LISTING_DESCRIPTION@4): the parent category's name,
+ * the names of the page's services (`services.name`, not their descriptions or
+ * prices) and the page's attribute labels (`attribute_values.name`, platform
+ * text). All three are public on the page already.
+ *
  * Note what is *not* selected below: no `phone`, `email`, `address_line_1`,
  * `zip`, or `social_*` from `listing_details_business`, and no `owner_user_id`
  * from `listings` — even though the caller has already used that column to prove
@@ -48,7 +53,7 @@ export async function loadGenerateContext(listingId: string): Promise<GenerateCo
 
   const { data: listing } = await supabase
     .from('listings')
-    .select('id, name, tagline, categories ( name ), cities ( name )')
+    .select('id, name, tagline, categories ( name, parent_id ), cities ( name )')
     .eq('id', listingId)
     .is('deleted_at', null)
     .maybeSingle()
@@ -58,12 +63,27 @@ export async function loadGenerateContext(listingId: string): Promise<GenerateCo
   const since30 = isoDaysAgo(30)
   const since7 = isoDaysAgo(7)
 
-  const [details, views30, cta30, saves30, shares30, views7] = await Promise.all([
+  const parentId = listing.categories?.parent_id ?? null
+
+  const [details, parent, services, attributes, views30, cta30, saves30, shares30, views7] = await Promise.all([
     supabase
       .from('listing_details_business')
       .select('description')
       .eq('listing_id', listingId)
       .maybeSingle(),
+
+    parentId
+      ? supabase.from('categories').select('name').eq('id', parentId).maybeSingle()
+      : Promise.resolve({ data: null }),
+
+    supabase
+      .from('services')
+      .select('name')
+      .eq('listing_id', listingId)
+      .order('display_order', { ascending: true })
+      .limit(15),
+
+    supabase.from('listing_attributes').select('attribute_values ( name )').eq('listing_id', listingId).limit(15),
 
     supabase
       .from('analytics_events')
@@ -121,6 +141,11 @@ export async function loadGenerateContext(listingId: string): Promise<GenerateCo
     cityName: listing.cities?.name ?? 'their community',
     tagline: listing.tagline,
     description: details.data?.description ?? null,
+    parentCategoryName: parent.data?.name ?? null,
+    serviceNames: (services.data ?? []).map((s) => s.name).filter((n): n is string => Boolean(n?.trim())),
+    attributeLabels: ((attributes.data ?? []) as { attribute_values: { name: string } | null }[])
+      .map((a) => a.attribute_values?.name)
+      .filter((n): n is string => Boolean(n?.trim())),
     pageViews30d: views30.count ?? 0,
     ctaClicks30d: cta30.count ?? 0,
     saves30d: saves30.count ?? 0,

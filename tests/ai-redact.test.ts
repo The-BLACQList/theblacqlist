@@ -187,6 +187,9 @@ describe('buildPromptVars with an owner name', () => {
     saves30d: 1,
     shares30d: 1,
     pageViews7d: 1,
+    parentCategoryName: null,
+    serviceNames: [],
+    attributeLabels: [],
   }
   const redaction = { ownerNameTerms: ownerNameTerms(['Keisha Brown'], CTX.listingName) }
   const vars = buildPromptVars(CTX, redaction)

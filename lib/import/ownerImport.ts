@@ -1,6 +1,7 @@
 import type { PhotoCandidate, SiteFindings, SocialKey } from '@/lib/import/read-site'
 import { summarizeHours } from '@/lib/messaging/quickReplies'
 import type { WeeklyHours } from '@/types'
+import type { PreviewContact } from '@/components/listings/LivePagePreview'
 
 // =============================================================================
 // "Import from my website" on the edit page: what to offer (part C, 2026-11-13)
@@ -201,6 +202,39 @@ export function importRows(f: SiteFindings, now: PageNow, opts: ImportOptions): 
   return rows
 }
 
+/**
+ * The rows with an About written from the site (by writing help) in place of
+ * the one the site had. Fitted to the plan's limit, and offered even when the
+ * page already has an About, since the owner asked for it.
+ */
+export function withAboutDraft(
+  rows: readonly ImportRow[],
+  draft: string,
+  now: Pick<PageNow, 'description'>,
+  aboutLimit: number | null
+): ImportRow[] {
+  const text = fitText(draft.replace(/\r\n?/g, '\n'), aboutLimit)
+  const row: ImportRow = {
+    key: 'about',
+    label: 'About',
+    found: text,
+    current: blank(now.description) ? null : (now.description as string),
+    card: 'about',
+    pairs: text ? [['description', text]] : [],
+    defaultChecked: true,
+    locked: null,
+    note:
+      text.length < draft.trim().length && aboutLimit !== null
+        ? `Shortened to fit your plan’s ${aboutLimit} characters.`
+        : null,
+  }
+  const at = rows.findIndex((r) => r.key === 'about')
+  if (at >= 0) return rows.map((r, i) => (i === at ? row : r))
+  // Right after the name, where the about row would have been.
+  const after = rows[0]?.key === 'name' ? 1 : 0
+  return [...rows.slice(0, after), row, ...rows.slice(after)]
+}
+
 /** The form fields for the ticked rows. A locked row is never sent. */
 export function pairsFor(rows: readonly ImportRow[], ticked: ReadonlySet<string>): [string, string][] {
   return rows.filter((r) => ticked.has(r.key) && r.locked === null).flatMap((r) => r.pairs)
@@ -223,7 +257,42 @@ export function photoChoices(f: SiteFindings): PhotoCandidate[] {
     .filter((p) => (seen.has(p.url) ? false : (seen.add(p.url), true)))
 }
 
-/** How many photos the owner can bring in now: the plan's room, at most one import's worth. */
-export function photoRoom(limit: number | null, count: number, perImport: number): number {
-  return Math.max(0, Math.min(perImport, limit === null ? perImport : limit - count))
+/**
+ * How many photos the owner can bring in now: the plan's room, or every
+ * candidate on a plan with no cap. The sheet sends them in batches of one
+ * import's worth (`chunk`), so this is no longer capped per import.
+ */
+export function photoRoom(limit: number | null, count: number, candidates: number): number {
+  return Math.max(0, limit === null ? candidates : limit - count)
+}
+
+/** Splits a list into runs of at most `size`, in order. */
+export function chunk<T>(items: readonly T[], size: number): T[][] {
+  const step = Math.max(1, Math.floor(size))
+  const out: T[][] = []
+  for (let i = 0; i < items.length; i += step) out.push(items.slice(i, i + step))
+  return out
+}
+
+/**
+ * The contact block for the edit page's preview, from what the page has now.
+ * The website shows as its host; social links by network name.
+ */
+export function previewContact(now: PageNow, hasHours: boolean): PreviewContact {
+  let website: string | null = null
+  if (!blank(now.websiteUrl)) {
+    try {
+      website = new URL(now.websiteUrl as string).host.replace(/^www\./, '')
+    } catch {
+      website = (now.websiteUrl as string).trim()
+    }
+  }
+  const street = blank(now.addressLine1) ? null : (now.addressLine1 as string).trim()
+  return {
+    phone: blank(now.phone) ? null : (now.phone as string).trim(),
+    website,
+    address: street ? [street, now.locationLabel].filter(Boolean).join(', ') : null,
+    hoursLine: hasHours ? hoursText(now.hours) : null,
+    socials: (Object.keys(SOCIAL_LABELS) as SocialKey[]).filter((k) => !blank(now.socials[k])).map((k) => SOCIAL_LABELS[k]),
+  }
 }

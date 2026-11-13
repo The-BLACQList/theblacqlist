@@ -8,11 +8,13 @@ import type { SiteFindings } from '@/lib/import/read-site'
 import type { WeeklyHours } from '@/types'
 import {
   cardsFor,
+  chunk,
   fitText,
   importRows,
   pairsFor,
   photoChoices,
   photoRoom,
+  previewContact,
   type ImportOptions,
   type PageNow,
 } from '@/lib/import/ownerImport'
@@ -45,6 +47,7 @@ function findings(over: Partial<SiteFindings> = {}): SiteFindings {
     photos: [],
     suggestedLogo: null,
     suggestedCover: null,
+    siteText: null,
     ...over,
   }
 }
@@ -184,13 +187,19 @@ describe('photos', () => {
     expect(choices.map((c) => c.url)).toEqual(['c', 'b', 'a'])
   })
 
-  it('photoRoom is the plan room, at most one import', () => {
-    expect(photoRoom(1, 0, 6)).toBe(1)
-    expect(photoRoom(1, 1, 6)).toBe(0)
-    expect(photoRoom(10, 2, 6)).toBe(6)
-    expect(photoRoom(10, 7, 6)).toBe(3)
-    expect(photoRoom(10, 12, 6)).toBe(0)
-    expect(photoRoom(null, 40, 6)).toBe(6)
+  it('photoRoom is the plan room, or every candidate with no cap', () => {
+    expect(photoRoom(1, 0, 24)).toBe(1)
+    expect(photoRoom(1, 1, 24)).toBe(0)
+    expect(photoRoom(10, 2, 24)).toBe(8)
+    expect(photoRoom(10, 7, 24)).toBe(3)
+    expect(photoRoom(10, 12, 24)).toBe(0)
+    expect(photoRoom(null, 40, 24)).toBe(24)
+  })
+
+  it('chunk sends picks in runs of one import', () => {
+    expect(chunk([1, 2, 3, 4, 5, 6, 7, 8], 6)).toEqual([[1, 2, 3, 4, 5, 6], [7, 8]])
+    expect(chunk([], 6)).toEqual([])
+    expect(chunk([1, 2], 0)).toEqual([[1], [2]])
   })
 })
 
@@ -219,10 +228,57 @@ describe('owner actions', () => {
     expect(sheet).toContain('updateListingContentAction')
     expect(sheet).toContain('pairsFor(rows, ticked)')
     expect(sheet).toContain('importMySitePhotosAction')
+    // Many photos go in batches of one import each.
+    expect(sheet).toMatch(/chunk\(photos, MAX_PHOTOS_PER_IMPORT\)/)
+  })
+
+  it('the sheet drafts About from the site through writing help, only when it is ready', () => {
+    const sheet = read('components/listings/finish/SiteImport.tsx')
+    // Through the page's writing help, so the allowance strip stays in step.
+    expect(sheet).toContain('useWritingHelp()')
+    expect(sheet).toMatch(/help\.request\('listing_description', \{ site_text: siteText \}\)/)
+    expect(sheet).toContain('rejectSuggestionAction')
+    expect(sheet).toMatch(/fd\.append\('ai_suggestion_id', draft\.id\)/)
+    const help = read('components/listings/finish/WritingHelp.tsx')
+    expect(help).toMatch(/for \(const \[k, v\] of Object\.entries\(extra \?\? \{\}\)\) form\.set\(k, v\)/)
+    // useWritingHelp is null unless help is ready.
+    expect(help).toMatch(/help && help\.allowance\.state === 'ready' \? help : null/)
   })
 
   it('is on the edit page only', () => {
     const view = read('components/listings/PageFinishView.tsx')
     expect(view).toMatch(/mode === 'edit' && \(\s*<SiteImport/)
+  })
+})
+
+describe('previewContact', () => {
+  it('shows what the page has now, in words', () => {
+    const c = previewContact(
+      {
+        ...EMPTY,
+        phone: '(404) 555-0100',
+        websiteUrl: 'https://www.glowsalon.com/about',
+        addressLine1: '12 Peach St',
+        hours: WEEK,
+        socials: { ...EMPTY.socials, instagram: 'https://instagram.com/glow' },
+      },
+      true
+    )
+    expect(c.phone).toBe('(404) 555-0100')
+    expect(c.website).toBe('glowsalon.com')
+    expect(c.address).toBe('12 Peach St, Atlanta, GA')
+    expect(c.hoursLine).toBeTruthy()
+    expect(c.socials).toEqual(['Instagram'])
+  })
+
+  it('leaves out what is empty, and hours on a page without them', () => {
+    const c = previewContact({ ...EMPTY, hours: WEEK }, false)
+    expect(c).toEqual({ phone: null, website: null, address: null, hoursLine: null, socials: [] })
+  })
+
+  it('the edit page passes photos and contact to the side preview', () => {
+    const view = read('components/listings/PageFinishView.tsx')
+    expect(view).toMatch(/<LivePagePreview \{\.\.\.preview\} \{\.\.\.previewExtras\} \/>/)
+    expect(view).toMatch(/previewContact\(importNow/)
   })
 })

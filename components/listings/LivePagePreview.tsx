@@ -1,4 +1,4 @@
-import { MapPin, Tag } from 'lucide-react'
+import { Clock, Globe, MapPin, Phone, Tag } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 
@@ -7,6 +7,18 @@ import { cn } from '@/lib/utils'
 // plain values and knows nothing about either screen's state. It mirrors the
 // public page's hero and About block; it is not the real EntityPage, which needs
 // a saved, fully loaded listing.
+
+/** Contact lines for the full preview, already in words. Empty values are left out. */
+export interface PreviewContact {
+  phone: string | null
+  /** The website's host, e.g. "glowsalon.com". */
+  website: string | null
+  address: string | null
+  /** From summarizeHours, e.g. "Mon–Fri 9am–5pm". */
+  hoursLine: string | null
+  /** Names of the networks linked, e.g. "Instagram". */
+  socials: string[]
+}
 
 export type PreviewPart = 'name' | 'tagline' | 'about' | 'category' | 'location' | 'cta' | 'owner'
 
@@ -27,6 +39,10 @@ interface Props {
   highlight?: PreviewPart | null
   /** Phones: the hero only, so the question stays on screen. */
   compact?: boolean
+  /** Gallery photos, first few only (edit page). Left out on a new page. */
+  photoUrls?: string[]
+  /** Contact details (edit page), so an import shows up beside the form. */
+  contact?: PreviewContact
 }
 
 function mark(on: boolean): string {
@@ -45,7 +61,17 @@ export function LivePagePreview({
   coverUrl,
   highlight = null,
   compact = false,
+  photoUrls = [],
+  contact,
 }: Props) {
+  const contactLines = contact
+    ? ([
+        [MapPin, contact.address],
+        [Clock, contact.hoursLine],
+        [Phone, contact.phone],
+        [Globe, contact.website],
+      ] as const).filter((line): line is readonly [typeof MapPin, string] => Boolean(line[1]))
+    : []
   return (
     <div
       className="overflow-hidden rounded-2xl border border-charcoal/10 bg-white shadow-sm"
@@ -163,6 +189,44 @@ export function LivePagePreview({
               {description || 'What you do, in your own words.'}
             </p>
           </div>
+          {photoUrls.length > 0 && (
+            <div>
+              <p className="font-headline text-base text-brand-black">Photos</p>
+              <ul className="mt-2 grid grid-cols-4 gap-1.5">
+                {photoUrls.slice(0, 4).map((url) => (
+                  <li key={url} className="aspect-square overflow-hidden rounded-md bg-charcoal/5">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={url} alt="" loading="lazy" className="h-full w-full object-cover" />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {(contactLines.length > 0 || (contact?.socials.length ?? 0) > 0) && (
+            <div>
+              <p className="font-headline text-base text-brand-black">Contact</p>
+              <ul className="mt-1.5 flex flex-col gap-1">
+                {contactLines.map(([Icon, text]) => (
+                  <li key={text} className="flex items-start gap-2 font-body text-sm text-charcoal">
+                    <Icon className="mt-0.5 size-3.5 shrink-0 text-charcoal-soft" aria-hidden="true" />
+                    <span className="min-w-0 break-words">{text}</span>
+                  </li>
+                ))}
+              </ul>
+              {contact && contact.socials.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {contact.socials.map((name) => (
+                    <span
+                      key={name}
+                      className="inline-flex items-center rounded-full border border-charcoal/15 px-2.5 py-0.5 font-subhead text-[11px] font-semibold text-charcoal"
+                    >
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

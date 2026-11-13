@@ -101,6 +101,10 @@ describe('prompt length bound', () => {
       saves30d: 999_999_999,
       shares30d: 999_999_999,
       pageViews7d: 999_999_999,
+      parentCategoryName: long,
+      serviceNames: Array.from({ length: 40 }, () => long),
+      attributeLabels: Array.from({ length: 40 }, () => long),
+      siteText: long,
     })
     for (const agent of AI_AGENTS) {
       const prompt = fillTemplate(PROMPT_TEMPLATES[agent.templateKey], vars)
