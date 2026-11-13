@@ -104,6 +104,7 @@ Every pick matches the lean except screen 5, where the founder added C.
 - **O1 A:** Claude reads the photo on our server, only when the shopper ticks the box. `FEATURE_RECEIPT_READ` stays off in prod until the privacy policy update is posted, notice is sent and counsel has looked at it. The policy text goes in its own draft PR so it never goes live ahead of the switch.
 - **O2 A + B:** the shopper invite and the private admin list, plus an "Email this business" action on the admin list. The founder types the business address and presses send, one business at a time. Nothing sends in bulk or on its own, and every send is the founder's own GATE-COMMS act. `[Needs professional review]` CAN-SPAM for one-to-one business outreach: the email carries our physical address and an opt-out line.
 - **O3 A:** text and the business link through the share sheet or Copy. Amount off by default, nothing stored.
+  - `[Decision — founder, 2026-11-13]` Image support posts are added in ticket 183. They show the shopper's own photo or a brand card, never the receipt and never the amount, and name the business only if it opted in.
 - **O4 A:** add `three`, `@react-three/fiber` and `@react-three/drei` (only what is used), loaded only on `/flow-map` after the page shows, with the table as the fallback.
 
 ## Tickets

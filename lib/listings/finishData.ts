@@ -103,6 +103,8 @@ export interface FinishData {
   levels: { primary: BusinessLevel; extras: BusinessLevel[]; allowed: BusinessLevel[] } | null
   /** The partner switch (ticket 132). False when the column is not there yet. */
   openToPartnerships: boolean
+  /** Named in shoppers' support posts (ticket 183). False when the column is not there yet. */
+  collectiveNameOptIn: boolean
 }
 
 const DETAIL_COLUMNS = `
@@ -199,8 +201,8 @@ export async function loadFinishData(
       )
       .eq('id', row.id)
       .maybeSingle(),
-    // '*' so a database without open_to_partnerships (ticket 131) or
-    // peak_tier (ticket 105) still loads.
+    // '*' so a database without open_to_partnerships (ticket 131),
+    // peak_tier (ticket 105) or collective_name_opt_in (ticket 183) still loads.
     supabase.from('listings').select('*').eq('id', row.id).maybeSingle(),
   ])
 
@@ -282,5 +284,7 @@ export async function loadFinishData(
     levels,
     openToPartnerships:
       (partnerRow as { open_to_partnerships?: boolean } | null)?.open_to_partnerships === true,
+    collectiveNameOptIn:
+      (partnerRow as { collective_name_opt_in?: boolean } | null)?.collective_name_opt_in === true,
   }
 }

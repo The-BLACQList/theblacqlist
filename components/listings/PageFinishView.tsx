@@ -20,6 +20,7 @@ import { AddOfferingForm } from '@/components/dashboard/AddOfferingForm'
 import { AttributesSection } from '@/components/dashboard/AttributesSection'
 import { LevelSection } from '@/components/dashboard/LevelSection'
 import { PartnershipSection } from '@/components/dashboard/PartnershipSection'
+import { CollectiveNameSection } from '@/components/dashboard/CollectiveNameSection'
 import { SocialSection } from '@/components/dashboard/SocialSection'
 import { VideoSection } from '@/components/dashboard/VideoSection'
 import { LinksSection } from '@/components/dashboard/LinksSection'
@@ -369,6 +370,12 @@ export function PageFinishView({
                 openToPartnerships={data.openToPartnerships}
               />
             </Anchor>
+
+            {data.entityType !== 'job' && (
+              <Anchor id="collective-name">
+                <CollectiveNameSection listingId={data.id} optedIn={data.collectiveNameOptIn} />
+              </Anchor>
+            )}
 
             <Anchor id="social">
               <SocialSection

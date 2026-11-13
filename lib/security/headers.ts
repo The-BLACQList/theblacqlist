@@ -54,13 +54,17 @@ export const SECURITY_HEADERS = [
     value: 'strict-origin-when-cross-origin',
   },
   {
-    // Deny the two powerful features nothing on the site uses, and pin the
-    // one it is about to.
+    // Allow the camera on our own origin only, deny the microphone, and pin
+    // geolocation.
     //
-    // `camera=()` / `microphone=()`: there is no `getUserMedia`,
-    // `mediaDevices`, or `MediaRecorder` call anywhere under app/, components/,
-    // or lib/ `[Measured — repo grep, 2026-08-12]`. Denying them costs nothing
-    // today and means an injected script cannot reach either device.
+    // `camera=(self)` since ticket 183: the support-post viewfinder
+    // (`components/support-share/CameraViewfinder.tsx`) calls `getUserMedia`
+    // for video. `(self)` still denies the camera to every embedded third
+    // party. The browser's own permission prompt is still the shopper's gate.
+    // It was `camera=()` until 2026-11-13, when nothing called getUserMedia.
+    //
+    // `microphone=()`: nothing records audio. The viewfinder asks for
+    // `audio: false`.
     //
     // The open question was the two `capture="environment"` file inputs
     // (`components/dashboard/MediaGrid.tsx:330`,
@@ -79,8 +83,8 @@ export const SECURITY_HEADERS = [
     // it; and only the **receipt** input was exercised — `MediaGrid.tsx:330` is
     // covered by inference (same attribute, same header, same engines), not by
     // measurement. If camera capture ever misbehaves in the media grid, that
-    // inference is the first thing to re-open; the fix is to drop `camera=()`
-    // and keep the rest. See
+    // inference is the first thing to re-open. (`camera=()` is gone now in
+    // any case; see above.) See
     // `docs/blacqlist/ops/runbooks/device-test-camera-capture.md`.
     //
     // `geolocation=(self)` deliberately, NOT `geolocation=()` as
@@ -93,6 +97,6 @@ export const SECURITY_HEADERS = [
     // it asks for `encrypted-media; picture-in-picture`, neither of which is
     // touched here.
     key: 'Permissions-Policy',
-    value: 'camera=(), microphone=(), geolocation=(self)',
+    value: 'camera=(self), microphone=(), geolocation=(self)',
   },
 ] as const

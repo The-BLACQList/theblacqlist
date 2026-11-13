@@ -74,6 +74,12 @@ export async function updateListingContentAction(
     listingsUpdate.open_to_partnerships = formData.get('open_to_partnerships') === 'true'
   }
 
+  // Naming in The Collective (tickets 166, 183): whether shoppers' support
+  // posts and counted shares may name this business. Same hidden-marker rule.
+  if (formData.get('collective_name_opt_in_field') !== null) {
+    listingsUpdate.collective_name_opt_in = formData.get('collective_name_opt_in') === 'true'
+  }
+
   // ── Collect listing_details_business fields ────────────────────────────────
   const detailsUpdate: Record<string, unknown> = {}
   const description = formData.get('description')?.toString().trim()
