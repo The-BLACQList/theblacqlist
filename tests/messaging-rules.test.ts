@@ -12,6 +12,7 @@ import { describe, expect, it } from 'vitest'
 import {
   inboxPlacement,
   isConversationUnread,
+  composerMounted,
   isUuid,
   matchesPageFilter,
   parseInboxTab,
@@ -397,5 +398,18 @@ describe('formatListTime / formatMessageTime (America/New_York)', () => {
 
   it('labels thread times as ET', () => {
     expect(formatMessageTime('2026-11-13T19:42:00.000Z')).toBe('Nov 13, 2:42 PM ET')
+  })
+})
+
+describe('composerMounted', () => {
+  it('keeps the composer for compose and thread, so "Message sent" survives the refresh', () => {
+    expect(composerMounted('compose')).toBe(true)
+    expect(composerMounted('thread')).toBe(true)
+  })
+
+  it('does not mount it for anyone who cannot write here', () => {
+    for (const mode of ['sign_in', 'owner', 'unavailable', undefined] as const) {
+      expect(composerMounted(mode)).toBe(false)
+    }
   })
 })

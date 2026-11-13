@@ -222,3 +222,17 @@ describe('send as a page', () => {
     expect(inbox.indexOf('readListingsAsService(')).toBeGreaterThan(inbox.indexOf("from('conversations')"))
   })
 })
+
+describe('message composer on the listing page', () => {
+  it('stays mounted after the first send flips the mode to thread', () => {
+    const page = source('app/[citySlug]/[entityType]/[listingSlug]/page.tsx')
+    expect(page).toContain('composerMounted(messaging?.mode)')
+    expect(page).toContain('{showComposer && (')
+    expect(page).not.toMatch(/mode === 'compose' &&/)
+  })
+
+  it('names the business in the confirmation', () => {
+    const composer = source('components/messaging/MessageComposer.tsx')
+    expect(composer).toContain('Message sent to {businessName}')
+  })
+})

@@ -70,6 +70,17 @@ export function messagingCtaLabel(mode: ListingMessagingMode, fallback: string):
   return fallback
 }
 
+/**
+ * Whether the listing page mounts the composer. 'thread' too: sending the
+ * first message refreshes the page (the action revalidates), which flips the
+ * mode from compose to thread. Unmounting then would close the dialog before
+ * the customer sees "Message sent". In thread mode no link points at
+ * #send-message, so the composer stays closed unless it was already open.
+ */
+export function composerMounted(mode: ListingMessagingMode | undefined): boolean {
+  return mode === 'compose' || mode === 'thread'
+}
+
 // ── Message bodies ──────────────────────────────────────────────────────────
 
 export type BodyResult = { ok: true; body: string } | { ok: false; error: string }

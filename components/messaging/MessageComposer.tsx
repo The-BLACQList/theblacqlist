@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useState } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { CheckCircle, Loader2 } from 'lucide-react'
@@ -80,6 +80,7 @@ export function MessageComposer({ listingId, businessName, sendAsPages = [] }: P
         <ComposerForm
           key={round}
           listingId={listingId}
+          businessName={businessName}
           sendAsPages={sendAsPages}
           onSent={() => setRound((r) => r + 1)}
         />
@@ -90,10 +91,12 @@ export function MessageComposer({ listingId, businessName, sendAsPages = [] }: P
 
 function ComposerForm({
   listingId,
+  businessName,
   sendAsPages,
   onSent,
 }: {
   listingId: string
+  businessName: string
   sendAsPages: SendAsPage[]
   onSent: () => void
 }) {
@@ -102,14 +105,28 @@ function ComposerForm({
   const [asListingId, setAsListingId] = useState('')
   // Page owners read every thread in the dashboard inbox (Businesses tab).
   const inboxPath = sendAsPages.length > 0 ? OWNER_INBOX_PATH : CUSTOMER_INBOX_PATH
+  const sent = Boolean(state && 'success' in state)
+  const sentHeading = useRef<HTMLParagraphElement>(null)
+
+  // The form is gone once it sends: move focus to the confirmation so keyboard
+  // and screen-reader users land on it instead of the dialog's edge.
+  useEffect(() => {
+    if (sent) sentHeading.current?.focus()
+  }, [sent])
 
   if (state && 'success' in state) {
     return (
       <div className="px-5 py-8 text-center" role="status" aria-live="polite">
         <CheckCircle className="size-10 text-green-600 mx-auto mb-3" aria-hidden="true" />
-        <p className="font-subhead text-base font-semibold text-brand-black mb-1">Message sent</p>
+        <p
+          ref={sentHeading}
+          tabIndex={-1}
+          className="font-subhead text-base font-semibold text-brand-black mb-1 focus:outline-none"
+        >
+          Message sent to {businessName}
+        </p>
         <p className="font-body text-sm text-charcoal-soft mb-5">
-          You&apos;ll see their reply in your messages.
+          We&apos;ll show their reply in your messages. You&apos;ll see a badge when they write back.
         </p>
         <div className="flex items-center justify-center gap-3">
           <Link
