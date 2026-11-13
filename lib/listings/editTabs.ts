@@ -13,6 +13,7 @@ export const EDIT_TABS = [
   { id: 'contact', label: 'Contact & buttons' },
   { id: 'media', label: 'Photos & video' },
   { id: 'services', label: 'Services' },
+  { id: 'where', label: 'Where to find us' },
   { id: 'social', label: 'Social & links' },
   { id: 'more', label: 'More' },
 ] as const
@@ -28,8 +29,10 @@ export const TAB_SECTIONS: Record<EditTabId, readonly string[]> = {
   basics: ['happening-now', 'basics', 'about', 'role', 'collective-name'],
   contact: ['contact', 'hours', 'main-button'],
   media: ['photos', 'video'],
-  // 'deals' is the edit page only (part G).
-  services: ['services', 'deals', 'details'],
+  // 'deals' is the edit page only (part G); 'order-on' too (part D).
+  services: ['services', 'order-on', 'deals', 'details'],
+  // Part D, the edit page only. With the flag off the tab has no cards and is hidden.
+  where: ['location', 'where-sold'],
   social: ['social', 'links'],
   more: ['faq', 'partnerships', 'google'],
 }
@@ -44,7 +47,10 @@ export const SCROLL_ORDER: readonly string[] = [
   'photos',
   'main-button',
   'services',
+  'order-on',
   'deals',
+  'location',
+  'where-sold',
   'role',
   'details',
   'partnerships',
@@ -92,8 +98,18 @@ export function tabsWithChanges(dirtyIds: readonly string[]): Set<EditTabId> {
   return out
 }
 
-/** The tab after this one, for the "Next" button at the end of a tab. Null on the last. */
-export function nextTab(id: EditTabId): (typeof EDIT_TABS)[number] | null {
-  const i = EDIT_TABS.findIndex((t) => t.id === id)
-  return i >= 0 ? (EDIT_TABS[i + 1] ?? null) : null
+export type EditTab = (typeof EDIT_TABS)[number]
+
+/**
+ * The tab after this one, for the "Next" button at the end of a tab. Null on
+ * the last. `tabs` is the tabs the page shows, when some are hidden.
+ */
+export function nextTab(id: EditTabId, tabs: readonly EditTab[] = EDIT_TABS): EditTab | null {
+  const i = tabs.findIndex((t) => t.id === id)
+  return i >= 0 ? (tabs[i + 1] ?? null) : null
+}
+
+/** The tabs with at least one card the page has. Basics always shows. */
+export function visibleTabs(hasCard: (id: string) => boolean): EditTab[] {
+  return EDIT_TABS.filter((t) => t.id === DEFAULT_TAB || TAB_SECTIONS[t.id].some(hasCard))
 }

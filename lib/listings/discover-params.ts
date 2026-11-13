@@ -64,6 +64,10 @@ export type DiscoverSearchParams = {
   partners?: string
   /** "Has deals" (part G). `1` is the only spelling. */
   deals?: string
+  /** Delivery apps, CSV: `order_on=doordash,instacart` (part D). */
+  order_on?: string
+  /** A 5-digit zip: pages stocked in a store there or nationwide (part D). */
+  sold_near?: string
   /** "Near You" — all three or none. See lib/listings/location-params.ts. */
   lat?: string
   lng?: string
@@ -109,6 +113,8 @@ export function hasFacetFilters(params: DiscoverSearchParams): boolean {
     params.attrs ||
     params.partners ||
     params.deals ||
+    params.order_on ||
+    params.sold_near ||
     isOpenNow(params)
   )
 }
@@ -163,6 +169,8 @@ export function parseDiscoverParams(
     open_now: isOpenNow(params),
     partners: params.partners === '1',
     deals: params.deals === '1',
+    order_on: csv(params.order_on),
+    sold_near: params.sold_near && /^\d{5}$/.test(params.sold_near) ? params.sold_near : undefined,
     lat: location?.lat,
     lng: location?.lng,
     radius: location?.radius,

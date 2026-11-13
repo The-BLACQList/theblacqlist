@@ -5,6 +5,7 @@ import {
   VALID_OWNERSHIP_LABELS,
 } from '@/lib/constants/listing'
 import { BUSINESS_LEVELS } from '@/lib/listings/levels'
+import { ORDER_PLATFORM_IDS } from '@/lib/listings/whereSold'
 
 /** Splits a comma-separated query param into a trimmed, de-duplicated array. */
 const csvArray = z
@@ -110,6 +111,16 @@ export const searchSchema = z.object({
   deals: z
     .union([z.literal('1'), z.literal('true'), z.literal('0'), z.literal('false')])
     .transform((v) => v === '1' || v === 'true')
+    .optional(),
+  // Delivery apps (part D): `order_on=doordash,instacart`. An unknown app is a
+  // 400, the same as an unknown level.
+  order_on: csvEnum(ORDER_PLATFORM_IDS),
+  // "Sold near" zip (part D). ZIP+4 is accepted and kept to its first five.
+  sold_near: z
+    .string()
+    .trim()
+    .regex(/^\d{5}(-\d{4})?$/, 'Enter a 5-digit zip code')
+    .transform((v) => v.slice(0, 5))
     .optional(),
   // "Near You" (C3.2). All three are optional and all three must travel
   // together — see the superRefine below. 500 miles is the upper bound because

@@ -33,6 +33,8 @@ export type SectionId =
   | 'facts'
   | 'happening-now'
   | 'info-rail'
+  | 'order-on'
+  | 'find-us'
   | 'deals'
   | 'at-a-glance'
   | 'map'
@@ -147,6 +149,26 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     gate: {},
     editor: { tool: 'Contact & hours', href: edit('contact') },
     isFilled: () => true,
+  },
+  {
+    // Delivery-app buttons (owner-experience round 2, part D): every plan,
+    // behind the orderWhereSold flag, edited on the Services tab.
+    id: 'order-on',
+    label: 'Order on',
+    templates: ALL,
+    gate: { flag: 'orderWhereSold' },
+    editor: { tool: 'Order on', href: edit('order-on') },
+    isFilled: (e) => (e.orderLinks?.length ?? 0) > 0,
+  },
+  {
+    // The stores that carry the business's products (part D), edited on the
+    // "Where to find us" tab.
+    id: 'find-us',
+    label: 'Find us at',
+    templates: ALL,
+    gate: { flag: 'orderWhereSold' },
+    editor: { tool: 'Where to find us', href: edit('where-sold') },
+    isFilled: (e) => (e.findUsAt?.length ?? 0) > 0,
   },
   {
     // Main's Deals section (part G, #328): Premium, behind the coupons flag,
@@ -428,6 +450,8 @@ export const TEMPLATE_SECTION_ORDER: Record<TemplateKey, readonly SectionId[]> =
     'hero',
     'info-rail',
     'at-a-glance',
+    'order-on',
+    'find-us',
     'deals',
     'locations',
     'links',
@@ -455,6 +479,8 @@ export const TEMPLATE_SECTION_ORDER: Record<TemplateKey, readonly SectionId[]> =
     'hero',
     'info-rail',
     'at-a-glance',
+    'order-on',
+    'find-us',
     'deals',
     'locations',
     'services',
@@ -481,6 +507,8 @@ export const TEMPLATE_SECTION_ORDER: Record<TemplateKey, readonly SectionId[]> =
     'hero',
     'info-rail',
     'at-a-glance',
+    'order-on',
+    'find-us',
     'deals',
     'locations',
     'portfolio',
@@ -580,6 +608,8 @@ export function applyTierGates(
     ...entity,
     logo: allowed('logo') ? entity.logo : undefined,
     team: allowed('team') ? sliceTo(entity.team, limits.teamMembers) : undefined,
+    orderLinks: allowed('order-on') ? entity.orderLinks : undefined,
+    findUsAt: allowed('find-us') ? entity.findUsAt : undefined,
     deals: allowed('deals') ? sliceTo(entity.deals, DEALS_ON_MAX) : undefined,
     booking: allowed('booking') ? entity.booking : undefined,
     locations: allowed('locations')

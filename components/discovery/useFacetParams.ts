@@ -115,6 +115,8 @@ export const FACET_KEYS = [
   'open_now',
   'partners',
   'deals',
+  'order_on',
+  'sold_near',
 ]
 
 /**

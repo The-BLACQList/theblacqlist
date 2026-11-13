@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { VALID_ENTITY_TYPES } from '@/lib/constants/listing'
 import { isFeatureEnabled } from '@/lib/env'
 import { BUSINESS_LEVELS, isBusinessLevel } from '@/lib/listings/levels'
+import { ORDER_PLATFORM_IDS, isZip } from '@/lib/listings/whereSold'
 import { expandSearchQuery } from '@/lib/search/wordFamilies'
 import {
   expandTypeCategoryIds,
@@ -132,6 +133,13 @@ export interface RawFacetParams {
   partners?: boolean
   /** Only Premium pages with a deal up now (part G). Ignored while the coupons flag is off. */
   deals?: boolean
+  /**
+   * Delivery apps (part D), multi-select, validated upstream. Matches a page
+   * linked on ANY of them. Ignored while the orderWhereSold flag is off.
+   */
+  order_on?: string[]
+  /** A 5-digit zip: pages stocked in a store there or nationwide (part D). Same flag. */
+  sold_near?: string
   /** "Near You" — all three or none. Validated upstream (searchSchema). */
   lat?: number
   lng?: number
@@ -233,6 +241,13 @@ export interface ResolvedFacetParams {
    * call without the filter resolves against the older functions too.
    */
   p_has_deals: true | null
+  /**
+   * Delivery apps and "sold near" zip (part D), added by
+   * 20261118000000_order_where_sold.sql. Never sent as NULL (see rpcArgs), so a
+   * call without them resolves against the older functions too.
+   */
+  p_platforms: string[] | null
+  p_stockist_zip: string | null
 }
 
 /** The two keys only the 20260924000000 signatures accept. */
@@ -267,6 +282,8 @@ export function rpcArgs<T extends Record<string, unknown>>(args: T): Record<stri
   if (out.p_levels == null) delete out.p_levels
   if (out.p_open_to_partnerships == null) delete out.p_open_to_partnerships
   if (out.p_has_deals == null) delete out.p_has_deals
+  if (out.p_platforms == null) delete out.p_platforms
+  if (out.p_stockist_zip == null) delete out.p_stockist_zip
   return out
 }
 
@@ -294,7 +311,9 @@ async function callWithTypeFallback(
     !TYPE_KEYS.some((k) => k in args) ||
     'p_levels' in args ||
     'p_open_to_partnerships' in args ||
-    'p_has_deals' in args
+    'p_has_deals' in args ||
+    'p_platforms' in args ||
+    'p_stockist_zip' in args
   )
     return first
   return rpc(fn, withoutTypeKeys(args))
@@ -426,6 +445,10 @@ export async function resolveFacetParams(
   const unknownLevels = (raw.level ?? []).filter((l) => l && !isBusinessLevel(l))
   if (unknownLevels.length > 0) unresolved.levels = unknownLevels
 
+  const whereSoldOn = isFeatureEnabled('orderWhereSold')
+  const platforms = ORDER_PLATFORM_IDS.filter((p) => raw.order_on?.includes(p))
+  const soldNear = isZip(raw.sold_near) ? raw.sold_near : null
+
   const price =
     raw.price?.filter((p): p is PriceRange => (PRICE_RANGES as string[]).includes(p)) ?? []
 
@@ -456,6 +479,9 @@ export async function resolveFacetParams(
       p_open_to_partnerships: raw.partners ? true : null,
       // Off, the filter is dropped rather than sent to a database that may not have it.
       p_has_deals: raw.deals && isFeatureEnabled('coupons') ? true : null,
+      // Same for part D's two filters.
+      p_platforms: platforms.length > 0 && whereSoldOn ? platforms : null,
+      p_stockist_zip: soldNear && whereSoldOn ? soldNear : null,
     },
     unresolved,
   }

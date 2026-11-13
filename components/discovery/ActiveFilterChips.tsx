@@ -17,6 +17,7 @@ import {
 } from '@/components/discovery/facetConstants'
 import { parseLocationFromQuery } from '@/lib/listings/location-params'
 import { isBusinessLevel, LEVEL_META } from '@/lib/listings/levels'
+import { isOrderPlatform, ORDER_PLATFORMS } from '@/lib/listings/whereSold'
 
 interface ActiveFilterChipsProps {
   groups: FacetGroupData[]
@@ -111,6 +112,17 @@ export function ActiveFilterChips({
 
   if (searchParams.get('deals') === '1')
     chips.push({ label: 'Has deals', onRemove: () => setParam('deals', '') })
+
+  // One chip per delivery app, like levels (part D).
+  for (const value of getCsv('order_on'))
+    chips.push({
+      label: isOrderPlatform(value) ? `Order on ${ORDER_PLATFORMS[value].label}` : value,
+      onRemove: () => removeCsv('order_on', value),
+    })
+
+  const soldNear = searchParams.get('sold_near')
+  if (soldNear)
+    chips.push({ label: `Sold near ${soldNear}`, onRemove: () => setParam('sold_near', '') })
 
   for (const p of getCsv('price')) chips.push({ label: p, onRemove: () => removeCsv('price', p) })
 

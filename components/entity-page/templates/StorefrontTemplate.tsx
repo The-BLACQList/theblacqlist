@@ -13,6 +13,8 @@ import { EntityOfferingsSection } from '@/components/entity-page/EntityOfferings
 import { EntityAttributes } from '@/components/entity-page/EntityAttributes'
 import { EntityFaqSection } from '@/components/entity-page/EntityFaqSection'
 import { EntityDeals } from '@/components/entity-page/EntityDeals'
+import { EntityOrderOn } from '@/components/entity-page/EntityOrderOn'
+import { EntityFindUsAt } from '@/components/entity-page/EntityFindUsAt'
 import { EntityUpcomingEvents } from '@/components/entity-page/EntityUpcomingEvents'
 import { EntityHiringBlock } from '@/components/entity-page/EntityHiringBlock'
 import { EntityMediaGallery } from '@/components/entity-page/EntityMediaGallery'
@@ -62,10 +64,12 @@ export function StorefrontTemplate({
   const hasShop = Boolean(entity.shop && entity.shop.items.length > 0)
 
   const hasDeals = (entity.deals?.length ?? 0) > 0
+  const hasFindUs = (entity.findUsAt?.length ?? 0) > 0
 
   const tabs: AnchorTab[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'visit', label: 'Visit' },
+    ...(hasFindUs ? [{ id: 'find-us', label: 'Find us at' }] : []),
     ...(hasDeals ? [{ id: 'deals', label: 'Deals' }] : []),
     ...(hasStory ? [{ id: 'about', label: 'About' }] : []),
     ...(hasOfferings ? [{ id: 'offerings', label: 'Offerings' }] : []),
@@ -101,6 +105,17 @@ export function StorefrontTemplate({
         <div id="visit" className="scroll-mt-32">
           <EntityAtAGlance entity={entity} mode={mode} />
         </div>
+      </SectionMark>
+
+      {/* Part D. On a sample page the store links lead nowhere real, so the
+          buttons are inert there, as Deals is. */}
+      <SectionMark id="order-on">
+        <div inert={mode === 'example' || undefined} className="contents">
+          <EntityOrderOn links={entity.orderLinks} businessName={entity.name} />
+        </div>
+      </SectionMark>
+      <SectionMark id="find-us">
+        <EntityFindUsAt stockists={entity.findUsAt} />
       </SectionMark>
 
       {/* Main's Deals section (part G, #328). On a sample page the wrapper is

@@ -22,6 +22,7 @@ import type { TreeCategory } from '@/lib/categories/tree'
 import { MoreFilters } from '@/components/discovery/MoreFilters'
 import { countMoreFilters } from '@/components/discovery/moreFiltersCount'
 import { BUSINESS_LEVELS, LEVEL_META } from '@/lib/listings/levels'
+import { WhereToBuyFilter } from '@/components/discovery/WhereToBuyFilter'
 
 function optionClass(isActive: boolean): string {
   return cn(
@@ -59,6 +60,8 @@ export interface FacetSidebarProps {
   hideCityFilter?: boolean
   /** Shows the "Has deals" filter (part G): the coupons flag, read on the server. */
   showDeals?: boolean
+  /** Shows "Where to buy" (part D): the orderWhereSold flag, read on the server. */
+  showOrderWhereSold?: boolean
   className?: string
 }
 
@@ -69,6 +72,7 @@ export function FacetSidebar({
   counts,
   hideCityFilter = false,
   showDeals = false,
+  showOrderWhereSold = false,
   className,
 }: FacetSidebarProps) {
   const { searchParams, setParam, setParams, getCsv, toggleCsv } = useFacetParams()
@@ -89,6 +93,7 @@ export function FacetSidebar({
   const openNow = searchParams.get('open_now') === '1'
   const partners = searchParams.get('partners') === '1'
   const deals = searchParams.get('deals') === '1'
+  const whereToBuyActive = getCsv('order_on').length > 0 || !!searchParams.get('sold_near')
   const selectedPrices = getCsv('price')
   const selectedAttrs = getCsv('attrs')
   // Multi-select as of 2026-09-04: Products & Services is four location types at
@@ -242,6 +247,14 @@ export function FacetSidebar({
               )
             })}
           </div>
+        </FilterSection>
+      )}
+
+      {/* Delivery apps and "sold near" zip (part D). Shown when set even with
+          the flag off, so the filter can be cleared. */}
+      {(showOrderWhereSold || whereToBuyActive) && (
+        <FilterSection title="Where to buy" active={whereToBuyActive}>
+          <WhereToBuyFilter />
         </FilterSection>
       )}
 

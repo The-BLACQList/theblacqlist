@@ -76,6 +76,7 @@ export type FeatureFlag =
   | 'marketplaceOpen'
   | 'messaging'
   | 'ocrExtraction'
+  | 'orderWhereSold'
   | 'ownerReceiptReview'
   | 'paidPostings'
   | 'postingSubmissions'
@@ -133,6 +134,14 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // preview, off in production) lets it be reviewed on Previews; production
   // also needs the 20261116000000 migration (GATE-DATA) first.
   happeningNow: 'FEATURE_HAPPENING_NOW',
+  // Gates "Order on" platforms and "Find us at" stores (owner-experience round
+  // 2, part D): the Order on card on the edit page's Services tab, the "Where
+  // to find us" tab, their actions, the Order on and Find us at sections on
+  // business pages and the "Order on" and "Sold near" filters on Discover. Off,
+  // none of it shows and the actions refuse. The default (on in preview, off in
+  // production) lets it be reviewed on Previews; production also needs the
+  // 20261118000000 migration (GATE-DATA) first.
+  orderWhereSold: 'FEATURE_ORDER_WHERE_SOLD',
   // Gates in-app customer -> business messaging (2026-11-13): the in-app
   // "Send Message" composer on listing pages, /account/messages,
   // /dashboard/messages, the dashboard Inbox switch, the unread badges and every

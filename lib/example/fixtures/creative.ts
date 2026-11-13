@@ -359,6 +359,29 @@ export function creativeEntity(now: Date): EntityPageData {
         photo: null,
       },
     ],
+    orderLinks: [
+      { platform: 'instacart', label: 'Instacart', url: 'https://www.instacart.com/store/example' },
+    ],
+    findUsAt: [
+      {
+        id: 'studio-stockist-1',
+        chainSlug: 'target',
+        name: 'Target',
+        nationwide: true,
+        position: 0,
+        cities: [],
+        zips: [],
+      },
+      {
+        id: 'studio-stockist-2',
+        chainSlug: null,
+        name: 'Sample Paper Goods',
+        nationwide: false,
+        position: 1,
+        cities: ['Atlanta, GA'],
+        zips: ['30307'],
+      },
+    ],
     deals: [
       {
         id: 'studio-deal-2',

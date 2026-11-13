@@ -356,7 +356,7 @@ describe('wiring', () => {
   })
 
   it('never retries a search without p_has_deals', () => {
-    expect(read('lib/listings/facets.ts')).toMatch(/'p_has_deals' in args\s*\)\s*return first/)
+    expect(read('lib/listings/facets.ts')).toMatch(/'p_has_deals' in args \|\|/)
   })
 
   it('the Discover filter is behind the flag', () => {
@@ -393,7 +393,7 @@ describe('wiring', () => {
   })
 
   it('the editor is on the Services tab, behind the flag', () => {
-    expect(read('lib/listings/editTabs.ts')).toContain("services: ['services', 'deals', 'details']")
+    expect(read('lib/listings/editTabs.ts')).toContain("services: ['services', 'order-on', 'deals', 'details']")
     expect(read('app/dashboard/pages/[entityId]/edit/page.tsx')).toContain(
       "isFeatureEnabled('coupons')"
     )
