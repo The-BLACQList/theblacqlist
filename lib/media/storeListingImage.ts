@@ -21,7 +21,8 @@ import type { PreparedImage } from '@/lib/media/prepareImage'
 //     as an orphan nothing points at.
 // =============================================================================
 
-export type ListingImageRole = 'logo' | 'cover' | 'gallery'
+/** 'post' is a Happening now image (part F): stored like a cover, no media row. */
+export type ListingImageRole = 'logo' | 'cover' | 'gallery' | 'post'
 
 export type StoreListingImageResult =
   | { ok: true; path: string; mediaId: string | null }

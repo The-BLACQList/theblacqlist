@@ -24,7 +24,8 @@ export type EditTabId = (typeof EDIT_TABS)[number]['id']
  * card the page doesn't have (hours on a creator page) is simply skipped.
  */
 export const TAB_SECTIONS: Record<EditTabId, readonly string[]> = {
-  basics: ['basics', 'about', 'role', 'collective-name'],
+  // 'happening-now' is the edit page only (part F); a new page has no posts.
+  basics: ['happening-now', 'basics', 'about', 'role', 'collective-name'],
   contact: ['contact', 'hours', 'main-button'],
   media: ['photos', 'video'],
   services: ['services', 'details'],
@@ -34,6 +35,7 @@ export const TAB_SECTIONS: Record<EditTabId, readonly string[]> = {
 
 /** The order of the one long scroll a new page keeps. Same cards as the tabs. */
 export const SCROLL_ORDER: readonly string[] = [
+  'happening-now',
   'basics',
   'about',
   'contact',

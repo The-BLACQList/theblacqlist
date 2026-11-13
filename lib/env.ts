@@ -70,6 +70,7 @@ export type FeatureFlag =
   | 'aiOnboarding'
   | 'collectiveOpen'
   | 'earnedFeatured'
+  | 'happeningNow'
   | 'jobsOpen'
   | 'marketplaceOpen'
   | 'messaging'
@@ -117,6 +118,13 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // production is the GATE-DATA write: the first run clears every flag that
   // was not earned that week (27 seeded rows at the time of writing).
   earnedFeatured: 'FEATURE_EARNED_FEATURED',
+  // Gates Happening now posts (owner-experience round 2, part F): the banner
+  // at the top of a business page, the strip on city and category pages, the
+  // owner's Happening now card and page, the post actions and the click
+  // redirect. Off, none of it shows and the actions refuse. The default (on in
+  // preview, off in production) lets it be reviewed on Previews; production
+  // also needs the 20261116000000 migration (GATE-DATA) first.
+  happeningNow: 'FEATURE_HAPPENING_NOW',
   // Gates in-app customer -> business messaging (2026-11-13): the in-app
   // "Send Message" composer on listing pages, /account/messages,
   // /dashboard/messages, the dashboard Inbox switch, the unread badges and every

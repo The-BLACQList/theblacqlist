@@ -163,6 +163,11 @@ export interface TierLimits {
    * The automatic "Message" button never counts.
    */
   extraButtons: number
+  /**
+   * Happening now posts that are on at once, live or scheduled (part F).
+   * Drafts and ended posts don't count.
+   */
+  activePosts: number | null
 }
 
 export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
@@ -180,6 +185,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     descriptionChars: 300,
     analyticsHistoryDays: 0,
     extraButtons: 0,
+    activePosts: 0,
   },
   starter: {
     photos: 10,
@@ -195,6 +201,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     descriptionChars: null,
     analyticsHistoryDays: 30,
     extraButtons: 1,
+    activePosts: 1,
   },
   growth: {
     photos: 25,
@@ -210,6 +217,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     descriptionChars: null,
     analyticsHistoryDays: 365,
     extraButtons: 2,
+    activePosts: 3,
   },
   premium: {
     photos: 50,
@@ -229,6 +237,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     descriptionChars: null,
     analyticsHistoryDays: 365,
     extraButtons: 3,
+    activePosts: null,
   },
 }
 
@@ -253,6 +262,11 @@ export const PHOTO_LIMITS: Record<PlanSlug, number | null> = {
 // because `photoLimit` predates the limits map — its signature must not change.
 export function photoLimit(tier: string | null): number | null {
   return limitsFor(tier).photos
+}
+
+/** Happening now posts on at once (part F). `null` means no limit. */
+export function activePostLimit(tier: string | null): number | null {
+  return limitsFor(tier).activePosts
 }
 
 export function videoLimit(tier: string | null): number | null {

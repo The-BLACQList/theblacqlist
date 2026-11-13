@@ -194,7 +194,7 @@ function MediaCard({
 
 // Resize and re-encode to JPEG at up to 2400px on the longest side, the largest
 // we store (IMAGE_MAX_EDGE), so a good photo keeps all the detail the page can show.
-async function compressImage(file: File, maxPx = 2400, quality = 0.9): Promise<File> {
+export async function compressImage(file: File, maxPx = 2400, quality = 0.9): Promise<File> {
   return new Promise((resolve) => {
     const img = new window.Image()
     const url = URL.createObjectURL(file)

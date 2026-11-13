@@ -1,4 +1,5 @@
 import {
+  activePostLimit,
   attributeLimit,
   canAccess,
   descriptionCharLimit,
@@ -203,6 +204,27 @@ export function checkButtonAdd(
   if (limit === 0) return 'Extra buttons are part of Starter. Upgrade to add one to your page.'
   const what = limit === 1 ? '1 extra button' : `up to ${limit} extra buttons`
   return `Your plan includes ${what}. ${makeRoom(tier, 'Upgrade to add more.', growthOpen, premiumOpen)}`
+}
+
+/**
+ * Turning one Happening now post on (part F): posting it, scheduling it, or
+ * turning a draft on. `activeCount` is how many other posts are on now, live or
+ * scheduled. Editing a post that is already on, ending one and deleting one are
+ * always allowed.
+ */
+export function checkPostAdd(
+  tier: string | null,
+  activeCount: number,
+  growthOpen = false,
+  premiumOpen = false
+): string | null {
+  const limit = activePostLimit(tier)
+  if (limit === null || activeCount < limit) return null
+  if (limit === 0) return 'Happening now posts are part of Starter. Upgrade to post one on your page.'
+  const what = limit === 1 ? '1 post at a time' : `up to ${limit} posts at a time`
+  const target = upgradeTarget(tier, growthOpen, premiumOpen)
+  const next = target ? `End one, or upgrade to ${target} for more.` : 'End one to post another.'
+  return `Your plan includes ${what}. ${next}`
 }
 
 /**

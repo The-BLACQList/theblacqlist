@@ -42,6 +42,31 @@ export function trackServerEvent(input: TrackEventInput): void {
 }
 
 /**
+ * Several events in one insert, after the response (the Happening now strip
+ * counts a view for each post it shows). Best effort, like trackServerEvent.
+ */
+export function trackServerEvents(inputs: readonly TrackEventInput[]): void {
+  if (inputs.length === 0) return
+  after(async () => {
+    try {
+      const serviceClient = createServiceClient()
+      await serviceClient.from('analytics_events').insert(
+        inputs.map((input) => ({
+          event_name: input.event_name,
+          entity_id: input.entity_id ?? null,
+          entity_type: input.entity_type ?? null,
+          user_id: input.user_id ?? null,
+          session_id: input.session_id ?? null,
+          properties: (input.properties ?? {}) as Json,
+        }))
+      )
+    } catch {
+      // best-effort analytics — never throw
+    }
+  })
+}
+
+/**
  * Resolves the current user_id from the session (best-effort),
  * then fires a fire-and-forget analytics insert.
  * Safe to call in any Server Action or Route Handler.

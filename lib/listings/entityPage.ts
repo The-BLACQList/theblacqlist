@@ -9,6 +9,8 @@ import { isCreatorGroup } from '@/lib/listings/creatorAttributes'
 import { mergeRelated, RELATED_LIMIT } from '@/lib/listings/related'
 import { listingVideoPublicUrl } from '@/lib/video/listingVideo'
 import { resolvePageButtons, toExtraButtons } from '@/lib/listings/pageButtons'
+import { isFeatureEnabled } from '@/lib/env'
+import { shownPosts, toOwnerPosts, toPublicPost } from '@/lib/listings/happeningNow'
 import type {
   EntityPageData,
   EntityAttributeGroup,
@@ -196,6 +198,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     ? relatedBase().eq('city_id', raw.city_id)
     : relatedBase().is('city_id', null)
 
+  const nowIso = new Date().toISOString()
   const [
     { data: servicesData },
     { data: mediaData },
@@ -210,6 +213,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     { data: faqData },
     { data: buttonData },
     { data: criteriaData },
+    { data: postData },
   ] = await Promise.all([
     supabase
       .from('services')
@@ -288,6 +292,20 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
       .select('id, name, display_order')
       .eq('is_active', true)
       .order('display_order', { ascending: true }),
+    // Happening now posts (part F). Fail-soft, and only read with the flag on.
+    // Live ones only, filtered here as well as in RLS: the owner's own client
+    // can also read their drafts and scheduled posts.
+    postsShowOn(raw.entity_type)
+      ? sb
+          .from('listing_posts')
+          .select('id, headline, body, image_path, button_label, button_url, starts_at, ends_at, status, created_at')
+          .eq('listing_id', raw.id)
+          .eq('status', 'active')
+          .lte('starts_at', nowIso)
+          .gt('ends_at', nowIso)
+          .order('created_at', { ascending: true })
+          .limit(50)
+      : Promise.resolve({ data: null }),
   ])
 
   // After a move to a lower plan, content over the new plan's limits is hidden
@@ -798,10 +816,21 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
       raw.entity_type === 'job' || raw.entity_type === 'event'
         ? []
         : resolvePageButtons(toExtraButtons(buttonData), raw.tier, det?.phone ?? null),
+    // Live posts the plan allows, soonest ending first (lib/listings/happeningNow.ts).
+    happeningNow: postsShowOn(raw.entity_type)
+      ? shownPosts(toOwnerPosts(postData), raw.tier, new Date(nowIso)).shown.map((p) =>
+          toPublicPost(p, resolveMediaPath)
+        )
+      : [],
     related,
     images,
     reviews,
     reviewCriteria,
     reviewCriteriaAverages,
   }
+}
+
+/** Happening now posts show on business pages, with the flag on. Jobs and events are dated already. */
+function postsShowOn(entityType: string): boolean {
+  return isFeatureEnabled('happeningNow') && entityType !== 'job' && entityType !== 'event'
 }

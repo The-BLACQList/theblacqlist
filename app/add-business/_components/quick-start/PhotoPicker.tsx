@@ -11,7 +11,7 @@ import { HINT_CLASS } from './shared'
 // one logo, one cover, and as many page photos as Free allows. Nothing comes
 // in until they tap "Use this". The images load straight from their own site.
 
-export type PhotoRole = ListingImageRole | 'skip'
+export type PhotoRole = Exclude<ListingImageRole, 'post'> | 'skip'
 export type PhotoRoles = Record<string, PhotoRole>
 
 /** New pages start on Free. */

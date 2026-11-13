@@ -9,8 +9,9 @@ import { listingMetaText } from '@/lib/listings/seo'
 import { buildJobPostingJsonLd } from '@/lib/listings/jobPosting'
 import { resolveMediaPath } from '@/lib/listings/coverImage'
 import { trackServerEvent } from '@/lib/analytics/server'
-import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
+import { ANALYTICS_EVENTS, SERVER_ONLY_EVENTS } from '@/lib/analytics/constants'
 import { EntityQuickActionBar } from '@/components/entity-page/EntityQuickActionBar'
+import { HappeningNowBanner } from '@/components/entity-page/HappeningNowBanner'
 import { EntityTemplateOutlet } from '@/components/entity-page/templates/EntityTemplateOutlet'
 import { recordTourWitness } from '@/lib/tour/witness'
 import { showShoppedHere } from '@/lib/spend/receipt-prefill'
@@ -192,6 +193,19 @@ export default async function EntityPage({ params }: PageProps) {
     entity_type: 'listing',
     user_id: user?.id ?? null,
   })
+  // Happening now (part F): the banner shows the first post, so that one is
+  // the one counted as seen. getEntityPageFromDB fills it only with the flag on.
+  const happeningNow = entity.happeningNow ?? []
+  const firstPost = happeningNow[0]
+  if (firstPost) {
+    trackServerEvent({
+      event_name: SERVER_ONLY_EVENTS.POST_VIEW,
+      entity_id: entity.id,
+      entity_type: 'listing',
+      user_id: user?.id ?? null,
+      properties: { post_id: firstPost.id, surface: 'page' },
+    })
+  }
   // Tour evidence: an enrolled tester opened a listing that isn't their own —
   // the ownership check lives inside recordTourWitness. Swallows all failures.
   await recordTourWitness('listing_opened', { listingOwnerId: entity.owner_user_id })
@@ -269,6 +283,9 @@ export default async function EntityPage({ params }: PageProps) {
           collectiveOpen: isFeatureEnabled('collectiveOpen'),
         })}
       />
+
+      {/* Happening now posts (part F), above every template's hero. */}
+      {happeningNow.length > 0 && <HappeningNowBanner posts={happeningNow} now={new Date()} />}
 
       {/* Every listing type renders through its own template — the outlet
           picks it, and each template owns its full page including the

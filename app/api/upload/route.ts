@@ -53,7 +53,8 @@ import {
 // Leaving an unowned write path open to a private bucket bought nothing.
 const ALLOWED_BUCKETS = new Set(['listing-media', 'verification-docs'])
 
-const LISTING_MEDIA_ROLES = new Set(['logo', 'cover', 'gallery'])
+// 'post': a Happening now image (part F). Like a cover, it adds no media row.
+const LISTING_MEDIA_ROLES = new Set(['logo', 'cover', 'gallery', 'post'])
 
 // A claim upload attaches to a client-generated id before any claim row exists;
 // a listing-verification upload attaches to a listing the caller must own.
@@ -82,7 +83,9 @@ const BUCKET_MIMES: Record<string, Set<string>> = {
 
 function getSizeLimit(bucket: string, mediaRole: string | null): number {
   if (bucket === 'listing-media') {
-    return listingImageLimit(mediaRole === 'logo' || mediaRole === 'cover' ? mediaRole : 'gallery')
+    return listingImageLimit(
+      mediaRole === 'logo' || mediaRole === 'cover' || mediaRole === 'post' ? mediaRole : 'gallery'
+    )
   }
   return 10 * 1024 * 1024
 }

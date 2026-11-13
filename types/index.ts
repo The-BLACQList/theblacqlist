@@ -2,6 +2,7 @@
 
 import { VALID_ENTITY_TYPES, VALID_LOCATION_TYPES } from '@/lib/constants/listing'
 import type { ListingMessaging } from '@/lib/messaging/rules'
+import type { PublicPost } from '@/lib/listings/happeningNow'
 
 /**
  * Both unions are DERIVED from the canonical constants rather than retyped, because
@@ -396,6 +397,11 @@ export interface EntityPageData {
    * plan and resolved to real links. Optional so older fixtures still type.
    */
   buttons?: { id: string; href: string; label: string }[]
+  /**
+   * Live Happening now posts the plan allows, soonest ending first (part F).
+   * Optional so older fixtures still type.
+   */
+  happeningNow?: PublicPost[]
   related: DiscoveryEntity[]
   images: GalleryImage[]
   reviews: ReviewItem[]
