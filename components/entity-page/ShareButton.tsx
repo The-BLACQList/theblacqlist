@@ -1,81 +1,86 @@
 'use client'
 
 import { useState } from 'react'
-import { Share2, Check } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Share2 } from 'lucide-react'
+
+import { ShareSheet } from '@/components/share/ShareSheet'
 import { track } from '@/lib/analytics/client'
 import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
+import { profileCaption } from '@/lib/share/captions'
+import { cleanShareUrl } from '@/lib/share/links'
+import { cn } from '@/lib/utils'
 
 interface Props {
   listingName: string
   listingId: string
+  listingSlug: string
+  cityName?: string | null
+  categoryName?: string | null
   className?: string
   /** Sizes the icon so a caller can match its own button scale exactly. */
   iconClassName?: string
   tabIndex?: number
 }
 
+/**
+ * Opens the share sheet for a business. Opening it is `share_sheet_opened`;
+ * `share_initiated` fires only when the visitor picks where to share, so the
+ * owner dashboard's Shares counts shares, not curiosity.
+ */
 export function ShareButton({
   listingName,
   listingId,
+  listingSlug,
+  cityName,
+  categoryName,
   className,
   iconClassName,
   tabIndex,
 }: Props) {
-  const [copied, setCopied] = useState(false)
+  const [open, setOpen] = useState(false)
+  const [url, setUrl] = useState('')
 
-  async function handleShare() {
-    const url = window.location.href
-    const title = `${listingName} | The BLACQList`
-    const canNativeShare = typeof navigator !== 'undefined' && 'share' in navigator
-
-    // Fire-and-forget. Goes through track() so it carries a session_id and uses
-    // sendBeacon — which matters here because navigator.share can navigate away
-    // before a plain fetch resolves. The hand-rolled fetch this replaced posted
-    // 'listing_shared', which is not in ANALYTICS_EVENTS, so the route rejected
-    // every share with a 400 and the owner dashboard's Shares was always zero.
+  function handleOpen() {
+    setUrl(cleanShareUrl(window.location.href))
+    setOpen(true)
     track({
-      event_name: ANALYTICS_EVENTS.SHARE_INITIATED,
+      event_name: ANALYTICS_EVENTS.SHARE_SHEET_OPENED,
       entity_type: 'listing',
       entity_id: listingId,
-      properties: { source: 'entity_page', method: canNativeShare ? 'native_share' : 'copy_link' },
+      properties: { source: 'entity_page' },
     })
-
-    if (canNativeShare) {
-      try {
-        await navigator.share({ title, url })
-        return
-      } catch {
-        // User cancelled or API unavailable — fall through to clipboard
-      }
-    }
-
-    // Clipboard fallback
-    try {
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // Clipboard not available — silently fail
-    }
   }
 
+  const card = `/api/share-card/listing/${encodeURIComponent(listingSlug)}`
+
   return (
-    <button
-      type="button"
-      onClick={handleShare}
-      tabIndex={tabIndex}
-      aria-label={copied ? 'Link copied' : 'Share this business'}
-      className={cn(
-        'inline-flex items-center justify-center size-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors',
-        className
-      )}
-    >
-      {copied ? (
-        <Check className={cn('size-4', iconClassName)} aria-hidden="true" />
-      ) : (
+    <>
+      <button
+        type="button"
+        onClick={handleOpen}
+        tabIndex={tabIndex}
+        aria-label="Share this business"
+        aria-haspopup="dialog"
+        className={cn(
+          'inline-flex items-center justify-center size-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors',
+          className
+        )}
+      >
         <Share2 className={cn('size-4', iconClassName)} aria-hidden="true" />
+      </button>
+      {url && (
+        <ShareSheet
+          open={open}
+          onOpenChange={setOpen}
+          title={`Share ${listingName}`}
+          caption={profileCaption({ businessName: listingName, categoryName, cityName })}
+          url={url}
+          campaign="profile_share"
+          businessName={listingName}
+          images={{ story: `${card}?format=story`, feed: `${card}?format=feed` }}
+          analytics={{ entityId: listingId, entityType: 'listing', source: 'entity_page' }}
+        />
       )}
-    </button>
+    </>
   )
 }
