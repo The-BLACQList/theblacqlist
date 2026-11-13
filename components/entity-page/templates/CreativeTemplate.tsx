@@ -20,7 +20,14 @@ import { EntityAtAGlance } from '@/components/entity-page/EntityAtAGlance'
 import { EntityMediaGallery } from '@/components/entity-page/EntityMediaGallery'
 import { EntityVideoSection } from '@/components/entity-page/EntityVideoSection'
 import { EntityUpcomingEvents } from '@/components/entity-page/EntityUpcomingEvents'
-import { EntityNowHiring } from '@/components/entity-page/EntityNowHiring'
+import { EntityHiringBlock } from '@/components/entity-page/EntityHiringBlock'
+import { EntityCouponsSection } from '@/components/entity-page/EntityCouponsSection'
+import { EntityLocationsSection } from '@/components/entity-page/EntityLocationsSection'
+import { EntityTeamSection } from '@/components/entity-page/EntityTeamSection'
+import { EntityShopSection } from '@/components/entity-page/EntityShopSection'
+import { EntityBookingSection } from '@/components/entity-page/EntityBookingSection'
+import { SectionMark } from '@/components/entity-page/SectionMark'
+import { EXAMPLE_BOOKING_NOTE } from '@/lib/entity-page/sections'
 import { EntityPlatformActivity } from '@/components/entity-page/EntityPlatformActivity'
 import { EntityReviewsSection } from '@/components/entity-page/EntityReviewsSection'
 import { EntityRelatedDiscovery } from '@/components/entity-page/EntityRelatedDiscovery'
@@ -37,10 +44,14 @@ export function CreativeTemplate({
   userId,
   isOwner,
   hasReviewed,
+  mode = 'live',
 }: EntityTemplateProps) {
   const hasPortfolio = entity.images.length > 0
   const hasCapabilities = entity.details.services.length > 0
   const hasStory = Boolean(entity.details.description?.trim())
+  const hasShop = Boolean(entity.shop && entity.shop.items.length > 0)
+  // The full gallery and the reel share one source; the name differs per template.
+  const hasGallery = hasPortfolio
 
   const hasDeals = (entity.deals?.length ?? 0) > 0
 
@@ -50,6 +61,7 @@ export function CreativeTemplate({
     ...(hasDeals ? [{ id: 'deals', label: 'Deals' }] : []),
     ...(hasPortfolio ? [{ id: 'portfolio', label: 'Portfolio' }] : []),
     ...(hasCapabilities ? [{ id: 'capabilities', label: 'Capabilities' }] : []),
+    ...(hasShop ? [{ id: 'shop', label: 'Shop' }] : []),
     ...(hasStory ? [{ id: 'about', label: 'About' }] : []),
     ...(hasPortfolio ? [{ id: 'gallery', label: 'Gallery' }] : []),
     { id: 'reviews', label: 'Reviews' },
@@ -57,45 +69,85 @@ export function CreativeTemplate({
 
   return (
     <>
-      <TemplateHero entity={entity} initialSaved={initialSaved} variant="creative" />
+      <SectionMark id="hero">
+        <TemplateHero entity={entity} initialSaved={initialSaved} variant="creative" mode={mode} />
+      </SectionMark>
       <EntityAnchorTabs tabs={tabs} />
-      <div id="overview" className="scroll-mt-32">
-        <TemplateInfoRail entity={entity} />
-      </div>
+      <SectionMark id="info-rail">
+        <div id="overview" className="scroll-mt-32">
+          <TemplateInfoRail entity={entity} />
+        </div>
+      </SectionMark>
+
+      <SectionMark id="coupons">
+        <EntityCouponsSection coupons={entity.coupons} />
+      </SectionMark>
 
       {/* At a Glance sits right under the quick facts on every template
           (ticket 140). Unconditional, as on Storefront, because it also
           carries the social row, which a page can have with no address,
           hours, phone or email. */}
-      <div id="visit" className="scroll-mt-32">
-        <EntityAtAGlance entity={entity} />
-      </div>
+      <SectionMark id="at-a-glance">
+        <div id="visit" className="scroll-mt-32">
+          <EntityAtAGlance entity={entity} />
+        </div>
+      </SectionMark>
 
-      <EntityDeals listingId={entity.id} deals={entity.deals} now={new Date()} />
+      <SectionMark id="locations">
+        <EntityLocationsSection locations={entity.locations} />
+      </SectionMark>
 
+      {/* Main column + sticky trust aside. Booking, shop and team (ticket 184)
+          sit in registry order and render bare with the column's kicker heading. */}
       <Reveal>
         <div className="bg-white">
           <div className="max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 py-10 md:py-14 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-10">
             <div className="flex flex-col gap-12 md:gap-14 min-w-0">
-              {hasPortfolio && (
-                <section
-                  id="portfolio"
-                  aria-labelledby="portfolio-heading"
-                  className="scroll-mt-32"
-                >
-                  <TemplateSectionHeading
-                    kicker="Selected work"
-                    heading="Portfolio"
-                    headingId="portfolio-heading"
-                  />
-                  <PortfolioReel images={entity.images} />
-                </section>
-              )}
+              <SectionMark id="portfolio">
+                {hasPortfolio && (
+                  <section
+                    id="portfolio"
+                    aria-labelledby="portfolio-heading"
+                    className="scroll-mt-32"
+                  >
+                    <TemplateSectionHeading
+                      kicker="Selected work"
+                      heading="Portfolio"
+                      headingId="portfolio-heading"
+                    />
+                    <PortfolioReel images={entity.images} />
+                  </section>
+                )}
+              </SectionMark>
 
-              <TemplateCapabilities entity={entity} />
-              <TemplateStory entity={entity} imageSide="right" />
-              <EntityAttributes attributes={entity.attributes} bare />
-              <EntityLinks entity={entity} bare />
+              <SectionMark id="capabilities">
+                <TemplateCapabilities entity={entity} />
+              </SectionMark>
+              <SectionMark id="booking">
+                <EntityBookingSection
+                  booking={entity.booking}
+                  name={entity.name}
+                  inertNote={mode === 'example' ? EXAMPLE_BOOKING_NOTE : undefined}
+                  bare
+                />
+              </SectionMark>
+              <SectionMark id="shop">
+                <div id="shop" className="scroll-mt-32">
+                  <EntityShopSection shop={entity.shop} bare />
+                </div>
+              </SectionMark>
+              <SectionMark id="story">
+                <TemplateStory entity={entity} imageSide="right" />
+              </SectionMark>
+              <SectionMark id="team">
+                <EntityTeamSection team={entity.team} bare />
+              </SectionMark>
+              <SectionMark id="attributes">
+                <EntityAttributes attributes={entity.attributes} bare />
+              </SectionMark>
+              <SectionMark id="links">
+                <EntityLinks entity={entity} bare />
+              </SectionMark>
             </div>
 
             <aside aria-label="Trust and verification">
@@ -106,39 +158,57 @@ export function CreativeTemplate({
       </Reveal>
 
       {/* Full gallery + lightbox — the reel is the curated feature, this is the complete work */}
-      {hasPortfolio && (
-        <div id="gallery" className="scroll-mt-32">
-          <EntityMediaGallery entity={entity} images={entity.images} />
-        </div>
-      )}
+      <SectionMark id="gallery">
+        {hasGallery && (
+          <div id="gallery" className="scroll-mt-32">
+            <EntityMediaGallery entity={entity} images={entity.images} />
+          </div>
+        )}
+      </SectionMark>
 
-      <EntityVideoSection entity={entity} />
+      <SectionMark id="video">
+        <EntityVideoSection entity={entity} />
+      </SectionMark>
 
-      <Reveal>
-        <TemplateInquiryBand entity={entity} />
-      </Reveal>
+      <SectionMark id="inquiry">
+        <Reveal>
+          <TemplateInquiryBand entity={entity} />
+        </Reveal>
+      </SectionMark>
 
-      <Reveal>
-        <div id="reviews" className="scroll-mt-32">
-          <EntityReviewsSection
-            entity={entity}
-            userId={userId}
-            isOwner={isOwner}
-            hasReviewed={hasReviewed}
-          />
-        </div>
-      </Reveal>
+      <SectionMark id="reviews">
+        <Reveal>
+          <div id="reviews" className="scroll-mt-32">
+            <EntityReviewsSection
+              entity={entity}
+              userId={userId}
+              isOwner={isOwner}
+              hasReviewed={hasReviewed}
+            />
+          </div>
+        </Reveal>
+      </SectionMark>
 
-      <EntityNowHiring listingId={entity.id} />
-      <EntityUpcomingEvents entity={entity} />
+      <SectionMark id="hiring">
+        <EntityHiringBlock entity={entity} mode={mode} />
+      </SectionMark>
+      <SectionMark id="events">
+        <EntityUpcomingEvents entity={entity} />
+      </SectionMark>
 
-      <Reveal>
-        <EntityFaqSection faqs={entity.faqs} />
-      </Reveal>
-      <EntityPlatformActivity entity={entity} />
-      <Reveal>
-        <EntityRelatedDiscovery entity={entity} />
-      </Reveal>
+      <SectionMark id="faq">
+        <Reveal>
+          <EntityFaqSection faqs={entity.faqs} />
+        </Reveal>
+      </SectionMark>
+      <SectionMark id="activity">
+        <EntityPlatformActivity entity={entity} />
+      </SectionMark>
+      <SectionMark id="related">
+        <Reveal>
+          <EntityRelatedDiscovery entity={entity} />
+        </Reveal>
+      </SectionMark>
     </>
   )
 }

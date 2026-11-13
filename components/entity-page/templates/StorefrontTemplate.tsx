@@ -1,6 +1,9 @@
 import { Reveal } from '@/components/motion/Reveal'
 import { TemplateHero } from '@/components/entity-page/templates/TemplateHero'
-import { EntityAnchorTabs, type AnchorTab } from '@/components/entity-page/templates/EntityAnchorTabs'
+import {
+  EntityAnchorTabs,
+  type AnchorTab,
+} from '@/components/entity-page/templates/EntityAnchorTabs'
 import { TemplateInfoRail } from '@/components/entity-page/templates/TemplateInfoRail'
 import { TemplateInquiryBand } from '@/components/entity-page/templates/TemplateInquiryBand'
 import { EntityAtAGlance } from '@/components/entity-page/EntityAtAGlance'
@@ -11,7 +14,7 @@ import { EntityAttributes } from '@/components/entity-page/EntityAttributes'
 import { EntityFaqSection } from '@/components/entity-page/EntityFaqSection'
 import { EntityDeals } from '@/components/entity-page/EntityDeals'
 import { EntityUpcomingEvents } from '@/components/entity-page/EntityUpcomingEvents'
-import { EntityNowHiring } from '@/components/entity-page/EntityNowHiring'
+import { EntityHiringBlock } from '@/components/entity-page/EntityHiringBlock'
 import { EntityMediaGallery } from '@/components/entity-page/EntityMediaGallery'
 import { EntityVideoSection } from '@/components/entity-page/EntityVideoSection'
 import { EntityReviewsSection } from '@/components/entity-page/EntityReviewsSection'
@@ -19,6 +22,13 @@ import { EntityTrustSection } from '@/components/entity-page/EntityTrustSection'
 import { EntityCommunityConnection } from '@/components/entity-page/EntityCommunityConnection'
 import { EntityPlatformActivity } from '@/components/entity-page/EntityPlatformActivity'
 import { EntityRelatedDiscovery } from '@/components/entity-page/EntityRelatedDiscovery'
+import { EntityCouponsSection } from '@/components/entity-page/EntityCouponsSection'
+import { EntityLocationsSection } from '@/components/entity-page/EntityLocationsSection'
+import { EntityTeamSection } from '@/components/entity-page/EntityTeamSection'
+import { EntityShopSection } from '@/components/entity-page/EntityShopSection'
+import { EntityBookingSection } from '@/components/entity-page/EntityBookingSection'
+import { SectionMark } from '@/components/entity-page/SectionMark'
+import { EXAMPLE_BOOKING_NOTE } from '@/lib/entity-page/sections'
 import type { EntityTemplateProps } from '@/lib/entity-page/template'
 
 /**
@@ -31,6 +41,11 @@ import type { EntityTemplateProps } from '@/lib/entity-page/template'
  *
  * Visit comes early here, unlike the microsite templates — for a shop or a
  * restaurant, "where and when" is the question, not the footnote.
+ *
+ * Ticket 184 added the plan-gated sections (coupons, other locations, team,
+ * shop, booking) in the slots TEMPLATE_SECTION_ORDER.storefront gives them,
+ * and a SectionMark around every section. Each new one renders only when its
+ * field is set, so a page from today's loader is unchanged.
  */
 export function StorefrontTemplate({
   entity,
@@ -38,10 +53,12 @@ export function StorefrontTemplate({
   userId,
   isOwner,
   hasReviewed,
+  mode = 'live',
 }: EntityTemplateProps) {
   const hasStory = Boolean(entity.details.description?.trim())
   const hasOfferings = entity.details.services.length > 0
   const hasGallery = entity.images.length > 0
+  const hasShop = Boolean(entity.shop && entity.shop.items.length > 0)
 
   const hasDeals = (entity.deals?.length ?? 0) > 0
 
@@ -51,75 +68,141 @@ export function StorefrontTemplate({
     ...(hasDeals ? [{ id: 'deals', label: 'Deals' }] : []),
     ...(hasStory ? [{ id: 'about', label: 'About' }] : []),
     ...(hasOfferings ? [{ id: 'offerings', label: 'Offerings' }] : []),
+    ...(hasShop ? [{ id: 'shop', label: 'Shop' }] : []),
     ...(hasGallery ? [{ id: 'gallery', label: 'Gallery' }] : []),
     { id: 'reviews', label: 'Reviews' },
   ]
 
   return (
     <>
-      <TemplateHero entity={entity} initialSaved={initialSaved} variant="storefront" />
+      <SectionMark id="hero">
+        <TemplateHero
+          entity={entity}
+          initialSaved={initialSaved}
+          variant="storefront"
+          mode={mode}
+        />
+      </SectionMark>
       <EntityAnchorTabs tabs={tabs} />
 
-      <div id="overview" className="scroll-mt-32">
-        <TemplateInfoRail entity={entity} />
-      </div>
+      <SectionMark id="info-rail">
+        <div id="overview" className="scroll-mt-32">
+          <TemplateInfoRail entity={entity} />
+        </div>
+      </SectionMark>
+
+      <SectionMark id="coupons">
+        <EntityCouponsSection coupons={entity.coupons} />
+      </SectionMark>
 
       {/* The id lives on the call site, never inside EntityAtAGlance — every
           template wraps it, so an id in the component would be duplicated.
           Unconditional on every template because EntityAtAGlance also carries
           the social row, which a listing can have with no address, hours,
           phone or email. */}
-      <div id="visit" className="scroll-mt-32">
-        <EntityAtAGlance entity={entity} />
-      </div>
-
-      <EntityDeals listingId={entity.id} deals={entity.deals} now={new Date()} />
-
-      <EntityLinks entity={entity} />
-
-      <Reveal>
-        <div id="about" className="scroll-mt-32">
-          <EntityStorySection entity={entity} />
+      <SectionMark id="at-a-glance">
+        <div id="visit" className="scroll-mt-32">
+          <EntityAtAGlance entity={entity} />
         </div>
-      </Reveal>
+      </SectionMark>
 
-      <div id="offerings" className="scroll-mt-32">
-        <EntityOfferingsSection entity={entity} />
-      </div>
+      <SectionMark id="locations">
+        <EntityLocationsSection locations={entity.locations} />
+      </SectionMark>
 
-      <EntityAttributes attributes={entity.attributes} />
-      <Reveal>
-        <EntityFaqSection faqs={entity.faqs} />
-      </Reveal>
-      <EntityNowHiring listingId={entity.id} />
-      <EntityUpcomingEvents entity={entity} />
+      <SectionMark id="links">
+        <EntityLinks entity={entity} />
+      </SectionMark>
 
-      <div id="gallery" className="scroll-mt-32">
-        <EntityMediaGallery entity={entity} images={entity.images} />
-      </div>
-      <EntityVideoSection entity={entity} />
+      <SectionMark id="story">
+        <Reveal>
+          <div id="about" className="scroll-mt-32">
+            <EntityStorySection entity={entity} />
+          </div>
+        </Reveal>
+      </SectionMark>
 
-      <Reveal>
-        <TemplateInquiryBand entity={entity} />
-      </Reveal>
+      <SectionMark id="team">
+        <EntityTeamSection team={entity.team} />
+      </SectionMark>
 
-      <Reveal>
-        <div id="reviews" className="scroll-mt-32">
-          <EntityReviewsSection
-            entity={entity}
-            userId={userId}
-            isOwner={isOwner}
-            hasReviewed={hasReviewed}
-          />
+      <SectionMark id="offerings">
+        <div id="offerings" className="scroll-mt-32">
+          <EntityOfferingsSection entity={entity} />
         </div>
-      </Reveal>
+      </SectionMark>
 
-      <EntityTrustSection entity={entity} />
-      <EntityCommunityConnection entity={entity} />
-      <EntityPlatformActivity entity={entity} />
-      <Reveal>
-        <EntityRelatedDiscovery entity={entity} />
-      </Reveal>
+      <SectionMark id="shop">
+        <div id="shop" className="scroll-mt-32">
+          <EntityShopSection shop={entity.shop} />
+        </div>
+      </SectionMark>
+
+      <SectionMark id="attributes">
+        <EntityAttributes attributes={entity.attributes} />
+      </SectionMark>
+      <SectionMark id="faq">
+        <Reveal>
+          <EntityFaqSection faqs={entity.faqs} />
+        </Reveal>
+      </SectionMark>
+      <SectionMark id="hiring">
+        <EntityHiringBlock entity={entity} mode={mode} />
+      </SectionMark>
+      <SectionMark id="events">
+        <EntityUpcomingEvents entity={entity} />
+      </SectionMark>
+
+      <SectionMark id="gallery">
+        <div id="gallery" className="scroll-mt-32">
+          <EntityMediaGallery entity={entity} images={entity.images} />
+        </div>
+      </SectionMark>
+      <SectionMark id="video">
+        <EntityVideoSection entity={entity} />
+      </SectionMark>
+
+      <SectionMark id="booking">
+        <EntityBookingSection
+          booking={entity.booking}
+          name={entity.name}
+          inertNote={mode === 'example' ? EXAMPLE_BOOKING_NOTE : undefined}
+        />
+      </SectionMark>
+
+      <SectionMark id="inquiry">
+        <Reveal>
+          <TemplateInquiryBand entity={entity} />
+        </Reveal>
+      </SectionMark>
+
+      <SectionMark id="reviews">
+        <Reveal>
+          <div id="reviews" className="scroll-mt-32">
+            <EntityReviewsSection
+              entity={entity}
+              userId={userId}
+              isOwner={isOwner}
+              hasReviewed={hasReviewed}
+            />
+          </div>
+        </Reveal>
+      </SectionMark>
+
+      <SectionMark id="trust">
+        <EntityTrustSection entity={entity} />
+      </SectionMark>
+      <SectionMark id="community">
+        <EntityCommunityConnection entity={entity} />
+      </SectionMark>
+      <SectionMark id="activity">
+        <EntityPlatformActivity entity={entity} />
+      </SectionMark>
+      <SectionMark id="related">
+        <Reveal>
+          <EntityRelatedDiscovery entity={entity} />
+        </Reveal>
+      </SectionMark>
     </>
   )
 }

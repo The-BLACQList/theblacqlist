@@ -509,3 +509,10 @@ export function visibleSections(
       sectionDef(id).isFilled(entity)
   )
 }
+
+/**
+ * The note EntityBookingSection shows instead of its submit promise on a
+ * sample page. Lives here so the three templates and the Playwright spec read
+ * one string.
+ */
+export const EXAMPLE_BOOKING_NOTE = 'Requests are off on the sample page.'
