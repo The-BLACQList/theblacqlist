@@ -237,7 +237,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     descriptionChars: null,
     analyticsHistoryDays: 365,
     extraButtons: 3,
-    activePosts: null,
+    activePosts: 5,
   },
 }
 

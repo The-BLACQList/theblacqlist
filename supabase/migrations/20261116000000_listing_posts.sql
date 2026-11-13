@@ -11,7 +11,7 @@
 -- whatever its status says.
 --
 -- Plan limits (TIER_LIMITS.activePosts in lib/stripe/features.ts): Free 0,
--- Starter 1, Growth 3, Premium no limit, counting active posts that have not
+-- Starter 1, Growth 3, Premium 5, counting active posts that have not
 -- ended (live or scheduled). Checked by the server action when a post goes
 -- active. The public read shows only the first ones the page's current plan
 -- allows, by creation order (lib/listings/happeningNow.ts). Nothing is deleted

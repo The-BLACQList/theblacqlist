@@ -58,11 +58,11 @@ function post(id: string, overrides: Partial<OwnerPost> = {}): OwnerPost {
 // ── Plan limits ─────────────────────────────────────────────────────────────
 
 describe('activePostLimit', () => {
-  it('is 0 / 1 / 3 / no limit by plan, and Free for anything unknown', () => {
+  it('is 0 / 1 / 3 / 5 by plan, and Free for anything unknown', () => {
     expect(activePostLimit('free')).toBe(0)
     expect(activePostLimit('starter')).toBe(1)
     expect(activePostLimit('growth')).toBe(3)
-    expect(activePostLimit('premium')).toBeNull()
+    expect(activePostLimit('premium')).toBe(5)
     expect(activePostLimit(null)).toBe(0)
     expect(activePostLimit('lapsed')).toBe(0)
   })
@@ -80,9 +80,11 @@ describe('checkPostAdd', () => {
     expect(checkPostAdd('growth', 3)).toMatch(/up to 3 posts at a time/)
   })
 
-  it('never blocks Premium', () => {
-    expect(checkPostAdd('premium', 0)).toBeNull()
-    expect(checkPostAdd('premium', 500)).toBeNull()
+  it('lets Premium post 5, with no upgrade to offer', () => {
+    expect(checkPostAdd('premium', 4, true, true)).toBeNull()
+    expect(checkPostAdd('premium', 5, true, true)).toBe(
+      'Your plan includes up to 5 posts at a time. End one to post another.'
+    )
   })
 
   it('offers the next plan only when it is for sale', () => {
@@ -170,6 +172,15 @@ describe('shownPosts', () => {
 
   it('never shows a scheduled post, whatever the plan', () => {
     expect(shownPosts(all, 'premium', NOW).shown.some((p) => p.id === 'later')).toBe(false)
+  })
+
+  it('caps Premium at 5', () => {
+    const many = Array.from({ length: 7 }, (_, i) =>
+      post(`p${i}`, { created_at: at(-(10 - i) * DAY), ends_at: at((i + 1) * HOUR) })
+    )
+    const { shown, hidden } = shownPosts(many, 'premium', NOW)
+    expect(shown.map((p) => p.id)).toEqual(['p0', 'p1', 'p2', 'p3', 'p4'])
+    expect(hidden.map((p) => p.id)).toEqual(['p5', 'p6'])
   })
 
   it('shows posts again on upgrade (nothing is lost)', () => {
@@ -360,7 +371,7 @@ describe('toStripPosts', () => {
 
   it(`shows at most ${STRIP_LIMIT}`, () => {
     const rows = Array.from({ length: 12 }, (_, i) =>
-      row(`p${i}`, 'premium-page', 'premium', { ends_at: at((12 - i) * HOUR) })
+      row(`p${i}`, `page-${i}`, 'premium', { ends_at: at((12 - i) * HOUR) })
     )
     const out = toStripPosts(rows, NOW)
     expect(out).toHaveLength(STRIP_LIMIT)
