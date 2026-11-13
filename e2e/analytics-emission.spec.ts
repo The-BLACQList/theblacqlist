@@ -157,22 +157,27 @@ test.describe('paid-tier metric integrity', () => {
     // rejected it"; without this the only symptom is a missing row.
     //
     // The button opens the share sheet (share_sheet_opened); share_initiated
-    // fires only on a pick, so the test picks "Copy link" and waits for that
-    // event's own request, not the sheet-open one.
-    const analyticsResponse = page.waitForResponse(
-      (r) =>
-        r.url().includes('/api/analytics/event') &&
-        (r.request().postData() ?? '').includes('share_initiated'),
-      { timeout: 15_000 }
-    )
+    // fires only on a pick, so the test picks "Copy link". That is two
+    // requests, and a beacon's body is a Blob Playwright can't read, so they
+    // can't be told apart here. Every one must be accepted; which event each
+    // carried is checked against analytics_events below.
+    const analyticsResponses: { url: string; status: number }[] = []
+    page.on('response', (r) => {
+      if (r.url().includes('/api/analytics/event')) {
+        analyticsResponses.push({ url: r.url(), status: r.status() })
+      }
+    })
     await page.getByRole('button', { name: 'Share this business' }).first().click()
     await page.getByRole('dialog').getByRole('button', { name: 'Copy link' }).click()
-    const shareResponse = await analyticsResponse
-    expect(
-      shareResponse.status(),
-      `POST ${shareResponse.url()} → ${shareResponse.status()} for payload ` +
-        `${shareResponse.request().postData() ?? '(none)'}`
-    ).toBe(200)
+    await expect
+      .poll(() => analyticsResponses.length, {
+        message: 'the sheet opening and the Copy link pick each send an analytics event',
+        timeout: 15_000,
+      })
+      .toBeGreaterThanOrEqual(2)
+    for (const res of analyticsResponses) {
+      expect(res.status, `POST ${res.url} → ${res.status}`).toBe(200)
+    }
 
     // ── The rollup's exact filters, asserted at the source ──────────────────
     // saves counts save_toggled AND (properties->>'action') = 'save'; both
