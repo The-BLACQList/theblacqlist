@@ -17,7 +17,7 @@ import {
 } from 'lucide-react'
 import { deleteMediaAction } from '@/lib/actions/dashboard/deleteMedia'
 import { updateMediaAltTextAction } from '@/lib/actions/dashboard/updateMediaAltText'
-import { setCoverImageAction } from '@/lib/actions/dashboard/setCoverImage'
+import { BannerCropDialog, BannerPanel, type BannerSource } from '@/components/dashboard/BannerEditor'
 
 interface MediaItem {
   id: string
@@ -105,18 +105,17 @@ function AltTextForm({ item }: { item: MediaItem }) {
 function MediaCard({
   item,
   supabaseStorageUrl,
-  listingId,
   isCover,
   hidden,
+  onUseAsBanner,
 }: {
   item: MediaItem
   supabaseStorageUrl: string
-  listingId: string
   isCover: boolean
   hidden: boolean
+  onUseAsBanner: (source: BannerSource) => void
 }) {
   const [deleteState, deleteAction, isDeleting] = useActionState(deleteMediaAction, null)
-  const [coverState, coverAction, isSettingCover] = useActionState(setCoverImageAction, null)
   const imageUrl = `${supabaseStorageUrl}/listing-media/${item.file_path}`
 
   return (
@@ -135,7 +134,7 @@ function MediaCard({
         />
         {isCover && (
           <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-gold text-brand-black font-subhead text-[11px] font-bold">
-            <Star className="size-3 fill-current" aria-hidden="true" /> Cover
+            <Star className="size-3 fill-current" aria-hidden="true" /> Banner
           </span>
         )}
         {hidden && (
@@ -167,28 +166,18 @@ function MediaCard({
       <div className="px-3 py-2 space-y-1.5">
         <AltTextForm item={item} />
 
-        <form action={coverAction}>
-          <input type="hidden" name="listing_id" value={listingId} />
-          {!isCover && <input type="hidden" name="media_id" value={item.id} />}
+        {!isCover && (
           <button
-            type="submit"
-            disabled={isSettingCover}
-            className={`w-full inline-flex items-center justify-center gap-1 h-7 rounded font-subhead text-xs font-semibold disabled:opacity-50 transition-colors ${
-              isCover
-                ? 'text-charcoal-soft hover:bg-charcoal/5'
-                : 'text-brand-black bg-pale-lavender hover:bg-amber-gold'
-            }`}
+            type="button"
+            onClick={() => onUseAsBanner({ url: imageUrl, remote: true })}
+            className="w-full inline-flex items-center justify-center gap-1 h-7 rounded font-subhead text-xs font-semibold text-brand-black bg-pale-lavender hover:bg-amber-gold transition-colors"
           >
-            {isSettingCover ? (
-              <Loader2 className="size-3 animate-spin" aria-hidden="true" />
-            ) : (
-              <Star className="size-3" aria-hidden="true" />
-            )}
-            {isCover ? 'Remove as cover' : 'Set as cover'}
+            <Star className="size-3" aria-hidden="true" />
+            Use as banner
           </button>
-        </form>
+        )}
 
-        {[deleteState, coverState].map(
+        {[deleteState].map(
           (s, i) =>
             s &&
             'error' in s && (
@@ -203,8 +192,9 @@ function MediaCard({
   )
 }
 
-// Resize and re-encode to JPEG at max 1920px on the longest side (~<1 MB for most photos)
-async function compressImage(file: File, maxPx = 1920, quality = 0.85): Promise<File> {
+// Resize and re-encode to JPEG at up to 2400px on the longest side, the largest
+// we store (IMAGE_MAX_EDGE), so a good photo keeps all the detail the page can show.
+async function compressImage(file: File, maxPx = 2400, quality = 0.9): Promise<File> {
   return new Promise((resolve) => {
     const img = new window.Image()
     const url = URL.createObjectURL(file)
@@ -221,6 +211,8 @@ async function compressImage(file: File, maxPx = 1920, quality = 0.85): Promise<
         resolve(file)
         return
       }
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
       ctx.drawImage(img, 0, 0, w, h)
       canvas.toBlob(
         (blob) => {
@@ -384,6 +376,11 @@ function MediaUploadForm({ listingId }: { listingId: string }) {
   )
 }
 
+/** A stored path, or a full address left over from older covers. */
+function bannerUrl(storageUrl: string, path: string): string {
+  return path.startsWith('http') ? path : `${storageUrl}/listing-media/${path}`
+}
+
 export function MediaGrid({
   media,
   supabaseStorageUrl,
@@ -391,7 +388,11 @@ export function MediaGrid({
   coverImagePath,
   hiddenIds,
 }: Props) {
-  const hasCover = !!coverImagePath
+  const [cropSource, setCropSource] = useState<BannerSource | null>(null)
+  const closeCrop = () => {
+    if (cropSource && !cropSource.remote) URL.revokeObjectURL(cropSource.url)
+    setCropSource(null)
+  }
 
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
@@ -399,23 +400,16 @@ export function MediaGrid({
         <h2 className="font-headline text-base text-brand-black">Photos</h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           Add photos to showcase your business. Use descriptive alt text to improve accessibility
-          and SEO. Upload at <strong className="font-semibold">1200×800px or larger</strong> for
-          best quality.
+          and SEO. Upload at <strong className="font-semibold">1920px wide or larger</strong> for
+          the sharpest photos.
         </p>
       </div>
       <div className="px-5 py-4 space-y-4">
-        {!hasCover && (
-          <div className="rounded-lg border border-amber-gold/40 bg-amber-gold/10 px-4 py-3">
-            <p className="font-subhead text-sm font-bold text-brand-black">
-              {media.length === 0 ? 'Start with your cover photo' : 'Pick one photo as your cover'}
-            </p>
-            <p className="font-body text-xs text-charcoal-soft mt-0.5">
-              {media.length === 0
-                ? 'Upload a photo below, then choose “Set as cover.” Until you do, your business shows a brand tile in search results and collections instead of your own photo.'
-                : 'Choose “Set as cover” on the photo that best represents your business. Until you do, it shows a brand tile in search results and collections.'}
-            </p>
-          </div>
-        )}
+        <BannerPanel
+          listingId={listingId}
+          bannerUrl={coverImagePath ? bannerUrl(supabaseStorageUrl, coverImagePath) : null}
+          onCrop={setCropSource}
+        />
         {media.length > 0 && (
           <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {media.map((item) => (
@@ -423,15 +417,21 @@ export function MediaGrid({
                 key={item.id}
                 item={item}
                 supabaseStorageUrl={supabaseStorageUrl}
-                listingId={listingId}
                 isCover={item.file_path === coverImagePath}
                 hidden={hiddenIds?.has(item.id) ?? false}
+                onUseAsBanner={setCropSource}
               />
             ))}
           </ul>
         )}
         <MediaUploadForm listingId={listingId} />
       </div>
+      <BannerCropDialog
+        key={cropSource?.url ?? 'none'}
+        listingId={listingId}
+        source={cropSource}
+        onClose={closeCrop}
+      />
     </div>
   )
 }

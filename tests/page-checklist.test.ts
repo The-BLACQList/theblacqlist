@@ -43,7 +43,7 @@ describe('page checklist — cover image', () => {
   })
 
   it('states the minimum size in the hint so the spec reaches the owner', () => {
-    expect(coverItem({}).hint).toContain('1200×800px')
+    expect(coverItem({}).hint).toContain('1920 × 960px')
   })
 })
 

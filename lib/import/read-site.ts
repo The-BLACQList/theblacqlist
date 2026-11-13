@@ -2,6 +2,7 @@ import { parse, type HTMLElement } from 'node-html-parser'
 import { WEEK_DAYS, type WeekDay } from '@/lib/listings/hours'
 import { MAX_PHOTO_CANDIDATES } from '@/lib/import/limits'
 import type { DayHours, SocialLinks, WeeklyHours } from '@/types'
+import { pickBannerPhoto } from '@/lib/media/banner'
 
 // =============================================================================
 // Reading an owner's public page into draft fields (ticket 127)
@@ -874,7 +875,8 @@ export function readSite(html: string, pageUrl: string): SiteFindings {
   }
 
   const suggestedLogo = photos.find((p) => p.kind === 'logo')?.url ?? null
-  const suggestedCover = photos.find((p) => p.kind === 'photo')?.url ?? null
+  // The first photo wide enough to stay sharp across the top of the page.
+  const suggestedCover = pickBannerPhoto(photos)?.url ?? null
 
   return {
     sourceHost,

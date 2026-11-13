@@ -16,6 +16,7 @@ import { updateListingContentAction } from '@/lib/actions/dashboard/updateListin
 import { rejectSuggestionAction } from '@/lib/actions/ai/rejectSuggestion'
 import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
 import { MAX_PHOTOS_PER_IMPORT } from '@/lib/import/limits'
+import { BANNER_MIN_WIDTH, BANNER_SIZE_TIP } from '@/lib/media/banner'
 import type { UpgradeTarget } from '@/lib/stripe/planChecks'
 import type { SiteFindings } from '@/lib/import/read-site'
 import type { PhotoImportOutcome } from '@/lib/import/siteImportCore'
@@ -252,7 +253,7 @@ function ImportFlow({
             </ul>
           )}
           {phase.coverSet && (
-            <p className="font-body text-sm text-brand-black">One of the photos is now your cover.</p>
+            <p className="font-body text-sm text-brand-black">One of the photos is now your banner. Crop it under Photos.</p>
           )}
           {phase.failedPhotos.length > 0 && (
             <div className="rounded-lg bg-amber-gold/10 px-3 py-2.5">
@@ -285,6 +286,7 @@ function ImportFlow({
   // Writing help needs something to write from; a few words aren't enough.
   const canWrite = siteText.length >= 40
   const choices = photoChoices(findings).filter((p) => !broken.has(p.url))
+  const coverWidth = choices.find((c) => c.url === cover)?.width ?? null
   const sendPairs = pairsFor(rows, ticked)
   const cards = cardsFor(rows, ticked)
   // Ticked fields refresh their cards, which would drop what the owner typed there.
@@ -573,7 +575,7 @@ function ImportFlow({
             {!hasCover && photos.length > 0 && (
               <div className="mt-3">
                 <label htmlFor={`${ids}-cover`} className="mb-1 block font-subhead text-xs font-semibold text-charcoal-soft">
-                  Your page has no cover yet. Use one as the cover?
+                  Your page has no banner yet. Use one as the banner?
                 </label>
                 <select
                   id={`${ids}-cover`}
@@ -581,16 +583,23 @@ function ImportFlow({
                   onChange={(e) => setCover(e.target.value || null)}
                   className="w-full rounded-lg border border-charcoal/20 bg-white px-3 py-2 font-body text-sm text-brand-black focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
                 >
-                  <option value="">No, I’ll pick a cover later</option>
+                  <option value="">No, I’ll pick a banner later</option>
                   {photos.map((u) => {
-                    const n = choices.findIndex((c) => c.url === u) + 1
+                    const i = choices.findIndex((c) => c.url === u)
+                    const width = choices[i]?.width ?? null
                     return (
                       <option key={u} value={u}>
-                        Photo {n}
+                        Photo {i + 1}
+                        {width !== null && width < BANNER_MIN_WIDTH ? ' (small for a banner)' : ''}
                       </option>
                     )
                   })}
                 </select>
+                <p className="mt-1 font-body text-xs text-charcoal-soft">
+                  {coverWidth !== null && coverWidth < BANNER_MIN_WIDTH
+                    ? `That photo is ${coverWidth} pixels wide, so it may look blurry across the top of your page. ${BANNER_SIZE_TIP} looks sharpest.`
+                    : 'You can crop it to fit after it comes in, under Photos.'}
+                </p>
               </div>
             )}
 
