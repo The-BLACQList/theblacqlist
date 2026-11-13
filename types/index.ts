@@ -348,8 +348,9 @@ export interface JobDetails {
 // does not provide it yet", and the section stays hidden — so adding a type here
 // changes nothing on a live page until its loader fills it. The example pages
 // (lib/example/fixtures) fill all of them; the live loader gains them one ticket
-// at a time (185 logo, 186 shop, 107 team, 108 coupons, 109 booking, 110
-// locations).
+// at a time (185 logo, 186 shop, 107 team, 109 booking, 110 locations).
+// Deals (ticket 108) are main's `deals` above (part G, #328); 184 dropped its
+// own coupons type.
 
 /** An image whose `src` is already a renderable URL — storage, remote or a repo asset. */
 export interface ResolvedImage {
@@ -366,17 +367,6 @@ export interface TeamMember {
   role: string | null
   bio: string | null
   photo: ResolvedImage | null
-}
-
-/** One deal on the Coupons section (ticket 108). `code` null → "show this page". */
-export interface CouponItem {
-  id: string
-  title: string
-  description: string | null
-  code: string | null
-  terms: string | null
-  /** ISO timestamp; null → no end date. */
-  endsAt: string | null
 }
 
 /** Owner settings for the booking-request form (ticket 109). */
@@ -493,7 +483,6 @@ export interface EntityPageData {
   /** Logo beside the name in the hero. Only claimed listings get one (ticket 185). */
   logo?: ResolvedImage | null
   team?: TeamMember[]
-  coupons?: CouponItem[]
   booking?: BookingConfig | null
   /** OTHER locations of this business, not the page itself. */
   locations?: LocationLink[]

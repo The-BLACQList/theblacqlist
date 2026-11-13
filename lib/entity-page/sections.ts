@@ -14,6 +14,7 @@
  */
 
 import type { FeatureFlag } from '@/lib/env'
+import { DEALS_ON_MAX } from '@/lib/listings/deals'
 import {
   FEATURE_MIN_TIER,
   canAccess,
@@ -28,7 +29,7 @@ export type SectionId =
   | 'hero'
   | 'logo'
   | 'info-rail'
-  | 'coupons'
+  | 'deals'
   | 'at-a-glance'
   | 'locations'
   | 'links'
@@ -117,12 +118,14 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     isFilled: () => true,
   },
   {
-    id: 'coupons',
-    label: 'Coupons & deals',
+    // Main's Deals section (part G, #328): Premium, behind the coupons flag,
+    // edited in the Deals card on the edit page's Services tab.
+    id: 'deals',
+    label: 'Deals',
     templates: ALL,
-    gate: { feature: 'coupons' },
-    editor: { tool: 'Deals', href: page('deals') },
-    isFilled: (e) => (e.coupons?.length ?? 0) > 0,
+    gate: { feature: 'coupons', flag: 'coupons' },
+    editor: { tool: 'Deals', href: edit('deals') },
+    isFilled: (e) => (e.deals?.length ?? 0) > 0,
   },
   {
     id: 'at-a-glance',
@@ -322,8 +325,8 @@ export function sectionDef(id: SectionId): EntitySectionDef {
 
 /**
  * The render order of each template, the same order the template files use.
- * Existing sections kept where they were; the new ones (coupons, locations,
- * team, shop, booking, logo) sit where the plan for ticket 184 put them.
+ * Existing sections kept where they were (deals where main's #328 put it);
+ * the new ones (locations, team, shop, booking, logo) sit where the plan for ticket 184 put them.
  * The professional and creative templates render trust inside the two-column
  * body as an aside rather than as a section, so it is not in their lists.
  */
@@ -332,7 +335,7 @@ export const TEMPLATE_SECTION_ORDER: Record<TemplateKey, readonly SectionId[]> =
     'hero',
     'info-rail',
     'at-a-glance',
-    'coupons',
+    'deals',
     'locations',
     'links',
     'story',
@@ -357,7 +360,7 @@ export const TEMPLATE_SECTION_ORDER: Record<TemplateKey, readonly SectionId[]> =
     'hero',
     'info-rail',
     'at-a-glance',
-    'coupons',
+    'deals',
     'locations',
     'services',
     'booking',
@@ -381,7 +384,7 @@ export const TEMPLATE_SECTION_ORDER: Record<TemplateKey, readonly SectionId[]> =
     'hero',
     'info-rail',
     'at-a-glance',
-    'coupons',
+    'deals',
     'locations',
     'portfolio',
     'capabilities',
@@ -478,7 +481,7 @@ export function applyTierGates(
     ...entity,
     logo: allowed('logo') ? entity.logo : undefined,
     team: allowed('team') ? sliceTo(entity.team, limits.teamMembers) : undefined,
-    coupons: allowed('coupons') ? entity.coupons : undefined,
+    deals: allowed('deals') ? sliceTo(entity.deals, DEALS_ON_MAX) : undefined,
     booking: allowed('booking') ? entity.booking : undefined,
     locations: allowed('locations')
       ? sliceTo(entity.locations, limits.locations === null ? null : limits.locations - 1)

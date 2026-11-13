@@ -386,9 +386,9 @@ export function storefrontEntity(now: Date): EntityPageData {
         photo: null,
       },
     ],
-    coupons: [
+    deals: [
       {
-        id: 'cafe-coupon-1',
+        id: 'cafe-deal-1',
         title: 'Free pastry with any pour-over',
         description: 'Weekdays before 10 am.',
         code: null,
@@ -396,7 +396,7 @@ export function storefrontEntity(now: Date): EntityPageData {
         endsAt: futureIso(now, 30),
       },
       {
-        id: 'cafe-coupon-2',
+        id: 'cafe-deal-2',
         title: '15% off whole-bean bags online',
         description: 'Stock up on the Friday roast.',
         code: 'ROAST15',

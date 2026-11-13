@@ -11,7 +11,7 @@
 //     and docs/blacqlist/design/example-image-licenses.md are only as honest
 //     as this 1:1 check;
 //   - dates are relative to the injected clock, so events are always upcoming,
-//     coupons unexpired and reviews in the past, on any day the page is seen;
+//     deals unexpired and reviews in the past, on any day the page is seen;
 //   - the sample never wears the Certified badge, which is earned, never
 //     sampled (lib/stripe/features.ts header).
 // =============================================================================
@@ -37,6 +37,7 @@ import {
 } from '@/lib/example/fixtures'
 import { EXAMPLE_ASSET_DIR } from '@/lib/example/fixtures/shared'
 import { EXAMPLE_PHOTO_CREDITS } from '@/lib/example/photoCredits'
+import { DEALS_ON_MAX, dealEndsLabel, parseDeal } from '@/lib/listings/deals'
 import { EXAMPLE_ASSET_PATH } from '@/lib/listings/exampleAssets'
 import { TIER_LIMITS } from '@/lib/stripe/features'
 import type { EntityPageData } from '@/types'
@@ -137,9 +138,8 @@ for (const variant of EXAMPLE_VARIANTS) {
       const now = NOW.getTime()
       for (const event of entity.organizerEvents)
         expect(new Date(event.starts_at).getTime(), event.name).toBeGreaterThan(now)
-      for (const coupon of entity.coupons ?? [])
-        if (coupon.endsAt)
-          expect(new Date(coupon.endsAt).getTime(), coupon.title).toBeGreaterThan(now)
+      for (const deal of entity.deals ?? [])
+        if (deal.endsAt) expect(new Date(deal.endsAt).getTime(), deal.title).toBeGreaterThan(now)
       for (const role of entity.hiring?.roles ?? []) {
         const closes = role.job_details?.closesAt
         expect(closes, role.name).toBeTruthy()
@@ -149,6 +149,31 @@ for (const variant of EXAMPLE_VARIANTS) {
         expect(review.published_at, review.id).toBeTruthy()
         if (review.published_at) expect(new Date(review.published_at).getTime()).toBeLessThan(now)
       }
+    })
+
+    it('has deals the Deals editor would accept, in the order main shows them', () => {
+      const deals = entity.deals ?? []
+      expect(deals.length).toBeGreaterThan(0)
+      expect(deals.length).toBeLessThanOrEqual(DEALS_ON_MAX)
+      expect(new Set(deals.map((d) => d.id)).size).toBe(deals.length)
+      for (const deal of deals) {
+        const parsed = parseDeal(
+          {
+            title: deal.title,
+            description: deal.description ?? '',
+            code: deal.code ?? '',
+            terms: deal.terms ?? '',
+            startsAt: '',
+            endsAt: deal.endsAt ?? '',
+          },
+          NOW
+        )
+        expect(parsed.ok, `${deal.id}: ${parsed.ok ? '' : parsed.error}`).toBe(true)
+        if (deal.endsAt) expect(dealEndsLabel(deal.endsAt, NOW), deal.id).not.toBe('Ended')
+      }
+      // Soonest ending first, deals with no end last (shownDeals in lib/listings/deals.ts).
+      const ends = deals.map((d) => (d.endsAt ? Date.parse(d.endsAt) : Number.POSITIVE_INFINITY))
+      expect(ends).toEqual([...ends].sort((a, b) => a - b))
     })
 
     it('is deterministic for a given clock', () => {

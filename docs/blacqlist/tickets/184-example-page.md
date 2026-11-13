@@ -1,6 +1,6 @@
 # 184: Test Business 123 — the fully filled Premium sample page, one per template
 
-**Status:** Building on `feat/184-example-page` (worktree `../theblacqlist-example-page`, cut from `origin/main` `0375333`). PR 1A ready for a draft PR; **no merge before Wed 18 Nov 2026** (launch merge freeze).
+**Status:** PR 1A #325 and PR 1B #329 (stacked), rebased on `origin/main` `9c8844c` (#328 deals). Merge as one deploy before the launch freeze (D-1 Mon 16 Nov to the end of the D0 watch Tue 17 Nov) or after it, never inside it; founder go 2026-11-13.
 **Follows:** 105 (tiered page features), 154 (Now hiring), 134 (partnerships badge), messaging (hero Message button, 2026-11-13)
 **Area:** business pages (`/example/*`), the section registry the click-to-fill editor (188) will reuse
 **Gates:** none for 1A. No migration, no env change, no production writes; the route answers 404 on production. Phases 2–9 carry their own gates (see "What comes after").
@@ -28,7 +28,7 @@ Today the public page shows a section only when its data exists, and the only ti
 - **Team headshots are initials avatars, not stock faces.** Neither licence carries a model release, and a stranger labelled "Head barista" implies endorsement, which the Pexels licence forbids.
 - **Logos are first-party monograms** (`public/images/example/logo-*.png`, drawn as SVG paths and rendered with sharp), so no third-party mark appears on the sample.
 - **Demo videos are Blender Foundation open movies** (CC BY 3.0: Big Buck Bunny on YouTube and Vimeo, Sintel), credited in the banner and in `docs/blacqlist/design/example-image-licenses.md`.
-- **Coupons render after At a Glance, not before it** (deviation from the plan's §1f, which had Coupons between the info rail and At a Glance). On the built page a deal strip above the hours and address pushed "where and when" below the fold on a phone; the registry and all three templates agree on the new order and `tests/entity-page-sections.test.ts` pins it.
+- **No coupons section of our own; the sample shows main's Deals.** Main merged coupons and deals (#328, part G) while 1A was open. 1A dropped its `EntityCouponsSection`/`CouponItem`/`coupons` and samples main's `EntityDeals` and `deals` (`PublicDeal`) in main's slot, right after At a Glance (where 1A had already moved coupons, so "where and when" stays above the fold on a phone). Registry id `deals`: gate `coupons` feature + `coupons` flag as main's loader does, capped at `DEALS_ON_MAX`, editor `/edit#deals` (the Deals card on the Services tab). On the sample the section sits in an `inert` wrapper, so Copy code cannot record `deal_code_copied` for a listing that does not exist. The sample deals pass main's `parseDeal` (test-enforced).
 - **Links are held, buttons are not.** `ExampleLinkGuard` cancels every link that would leave the sample (the business's site, tel:, mailto:, related cards, sign-in) with a short note; the banner's variant switcher and in-page anchors still work. Save and Share are rendered `inert` so they look real and never call `/api/saves` or `track()`. The hero Message button shows; the composer is not mounted.
 
 ## What ships in 1A
@@ -36,7 +36,7 @@ Today the public page shows a section only when its data exists, and the only ti
 - **Route** `app/example/[variant]/page.tsx` + `app/example/page.tsx` (index) + `app/example/layout.tsx` (robots `noindex, nofollow`, link guard). `force-dynamic`; `notFound()` on production or an unknown variant. `app/robots.ts` disallows `/example/`. Sitemap untouched; `proxy.ts` untouched (the founder passes the coming-soon gate with the usual cookie or a signed-in session).
 - **Render mode** `EntityRenderMode = 'live' | 'example'` on `EntityTemplateProps`; `TemplateHero` holds Save/Share and reads the cover through the scoped resolver `lib/listings/exampleAssets.ts` (`coverImage.ts` is unchanged; live covers still refuse stock paths).
 - **Section registry** `lib/entity-page/sections.ts`: every section with its template list, plan gate (`feature`/`flag`/`limit`/`requiresClaimed`), editor link and `isFilled`; `TEMPLATE_SECTION_ORDER`; `minTierFor` derived from `FEATURE_MIN_TIER`; `applyTierGates`; `visibleSections`. `SectionMark` (`data-section`) wraps every section in the three templates — the hook for the Playwright spec and for ticket 188.
-- **New optional `EntityPageData` fields** (`logo`, `team`, `coupons`, `booking`, `locations`, `shop`, `hiring`) and their display-only components (`EntityLogo`, `EntityTeamSection`, `EntityCouponsSection`, `EntityBookingSection`, `EntityLocationsSection`, `EntityShopSection`). `undefined` means "the loader does not provide it yet", so **live output is unchanged** (pinned by the legacy-shape test).
+- **New optional `EntityPageData` fields** (`logo`, `team`, `booking`, `locations`, `shop`, `hiring`) and their display-only components (`EntityLogo`, `EntityTeamSection`, `EntityBookingSection`, `EntityLocationsSection`, `EntityShopSection`). Deals are main's (`deals`, `EntityDeals`, #328). `undefined` means "the loader does not provide it yet", so **live output is unchanged** (pinned by the legacy-shape test).
 - **Fixtures** `lib/example/fixtures/{shared,storefront,professional,creative,index}.ts`, deterministic for an injected clock; **photos** 44 WebP in `public/images/example/` with `lib/example/photoCredits.ts` and `docs/blacqlist/design/example-image-licenses.md` (1:1 with the folder, test-enforced).
 - **Tests:** `tests/entity-page-sections.test.ts`, `tests/example-fixtures.test.ts`, `tests/example-assets.test.ts`, `tests/example-copy.test.ts`, `tests/example-route.test.ts`; `e2e/example-page.spec.ts`; `/example/storefront` added to `e2e/a11y.spec.ts`.
 
@@ -48,7 +48,7 @@ Today the public page shows a section only when its data exists, and the only ti
 
 ## What comes after
 
-PR 1B (`feat/184-example-page-1b`, stacked): the value-add sections above, display-only, plus ticket stubs 197–202. Then 185 (logo on page, logo editor, cover upload, meter fixes), 189 (facts line, captions, JSON-LD live), 190 (mini map live), 186 (shop on the profile), 107, 108, 109, 110, 191–196 (one table each), 187 (staging seed). Each is its own branch and draft PR off `origin/main`; migrations are staging-first with founder confirmation, production at GATE-DATA.
+PR 1B (`feat/184-example-page-1b`, stacked): the value-add sections above, display-only, plus ticket stubs 197–202. Then 185 (logo on page, logo editor, cover upload, meter fixes), 189 (facts line, captions, JSON-LD live), 190 (mini map live), 186 (shop on the profile), 107, 109, 110 (108 shipped on main as Deals, #328), 191–196 (one table each), 187 (staging seed). Each is its own branch and draft PR off `origin/main`; migrations are staging-first with founder confirmation, production at GATE-DATA.
 
 ## Verification
 

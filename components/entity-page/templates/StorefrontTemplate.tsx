@@ -22,7 +22,6 @@ import { EntityTrustSection } from '@/components/entity-page/EntityTrustSection'
 import { EntityCommunityConnection } from '@/components/entity-page/EntityCommunityConnection'
 import { EntityPlatformActivity } from '@/components/entity-page/EntityPlatformActivity'
 import { EntityRelatedDiscovery } from '@/components/entity-page/EntityRelatedDiscovery'
-import { EntityCouponsSection } from '@/components/entity-page/EntityCouponsSection'
 import { EntityLocationsSection } from '@/components/entity-page/EntityLocationsSection'
 import { EntityTeamSection } from '@/components/entity-page/EntityTeamSection'
 import { EntityShopSection } from '@/components/entity-page/EntityShopSection'
@@ -42,8 +41,8 @@ import type { EntityTemplateProps } from '@/lib/entity-page/template'
  * Visit comes early here, unlike the microsite templates — for a shop or a
  * restaurant, "where and when" is the question, not the footnote.
  *
- * Ticket 184 added the plan-gated sections (coupons, other locations, team,
- * shop, booking) in the slots TEMPLATE_SECTION_ORDER.storefront gives them,
+ * Ticket 184 added the plan-gated sections (other locations, team, shop,
+ * booking) in the slots TEMPLATE_SECTION_ORDER.storefront gives them,
  * and a SectionMark around every section. Each new one renders only when its
  * field is set, so a page from today's loader is unchanged.
  */
@@ -102,8 +101,13 @@ export function StorefrontTemplate({
         </div>
       </SectionMark>
 
-      <SectionMark id="coupons">
-        <EntityCouponsSection coupons={entity.coupons} />
+      {/* Main's Deals section (part G, #328). On a sample page the wrapper is
+          inert, so Copy code cannot record deal_code_copied for a listing that
+          does not exist; live pages render it exactly as main does. */}
+      <SectionMark id="deals">
+        <div inert={mode === 'example' || undefined} className="contents">
+          <EntityDeals listingId={entity.id} deals={entity.deals} now={new Date()} />
+        </div>
       </SectionMark>
 
       <SectionMark id="locations">

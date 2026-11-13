@@ -12,7 +12,8 @@
 //      SectionMark ids in each template's source, in order.
 //   2. A gate names a plan feature or an editor anchor that does not exist.
 //      Features are checked against FEATURE_MIN_TIER; edit anchors against the
-//      ids PageFinishView actually renders.
+//      cards lib/listings/editTabs.ts lists, which is how main's tabbed edit
+//      page (#324) finds the tab a `/edit#card` link opens.
 //   3. applyTierGates stops hiding what a lower plan did not buy. Pinned per
 //      plan on the storefront fixture, which fills everything.
 //
@@ -38,6 +39,8 @@ import {
   type TemplateKey,
 } from '@/lib/entity-page/sections'
 import { buildExampleEntity } from '@/lib/example/fixtures'
+import { DEALS_ON_MAX } from '@/lib/listings/deals'
+import { SCROLL_ORDER, tabForAnchor } from '@/lib/listings/editTabs'
 import { FEATURE_MIN_TIER, TIER_LIMITS, canAccess } from '@/lib/stripe/features'
 import type { PlanSlug } from '@/lib/stripe/plans'
 import type { EntityPageData } from '@/types'
@@ -55,7 +58,6 @@ const TEMPLATE_FILES: Record<TemplateKey, string> = {
 /** The sections ticket 184 added; a page the live loader built never fills them. */
 const NEW_SECTIONS: readonly SectionId[] = [
   'logo',
-  'coupons',
   'locations',
   'team',
   'shop',
@@ -76,7 +78,6 @@ function legacyShaped(entity: EntityPageData): EntityPageData {
   const {
     logo: _logo,
     team: _team,
-    coupons: _coupons,
     booking: _booking,
     locations: _locations,
     shop: _shop,
@@ -108,16 +109,14 @@ describe('registry shape', () => {
     }
   })
 
-  it('every edit anchor is one PageFinishView renders', () => {
-    const anchors = new Set(
-      [...source('components/listings/PageFinishView.tsx').matchAll(/\bid="([a-z-]+)"/g)].map(
-        (m) => m[1]
-      )
-    )
+  it('every edit anchor is a card the owner edit page has, so the link opens its tab', () => {
     for (const def of ENTITY_SECTIONS) {
       const href = def.editor.href('listing-1')
       const anchor = href?.match(/\/edit#([a-z-]+)$/)?.[1]
-      if (anchor) expect(anchors.has(anchor), `${def.id} → ${href}`).toBe(true)
+      if (anchor) {
+        expect(SCROLL_ORDER, `${def.id} → ${href}`).toContain(anchor)
+        expect(tabForAnchor(anchor), `${def.id} → ${href}`).not.toBeNull()
+      }
       if (href) expect(href.startsWith('/dashboard/'), `${def.id} → ${href}`).toBe(true)
     }
   })
@@ -169,11 +168,11 @@ describe('applyTierGates on a page that fills everything', () => {
     ])
   })
 
-  it('growth keeps team and shop, drops coupons, booking and other locations', () => {
+  it('growth keeps team and shop, drops deals, booking and other locations', () => {
     const shown = visibleSections(applyTierGates(full, 'growth'), 'storefront')
     expect(shown).toContain('team')
     expect(shown).toContain('shop')
-    expect(shown).not.toContain('coupons')
+    expect(shown).not.toContain('deals')
     expect(shown).not.toContain('booking')
     expect(shown).not.toContain('locations')
   })
@@ -238,7 +237,19 @@ describe('applyTierGates on a page that fills everything', () => {
     const flagsOff = () => false
     expect(sectionAllowed('shop', 'premium', flagsOff)).toBe(false)
     expect(sectionAllowed('hiring', 'premium', flagsOff)).toBe(false)
-    expect(sectionAllowed('coupons', 'premium', flagsOff)).toBe(true)
+    // Main's deals are behind the coupons flag (part G), like its loader.
+    expect(sectionAllowed('deals', 'premium', flagsOff)).toBe(false)
+  })
+
+  it('deals follow main: Premium only, at most DEALS_ON_MAX, gone with the flag off', () => {
+    const one = full.deals?.[0]
+    expect(one).toBeDefined()
+    if (!one) return
+    const many = Array.from({ length: DEALS_ON_MAX + 2 }, (_, i) => ({ ...one, id: `deal-${i}` }))
+    const page = { ...full, deals: many }
+    expect(applyTierGates(page, 'premium').deals).toHaveLength(DEALS_ON_MAX)
+    expect(applyTierGates(page, 'growth').deals).toBeUndefined()
+    expect(applyTierGates(page, 'premium', () => false).deals).toBeUndefined()
   })
 })
 

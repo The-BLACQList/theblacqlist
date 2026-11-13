@@ -21,7 +21,6 @@ import { EntityMediaGallery } from '@/components/entity-page/EntityMediaGallery'
 import { EntityVideoSection } from '@/components/entity-page/EntityVideoSection'
 import { EntityUpcomingEvents } from '@/components/entity-page/EntityUpcomingEvents'
 import { EntityHiringBlock } from '@/components/entity-page/EntityHiringBlock'
-import { EntityCouponsSection } from '@/components/entity-page/EntityCouponsSection'
 import { EntityLocationsSection } from '@/components/entity-page/EntityLocationsSection'
 import { EntityTeamSection } from '@/components/entity-page/EntityTeamSection'
 import { EntityShopSection } from '@/components/entity-page/EntityShopSection'
@@ -89,8 +88,13 @@ export function CreativeTemplate({
         </div>
       </SectionMark>
 
-      <SectionMark id="coupons">
-        <EntityCouponsSection coupons={entity.coupons} />
+      {/* Main's Deals section (part G, #328). On a sample page the wrapper is
+          inert, so Copy code cannot record deal_code_copied for a listing that
+          does not exist; live pages render it exactly as main does. */}
+      <SectionMark id="deals">
+        <div inert={mode === 'example' || undefined} className="contents">
+          <EntityDeals listingId={entity.id} deals={entity.deals} now={new Date()} />
+        </div>
       </SectionMark>
 
       <SectionMark id="locations">

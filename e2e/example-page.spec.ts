@@ -87,6 +87,12 @@ for (const { variant, template, cta } of VARIANTS) {
       // Save and Share are rendered, but inert.
       await expect(page.locator('[data-section="hero"] [inert]').first()).toBeAttached()
 
+      // Main's Deals section shows its codes, but Copy code sits inside an
+      // inert wrapper, so it cannot record deal_code_copied for a fake page.
+      const dealCode = page.locator('[data-section="deals"] [inert] button').first()
+      await expect(dealCode).toBeAttached()
+      await expect(dealCode).toContainText('Copy code')
+
       // Give any stray tracking call time to leave.
       await page.waitForTimeout(500)
       expect(hits).toEqual([])

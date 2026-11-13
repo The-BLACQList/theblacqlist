@@ -340,22 +340,22 @@ export function professionalEntity(now: Date): EntityPageData {
         photo: null,
       },
     ],
-    coupons: [
+    deals: [
       {
-        id: 'pro-coupon-1',
-        title: 'Free discovery call',
-        description: 'Thirty minutes with a partner. No pitch.',
-        code: null,
-        terms: 'One per company.',
-        endsAt: null,
-      },
-      {
-        id: 'pro-coupon-2',
+        id: 'pro-deal-2',
         title: '$500 off the diagnostic',
         description: 'For BLACQList members booking this quarter.',
         code: 'BLACQ500',
         terms: 'Mention the code on the discovery call. New clients only.',
         endsAt: futureIso(now, 60),
+      },
+      {
+        id: 'pro-deal-1',
+        title: 'Free discovery call',
+        description: 'Thirty minutes with a partner. No pitch.',
+        code: null,
+        terms: 'One per company.',
+        endsAt: null,
       },
     ],
     booking: {

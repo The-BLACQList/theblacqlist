@@ -346,22 +346,22 @@ export function creativeEntity(now: Date): EntityPageData {
         photo: null,
       },
     ],
-    coupons: [
+    deals: [
       {
-        id: 'studio-coupon-1',
-        title: '20% off prints on first Saturdays',
-        description: 'In the studio, while the press is running.',
-        code: null,
-        terms: 'In-person only. Excludes commissions.',
-        endsAt: futureIso(now, 90),
-      },
-      {
-        id: 'studio-coupon-2',
+        id: 'studio-deal-2',
         title: 'Free shipping on two or more prints',
         description: 'Anywhere in the US.',
         code: 'TUBE2',
         terms: 'Online print-shop orders only.',
         endsAt: futureIso(now, 40),
+      },
+      {
+        id: 'studio-deal-1',
+        title: '20% off prints on first Saturdays',
+        description: 'In the studio, while the press is running.',
+        code: null,
+        terms: 'In-person only. Excludes commissions.',
+        endsAt: futureIso(now, 90),
       },
     ],
     booking: {
