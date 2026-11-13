@@ -1,4 +1,5 @@
 import type { EntityPageData } from '@/types'
+import { futureDateKey } from '@/lib/listings/hoursOverrides'
 import {
   ATLANTA,
   DEMO_VIDEOS,
@@ -26,18 +27,26 @@ const DESCRIPTION = [
 ].join('\n\n')
 
 const PORTFOLIO = gallery('studio', [
-  ['studio-branding.webp', 'Identity system for a neighbourhood bakery: cards, bags and labels'],
-  ['studio-poster.webp', 'Limited-edition poster for a summer concert series'],
-  ['studio-mural.webp', 'Thirty-foot mural for a restaurant patio in Summerhill'],
-  ['studio-packaging.webp', 'Packaging for a small-batch hot-sauce brand'],
-  ['studio-typography.webp', 'Hand-lettered wordmark in progress'],
-  ['studio-print.webp', 'Screen prints drying after a Saturday press run'],
-  ['studio-screenprint.webp', 'Pulling a two-colour print on the studio press'],
-  ['studio-sketch.webp', 'Logo sketches from the first week of an identity project'],
-  ['studio-palette.webp', 'Choosing the palette for a café rebrand'],
-  ['studio-space.webp', 'The studio floor on a first-Saturday open day'],
-  ['studio-gallery-wall.webp', 'The print wall, where every edition hangs before it ships'],
-  ['studio-desk.webp', 'A designer’s desk mid-project'],
+  [
+    'studio-branding.webp',
+    'Identity system for a neighbourhood bakery: cards, bags and labels',
+    'Identity',
+  ],
+  ['studio-poster.webp', 'Limited-edition poster for a summer concert series', 'Print'],
+  ['studio-mural.webp', 'Thirty-foot mural for a restaurant patio in Summerhill', 'Murals'],
+  ['studio-packaging.webp', 'Packaging for a small-batch hot-sauce brand', 'Print'],
+  ['studio-typography.webp', 'Hand-lettered wordmark in progress', 'Identity'],
+  ['studio-print.webp', 'Screen prints drying after a Saturday press run', 'Print'],
+  ['studio-screenprint.webp', 'Pulling a two-colour print on the studio press', 'Print'],
+  ['studio-sketch.webp', 'Logo sketches from the first week of an identity project', 'Identity'],
+  ['studio-palette.webp', 'Choosing the palette for a café rebrand', 'Identity'],
+  ['studio-space.webp', 'The studio floor on a first-Saturday open day', 'Studio'],
+  [
+    'studio-gallery-wall.webp',
+    'The print wall, where every edition hangs before it ships',
+    'Print',
+  ],
+  ['studio-desk.webp', 'A designer’s desk mid-project', 'Studio'],
 ])
 
 export function creativeEntity(now: Date): EntityPageData {
@@ -86,6 +95,9 @@ export function creativeEntity(now: Date): EntityPageData {
       cta_url: `${EXAMPLE_SITE}/commission`,
       cta_label_override: null,
       ships_nationwide: true,
+      founded_year: 2018,
+      price_range: '$$',
+      accepts_reservations: null,
       videos: DEMO_VIDEOS,
       lat: 33.7465,
       lng: -84.403,
@@ -326,6 +338,7 @@ export function creativeEntity(now: Date): EntityPageData {
     team: [
       {
         id: 'studio-team-1',
+        isFounder: true,
         name: 'Zora Bennett',
         role: 'Founder & creative director',
         bio: 'Started the studio in 2018 after six years at an agency. Draws every first sketch herself.',
@@ -376,6 +389,8 @@ export function creativeEntity(now: Date): EntityPageData {
         label: 'Gallery & print shop',
         cityName: 'Atlanta',
         addressLine: '47 Example Walk SW',
+        lat: 33.749,
+        lng: -84.401,
         href: `/${ATLANTA.slug}/creative/test-business-123-gallery`,
       },
       {
@@ -383,6 +398,8 @@ export function creativeEntity(now: Date): EntityPageData {
         label: 'Pop-up at the market',
         cityName: 'Atlanta',
         addressLine: 'Weekends, Example Market Hall',
+        lat: 33.7701,
+        lng: -84.3659,
         href: `/${ATLANTA.slug}/creative/test-business-123-popup`,
       },
     ],
@@ -443,5 +460,122 @@ export function creativeEntity(now: Date): EntityPageData {
       ],
       total: 1,
     },
+    // Happening now (main, part F): soonest ending first, inside the Premium cap
+    // of five and the 30-day window.
+    happeningNow: [
+      {
+        id: 'studio-post-1',
+        headline: 'Studio open house',
+        body: 'Come see the print shop, pull a screen yourself and take a poster home. Details in the events below.',
+        imageUrl: asset('studio-screenprint.webp'),
+        buttonLabel: 'RSVP',
+        endsAt: futureIso(now, 12),
+      },
+      {
+        id: 'studio-post-2',
+        headline: 'Print sale: 20% off every print in the shop',
+        body: 'Framed or unframed, shipped anywhere in the US. This month only.',
+        imageUrl: null,
+        buttonLabel: 'Shop prints',
+        endsAt: futureIso(now, 23),
+      },
+      {
+        id: 'studio-post-3',
+        headline: 'New mural finished on the Westside',
+        body: 'Forty feet of wall for a neighbourhood bakery. Three weeks, two ladders, one very patient owner.',
+        imageUrl: asset('studio-mural.webp'),
+        buttonLabel: 'See the wall',
+        endsAt: futureIso(now, 27),
+      },
+    ],
+    // Relative to `now`, so the sample never shows a stale holiday. Never today.
+    hoursOverrides: [
+      {
+        date: futureDateKey(now, 8),
+        closed: true,
+        open: null,
+        close: null,
+        label: 'Installing a mural',
+      },
+      {
+        date: futureDateKey(now, 15),
+        closed: false,
+        open: '10:00',
+        close: '20:00',
+        label: 'Open house — press running',
+      },
+    ],
+    highlights: [
+      {
+        id: 'studio-step-1',
+        kind: 'step',
+        icon: 'message-square',
+        title: 'Share the brief',
+        text: 'Tell us about the wall, the brand or the event. Photos, measurements and a rough budget all help.',
+      },
+      {
+        id: 'studio-step-2',
+        kind: 'step',
+        icon: 'lightbulb',
+        title: 'Concepts and a quote',
+        text: 'Two or three directions as sketches, with a fixed quote and a timeline. One round of revisions is included.',
+      },
+      {
+        id: 'studio-step-3',
+        kind: 'step',
+        icon: 'paintbrush',
+        title: 'We make it',
+        text: 'In the studio or on site, with progress photos every few days.',
+      },
+      {
+        id: 'studio-step-4',
+        kind: 'step',
+        icon: 'sparkles',
+        title: 'Hand-off and care',
+        text: 'Sealed, photographed and documented, with a care sheet for the years ahead.',
+      },
+    ],
+    documents: [
+      {
+        id: 'studio-doc-guide',
+        label: 'Commission guide (PDF)',
+        href: 'https://example.com/test-business-123/commission-guide.pdf',
+        sizeLabel: '2.4 MB',
+      },
+    ],
+    credentials: [
+      {
+        id: 'studio-cred-1',
+        kind: 'award',
+        title: 'Best public mural',
+        issuer: 'Example Arts Festival',
+        year: 2025,
+        href: null,
+      },
+      {
+        id: 'studio-cred-2',
+        kind: 'award',
+        title: 'Emerging studio of the year',
+        issuer: 'Example Design Society',
+        year: 2023,
+        href: null,
+      },
+      {
+        id: 'studio-cred-3',
+        kind: 'press',
+        title: 'The studio painting the Westside back to life',
+        issuer: 'Example Arts Weekly',
+        year: 2025,
+        href: 'https://example.com/press/westside-murals',
+      },
+      {
+        id: 'studio-cred-4',
+        kind: 'press',
+        title: 'Risograph is back, and this studio is part of why',
+        issuer: 'Example Print Quarterly',
+        year: 2024,
+        href: 'https://example.com/press/riso-is-back',
+      },
+    ],
   }
 }

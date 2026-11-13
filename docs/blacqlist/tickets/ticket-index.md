@@ -1,8 +1,8 @@
 # BLACQList Dev Ticket Index
 
-**Total tickets:** 136
+**Total tickets:** 192
 **Phases:** 0–18, plus V1 / V1.5 monetization work
-**Last updated:** 2026-10-08
+**Last updated:** 2026-11-13
 
 ---
 
@@ -182,3 +182,21 @@
 | [172](172-search-word-families.md) | Search word families: "lawyer" finds law offices, "dentists" finds dental clinics, no junk | V1.5 | P1 | none | In review | Founder 2026-10-31: "lawyer" and "dentists" found nothing while "law" and "dental" did |
 | [183](183-share-and-celebrate.md) | Share and celebrate: profile share sheet, support post, owners verify receipts | V1.5 | P1 | 166, 165 | In progress | Founder 2026-11-13: branded share images per platform; support post with live camera or camera roll, never the receipt or amount, Supported then Verified; business name opt-in (GATE-DATA); owners verify with admin fallback (GATE-DATA, privacy review) |
 | [184](184-example-page.md) | Test Business 123: the fully filled Premium sample page, one per template | V1.5 | P1 | 105, 154 | In progress | Founder 2026-11-13: three variants on Preview/staging only (404 on production), fixture route now + staging seed (187), build the missing features fully (107–110, 185–196), free stock photos with a licence record; 1B adds the chosen value-adds and stubs 197–202 |
+| [185](185-logo-and-cover-editor.md) | Logo on the page, a logo editor, cover upload, and the meter fixes | V1.5 | P1 | 184 | After deps | Planned from the 184 plan (founder 2026-11-13); no migration; claimed-only logo rule |
+| [186](186-shop-on-profile.md) | The business's marketplace items on its own page ("Shop") | V1.5 | P1 | 184 | After deps | Planned; `storefront` gate + `marketplaceOpen` flag; ≤ 6 products and 6 services, Shop all → /vendors |
+| [187](187-staging-seed-example-business.md) | Seed "Test Business 123" as real listings on staging | V1.5 | P1 | 184 | After deps | Planned; cannot target production; founder confirms every staging run; skips tables not yet migrated |
+| [188](188-click-to-fill-editor.md) | The click-to-fill editor: the sample page as the owner's editor | V1.5 | P1 | 184, 185, 107–110, 189–196 | After deps | Reserved (founder 2026-11-13); `mode='edit'` over the section registry |
+| [189](189-page-quick-wins-live.md) | Facts line, gallery captions and richer JSON-LD on live pages | V1.5 | P1 | 184 | After deps | Planned; no migration; fixes the two JSON-LD quirks pinned in tests/jsonld.test.ts |
+| [190](190-mini-location-map-live.md) | The mini location map on live pages | V1.5 | P2 | 184, 110 | After deps | Planned; lazy-load on scroll, LCP unchanged; verify owner-edit geocoding |
+| [191](191-updates-feed.md) | Updates feed ("What's new") — shipped on main as Happening now posts | V1.5 | P1 | — | Done | Shipped by #326 (2026-11-13), not by this ticket: `listing_posts`, `HappeningNowBanner` above the hero, `/dashboard/pages/[id]/posts`, caps free 0 / Starter 1 / Growth 3 / Premium 5, flag `FEATURE_HAPPENING_NOW`; 184 1B samples it. Deltas from the plan (time-boxed, no pin) recorded in the ticket |
+| [192](192-credentials-awards-press.md) | Credentials, awards and press | V1.5 | P2 | 184, 107 | After deps | Planned; `listing_credentials`, Starter+, https only, no publication logos; GATE-DATA |
+| [193](193-photo-albums.md) | Photo albums in the gallery | V1.5 | P2 | 184 | After deps | Planned; `media_attachments.album`, Growth+; GATE-DATA |
+| [194](194-documents-menu-rate-card.md) | Documents: menu, rate card, commission guide (PDF) | V1.5 | P2 | 184 | After deps | Planned; `media_role='document'` + `listing_documents`, Starter 1 / Growth 3 / Premium 10, download-only; GATE-DATA |
+| [195](195-highlights-and-process.md) | Highlights and process steps | V1.5 | P2 | 184 | After deps | Planned; `listing_highlights`, Free 0 / Starter 4 / Growth+ 6, icons from the allow-list; GATE-DATA |
+| [196](196-holiday-hours.md) | Holiday and special hours | V1.5 | P1 | 184, 189 | After deps | Planned; `listing_hours_overrides`, all tiers, JSON-LD specialOpeningHoursSpecification; GATE-DATA |
+| [197](197-menu-item-photos-tags.md) | Menu-item photos and tags | V1.5 | P3 | 184, 186 | Needs decision | Stub — founder 2026-11-13 |
+| [198](198-service-area-list.md) | Service-area list for businesses without an address | V1.5 | P3 | 184, 190 | Needs decision | Stub — founder 2026-11-13 |
+| [199](199-pinned-review-quote.md) | A pinned review quote in the hero | V1.5 | P3 | 184 | Needs decision | Stub — founder 2026-11-13; only a published review can be pinned |
+| [200](200-sticky-mini-header.md) | Sticky desktop mini header on long pages | V1.5 | P3 | 184, 185 | Needs decision | Stub — founder 2026-11-13; display only |
+| [201](201-custom-subdomain.md) | A custom subdomain per business (name.theblacqlist.com) | V1.5 | P3 | 184 | Needs decision | Stub — founder 2026-11-13; own security and SEO review |
+| [202](202-brand-accent-colour.md) | A brand accent colour on the page | V1.5 | P3 | 184 | Needs decision | Stub — not selected by the founder 2026-11-13; kept visible to strike or pick up |

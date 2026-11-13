@@ -1,6 +1,7 @@
 import type { EntityPageData } from '@/types'
 import { TemplateSectionHeading } from '@/components/entity-page/templates/TemplateSectionHeading'
 import { getCtaHref } from '@/components/entity-page/templates/cta'
+import { documentsActions } from '@/components/entity-page/EntityDocumentsRow'
 
 interface Props {
   entity: EntityPageData
@@ -32,6 +33,7 @@ export function TemplateServices({ entity }: Props) {
           kicker="What we offer"
           heading="Services & packages"
           headingId="services-heading"
+          actions={documentsActions(entity.documents)}
         />
         <div className="flex flex-col gap-8 mb-6">
           {[...groups.entries()].map(([group, items]) => (
@@ -81,6 +83,7 @@ export function TemplateServices({ entity }: Props) {
         kicker="What we offer"
         heading="Services & packages"
         headingId="services-heading"
+        actions={documentsActions(entity.documents)}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

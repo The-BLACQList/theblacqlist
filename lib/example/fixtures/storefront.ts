@@ -1,4 +1,5 @@
 import type { EntityPageData } from '@/types'
+import { futureDateKey } from '@/lib/listings/hoursOverrides'
 import {
   ATLANTA,
   DEMO_VIDEOS_THREE,
@@ -26,18 +27,30 @@ const DESCRIPTION = [
 ].join('\n\n')
 
 const GALLERY = gallery('cafe', [
-  ['cafe-interior.webp', 'The main room at opening time, with morning light across the long table'],
-  ['cafe-counter.webp', 'The espresso bar and pastry case'],
-  ['cafe-latte.webp', 'Oat-milk latte with a rosetta pour'],
-  ['cafe-pastries.webp', 'Thursday’s pastry case: croissants, scones and sweet potato hand pies'],
-  ['cafe-brunch.webp', 'Shrimp and grits from the weekend brunch menu'],
-  ['cafe-pour-over.webp', 'Single-origin pour-over at the brew bar'],
-  ['cafe-beans.webp', 'Freshly roasted Ethiopia Guji beans cooling after the Friday roast'],
-  ['cafe-patio.webp', 'The side patio on a spring afternoon'],
-  ['cafe-espresso.webp', 'A shot of our house espresso blend'],
-  ['cafe-croissant.webp', 'Butter croissant, baked each morning'],
-  ['cafe-window-seat.webp', 'The window seat, the best spot in the house'],
-  ['cafe-cold-brew.webp', 'Cold brew on tap, served over ice'],
+  [
+    'cafe-interior.webp',
+    'The main room at opening time, with morning light across the long table',
+    'Interior',
+  ],
+  ['cafe-counter.webp', 'The espresso bar and pastry case', 'Interior'],
+  ['cafe-latte.webp', 'Oat-milk latte with a rosetta pour', 'Drinks'],
+  [
+    'cafe-pastries.webp',
+    'Thursday’s pastry case: croissants, scones and sweet potato hand pies',
+    'Food',
+  ],
+  ['cafe-brunch.webp', 'Shrimp and grits from the weekend brunch menu', 'Food'],
+  ['cafe-pour-over.webp', 'Single-origin pour-over at the brew bar', 'Drinks'],
+  [
+    'cafe-beans.webp',
+    'Freshly roasted Ethiopia Guji beans cooling after the Friday roast',
+    'Roastery',
+  ],
+  ['cafe-patio.webp', 'The side patio on a spring afternoon', 'Interior'],
+  ['cafe-espresso.webp', 'A shot of our house espresso blend', 'Drinks'],
+  ['cafe-croissant.webp', 'Butter croissant, baked each morning', 'Food'],
+  ['cafe-window-seat.webp', 'The window seat, the best spot in the house', 'Interior'],
+  ['cafe-cold-brew.webp', 'Cold brew on tap, served over ice', 'Drinks'],
 ])
 
 export function storefrontEntity(now: Date): EntityPageData {
@@ -86,6 +99,9 @@ export function storefrontEntity(now: Date): EntityPageData {
       cta_url: `${EXAMPLE_SITE}/order`,
       cta_label_override: null,
       ships_nationwide: true,
+      founded_year: 2014,
+      price_range: '$$',
+      accepts_reservations: true,
       videos: DEMO_VIDEOS_THREE,
       lat: 33.7627,
       lng: -84.366,
@@ -359,6 +375,7 @@ export function storefrontEntity(now: Date): EntityPageData {
     team: [
       {
         id: 'cafe-team-1',
+        isFounder: true,
         name: 'Amara Johnson',
         role: 'Owner & head roaster',
         bio: 'Opened the café in 2014 after a decade in specialty coffee. Roasts every Tuesday and Friday.',
@@ -415,6 +432,8 @@ export function storefrontEntity(now: Date): EntityPageData {
         label: 'Westside',
         cityName: 'Atlanta',
         addressLine: '456 Sample Avenue NW',
+        lat: 33.7868,
+        lng: -84.416,
         href: `/${ATLANTA.slug}/restaurant/test-business-123-westside`,
       },
       {
@@ -422,6 +441,8 @@ export function storefrontEntity(now: Date): EntityPageData {
         label: 'Decatur Square',
         cityName: 'Decatur',
         addressLine: '78 Placeholder Street',
+        lat: 33.7748,
+        lng: -84.2963,
         href: '/decatur-ga/restaurant/test-business-123-decatur',
       },
     ],
@@ -510,5 +531,130 @@ export function storefrontEntity(now: Date): EntityPageData {
       ],
       total: 2,
     },
+    // Happening now (main, part F): soonest ending first, inside the Premium cap
+    // of five and the 30-day window. The button links go through
+    // /api/happening-now and the sample's link guard holds them.
+    happeningNow: [
+      {
+        id: 'cafe-post-1',
+        headline: 'Thanksgiving week hours',
+        body: 'Closed Thursday for Thanksgiving; open at 8 on Friday. Pre-order pies for pickup by Tuesday.',
+        imageUrl: null,
+        buttonLabel: null,
+        endsAt: futureIso(now, 13, 22),
+      },
+      {
+        id: 'cafe-post-2',
+        headline: 'Holiday blend is back',
+        body: 'Cocoa, orange peel and a little spice. Twelve-ounce bags on the shelf and in the online shop while it lasts.',
+        imageUrl: asset('cafe-beans.webp'),
+        buttonLabel: 'Shop the blend',
+        endsAt: futureIso(now, 21),
+      },
+      {
+        id: 'cafe-post-3',
+        headline: 'Patio open, heaters on',
+        body: 'Eight more tables out back and the heaters are lit for the cold months. Dogs welcome.',
+        imageUrl: asset('cafe-patio.webp'),
+        buttonLabel: 'Book a table',
+        endsAt: futureIso(now, 27),
+      },
+    ],
+    // Relative to `now`, so the sample never shows a stale holiday. Never today.
+    hoursOverrides: [
+      {
+        date: futureDateKey(now, 6),
+        closed: true,
+        open: null,
+        close: null,
+        label: 'Staff holiday',
+      },
+      {
+        date: futureDateKey(now, 13),
+        closed: false,
+        open: '07:00',
+        close: '21:00',
+        label: 'Open late for the night market',
+      },
+      {
+        date: futureDateKey(now, 20),
+        closed: false,
+        open: '09:00',
+        close: '14:00',
+        label: 'Holiday hours',
+      },
+    ],
+    highlights: [
+      {
+        id: 'cafe-hl-1',
+        kind: 'highlight',
+        icon: 'coffee',
+        title: 'Roasted on site',
+        text: 'Beans from family farms, roasted every Tuesday and Friday. Ask what came out of the drum this week.',
+      },
+      {
+        id: 'cafe-hl-2',
+        kind: 'highlight',
+        icon: 'leaf',
+        title: 'Made from scratch',
+        text: 'The brunch menu and the pastry case start at five in the morning, from flour, butter and whatever is in season.',
+      },
+      {
+        id: 'cafe-hl-3',
+        kind: 'highlight',
+        icon: 'users',
+        title: 'Room to work and to linger',
+        text: 'Twenty-four seats in the back room, a long table by the window and an outlet at every seat.',
+      },
+      {
+        id: 'cafe-hl-4',
+        kind: 'highlight',
+        icon: 'dog',
+        title: 'Dogs welcome on the patio',
+        text: 'Water bowls out front and a jar of treats behind the counter.',
+      },
+    ],
+    documents: [
+      {
+        id: 'cafe-doc-menu',
+        label: 'Full menu (PDF)',
+        href: 'https://example.com/test-business-123/menu.pdf',
+        sizeLabel: '1.2 MB',
+      },
+    ],
+    credentials: [
+      {
+        id: 'cafe-cred-1',
+        kind: 'award',
+        title: 'Best neighbourhood café',
+        issuer: 'Example City Weekly readers’ poll',
+        year: 2025,
+        href: null,
+      },
+      {
+        id: 'cafe-cred-2',
+        kind: 'award',
+        title: 'Roaster of the year, Southeast',
+        issuer: 'Example Coffee Guild',
+        year: 2024,
+        href: null,
+      },
+      {
+        id: 'cafe-cred-3',
+        kind: 'press',
+        title: 'The biscuit worth crossing town for',
+        issuer: 'Example Food Journal',
+        year: 2025,
+        href: 'https://example.com/press/the-biscuit',
+      },
+      {
+        id: 'cafe-cred-4',
+        kind: 'press',
+        title: 'Twelve cafés doing right by their neighbourhoods',
+        issuer: 'Example Magazine',
+        year: 2024,
+        href: 'https://example.com/press/twelve-cafes',
+      },
+    ],
   }
 }

@@ -13,6 +13,8 @@ import { resolveEntityCover } from '@/lib/listings/exampleAssets'
 import type { EntityRenderMode } from '@/lib/entity-page/template'
 import { EntityLogo } from '@/components/entity-page/EntityLogo'
 import { SectionMark } from '@/components/entity-page/SectionMark'
+import { EntityFactsLine } from '@/components/entity-page/EntityFactsLine'
+import { factsFor } from '@/lib/listings/facts'
 import { categoryFilterHref, levelFilterHref } from '@/lib/listings/url'
 import { levelPill, extraLevelLabels } from '@/lib/listings/levels'
 import {
@@ -84,6 +86,8 @@ export function TemplateHero({ entity, initialSaved = false, variant, mode = 'li
   // Events and jobs have no opening hours and no "is it open right now?"
   // question to answer — OpenStatus would render an empty promise there.
   const showOpenStatus = variant !== 'event' && variant !== 'job'
+  // Facts line (ticket 189): only business templates have a founding year or price band.
+  const facts = showOpenStatus ? factsFor(entity.details) : []
   const cover = resolveEntityCover(entity.cover_image_path, entity.entity_type, entity.id, mode)
   const ctaLabel = getEntityCtaLabel(entity)
   // A job past its closing date offers no apply button; the page says so instead.
@@ -257,14 +261,30 @@ export function TemplateHero({ entity, initialSaved = false, variant, mode = 'li
         {!isCreative && locationLine && (
           <p className="flex items-center gap-3 flex-wrap font-body text-sm md:text-[15px] text-off-white/90 mt-2">
             {locationLine}
-            {showOpenStatus && <OpenStatus hours={entity.details.hours} surface="dark" />}
+            {showOpenStatus && (
+              <OpenStatus
+                hours={entity.details.hours}
+                overrides={entity.hoursOverrides}
+                surface="dark"
+              />
+            )}
           </p>
         )}
         {isCreative && entity.city && (
           <p className="flex items-center gap-3 flex-wrap font-body text-sm md:text-[15px] text-off-white/90 mt-2">
             {entity.city.name}, {entity.city.state_abbr}
-            <OpenStatus hours={entity.details.hours} surface="dark" />
+            <OpenStatus
+              hours={entity.details.hours}
+              overrides={entity.hoursOverrides}
+              surface="dark"
+            />
           </p>
+        )}
+
+        {facts.length > 0 && (
+          <SectionMark id="facts">
+            <EntityFactsLine facts={facts} className="mt-2" />
+          </SectionMark>
         )}
 
         <span className="blacq-hero-rule mt-3" aria-hidden="true" />

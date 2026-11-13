@@ -1,12 +1,22 @@
+import type { ReactNode } from 'react'
+
 interface Props {
   kicker: string
   heading: string
   headingId: string
   onDark?: boolean
+  /** Rendered under the heading row: a download row, a filter. */
+  actions?: ReactNode
 }
 
 /** Editorial section heading: uppercase kicker + gold rule + Jost h2. */
-export function TemplateSectionHeading({ kicker, heading, headingId, onDark = false }: Props) {
+export function TemplateSectionHeading({
+  kicker,
+  heading,
+  headingId,
+  onDark = false,
+  actions,
+}: Props) {
   return (
     <div className="mb-6">
       <p
@@ -26,6 +36,7 @@ export function TemplateSectionHeading({ kicker, heading, headingId, onDark = fa
           {heading}
         </h2>
       </div>
+      {actions && <div className="mt-4">{actions}</div>}
     </div>
   )
 }

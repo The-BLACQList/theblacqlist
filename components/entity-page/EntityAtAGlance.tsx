@@ -8,10 +8,17 @@ import { Phone, Mail, Globe, MapPin, ExternalLink } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { trackContactTap } from '@/lib/analytics/contactTap'
 import { directionsUrl } from '@/lib/listings/directions'
+import { upcomingOverrides } from '@/lib/listings/hoursOverrides'
+import { locationPins } from '@/lib/listings/locationPins'
+import { formatTime, isOpenNow } from '@/lib/listings/openStatus'
 import { LOCATION_TYPE_META } from '@/lib/constants/listing'
-import type { EntityPageData, WeeklyHours, DayHours } from '@/types'
+import type { EntityRenderMode } from '@/lib/entity-page/template'
+import type { EntityPageData, HoursOverride, WeeklyHours } from '@/types'
 import { ReportCorrectionForm } from '@/components/entity-page/ReportCorrectionForm'
 import { DistanceFromYou } from '@/components/entity-page/DistanceFromYou'
+import { EntityHoursOverrides } from '@/components/entity-page/EntityHoursOverrides'
+import { EntityLocationMap } from '@/components/entity-page/EntityLocationMap'
+import { SectionMark } from '@/components/entity-page/SectionMark'
 
 type Day = keyof WeeklyHours
 const DAYS: Day[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
@@ -44,47 +51,15 @@ function normalizeSocialUrl(platform: string, raw: string): string {
   return (SOCIAL_BASE[platform] ?? 'https://') + handle
 }
 
-function formatTime(t: string): string {
-  const [hStr, mStr] = t.split(':')
-  const h = parseInt(hStr ?? '0')
-  const m = mStr ?? '00'
-  const suffix = h >= 12 ? 'PM' : 'AM'
-  const h12 = h % 12 || 12
-  return `${h12}:${m} ${suffix}`
-}
-
-function isOpenNow(hours: WeeklyHours): { open: boolean; label: string } {
-  const now = new Date()
-  const dayIndex = now.getDay() // 0=Sun, 1=Mon, ...
-  const dayKey = DAYS[dayIndex === 0 ? 6 : dayIndex - 1] as Day
-  const today: DayHours = hours[dayKey]
-
-  if (today.closed) return { open: false, label: 'Closed today' }
-
-  const [oh, om] = today.open.split(':').map(Number)
-  const [ch, cm] = today.close.split(':').map(Number)
-  const nowMins = now.getHours() * 60 + now.getMinutes()
-  const openMins = (oh ?? 0) * 60 + (om ?? 0)
-  const closeMins = (ch ?? 0) * 60 + (cm ?? 0)
-
-  if (nowMins >= openMins && nowMins < closeMins) {
-    return {
-      open: true,
-      label: `Open · Closes ${formatTime(today.close)}`,
-    }
-  }
-  if (nowMins < openMins) {
-    return {
-      open: false,
-      label: `Closed · Opens ${formatTime(today.open)}`,
-    }
-  }
-  return { open: false, label: 'Closed now' }
-}
-
-function OpenStatusIndicator({ hours }: { hours: WeeklyHours }) {
+function OpenStatusIndicator({
+  hours,
+  overrides,
+}: {
+  hours: WeeklyHours
+  overrides?: readonly HoursOverride[]
+}) {
   // suppressHydrationWarning is intentional: time differs between server and client renders.
-  const status = isOpenNow(hours)
+  const status = isOpenNow(hours, overrides)
   return (
     <span
       suppressHydrationWarning
@@ -104,9 +79,11 @@ function OpenStatusIndicator({ hours }: { hours: WeeklyHours }) {
 
 interface Props {
   entity: EntityPageData
+  /** Example pages show the mini map now; live pages get it in ticket 190. */
+  mode?: EntityRenderMode
 }
 
-export function EntityAtAGlance({ entity }: Props) {
+export function EntityAtAGlance({ entity, mode = 'live' }: Props) {
   const { details } = entity
   const hasAddress = details.address && details.city_name && details.state_abbr
 
@@ -131,6 +108,13 @@ export function EntityAtAGlance({ entity }: Props) {
     : null
 
   const hasSocial = Object.values(details.social).some(Boolean)
+
+  // Live listings already carry lat/lng, so the map is example-only until
+  // ticket 190 measures it on a real page and flips it on.
+  const pins = mode === 'example' ? locationPins(entity) : []
+  // Only the window moves with the clock, and the fixtures keep every date
+  // well inside it, so server and client render the same rows.
+  const upcoming = upcomingOverrides(entity.hoursOverrides, new Date())
 
   return (
     <section aria-labelledby="at-a-glance-heading" className="bg-white py-12 md:py-16">
@@ -187,6 +171,11 @@ export function EntityAtAGlance({ entity }: Props) {
                     {LOCATION_TYPE_META[entity.location_type].label}
                   </p>
                 )}
+                {pins.length > 0 && (
+                  <SectionMark id="map">
+                    <EntityLocationMap pins={pins} directionsHref={mapsHref} className="mt-4" />
+                  </SectionMark>
+                )}
               </div>
             )}
 
@@ -197,7 +186,7 @@ export function EntityAtAGlance({ entity }: Props) {
                   Hours
                 </p>
                 <div className="mb-2">
-                  <OpenStatusIndicator hours={details.hours} />
+                  <OpenStatusIndicator hours={details.hours} overrides={entity.hoursOverrides} />
                 </div>
                 <table className="w-full text-sm font-body text-charcoal">
                   <tbody>
@@ -216,6 +205,11 @@ export function EntityAtAGlance({ entity }: Props) {
                     })}
                   </tbody>
                 </table>
+                {upcoming.length > 0 && (
+                  <SectionMark id="hours-overrides">
+                    <EntityHoursOverrides overrides={upcoming} />
+                  </SectionMark>
+                )}
               </div>
             )}
           </div>

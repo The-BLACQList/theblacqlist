@@ -110,6 +110,21 @@ describe('off production', () => {
     }
   })
 
+  it('carries the LocalBusiness JSON-LD a live listing emits', async () => {
+    const { page } = await loadRoutes(false)
+    for (const variant of ['storefront', 'professional', 'creative']) {
+      const tree = await page.default({ params: params(variant) })
+      const html = findProp(tree, 'dangerouslySetInnerHTML') as { __html: string } | undefined
+      expect(html?.__html, variant).toBeTruthy()
+      const data = JSON.parse(html!.__html) as Record<string, unknown>
+      expect(data['@context']).toBe('https://schema.org')
+      expect(data['@type']).toBe('LocalBusiness')
+      expect(data.name).toBe('Test Business 123')
+      expect(data.aggregateRating).toBeTruthy()
+      expect(data.address).toBeTruthy()
+    }
+  })
+
   it('titles say it is a sample', async () => {
     const { page, index } = await loadRoutes(false)
     const meta = await page.generateMetadata({ params: params('professional') })
