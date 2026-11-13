@@ -40,10 +40,10 @@ export function MoreBelow({ watch }: { watch?: unknown }) {
           <button
             type="button"
             onClick={scrollOn}
-            className="pointer-events-auto inline-flex -translate-y-full items-center gap-2 rounded-full bg-amber-gold px-6 py-3 font-subhead text-sm font-bold text-brand-black shadow-lg ring-4 ring-white transition-colors hover:bg-[#b08d55] focus-visible:outline-none focus-visible:ring-brand-black"
+            className="blacq-more-pulse pointer-events-auto inline-flex -translate-y-full items-center gap-2 rounded-full bg-amber-gold px-6 py-3 font-subhead text-sm font-bold text-brand-black shadow-lg ring-4 ring-white transition-colors hover:bg-[#b08d55] focus-visible:outline-none focus-visible:ring-brand-black"
           >
             More below
-            <ArrowDown className="size-4 motion-safe:animate-bounce" aria-hidden="true" />
+            <ArrowDown className="size-4" aria-hidden="true" />
           </button>
         )}
       </div>
