@@ -1,7 +1,10 @@
-import type { EntityPageData } from '@/types'
+import type { EntityTemplateProps } from '@/lib/entity-page/template'
 import { Reveal } from '@/components/motion/Reveal'
 import { TemplateHero } from '@/components/entity-page/templates/TemplateHero'
-import { EntityAnchorTabs, type AnchorTab } from '@/components/entity-page/templates/EntityAnchorTabs'
+import {
+  EntityAnchorTabs,
+  type AnchorTab,
+} from '@/components/entity-page/templates/EntityAnchorTabs'
 import { TemplateInfoRail } from '@/components/entity-page/templates/TemplateInfoRail'
 import { TemplateSectionHeading } from '@/components/entity-page/templates/TemplateSectionHeading'
 import { TemplateServices } from '@/components/entity-page/templates/TemplateServices'
@@ -22,14 +25,6 @@ import { EntityPlatformActivity } from '@/components/entity-page/EntityPlatformA
 import { EntityReviewsSection } from '@/components/entity-page/EntityReviewsSection'
 import { EntityRelatedDiscovery } from '@/components/entity-page/EntityRelatedDiscovery'
 
-interface Props {
-  entity: EntityPageData
-  initialSaved: boolean
-  userId: string | null
-  isOwner: boolean
-  hasReviewed: boolean
-}
-
 /**
  * Service archetype — the P-A "Immersive Microsite" template for
  * professional listings (Living Commerce Index proof page #1).
@@ -37,7 +32,13 @@ interface Props {
  * editorial story with sticky trust aside → gallery → reviews → visit →
  * related.
  */
-export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, hasReviewed }: Props) {
+export function ProfessionalTemplate({
+  entity,
+  initialSaved,
+  userId,
+  isOwner,
+  hasReviewed,
+}: EntityTemplateProps) {
   const hasServices = entity.details.services.length > 0
   const hasStory = Boolean(entity.details.description?.trim())
   const hasGallery = entity.images.length > 0
@@ -74,30 +75,30 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
 
       {/* Main content + sticky trust aside */}
       <Reveal>
-      <div className="bg-white">
-        <div className="max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 py-10 md:py-14 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-10">
-          <div className="flex flex-col gap-12 md:gap-14 min-w-0">
-            <TemplateServices entity={entity} />
-            <TemplateStory entity={entity} imageSide="left" />
-            {hasGallery && (
-              <section aria-labelledby="featured-work-heading">
-                <TemplateSectionHeading
-                  kicker="Featured work"
-                  heading="Recent work"
-                  headingId="featured-work-heading"
-                />
-                <PortfolioReel images={entity.images} />
-              </section>
-            )}
-            <EntityAttributes attributes={entity.attributes} bare />
-            <EntityLinks entity={entity} bare />
-          </div>
+        <div className="bg-white">
+          <div className="max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 py-10 md:py-14 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-10">
+            <div className="flex flex-col gap-12 md:gap-14 min-w-0">
+              <TemplateServices entity={entity} />
+              <TemplateStory entity={entity} imageSide="left" />
+              {hasGallery && (
+                <section aria-labelledby="featured-work-heading">
+                  <TemplateSectionHeading
+                    kicker="Featured work"
+                    heading="Recent work"
+                    headingId="featured-work-heading"
+                  />
+                  <PortfolioReel images={entity.images} />
+                </section>
+              )}
+              <EntityAttributes attributes={entity.attributes} bare />
+              <EntityLinks entity={entity} bare />
+            </div>
 
-          <aside aria-label="Trust and verification">
-            <TemplateTrustPanel entity={entity} />
-          </aside>
+            <aside aria-label="Trust and verification">
+              <TemplateTrustPanel entity={entity} />
+            </aside>
+          </div>
         </div>
-      </div>
       </Reveal>
 
       {hasGallery && (
@@ -113,19 +114,18 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
       </Reveal>
 
       <Reveal>
-      <div id="reviews" className="scroll-mt-32">
-        <EntityReviewsSection
-          entity={entity}
-          userId={userId}
-          isOwner={isOwner}
-          hasReviewed={hasReviewed}
-        />
-      </div>
+        <div id="reviews" className="scroll-mt-32">
+          <EntityReviewsSection
+            entity={entity}
+            userId={userId}
+            isOwner={isOwner}
+            hasReviewed={hasReviewed}
+          />
+        </div>
       </Reveal>
 
       <EntityNowHiring listingId={entity.id} />
       <EntityUpcomingEvents entity={entity} />
-
 
       <Reveal>
         <EntityFaqSection faqs={entity.faqs} />

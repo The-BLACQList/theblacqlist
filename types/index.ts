@@ -342,6 +342,82 @@ export interface JobDetails {
   hiring: JobHiring | null
 }
 
+// ─── Page sections that a loader may or may not provide (ticket 184) ────────────
+//
+// Every field below is optional on EntityPageData. `undefined` means "this loader
+// does not provide it yet", and the section stays hidden — so adding a type here
+// changes nothing on a live page until its loader fills it. The example pages
+// (lib/example/fixtures) fill all of them; the live loader gains them one ticket
+// at a time (185 logo, 186 shop, 107 team, 108 coupons, 109 booking, 110
+// locations).
+
+/** An image whose `src` is already a renderable URL — storage, remote or a repo asset. */
+export interface ResolvedImage {
+  src: string
+  alt: string
+  /** Set when next/image must not optimize it (a host outside remotePatterns). */
+  unoptimized?: boolean
+}
+
+/** One person on the Team section (ticket 107). `photo` null → initials avatar. */
+export interface TeamMember {
+  id: string
+  name: string
+  role: string | null
+  bio: string | null
+  photo: ResolvedImage | null
+}
+
+/** One deal on the Coupons section (ticket 108). `code` null → "show this page". */
+export interface CouponItem {
+  id: string
+  title: string
+  description: string | null
+  code: string | null
+  terms: string | null
+  /** ISO timestamp; null → no end date. */
+  endsAt: string | null
+}
+
+/** Owner settings for the booking-request form (ticket 109). */
+export interface BookingConfig {
+  prompt: string | null
+  askDate: boolean
+  askPartySize: boolean
+}
+
+/** Another location of the same business (ticket 110). `href` is its page. */
+export interface LocationLink {
+  id: string
+  label: string
+  cityName: string
+  addressLine: string | null
+  href: string
+}
+
+/** One marketplace item shown on the profile Shop section (ticket 186). */
+export interface EntityShopItem {
+  id: string
+  kind: 'product' | 'service'
+  name: string
+  priceLabel: string | null
+  image: ResolvedImage | null
+  href: string
+}
+
+export interface EntityShop {
+  items: EntityShopItem[]
+  /** Total active items, so "Shop all (14)" can exceed what is shown. */
+  total: number
+  shopAllHref: string
+}
+
+/** Open roles for the Now-hiring block. Shape matches NowHiringView's props. */
+export interface EntityHiring {
+  roles: DiscoveryEntity[]
+  total: number
+}
+
 export interface EntityPageData {
   id: string
   entity_type: EntityType
@@ -413,4 +489,14 @@ export interface EntityPageData {
   reviews: ReviewItem[]
   reviewCriteria: ReviewCriterion[]
   reviewCriteriaAverages: ReviewCriterionAverage[]
+  // ── Optional sections (ticket 184). See the block above EntityPageData. ──
+  /** Logo beside the name in the hero. Only claimed listings get one (ticket 185). */
+  logo?: ResolvedImage | null
+  team?: TeamMember[]
+  coupons?: CouponItem[]
+  booking?: BookingConfig | null
+  /** OTHER locations of this business, not the page itself. */
+  locations?: LocationLink[]
+  shop?: EntityShop | null
+  hiring?: EntityHiring | null
 }
