@@ -27,6 +27,8 @@ interface Props {
   showReceipts?: boolean
   /** Unread messages. Undefined hides the Messages item (flag off). */
   messagesUnread?: number
+  /** happeningNow is on: "Happening now" shows under This page (part F). */
+  showPosts?: boolean
 }
 
 const NAV_ITEMS = [
@@ -58,6 +60,7 @@ export function DashboardSidebar({
   receiptsToVerify = 0,
   showReceipts = false,
   messagesUnread,
+  showPosts = false,
 }: Props) {
   const pathname = usePathname()
   const allItems =
@@ -139,6 +142,7 @@ export function DashboardSidebar({
             <div className="flex gap-1 overflow-x-auto md:block">
               {[
                 { href: `/dashboard/pages/${entityId}/edit`, label: 'Edit content' },
+                ...(showPosts ? [{ href: `/dashboard/pages/${entityId}/posts`, label: 'Happening now' }] : []),
                 { href: `/dashboard/pages/${entityId}/offerings`, label: 'Offerings' },
                 { href: `/dashboard/pages/${entityId}/events`, label: 'Events' },
                 { href: `/dashboard/pages/${entityId}/media`, label: 'Media' },

@@ -42,6 +42,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         receiptsToVerify={receiptsToVerify}
         showReceipts={ownerReview}
         messagesUnread={messagesUnread}
+        showPosts={isFeatureEnabled('happeningNow')}
       />
       <main className="flex-1 min-w-0 p-4 sm:p-6 md:p-8">{children}</main>
     </div>

@@ -1719,6 +1719,56 @@ export type Database = {
           },
         ]
       }
+      listing_posts: {
+        Row: {
+          body: string | null
+          button_label: string | null
+          button_url: string | null
+          created_at: string
+          ends_at: string
+          headline: string
+          id: string
+          image_path: string | null
+          listing_id: string
+          starts_at: string
+          status: string
+        }
+        Insert: {
+          body?: string | null
+          button_label?: string | null
+          button_url?: string | null
+          created_at?: string
+          ends_at: string
+          headline: string
+          id?: string
+          image_path?: string | null
+          listing_id: string
+          starts_at?: string
+          status?: string
+        }
+        Update: {
+          body?: string | null
+          button_label?: string | null
+          button_url?: string | null
+          created_at?: string
+          ends_at?: string
+          headline?: string
+          id?: string
+          image_path?: string | null
+          listing_id?: string
+          starts_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_posts_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_tags: {
         Row: {
           created_at: string

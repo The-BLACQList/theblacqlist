@@ -46,6 +46,8 @@ import { SiteImport, type ImportSaved } from './finish/SiteImport'
 import { photoRoom, previewContact, type ImportCard, type PageNow } from '@/lib/import/ownerImport'
 import { MAX_PHOTO_CANDIDATES } from '@/lib/import/limits'
 import type { WeeklyHours } from '@/types'
+import { HappeningNowCard } from '@/components/dashboard/HappeningNowCard'
+import type { OwnerPost } from '@/lib/listings/happeningNow'
 import {
   DEFAULT_TAB,
   EDIT_TABS,
@@ -79,6 +81,8 @@ interface Props {
   inbox?: { open: boolean }
   /** The tab to open first on the edit page, from `?tab=`. A `#card` in the address wins. */
   initialTab?: EditTabId
+  /** Happening now posts (part F). Edit mode on a business page with the flag on only. */
+  happeningNow?: { posts: OwnerPost[]; now: string }
 }
 
 // Which section shows each draft card's field, and that field's draft key.
@@ -142,6 +146,7 @@ export function PageFinishView({
   premiumOpen = false,
   inbox,
   initialTab = DEFAULT_TAB,
+  happeningNow,
 }: Props) {
   const d = data.details
   const fromProps: Draft = {
@@ -358,6 +363,16 @@ export function PageFinishView({
   // Every card, by anchor id. A new page shows them in one scroll; the edit
   // page groups them into tabs (part C). Cards a page doesn't have are left out.
   const sections: Partial<Record<string, ReactNode>> = {
+    'happening-now':
+      mode === 'edit' && happeningNow ? (
+        <HappeningNowCard
+          listingId={data.id}
+          posts={happeningNow.posts}
+          tier={tier}
+          upgradeTo={moreOffer}
+          now={happeningNow.now}
+        />
+      ) : null,
     basics: (
       <BasicInfoSection
         key={`basics-${mounts.basics}`}

@@ -60,6 +60,10 @@ export const SERVER_ONLY_EVENTS = {
   PRODUCT_CREATED: 'product_created',
   SERVICE_CREATED: 'service_created',
   SIGN_UP_COMPLETED: 'sign_up_completed',
+  // Happening now posts (part F). entity_type 'listing', entity_id = the
+  // listing id, properties { post_id, surface: 'page' | 'strip' }.
+  POST_VIEW: 'post_view',
+  POST_CLICK: 'post_click',
 } as const
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS]
@@ -80,6 +84,11 @@ export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
  *            share_initiated, claim_submitted, listing_submitted,
  *            hero_cta_click, action_bar_cta_click
  *            + the three SERVER_ONLY_EVENTS above.
+ *   post_view and post_click (part F, 2026-11-13, behind happeningNow):
+ *            post_view when a live post is on a business page (the one the
+ *            banner shows) or in the city/category strip; post_click from
+ *            GET /api/happening-now/[postId]. Both server-side, so a visitor
+ *            can't inflate them through /api/analytics.
  *
  *   cta_click IS NOT ONE EVENT WITH ONE SHAPE. Two emitters write it, and they
  *   disagree about what entity_id means:

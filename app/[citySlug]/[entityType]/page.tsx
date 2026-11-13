@@ -8,6 +8,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { queryListings, LISTINGS_PAGE_SIZE } from '@/lib/listings/query'
 import { Container } from '@/components/layout/container'
 import { DiscoveryGrid } from '@/components/discovery/DiscoveryGrid'
+import { HappeningNowStrip } from '@/components/discovery/HappeningNowStrip'
 
 export const revalidate = 86400
 export const dynamicParams = true
@@ -220,6 +221,15 @@ export default async function CityCategoryPage({ params, searchParams }: PagePro
           )}
         </Container>
       </div>
+
+      {/* Happening now posts (part F). Renders nothing with the flag off or no posts. */}
+      <Suspense fallback={null}>
+        <HappeningNowStrip
+          cityId={city.id}
+          categoryId={category.id}
+          placeLabel={`in ${category.name} in ${city.name}`}
+        />
+      </Suspense>
 
       {/* Listings */}
       <Container className="py-8">

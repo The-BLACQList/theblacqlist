@@ -238,6 +238,7 @@ describe('getEnabledFeatures', () => {
     expect(getEnabledFeatures().sort()).toEqual([
       'aiBeta',
       'earnedFeatured',
+      'happeningNow',
       'messaging',
       'ocrExtraction',
       'paidPostings',

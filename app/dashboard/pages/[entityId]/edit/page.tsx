@@ -24,6 +24,7 @@ import { loadOpenSuggestions } from '@/lib/ai/openSuggestions'
 import { growthIsOpen, offerPremiumTo } from '@/lib/marketplace/entitlements'
 import { OWNER_MANAGES_LINE, postJobInviteOpen } from '@/lib/listings/ownerLine'
 import { initialTab } from '@/lib/listings/editTabs'
+import { toOwnerPosts } from '@/lib/listings/happeningNow'
 
 interface Props {
   params: Promise<{ entityId: string }>
@@ -270,7 +271,7 @@ export default async function EditPage({ params, searchParams }: Props) {
 
   // Every other page (business, creative, service provider, vendor) edits in
   // the same side-by-side finish view a new owner uses (ticket 129).
-  const [data, allowance, growthOpen, premiumOpen, inboxOpen] = await Promise.all([
+  const [data, allowance, growthOpen, premiumOpen, inboxOpen, postRows] = await Promise.all([
     loadFinishData(supabase, listing.id, owner.user.id),
     getWritingAllowance(listing.id, listing.tier),
     // Limit notes offer Growth to a Starter page only while it is for sale.
@@ -285,6 +286,17 @@ export default async function EditPage({ params, searchParams }: Props) {
           .eq('id', listing.id)
           .maybeSingle()
           .then(({ data: row, error }) => (error || !row ? null : row.messaging_enabled))
+      : Promise.resolve(null),
+    // Happening now card (part F): null hides it (flag off, or the read failed).
+    isFeatureEnabled('happeningNow')
+      ? supabase
+          .from('listing_posts')
+          .select(
+            'id, headline, body, image_path, button_label, button_url, starts_at, ends_at, status, created_at'
+          )
+          .eq('listing_id', listing.id)
+          .order('created_at', { ascending: false })
+          .then(({ data: rows, error }) => (error ? null : rows))
       : Promise.resolve(null),
   ])
   if (!data) notFound()
@@ -363,6 +375,9 @@ export default async function EditPage({ params, searchParams }: Props) {
         premiumOpen={premiumOpen}
         inbox={inboxOpen === null ? undefined : { open: inboxOpen }}
         initialTab={initialTab(tab)}
+        happeningNow={
+          postRows ? { posts: toOwnerPosts(postRows), now: new Date().toISOString() } : undefined
+        }
       />
     </div>
   )

@@ -22,6 +22,7 @@ import { MobileFilterSheet } from '@/components/discovery/MobileFilterSheet'
 import { SortDropdown } from '@/components/discovery/SortDropdown'
 import { ActiveFilterChips } from '@/components/discovery/ActiveFilterChips'
 import { DiscoveryGrid } from '@/components/discovery/DiscoveryGrid'
+import { HappeningNowStrip } from '@/components/discovery/HappeningNowStrip'
 import { SearchAssist } from '@/components/discovery/SearchAssist'
 import { shouldAssist } from '@/lib/search/assist'
 
@@ -237,6 +238,11 @@ export default async function CityPage({ params, searchParams }: PageProps) {
           )}
         </Container>
       </div>
+
+      {/* Happening now posts (part F). Renders nothing with the flag off or no posts. */}
+      <Suspense fallback={null}>
+        <HappeningNowStrip cityId={city.id} placeLabel={`in ${city.name}`} />
+      </Suspense>
 
       {/* Listings */}
       <Container className="py-8">

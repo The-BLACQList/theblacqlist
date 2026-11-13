@@ -3,7 +3,8 @@ import { BarChart2, Lock } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { requireOwner } from '@/lib/dashboard/guard'
-import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
+import { ANALYTICS_EVENTS, SERVER_ONLY_EVENTS } from '@/lib/analytics/constants'
+import { isFeatureEnabled } from '@/lib/env'
 import { canAccess } from '@/lib/stripe/features'
 import { getWritingAllowance } from '@/lib/ai/allowance'
 import { bucketTrend, periodsFor, resolvePeriod, type TrendPoint } from '@/lib/analytics/periods'
@@ -125,6 +126,17 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
   const sinceDate = new Date(now.getTime() - period.days * 24 * 60 * 60 * 1_000)
   const sinceDateStr = sinceDate.toISOString().slice(0, 10)
   const sinceIso = sinceDate.toISOString()
+  // Happening now counts (part F). Only read while the feature is on.
+  const showPosts = isFeatureEnabled('happeningNow')
+  const countEvent = (eventName: string) =>
+    showPosts
+      ? supabase
+          .from('analytics_events')
+          .select('id', { count: 'exact', head: true })
+          .eq('entity_id', entityId)
+          .eq('event_name', eventName)
+          .gte('created_at', sinceIso)
+      : Promise.resolve({ count: 0 })
 
   const [
     viewsCount,
@@ -134,6 +146,8 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
     savesCount,
     dailyResult,
     writingAllowance,
+    postViewsCount,
+    postClicksCount,
   ] = await Promise.all([
     supabase
       .from('analytics_events')
@@ -215,6 +229,11 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
 
     // Off or locked means no "Explain my numbers" card (ticket 138).
     getWritingAllowance(listing.id, listing.tier),
+
+    // Views count each time a post is shown: the top of the page counts the
+    // first post, the city strip counts every card.
+    countEvent(SERVER_ONLY_EVENTS.POST_VIEW),
+    countEvent(SERVER_ONLY_EVENTS.POST_CLICK),
   ])
 
   const views = viewsCount.count ?? 0
@@ -275,6 +294,22 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
           <StatCard label="Shares" value={sh} />
         </div>
       </div>
+
+      {showPosts && (
+        <div>
+          <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-3">
+            Happening now, {period.heading.toLowerCase()}
+          </h2>
+          <div className="grid grid-cols-2 gap-4">
+            <StatCard
+              label="Post views"
+              value={postViewsCount.count ?? 0}
+              sub="On your page and city pages"
+            />
+            <StatCard label="Post clicks" value={postClicksCount.count ?? 0} />
+          </div>
+        </div>
+      )}
 
       {/* Trend charts */}
       {dailyRows.length === 0 ? (
