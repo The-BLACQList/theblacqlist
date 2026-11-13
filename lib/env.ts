@@ -73,6 +73,7 @@ export type FeatureFlag =
   | 'jobsOpen'
   | 'marketplaceOpen'
   | 'ocrExtraction'
+  | 'ownerReceiptReview'
   | 'paidPostings'
   | 'postingSubmissions'
   | 'receiptRead'
@@ -142,6 +143,14 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // sends a shopper's photo to a model, and production waits for the privacy
   // policy update that names it.
   receiptRead: 'FEATURE_RECEIPT_READ',
+  // Gates business owners verifying receipts (ticket 183): /dashboard/receipts,
+  // the owner verify/reject actions, the owner's access to the receipt photo,
+  // and the "a receipt to verify" email. Off, admins review every receipt as
+  // before. Closed by default on EVERY deployment (see CLOSED_BY_DEFAULT),
+  // because it shows a shopper's receipt and name to a business, and the
+  // live privacy policy says receipt details are visible only to the shopper.
+  // Opens with the policy update that says otherwise (GATE-PUBLISH).
+  ownerReceiptReview: 'FEATURE_OWNER_RECEIPT_REVIEW',
   // Gates "Start from your website" on /add-business (ticket 127): step 0, the
   // read-site and import-photo actions. Off, there is no step 0 and nothing is
   // ever fetched. The default (on in preview, off in production) lets it be
@@ -175,6 +184,7 @@ const CLOSED_BY_DEFAULT: ReadonlySet<FeatureFlag> = new Set<FeatureFlag>([
   'collectiveOpen',
   'jobsOpen',
   'marketplaceOpen',
+  'ownerReceiptReview',
   'receiptRead',
 ])
 

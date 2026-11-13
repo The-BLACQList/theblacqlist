@@ -45,6 +45,7 @@ beforeEach(() => {
   delete process.env.FEATURE_JOBS_OPEN
   delete process.env.FEATURE_MARKETPLACE_OPEN
   delete process.env.FEATURE_RECEIPT_READ
+  delete process.env.FEATURE_OWNER_RECEIPT_REVIEW
 })
 
 afterEach(() => {
@@ -205,6 +206,23 @@ describe('receipt reading (ticket 163)', () => {
       FEATURE_RECEIPT_READ: 'true',
     })
     expect(isFeatureEnabled('receiptRead')).toBe(true)
+  })
+})
+
+describe('owners verifying receipts (ticket 183)', () => {
+  it.each(['production', 'preview', 'development'])('stays off in a bare %s deployment', async (env) => {
+    // It shows a shopper's receipt and name to a business, which the live
+    // privacy policy doesn't allow yet. Opens only with the policy update.
+    const { isFeatureEnabled } = await loadEnv({ VERCEL_ENV: env })
+    expect(isFeatureEnabled('ownerReceiptReview')).toBe(false)
+  })
+
+  it('opens only when set to true', async () => {
+    const { isFeatureEnabled } = await loadEnv({
+      VERCEL_ENV: 'preview',
+      FEATURE_OWNER_RECEIPT_REVIEW: 'true',
+    })
+    expect(isFeatureEnabled('ownerReceiptReview')).toBe(true)
   })
 })
 

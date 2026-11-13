@@ -80,6 +80,7 @@ export default async function NewReceiptPage({
           <ReceiptSubmissionForm
             prefillListing={prefillListing}
             canReadReceipt={isFeatureEnabled('receiptRead') && !aiKillSwitchOn()}
+            ownerReview={isFeatureEnabled('ownerReceiptReview')}
           />
         </div>
       </div>

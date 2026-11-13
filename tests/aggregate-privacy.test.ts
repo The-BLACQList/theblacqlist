@@ -303,12 +303,13 @@ describe('RLS on the community-aggregate tables', () => {
 //
 // Because flow_nodes cannot carry the flag, the exclusion can only happen at
 // write time. That makes two things load-bearing, and both are pinned here:
-// that approveReceipt.ts remains the sole writer, and that its guard tests the
+// that lib/spend/applyReceiptReview.ts remains the sole writer (admin and owner
+// approvals both call it, ticket 183), and that its guard tests the
 // flag. If a second write path appears, the first test fails rather than the
 // promise quietly breaking again.
 
 describe('opted-out spend never enters the flow graph', () => {
-  const WRITER = 'lib/actions/spend/approveReceipt.ts'
+  const WRITER = 'lib/spend/applyReceiptReview.ts'
   const GRAPH_TABLES = ['flow_nodes', 'flow_edges'] as const
   const MUTATIONS = ['.insert(', '.update(', '.upsert(', '.delete('] as const
 
@@ -347,7 +348,7 @@ describe('opted-out spend never enters the flow graph', () => {
     return [...found].sort()
   }
 
-  it('approveReceipt.ts is the only writer to flow_nodes and flow_edges', () => {
+  it('applyReceiptReview.ts is the only writer to flow_nodes and flow_edges', () => {
     // The whole design rests on this. A second writer would need its own guard,
     // and nothing else in the suite would notice it was missing.
     expect(graphWriters()).toEqual([WRITER])
@@ -409,6 +410,7 @@ describe('community-spend methodology doc', () => {
   it('names files that exist — a rename must not leave the doc pointing at nothing', () => {
     const CITED = [
       'lib/actions/spend/approveReceipt.ts',
+      'lib/spend/applyReceiptReview.ts',
       'lib/actions/spend/createReceiptSubmission.ts',
       'lib/actions/spend/rejectReceipt.ts',
       'lib/actions/account/deleteAccount.ts',

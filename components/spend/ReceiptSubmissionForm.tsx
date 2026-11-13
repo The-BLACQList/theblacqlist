@@ -14,6 +14,7 @@ import { Loader2, AlertCircle, Info, ChevronDown } from 'lucide-react'
 
 import { createReceiptSubmissionAction } from '@/lib/actions/spend/createReceiptSubmission'
 import type { ReceiptSubmissionState } from '@/lib/actions/spend/createReceiptSubmission'
+import { supportShareHref } from '@/lib/share/supportCard'
 import { updateReceiptSubmissionAction } from '@/lib/actions/spend/updateReceiptSubmission'
 import { readReceiptPhoto, type ReceiptReadResult } from '@/lib/actions/spend/readReceiptPhoto'
 import {
@@ -28,6 +29,8 @@ import { ListingCombobox } from './ListingCombobox'
 import { ReceiptPhotoField, receiptFileProblem } from './ReceiptPhotoField'
 import { ReceiptReadOptIn } from './ReceiptReadOptIn'
 import { UnlistedInvite } from './UnlistedInvite'
+import { UNLISTED_FORM_NOTE } from '@/lib/spend/unlisted'
+import { receiptPrivacyNote } from '@/lib/spend/owner-receipts'
 
 const inputCls =
   'w-full h-11 px-3 rounded-lg border border-charcoal/20 bg-white font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/60'
@@ -97,12 +100,15 @@ export function ReceiptSubmissionForm({
   receipt,
   prefillListing = null,
   canReadReceipt = false,
+  ownerReview = false,
 }: {
   receipt?: ReceiptFormDefaults
   /** From `?listing=` on the new page ("I shopped here"). Ignored in edit mode. */
   prefillListing?: ReceiptFormDefaults['listing']
   /** FEATURE_RECEIPT_READ is on and the AI kill switch is off (ticket 163). New receipts only. */
   canReadReceipt?: boolean
+  /** FEATURE_OWNER_RECEIPT_REVIEW is on: the business sees the receipt (ticket 183). */
+  ownerReview?: boolean
 }) {
   const isEdit = receipt !== undefined
   const [state, formAction, isPending] = useActionState<ReceiptSubmissionState, FormData>(
@@ -131,7 +137,17 @@ export function ReceiptSubmissionForm({
 
   useEffect(() => {
     if (state && 'success' in state) {
-      router.push(isEdit ? '/account/receipts?updated=true' : '/account/receipts?submitted=true')
+      // A new receipt for a listed business goes to the support post first
+      // (ticket 183); "Not now" there lands on My receipts with the same
+      // submitted banner. A business that isn't listed has no post: its
+      // receipt waits for the business to join, so it goes to My receipts.
+      router.push(
+        isEdit
+          ? '/account/receipts?updated=true'
+          : 'id' in state && state.id && state.matched
+            ? supportShareHref(state.id, { isNew: true })
+            : '/account/receipts?submitted=true'
+      )
     }
   }, [state, router, isEdit])
 
@@ -341,7 +357,10 @@ export function ReceiptSubmissionForm({
         </div>
         {/* Outside the wrapper above, so tapping it doesn't count as editing the name. */}
         {noMatch && noMatch.key === fillKeys.business && (
-          <UnlistedInvite businessName={noMatch.name} />
+          <>
+            <UnlistedInvite businessName={noMatch.name} />
+            <p className="mt-1 font-body text-xs text-charcoal-soft">{UNLISTED_FORM_NOTE}</p>
+          </>
         )}
       </Field>
 
@@ -427,8 +446,7 @@ export function ReceiptSubmissionForm({
             <div className="flex items-start gap-2">
               <Info className="size-4 text-charcoal-faint shrink-0 mt-0.5" aria-hidden="true" />
               <p className="font-body text-xs text-charcoal-soft leading-relaxed">
-                Receipt details are private. Only you and BLACQList admins can see your receipt.
-                We use anonymized totals to power the community spend map. Your name is never
+                {receiptPrivacyNote(ownerReview)} We use anonymized totals to power the community spend map. Your name is never
                 attached to public data.
               </p>
             </div>

@@ -2,6 +2,12 @@ import type { createServiceClient } from '@/lib/supabase/server'
 import { sendEmail } from '@/lib/email/resend'
 import { ReceiptCountedEmail } from '@/lib/email/templates/receipt-counted'
 import { ReceiptNeedsFixEmail } from '@/lib/email/templates/receipt-needs-fix'
+import { ReceiptToVerifyEmail } from '@/lib/email/templates/receipt-to-verify'
+import {
+  maskBuyerName,
+  receiptToVerifyLine,
+  shouldNotifyOwner,
+} from '@/lib/spend/owner-receipts'
 import {
   RECEIPT_COUNTED_SUBJECT,
   RECEIPT_NEEDS_FIX_SUBJECT,
@@ -11,8 +17,9 @@ import {
 // =============================================================================
 // Receipt review emails (ticket 165)
 // =============================================================================
-// Called fire-and-forget from approveReceipt and rejectReceipt, after the
-// status update has landed. Neither function ever rejects: a failed send logs
+// Called fire-and-forget from approveReceipt and rejectReceipt (admin and
+// owner), after the status update has landed. The to-verify email goes from
+// createReceiptSubmission. Neither function ever rejects: a failed send logs
 // the receipt id (and nothing about the shopper) and the review stands.
 // =============================================================================
 
@@ -89,5 +96,48 @@ export async function sendReceiptNeedsFixEmail(
     })
   } catch {
     console.error(`[receipt-email] needs-a-fix email failed for receipt ${notice.receiptId}`)
+  }
+}
+
+/**
+ * "Jordan S. supported Mama's Kitchen": tells the business a receipt waits for
+ * them (ticket 183). Only when the listing is claimed and the owner isn't the
+ * shopper. Stamps owner_notified_at once sent. Never rejects.
+ */
+export async function sendReceiptToVerifyEmail(
+  serviceClient: ServiceClient,
+  notice: { receiptId: string; listingId: string; uploaderId: string }
+): Promise<void> {
+  try {
+    const { data: listing } = await serviceClient
+      .from('listings')
+      .select('name, owner_user_id')
+      .eq('id', notice.listingId)
+      .is('deleted_at', null)
+      .maybeSingle()
+    if (!listing || !shouldNotifyOwner(listing.owner_user_id, notice.uploaderId)) return
+
+    const { data: profile } = await serviceClient
+      .from('profiles')
+      .select('display_name')
+      .eq('id', notice.uploaderId)
+      .maybeSingle()
+    const buyer = maskBuyerName(profile?.display_name)
+
+    const to = await emailFor(serviceClient, listing.owner_user_id)
+    if (!to) return
+
+    await sendEmail({
+      to,
+      subject: receiptToVerifyLine(buyer, listing.name),
+      react: ReceiptToVerifyEmail({ buyer, businessName: listing.name, siteUrl: siteUrl() }),
+    })
+
+    await serviceClient
+      .from('receipt_uploads')
+      .update({ owner_notified_at: new Date().toISOString() })
+      .eq('id', notice.receiptId)
+  } catch {
+    console.error(`[receipt-email] to-verify email failed for receipt ${notice.receiptId}`)
   }
 }

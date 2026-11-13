@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getAdminSession } from '@/lib/admin/guard'
+import { canViewReceiptFile } from '@/lib/spend/owner-receipts'
+import { isFeatureEnabled } from '@/lib/env'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -12,7 +14,8 @@ function isUUID(value: string): boolean {
 
 // GET /api/receipts/[id]/signed-url
 // Returns a 15-minute signed URL for a receipt image.
-// Access: receipt owner or admin only.
+// Access: the shopper who uploaded it, an admin, or (ticket 183) the owner of
+// the receipt's business while it waits for them to verify it.
 export async function GET(_request: NextRequest, { params }: RouteParams) {
   const { id } = await params
 
@@ -42,7 +45,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
 
   const { data: receipt } = await serviceClient
     .from('receipt_uploads')
-    .select('id, user_id, file_path')
+    .select('id, user_id, file_path, listing_id, status')
     .eq('id', id)
     .single()
 
@@ -50,8 +53,29 @@ export async function GET(_request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Receipt not found.', code: 'NOT_FOUND' }, { status: 404 })
   }
 
-  // Ownership check: must be the owner or an admin
-  if (receipt.user_id !== user.id && !adminSession) {
+  // The business owner, read through the viewer's own client so RLS and
+  // deleted_at apply. Only asked when the viewer isn't the shopper or an admin.
+  let listingOwnerId: string | null = null
+  if (
+    receipt.user_id !== user.id &&
+    !adminSession &&
+    receipt.listing_id &&
+    isFeatureEnabled('ownerReceiptReview')
+  ) {
+    const { data: listing } = await supabase
+      .from('listings')
+      .select('owner_user_id')
+      .eq('id', receipt.listing_id)
+      .eq('owner_user_id', user.id)
+      .is('deleted_at', null)
+      .maybeSingle()
+    listingOwnerId = listing?.owner_user_id ?? null
+  }
+
+  // Anyone else gets a 404, never a 403.
+  if (
+    !canViewReceiptFile({ viewerId: user.id, isAdmin: !!adminSession, receipt, listingOwnerId })
+  ) {
     return NextResponse.json({ error: 'Not found.', code: 'NOT_FOUND' }, { status: 404 })
   }
 

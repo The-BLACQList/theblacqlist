@@ -6,6 +6,8 @@ import { Camera, Map as MapIcon, Plus, Store } from 'lucide-react'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { getAppUrl } from '@/lib/env'
 import { ReceiptListRow } from '@/components/spend/ReceiptListRow'
+import { isFeatureEnabled } from '@/lib/env'
+import { pendingReviewLine, receiptPrivacyNote } from '@/lib/spend/owner-receipts'
 import { formatDollarsExact } from '@/lib/spend/personal-spend'
 import {
   countedTotalCents,
@@ -52,6 +54,7 @@ export default async function MyReceiptsPage({
   if (!user) redirect('/sign-in?next=/account/receipts')
 
   const { submitted, updated } = await searchParams
+  const ownerReview = isFeatureEnabled('ownerReceiptReview')
 
   // receipt_uploads has no UPDATE policy, so every receipt read and write goes
   // through the service client, scoped to the caller here.
@@ -114,7 +117,7 @@ export default async function MyReceiptsPage({
           <div role="status" className="rounded-xl bg-green-50 border border-green-200 px-4 py-3">
             <p className="font-subhead text-sm font-semibold text-green-800">Receipt added.</p>
             <p className="font-body text-xs text-green-700 mt-0.5">
-              We&apos;ll check it within 3 business days.
+              {pendingReviewLine(ownerReview)}
             </p>
           </div>
         )}
@@ -123,7 +126,7 @@ export default async function MyReceiptsPage({
           <div role="status" className="rounded-xl bg-green-50 border border-green-200 px-4 py-3">
             <p className="font-subhead text-sm font-semibold text-green-800">Changes saved.</p>
             <p className="font-body text-xs text-green-700 mt-0.5">
-              We&apos;ll check it within 3 business days.
+              {pendingReviewLine(ownerReview)}
             </p>
           </div>
         )}
@@ -199,6 +202,7 @@ export default async function MyReceiptsPage({
                     status={r.status}
                     filePath={r.file_path}
                     rejectionReason={r.rejection_reason}
+                    createdAt={r.created_at}
                     origin={getAppUrl()}
                   />
                 ))}
@@ -208,7 +212,7 @@ export default async function MyReceiptsPage({
         )}
 
         <p className="font-body text-xs text-charcoal-faint text-center">
-          Receipt details are private. Only you and BLACQList admins can view your submissions.
+          {receiptPrivacyNote(ownerReview)}
         </p>
       </div>
     </main>

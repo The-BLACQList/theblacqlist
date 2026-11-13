@@ -28,6 +28,13 @@ aggregate for good reason. That property must not be weakened to build this:
 - Reuse the existing anonymized aggregation path from `/account/community-spend` rather than
   querying `receipt_uploads` directly
 
+> **Note (2026-11-13, ticket 183).** `[Decision — founder, 2026-11-13]` Owners now *verify*
+> receipts for their own business, on a separate surface (`/dashboard/receipts`). While a receipt
+> waits, the owner sees its photo, amount, date and the buyer's first name and last initial; once
+> it is reviewed that access closes. This impact panel is unchanged: it still shows aggregates only,
+> under the cohort threshold above. The verification view sits behind `FEATURE_OWNER_RECEIPT_REVIEW`
+> (closed) until the privacy policy is updated. `[Needs professional review]`
+
 ## Acceptance criteria
 
 - Panel at `/dashboard/pages/[entityId]/impact` for Premium listings

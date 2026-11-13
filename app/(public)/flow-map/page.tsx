@@ -54,6 +54,8 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
     .from('spend_events')
     .select('amount_cents, listing_id, created_at')
     .eq('aggregate_opt_out', false)
+    // Only businesses on The BLACQList count (ticket 183).
+    .not('listing_id', 'is', null)
 
   const spendData = spendRows ?? []
   const totalAmountCents = spendData.reduce((sum, r) => sum + r.amount_cents, 0)

@@ -85,6 +85,15 @@ export default function FlowMapMethodologyPage() {
                 </span>
               </li>
               <li>
+                <span className="font-semibold">
+                  Only businesses on The BLACQList count.
+                </span>{' '}
+                If you add a receipt from a business we don&rsquo;t list, it is kept but not
+                approved. It waits up to 90 days for that business to join. If it does, you link
+                the receipt to its listing and it is reviewed like any other. If it doesn&rsquo;t,
+                the receipt never counts toward a public figure.
+              </li>
+              <li>
                 <span className="font-semibold">The approved receipt becomes one anonymous
                 record</span> holding an amount, a date, and the business it names. That record has
                 no account attached to it. It is what the community-wide totals are summed from.
@@ -101,6 +110,13 @@ export default function FlowMapMethodologyPage() {
             <p>
               There is no scheduled job and no batch anywhere in that path. A total moves at the
               moment a receipt is approved.
+            </p>
+            <p>
+              <span className="font-semibold">From 13 November 2026, the totals went down.</span>{' '}
+              Before that date, a receipt from a business we don&rsquo;t list could be approved, and
+              its amount was added to the community-wide totals (never to a named business or
+              city). We now leave that older spend out of every public figure, so the totals only
+              ever describe businesses on The BLACQList.
             </p>
           </section>
 

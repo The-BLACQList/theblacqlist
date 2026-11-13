@@ -20,6 +20,46 @@ export const UNLISTED_INVITE_LEAD = "This business isn't on The BLACQList yet."
 export const UNLISTED_INVITE_ACTION = 'Invite them.'
 export const UNLISTED_INVITE_LINE = `${UNLISTED_INVITE_LEAD} ${UNLISTED_INVITE_ACTION}`
 
+// ── Waiting for the business (ticket 183) ───────────────────────────────────
+// `[Decision — founder, 2026-11-13]` Only businesses on The BLACQList count
+// toward The Collective. A receipt for a business that isn't listed is never
+// approved and never reaches a public figure. It waits: once the business is
+// on The BLACQList, the shopper edits the receipt and picks it, and the
+// business verifies it as usual. After UNLISTED_WAIT_DAYS it stops waiting.
+// "Stopped" is worked out from created_at when read; no job changes the row.
+
+export const UNLISTED_WAIT_DAYS = 90
+
+export type UnlistedWait = 'waiting' | 'stopped'
+
+/** Null for a matched receipt or one that is no longer pending. */
+export function unlistedWait(
+  receipt: { listing_id: string | null; status: string; created_at: string },
+  now: Date
+): UnlistedWait | null {
+  if (receipt.listing_id || receipt.status !== 'pending_review') return null
+  const age = now.getTime() - new Date(receipt.created_at).getTime()
+  return age >= UNLISTED_WAIT_DAYS * 24 * 60 * 60 * 1000 ? 'stopped' : 'waiting'
+}
+
+/** Under a waiting receipt on My receipts. */
+export function unlistedWaitLine(state: UnlistedWait, businessName: string): string {
+  return state === 'waiting'
+    ? `Receipts only count for businesses on The BLACQList. If ${businessName} joins within ${UNLISTED_WAIT_DAYS} days of your upload, edit this receipt and pick them to get it counted.`
+    : `Not counted. ${businessName} didn't join The BLACQList within ${UNLISTED_WAIT_DAYS} days.`
+}
+
+/** On the receipt form when the business isn't found. */
+export const UNLISTED_FORM_NOTE =
+  'You can still add it. It will count once the business is on The BLACQList and you pick them on this receipt.'
+
+/** The admin's error if they try to approve one. */
+export const UNLISTED_CANT_APPROVE =
+  "This business isn't on The BLACQList, so the receipt can't be counted. It waits for the shopper to link it to a listed business."
+
+/** Editing a receipt that stopped waiting. */
+export const UNLISTED_STOPPED_EDIT = `This receipt stopped waiting after ${UNLISTED_WAIT_DAYS} days and can't be changed.`
+
 /** The path the shopper's invite and the founder's email both point at. */
 export const ADD_BUSINESS_PATH = '/add-business'
 

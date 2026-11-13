@@ -11,6 +11,7 @@ import {
 } from '@react-email/components'
 import { countedLine } from '@/lib/spend/receipt-emails'
 import { JOINED_MAP_LINE, OFF_MAP_LINE, countedReceiptHref } from '@/lib/spend/counted-receipt'
+import { supportShareHref } from '@/lib/share/supportCard'
 
 interface ReceiptCountedEmailProps {
   receiptId: string
@@ -22,7 +23,7 @@ interface ReceiptCountedEmailProps {
 }
 
 /**
- * Sent when the founder approves a receipt (ticket 165). The shopper can turn
+ * Sent when a receipt is approved, by the business or an admin (tickets 165, 183). The shopper can turn
  * it off on /account/settings, and the footer says where. The button opens
  * the counted screen (ticket 166).
  */
@@ -57,6 +58,14 @@ export function ReceiptCountedEmail({
             <Button href={`${siteUrl}${countedReceiptHref(receiptId)}`} style={button}>
               {joinedMap ? 'See it on the map' : 'See your receipt'}
             </Button>
+
+            {/* Ticket 183: the verified support post. No amount on it, ever. */}
+            <Text style={paragraph}>
+              <a href={`${siteUrl}${supportShareHref(receiptId)}`} style={link}>
+                Share your verified post
+              </a>{' '}
+              to celebrate supporting {businessName}.
+            </Text>
 
             <Hr style={divider} />
 

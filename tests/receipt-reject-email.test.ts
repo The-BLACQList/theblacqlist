@@ -34,7 +34,12 @@ const h = vi.hoisted(() => {
         maybeSingle: async () => ({ data: null, error: null }),
         update(values: Record<string, unknown>) {
           if (table === 'receipt_uploads') state.updated = values
-          return { eq: async () => ({ error: null }) }
+          // The guarded update: .eq(id).eq(status).select() returns the row.
+          const u = {
+            eq: () => u,
+            select: async () => ({ data: [{ id: 'r-0002' }], error: null }),
+          }
+          return u
         },
       }
       return b
