@@ -1716,6 +1716,7 @@ export type Database = {
           certification_auto_granted_at: string | null
           city_id: string | null
           claim_id: string | null
+          collective_name_opt_in: boolean
           cover_image_path: string | null
           created_at: string
           deleted_at: string | null
@@ -1782,6 +1783,7 @@ export type Database = {
           certification_auto_granted_at?: string | null
           city_id?: string | null
           claim_id?: string | null
+          collective_name_opt_in?: boolean
           cover_image_path?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -1848,6 +1850,7 @@ export type Database = {
           certification_auto_granted_at?: string | null
           city_id?: string | null
           claim_id?: string | null
+          collective_name_opt_in?: boolean
           cover_image_path?: string | null
           created_at?: string
           deleted_at?: string | null
@@ -2402,6 +2405,7 @@ export type Database = {
           id: string
           listing_id: string | null
           notes: string | null
+          owner_notified_at: string | null
           purchase_date: string
           raw_business_name: string | null
           rejection_reason: string | null
@@ -2411,6 +2415,7 @@ export type Database = {
           status: string
           updated_at: string
           user_id: string
+          verified_by_role: string | null
         }
         Insert: {
           aggregate_opt_out?: boolean
@@ -2421,6 +2426,7 @@ export type Database = {
           id?: string
           listing_id?: string | null
           notes?: string | null
+          owner_notified_at?: string | null
           purchase_date: string
           raw_business_name?: string | null
           rejection_reason?: string | null
@@ -2430,6 +2436,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id: string
+          verified_by_role?: string | null
         }
         Update: {
           aggregate_opt_out?: boolean
@@ -2440,6 +2447,7 @@ export type Database = {
           id?: string
           listing_id?: string | null
           notes?: string | null
+          owner_notified_at?: string | null
           purchase_date?: string
           raw_business_name?: string | null
           rejection_reason?: string | null
@@ -2449,6 +2457,7 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+          verified_by_role?: string | null
         }
         Relationships: [
           {

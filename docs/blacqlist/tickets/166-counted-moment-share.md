@@ -6,6 +6,7 @@
 
 **Depends on:** 164, and 167 for the "See it on the map" ring. Before 167, the button goes to `/flow-map` with no ring.
 **Gates:** GATE-DEPLOY. No migration for Part A, or for Part C if O3 is A.
+**Update `[Decision — founder, 2026-11-13]`:** the business name opt-in is built in ticket 183 as `listings.collective_name_opt_in`, and the counted share now reads it. Image support posts are allowed through 183; this screen's text share is unchanged.
 **Decision record (founder, 2026-10-31):** Screen 5 **A + C**. "After approval, A + C. We do want people to be able to share it." Q13 **gold ring and You tag**.
 
 ---

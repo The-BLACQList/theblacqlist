@@ -9,6 +9,8 @@ import { receiptBusinessName } from '@/lib/spend/receipt-emails'
 import { countedScreen, isReceiptId, joinedMap } from '@/lib/spend/counted-receipt'
 import { getAppUrl } from '@/lib/env'
 import { CountedShare } from '@/components/spend/CountedShare'
+import { buildEntityUrl } from '@/lib/listings/url'
+import { supportShareHref } from '@/lib/share/supportCard'
 
 export const metadata: Metadata = { title: 'Your spend is counted' }
 
@@ -20,7 +22,14 @@ interface CountedRow {
   raw_business_name: string | null
   listing_id: string | null
   aggregate_opt_out: boolean
-  listings: { name: string; categories: { name: string } | null } | null
+  listings: {
+    name: string
+    slug: string
+    entity_type: string
+    collective_name_opt_in: boolean | null
+    categories: { name: string } | null
+    cities: { slug: string } | null
+  } | null
 }
 
 const primaryBtnCls =
@@ -58,7 +67,7 @@ export default async function CountedReceiptPage({ params }: { params: Promise<{
       raw_business_name,
       listing_id,
       aggregate_opt_out,
-      listings ( name, categories ( name ) )
+      listings ( name, slug, entity_type, collective_name_opt_in, categories ( name ), cities ( slug ) )
     `
     )
     .eq('id', id)
@@ -175,15 +184,30 @@ export default async function CountedReceiptPage({ params }: { params: Promise<{
 
           <p className="font-body text-xs text-charcoal-soft mt-4">Nobody’s name is shown.</p>
 
+          {/* Support posts only name businesses on The BLACQList (ticket 183). */}
+          {receipt.listing_id !== null && (
+            <Link href={supportShareHref(receipt.id)} className={`${linkCls} mt-4`}>
+              Share a verified support post
+            </Link>
+          )}
+
           {/* Share only what's true: a receipt off the map isn't in The Collective.
-              No business has a way to opt in to being named yet, so the text
-              names none and links to /flow-map. Wire the opt-in here when it lands. */}
+              The business is named only if it opted in (ticket 183); otherwise
+              the text says "a local business" and links to /flow-map. */}
           {onMap && (
             <CountedShare
               origin={getAppUrl()}
               businessName={businessName}
-              businessPath={null}
-              businessNameOptIn={false}
+              businessPath={
+                receipt.listings
+                  ? buildEntityUrl(
+                      receipt.listings.entity_type,
+                      receipt.listings.cities?.slug,
+                      receipt.listings.slug
+                    )
+                  : null
+              }
+              businessNameOptIn={receipt.listings?.collective_name_opt_in === true}
               amountCents={receipt.amount_cents}
             />
           )}
