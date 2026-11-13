@@ -26,7 +26,7 @@ export default async function OfferingsPage({ params }: Props) {
   // Business-shaped pages edit everything in one finish view (ticket 129);
   // old links land on the matching section there.
   if (listing.entity_type !== 'event' && listing.entity_type !== 'job')
-    redirect(`/dashboard/pages/${listing.id}/edit#services`)
+    redirect(`/dashboard/pages/${listing.id}/edit?tab=services#services`)
 
   // group_label fetched fail-soft (separate query) so a not-yet-migrated column
   // can't break the offerings editor.

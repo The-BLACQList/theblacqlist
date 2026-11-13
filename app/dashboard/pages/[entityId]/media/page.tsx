@@ -24,7 +24,7 @@ export default async function MediaPage({ params }: Props) {
   // Business-shaped pages edit everything in one finish view (ticket 129);
   // old links land on the matching section there.
   if (listing.entity_type !== 'event' && listing.entity_type !== 'job')
-    redirect(`/dashboard/pages/${listing.id}/edit#photos`)
+    redirect(`/dashboard/pages/${listing.id}/edit?tab=media#photos`)
 
   const { data: media } = await supabase
     .from('media_attachments')

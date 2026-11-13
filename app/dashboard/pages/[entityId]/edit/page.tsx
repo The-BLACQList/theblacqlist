@@ -23,13 +23,15 @@ import { getWritingAllowance } from '@/lib/ai/allowance'
 import { loadOpenSuggestions } from '@/lib/ai/openSuggestions'
 import { growthIsOpen, offerPremiumTo } from '@/lib/marketplace/entitlements'
 import { OWNER_MANAGES_LINE, postJobInviteOpen } from '@/lib/listings/ownerLine'
+import { initialTab } from '@/lib/listings/editTabs'
 
 interface Props {
   params: Promise<{ entityId: string }>
+  searchParams: Promise<{ tab?: string | string[] }>
 }
 
-export default async function EditPage({ params }: Props) {
-  const { entityId } = await params
+export default async function EditPage({ params, searchParams }: Props) {
+  const [{ entityId }, { tab }] = await Promise.all([params, searchParams])
   const owner = await requireOwner()
   const supabase = await createClient()
 
@@ -360,6 +362,7 @@ export default async function EditPage({ params }: Props) {
         growthOpen={growthOpen}
         premiumOpen={premiumOpen}
         inbox={inboxOpen === null ? undefined : { open: inboxOpen }}
+        initialTab={initialTab(tab)}
       />
     </div>
   )
