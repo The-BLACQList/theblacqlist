@@ -14,6 +14,7 @@ import path from 'node:path'
 
 import { PLANS, getPlanMeta } from '@/lib/stripe/plans'
 import {
+  activePostLimit,
   aiQuota,
   attributeLimit,
   canAccess,
@@ -112,6 +113,9 @@ describe('Starter copy matches the Starter gates and limits', () => {
     expect(starter).toContain('Up to 10 details customers filter by')
     expect(faqLimit('starter')).toBe(5)
     expect(starter).toContain('A common questions section (up to 5)')
+    expect(activePostLimit('free')).toBe(0)
+    expect(activePostLimit('starter')).toBe(1)
+    expect(starter).toContain('A Happening now post on your page and city page, 1 at a time')
   })
 })
 
@@ -125,13 +129,15 @@ describe('Growth and Premium lists match their limits', () => {
     expect(productLimit('growth')).toBe(25)
     expect(eventLimit('growth')).toBe(3)
     expect(jobLimit('growth')).toBe(1)
+    expect(activePostLimit('growth')).toBe(3)
+    expect(growth).toContain('Up to 3 Happening now posts at a time')
   })
 
   // Founder 2026-10-28 (ticket 143): these came off because nothing works
   // behind them yet. Put a line back only with the feature that makes it true.
   it('Growth does not promise search terms, team members or 1-day support', () => {
     const growth = getPlanMeta('growth').features
-    expect(growth).toHaveLength(6)
+    expect(growth).toHaveLength(7)
     const text = growth.join(' ').toLowerCase()
     expect(text).not.toContain('search terms')
     expect(text).not.toContain('team member')
@@ -147,6 +153,8 @@ describe('Growth and Premium lists match their limits', () => {
     expect(jobLimit('premium')).toBe(3)
     expect(locationLimit('premium')).toBe(3)
     expect(premium).toContain('Up to 3 locations on one account')
+    expect(activePostLimit('premium')).toBe(5)
+    expect(premium).toContain('Up to 5 Happening now posts at a time')
   })
 })
 
