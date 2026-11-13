@@ -7,7 +7,7 @@ import { getEntityPageFromDB } from '@/lib/listings/entityPage'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { listingMetaText } from '@/lib/listings/seo'
 import { buildJobPostingJsonLd } from '@/lib/listings/jobPosting'
-import { resolveCoverImage, resolveMediaPath } from '@/lib/listings/coverImage'
+import { resolveMediaPath } from '@/lib/listings/coverImage'
 import { trackServerEvent } from '@/lib/analytics/server'
 import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
 import { EntityQuickActionBar } from '@/components/entity-page/EntityQuickActionBar'
@@ -45,11 +45,16 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     metaDescription: entity.meta_description,
   })
 
-  // An owner cover resolves to an absolute Storage URL, already OG-ready. With
-  // no cover there is no OG image — the F-1 fallback is a render-time CSS tile,
-  // not a file a social crawler could fetch.
-  const cover = resolveCoverImage(entity.cover_image_path, entity.entity_type, entity.id)
-  const ogImage = cover.src ?? undefined
+  // The branded "Look what I found on The BLACQList" card is the link preview
+  // everywhere (Facebook, X, Threads, iMessage, WhatsApp). It draws the owner's
+  // cover inside it when there is one, and an all-brand card when there isn't,
+  // so every business now has a preview image.
+  const ogImage = {
+    url: `${BASE_URL}/api/share-card/listing/${encodeURIComponent(listingSlug)}?format=og`,
+    width: 1200,
+    height: 630,
+    alt: `${entity.name} on The BLACQList`,
+  }
 
   return {
     title,
@@ -60,12 +65,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: entity.name,
       description: entity.tagline,
       url: canonicalUrl,
-      ...(ogImage && { images: [ogImage] }),
+      images: [ogImage],
     },
     twitter: {
       card: 'summary_large_image',
       title: entity.name,
       description,
+      images: [ogImage],
     },
   }
 }

@@ -293,6 +293,9 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
           <ShareButton
             listingName={entity.name}
             listingId={entity.id}
+            listingSlug={entity.slug}
+            cityName={entity.city?.name}
+            categoryName={entity.category.name}
             className="size-12 bg-white/20 hover:bg-white/30 text-white backdrop-blur-sm"
             iconClassName="size-5"
           />

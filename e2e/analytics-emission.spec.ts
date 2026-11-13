@@ -155,11 +155,18 @@ test.describe('paid-tier metric integrity', () => {
     // how the old 'listing_shared' emitter failed, silently, for months.
     // Asserting the response separates "the button never fired" from "the route
     // rejected it"; without this the only symptom is a missing row.
+    //
+    // The button opens the share sheet (share_sheet_opened); share_initiated
+    // fires only on a pick, so the test picks "Copy link" and waits for that
+    // event's own request, not the sheet-open one.
     const analyticsResponse = page.waitForResponse(
-      (r) => r.url().includes('/api/analytics/event'),
+      (r) =>
+        r.url().includes('/api/analytics/event') &&
+        (r.request().postData() ?? '').includes('share_initiated'),
       { timeout: 15_000 }
     )
     await page.getByRole('button', { name: 'Share this business' }).first().click()
+    await page.getByRole('dialog').getByRole('button', { name: 'Copy link' }).click()
     const shareResponse = await analyticsResponse
     expect(
       shareResponse.status(),
@@ -179,6 +186,7 @@ test.describe('paid-tier metric integrity', () => {
 
     const shareEvent = await waitForEvent('share_initiated', () => true)
     expect(shareEvent.entity_type).toBe('listing')
+    expect((shareEvent.properties as Record<string, unknown> | null)?.method).toBe('copy_link')
 
     // ── The rollup itself ───────────────────────────────────────────────────
     const { data: jobResult, error: rpcError } = await svc.rpc('aggregate_entity_analytics', {

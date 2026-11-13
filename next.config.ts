@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
   // Removes `x-powered-by: Next.js`. It names the framework and its version
   // surface for anyone probing, and nothing in the app reads it.
   poweredByHeader: false,
+  // The share-card route reads its fonts and the gold mark with readFile at a
+  // path built at runtime, which the file tracer can't follow. Without this the
+  // deployed function has no fonts and every card is a 500.
+  outputFileTracingIncludes: {
+    '/api/share-card/**': ['./assets/fonts/**', './public/brand/blacqlist-mark-gold-256.png'],
+  },
   async headers() {
     return [{ source: '/:path*', headers: [...SECURITY_HEADERS] }]
   },

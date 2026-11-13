@@ -117,6 +117,9 @@ export function EntityQuickActionBar({
           <ShareButton
             listingName={entity.name}
             listingId={entity.id}
+            listingSlug={entity.slug}
+            cityName={entity.city?.name}
+            categoryName={entity.category.name}
             tabIndex={visible ? 0 : -1}
             className="flex-shrink-0 size-11 bg-white/10 hover:bg-white/20 text-white"
           />
@@ -197,6 +200,9 @@ export function EntityQuickActionBar({
           <ShareButton
             listingName={entity.name}
             listingId={entity.id}
+            listingSlug={entity.slug}
+            cityName={entity.city?.name}
+            categoryName={entity.category.name}
             tabIndex={visible ? 0 : -1}
             className="size-9 bg-white/10 hover:bg-white/20 text-white"
           />

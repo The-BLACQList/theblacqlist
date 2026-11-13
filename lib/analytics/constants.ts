@@ -15,6 +15,9 @@ export const ANALYTICS_EVENTS = {
   ACTION_BAR_CTA_CLICK: 'action_bar_cta_click',
   SAVE_TOGGLED: 'save_toggled',
   SHARE_INITIATED: 'share_initiated',
+  // The share sheet opened. Separate from share_initiated so opening and
+  // closing the sheet never counts as a share in the rollups.
+  SHARE_SHEET_OPENED: 'share_sheet_opened',
 
   // ── Marketplace ───────────────────────────────────────────────────────────
   MARKETPLACE_PRODUCT_VIEWED: 'marketplace_product_viewed',
@@ -181,8 +184,10 @@ export interface SaveToggledProperties {
 }
 
 export interface ShareInitiatedProperties {
-  method?: string // 'copy_link' | 'native_share'
-  source?: string
+  // Where it went: a SharePlatform from lib/share/links.ts ('instagram_story',
+  // 'facebook', 'copy_link', 'native_share', 'download', ...). One event per pick.
+  method?: string
+  source?: string // 'entity_page' | 'support_post'
 }
 
 export interface ReviewSubmittedProperties {
