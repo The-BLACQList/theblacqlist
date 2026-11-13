@@ -447,25 +447,25 @@
 }
 
 /* ─── Edit page: "More below" pulse (components/listings/finish/MoreBelow) ──
-   One short pulse every 4 seconds, a gold glow and a slight swell, so the pill
+   One soft pulse every 6 seconds, a faint gold glow and a slight swell, so the pill
    catches the eye without moving all the time. Same house pattern as below: no
    base rule, motion only under prefers-reduced-motion: no-preference. Uses
    `scale`, not `transform`, so Tailwind's translate on the pill is untouched. */
 @media (prefers-reduced-motion: no-preference) {
   .blacq-more-pulse {
-    animation: blacq-more-pulse 4s ease-in-out 1s infinite;
+    animation: blacq-more-pulse 6s ease-in-out 1s infinite;
   }
   @keyframes blacq-more-pulse {
     0%,
-    24%,
+    20%,
     100% {
       scale: 1;
     }
-    12% {
-      scale: 1.06;
+    10% {
+      scale: 1.03;
       box-shadow:
         0 0 0 4px #fff,
-        0 0 0 12px rgba(196, 160, 101, 0.4);
+        0 0 0 9px rgba(196, 160, 101, 0.28);
     }
   }
 }
