@@ -55,7 +55,7 @@ describe('initialTab', () => {
 
   it('falls back to Basics for a missing or unknown tab', () => {
     expect(initialTab(undefined)).toBe('basics')
-    expect(initialTab('where')).toBe('basics')
+    expect(initialTab('nowhere')).toBe('basics')
   })
 
   it('lets a card link win over ?tab=', () => {
@@ -104,7 +104,7 @@ describe('wiring', () => {
   it('keeps every panel mounted, so edits in a closed tab survive', () => {
     const view = read('components/listings/PageFinishView.tsx')
     expect(view).toMatch(/role="tabpanel"/)
-    expect(view).toMatch(/hidden=\{t\.id !== tab\}/)
+    expect(view).toMatch(/hidden=\{t\.id !== openTab\}/)
   })
 
   it('the old offerings and media pages open their tab', () => {

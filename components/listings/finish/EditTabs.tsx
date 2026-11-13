@@ -2,7 +2,7 @@
 
 import { useRef, type KeyboardEvent } from 'react'
 import { cn } from '@/lib/utils'
-import { EDIT_TABS, tabsWithChanges, type EditTabId } from '@/lib/listings/editTabs'
+import { EDIT_TABS, tabsWithChanges, type EditTab, type EditTabId } from '@/lib/listings/editTabs'
 import { useChangedCards } from './ProfileSave'
 
 // The tab row on the owner edit page (part C). A plain ARIA tablist: arrow
@@ -21,20 +21,22 @@ export function panelId(id: EditTabId): string {
 interface Props {
   active: EditTabId
   onSelect: (id: EditTabId) => void
+  /** The tabs the page shows. A tab with no cards (a flag off) is left out. */
+  tabs?: readonly EditTab[]
 }
 
-export function EditTabs({ active, onSelect }: Props) {
+export function EditTabs({ active, onSelect, tabs = EDIT_TABS }: Props) {
   const changed = tabsWithChanges(useChangedCards())
   const refs = useRef<Partial<Record<EditTabId, HTMLButtonElement | null>>>({})
 
   function onKeyDown(e: KeyboardEvent<HTMLDivElement>) {
-    const i = EDIT_TABS.findIndex((t) => t.id === active)
-    const last = EDIT_TABS.length - 1
+    const i = tabs.findIndex((t) => t.id === active)
+    const last = tabs.length - 1
     const next =
       e.key === 'ArrowRight'
-        ? (i + 1) % EDIT_TABS.length
+        ? (i + 1) % tabs.length
         : e.key === 'ArrowLeft'
-          ? (i - 1 + EDIT_TABS.length) % EDIT_TABS.length
+          ? (i - 1 + tabs.length) % tabs.length
           : e.key === 'Home'
             ? 0
             : e.key === 'End'
@@ -42,7 +44,7 @@ export function EditTabs({ active, onSelect }: Props) {
               : null
     if (next === null) return
     e.preventDefault()
-    const tab = EDIT_TABS[next]
+    const tab = tabs[next]
     if (!tab) return
     onSelect(tab.id)
     refs.current[tab.id]?.focus()
@@ -55,7 +57,7 @@ export function EditTabs({ active, onSelect }: Props) {
       onKeyDown={onKeyDown}
       className="sticky top-16 md:top-20 z-10 flex gap-1 overflow-x-auto rounded-xl border border-charcoal/10 bg-white p-1 shadow-sm"
     >
-      {EDIT_TABS.map((t) => {
+      {tabs.map((t) => {
         const selected = t.id === active
         const dirty = changed.has(t.id)
         return (

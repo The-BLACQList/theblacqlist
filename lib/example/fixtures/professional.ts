@@ -353,6 +353,20 @@ export function professionalEntity(now: Date): EntityPageData {
         photo: null,
       },
     ],
+    orderLinks: [
+      { platform: 'instacart', label: 'Instacart', url: 'https://www.instacart.com/store/example' },
+    ],
+    findUsAt: [
+      {
+        id: 'pro-stockist-1',
+        chainSlug: null,
+        name: 'Sample Books & Co.',
+        nationwide: true,
+        position: 0,
+        cities: [],
+        zips: [],
+      },
+    ],
     deals: [
       {
         id: 'pro-deal-2',

@@ -1342,6 +1342,106 @@ export type Database = {
           },
         ]
       }
+      listing_order_platforms: {
+        Row: {
+          created_at: string
+          listing_id: string
+          platform: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          listing_id: string
+          platform: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          listing_id?: string
+          platform?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_order_platforms_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_stockist_areas: {
+        Row: {
+          kind: string
+          stockist_id: string
+          value: string
+        }
+        Insert: {
+          kind: string
+          stockist_id: string
+          value: string
+        }
+        Update: {
+          kind?: string
+          stockist_id?: string
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_stockist_areas_stockist_id_fkey"
+            columns: ["stockist_id"]
+            isOneToOne: false
+            referencedRelation: "listing_stockists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_stockists: {
+        Row: {
+          chain_slug: string | null
+          created_at: string
+          id: string
+          listing_id: string
+          nationwide: boolean
+          position: number
+          store_name: string | null
+        }
+        Insert: {
+          chain_slug?: string | null
+          created_at?: string
+          id?: string
+          listing_id: string
+          nationwide?: boolean
+          position?: number
+          store_name?: string | null
+        }
+        Update: {
+          chain_slug?: string | null
+          created_at?: string
+          id?: string
+          listing_id?: string
+          nationwide?: boolean
+          position?: number
+          store_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_stockists_chain_slug_fkey"
+            columns: ["chain_slug"]
+            isOneToOne: false
+            referencedRelation: "retail_chains"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "listing_stockists_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_details_business: {
         Row: {
           accepts_reservations: boolean | null
@@ -2764,6 +2864,22 @@ export type Database = {
           },
         ]
       }
+      retail_chains: {
+        Row: {
+          name: string
+          slug: string
+        }
+        Insert: {
+          name: string
+          slug: string
+        }
+        Update: {
+          name?: string
+          slug?: string
+        }
+        Relationships: [
+        ]
+      }
       review_criteria: {
         Row: {
           applies_to: string
@@ -3651,6 +3767,8 @@ export type Database = {
           p_location_types?: string[]
           p_open_now?: boolean
           p_has_deals?: boolean
+          p_platforms?: string[]
+          p_stockist_zip?: string
           p_open_to_partnerships?: boolean
           p_price_ranges?: string[]
           p_q?: string
@@ -3732,6 +3850,8 @@ export type Database = {
           p_offset?: number
           p_open_now?: boolean
           p_has_deals?: boolean
+          p_platforms?: string[]
+          p_stockist_zip?: string
           p_open_to_partnerships?: boolean
           p_ownership_label?: string
           p_price_ranges?: string[]

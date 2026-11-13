@@ -36,6 +36,9 @@ export interface ListingsParams {
   partners?: boolean
   /** "Has deals" (part G). */
   deals?: boolean
+  /** Delivery apps, multi-select, and a "sold near" zip (part D). */
+  order_on?: string[]
+  sold_near?: string
   /** "Near You" — all three or none. Validated upstream (searchSchema). */
   lat?: number
   lng?: number
@@ -258,6 +261,8 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     open_now: params.open_now,
     partners: params.partners,
     deals: params.deals,
+    order_on: params.order_on,
+    sold_near: params.sold_near,
     lat: params.lat,
     lng: params.lng,
     radius: params.radius,
@@ -307,6 +312,8 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     resolved.p_levels ||
     resolved.p_open_to_partnerships ||
     resolved.p_has_deals ||
+    resolved.p_platforms ||
+    resolved.p_stockist_zip ||
     resolved.p_attribute_values ||
     resolved.p_price_ranges ||
     resolved.p_open_now ||

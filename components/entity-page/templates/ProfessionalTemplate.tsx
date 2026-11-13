@@ -16,6 +16,8 @@ import { EntityLinks } from '@/components/entity-page/EntityLinks'
 import { EntityAttributes } from '@/components/entity-page/EntityAttributes'
 import { EntityFaqSection } from '@/components/entity-page/EntityFaqSection'
 import { EntityDeals } from '@/components/entity-page/EntityDeals'
+import { EntityOrderOn } from '@/components/entity-page/EntityOrderOn'
+import { EntityFindUsAt } from '@/components/entity-page/EntityFindUsAt'
 import { EntityAtAGlance } from '@/components/entity-page/EntityAtAGlance'
 import { EntityMediaGallery } from '@/components/entity-page/EntityMediaGallery'
 import { EntityVideoSection } from '@/components/entity-page/EntityVideoSection'
@@ -54,10 +56,12 @@ export function ProfessionalTemplate({
   const hasTeam = Boolean(entity.team && entity.team.length > 0)
 
   const hasDeals = (entity.deals?.length ?? 0) > 0
+  const hasFindUs = (entity.findUsAt?.length ?? 0) > 0
 
   const tabs: AnchorTab[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'visit', label: 'Visit' },
+    ...(hasFindUs ? [{ id: 'find-us', label: 'Find us at' }] : []),
     ...(hasDeals ? [{ id: 'deals', label: 'Deals' }] : []),
     ...(hasServices ? [{ id: 'services', label: 'Services' }] : []),
     ...(hasStory ? [{ id: 'about', label: 'About' }] : []),
@@ -91,6 +95,17 @@ export function ProfessionalTemplate({
         <div id="visit" className="scroll-mt-32">
           <EntityAtAGlance entity={entity} mode={mode} />
         </div>
+      </SectionMark>
+
+      {/* Part D. On a sample page the store links lead nowhere real, so the
+          buttons are inert there, as Deals is. */}
+      <SectionMark id="order-on">
+        <div inert={mode === 'example' || undefined} className="contents">
+          <EntityOrderOn links={entity.orderLinks} businessName={entity.name} />
+        </div>
+      </SectionMark>
+      <SectionMark id="find-us">
+        <EntityFindUsAt stockists={entity.findUsAt} />
       </SectionMark>
 
       {/* Main's Deals section (part G, #328). On a sample page the wrapper is

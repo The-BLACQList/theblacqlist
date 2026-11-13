@@ -51,13 +51,17 @@ import type { OwnerPost } from '@/lib/listings/happeningNow'
 import { DealsSection } from '@/components/dashboard/DealsSection'
 import type { OwnerDeal } from '@/lib/listings/deals'
 import { dealsUpgradeTarget } from '@/lib/stripe/planChecks'
+import { OrderPlatformsSection } from '@/components/dashboard/OrderPlatformsSection'
+import { LocationSection } from '@/components/dashboard/LocationSection'
+import { WhereToFindSection } from '@/components/dashboard/WhereToFindSection'
+import type { OwnerWhereSold } from '@/lib/listings/whereSoldOwner'
 import {
   DEFAULT_TAB,
-  EDIT_TABS,
   nextTab,
   SCROLL_ORDER,
   TAB_SECTIONS,
   tabForAnchor,
+  visibleTabs,
   type EditTabId,
 } from '@/lib/listings/editTabs'
 
@@ -91,6 +95,12 @@ interface Props {
    * only. `premiumOpen`: Premium can be bought right now.
    */
   deals?: { deals: OwnerDeal[]; now: string; premiumOpen: boolean }
+  /**
+   * Order on, Find us at and how the business operates (part D). Edit mode on
+   * a business page with the flag on only; without it the "Where to find us"
+   * tab has no cards and is hidden.
+   */
+  whereSold?: OwnerWhereSold
 }
 
 // Which section shows each draft card's field, and that field's draft key.
@@ -156,6 +166,7 @@ export function PageFinishView({
   initialTab = DEFAULT_TAB,
   happeningNow,
   deals,
+  whereSold,
 }: Props) {
   const d = data.details
   const fromProps: Draft = {
@@ -382,6 +393,22 @@ export function PageFinishView({
           now={happeningNow.now}
         />
       ) : null,
+    'order-on':
+      mode === 'edit' && whereSold ? (
+        <OrderPlatformsSection listingId={data.id} initial={whereSold.orderLinks} />
+      ) : null,
+    location:
+      mode === 'edit' && whereSold ? (
+        <LocationSection listingId={data.id} initial={whereSold.location} />
+      ) : null,
+    'where-sold':
+      mode === 'edit' && whereSold ? (
+        <WhereToFindSection
+          listingId={data.id}
+          initial={whereSold.stockists}
+          chains={whereSold.chains}
+        />
+      ) : null,
     deals:
       mode === 'edit' && deals ? (
         <DealsSection
@@ -564,11 +591,16 @@ export function PageFinishView({
       ) : null
     )
 
+  // A tab with none of its cards on this page (a flag off) is hidden, and a
+  // link to it opens Basics.
+  const shownTabs = visibleTabs((id) => Boolean(sections[id]))
+  const openTab = shownTabs.some((t) => t.id === tab) ? tab : DEFAULT_TAB
+
   const body =
     mode === 'edit' ? (
       <div ref={tabsTopRef} className="flex scroll-mt-16 flex-col gap-6 md:scroll-mt-20">
-        <EditTabs active={tab} onSelect={selectTab} />
-        {EDIT_TABS.map((t) => (
+        <EditTabs active={openTab} onSelect={selectTab} tabs={shownTabs} />
+        {shownTabs.map((t) => (
           // Every panel stays mounted, so edits in a closed tab are kept and
           // "Save all" still finds them.
           <div
@@ -576,28 +608,28 @@ export function PageFinishView({
             role="tabpanel"
             id={panelId(t.id)}
             aria-labelledby={tabId(t.id)}
-            hidden={t.id !== tab}
+            hidden={t.id !== openTab}
             className="flex flex-col gap-6"
           >
             {cards(TAB_SECTIONS[t.id])}
-            {nextTab(t.id) && (
+            {nextTab(t.id, shownTabs) && (
               <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={() => {
-                    const next = nextTab(t.id)
+                    const next = nextTab(t.id, shownTabs)
                     if (next) selectTab(next.id)
                   }}
                   className="inline-flex h-10 items-center gap-1.5 rounded-lg border border-charcoal/20 bg-white px-4 font-subhead text-sm font-semibold text-brand-black hover:bg-charcoal/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold/60"
                 >
-                  Next: {nextTab(t.id)?.label}
+                  Next: {nextTab(t.id, shownTabs)?.label}
                   <ArrowRight className="size-4" aria-hidden="true" />
                 </button>
               </div>
             )}
           </div>
         ))}
-        <MoreBelow watch={tab} />
+        <MoreBelow watch={openTab} />
       </div>
     ) : (
       <>

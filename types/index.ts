@@ -4,6 +4,7 @@ import { VALID_ENTITY_TYPES, VALID_LOCATION_TYPES } from '@/lib/constants/listin
 import type { ListingMessaging } from '@/lib/messaging/rules'
 import type { PublicPost } from '@/lib/listings/happeningNow'
 import type { PublicDeal } from '@/lib/listings/deals'
+import type { OrderLink, Stockist } from '@/lib/listings/whereSold'
 
 /**
  * Both unions are DERIVED from the canonical constants rather than retyped, because
@@ -532,6 +533,12 @@ export interface EntityPageData {
    * older fixtures still type.
    */
   deals?: PublicDeal[]
+  /** "Order on" delivery-app links (part D). Optional so older fixtures still type. */
+  orderLinks?: OrderLink[]
+  /** "Find us at" stores, in the owner's order (part D). Optional, as above. */
+  findUsAt?: Stockist[]
+  /** The owner's "Area you serve" line (part D). Optional, as above. */
+  service_area_description?: string | null
   related: DiscoveryEntity[]
   images: GalleryImage[]
   reviews: ReviewItem[]

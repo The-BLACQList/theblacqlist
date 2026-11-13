@@ -12,6 +12,7 @@ import { resolvePageButtons, toExtraButtons } from '@/lib/listings/pageButtons'
 import { isFeatureEnabled } from '@/lib/env'
 import { shownPosts, toOwnerPosts, toPublicPost } from '@/lib/listings/happeningNow'
 import { shownDeals, toOwnerDeals, toPublicDeal } from '@/lib/listings/deals'
+import { STOCKIST_SELECT, toOrderLinks, toStockists } from '@/lib/listings/whereSold'
 import type {
   EntityPageData,
   EntityAttributeGroup,
@@ -72,6 +73,7 @@ type RawRow = {
   review_count: number
   save_count: number
   ships_nationwide: boolean
+  service_area_description: string | null
   owner_user_id: string | null
   category_id: string
   // Selected for the related-listings query, which prefers same-city matches.
@@ -114,7 +116,8 @@ const LISTING_SELECT = `
   entity_type, location_type, trust_tier, tier, source,
   ownership_label,
   is_featured, is_sponsored, logo_path, cover_image_path,
-  avg_rating, review_count, save_count, ships_nationwide, owner_user_id, category_id, city_id,
+  avg_rating, review_count, save_count, ships_nationwide, service_area_description,
+  owner_user_id, category_id, city_id,
   categories!listings_category_id_fkey(name, slug),
   cities!listings_city_id_fkey(
     name, slug,
@@ -216,6 +219,8 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     { data: criteriaData },
     { data: postData },
     { data: dealData },
+    { data: orderLinkData },
+    { data: stockistData },
   ] = await Promise.all([
     supabase
       .from('services')
@@ -320,6 +325,14 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
           .or(`ends_at.is.null,ends_at.gt."${nowIso}"`)
           .order('created_at', { ascending: true })
           .limit(50)
+      : Promise.resolve({ data: null }),
+    // "Order on" links and "Find us at" stores (part D). Fail-soft, and only
+    // read with the flag on.
+    whereSoldShowOn(raw.entity_type)
+      ? sb.from('listing_order_platforms').select('platform, url').eq('listing_id', raw.id)
+      : Promise.resolve({ data: null }),
+    whereSoldShowOn(raw.entity_type)
+      ? sb.from('listing_stockists').select(STOCKIST_SELECT).eq('listing_id', raw.id).limit(50)
       : Promise.resolve({ data: null }),
   ])
 
@@ -841,6 +854,10 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     deals: dealsShowOn(raw.entity_type)
       ? shownDeals(toOwnerDeals(dealData), raw.tier, new Date(nowIso)).shown.map(toPublicDeal)
       : [],
+    // Delivery-app links and stores (lib/listings/whereSold.ts). Every plan.
+    orderLinks: toOrderLinks(orderLinkData),
+    findUsAt: toStockists(stockistData),
+    service_area_description: raw.service_area_description?.trim() || null,
     related,
     images,
     reviews,
@@ -857,4 +874,9 @@ function postsShowOn(entityType: string): boolean {
 /** Deals show on business pages, with the flag on. */
 function dealsShowOn(entityType: string): boolean {
   return isFeatureEnabled('coupons') && entityType !== 'job' && entityType !== 'event'
+}
+
+/** Order links and stores show on business and creator pages, with the flag on. */
+function whereSoldShowOn(entityType: string): boolean {
+  return isFeatureEnabled('orderWhereSold') && entityType !== 'job' && entityType !== 'event'
 }

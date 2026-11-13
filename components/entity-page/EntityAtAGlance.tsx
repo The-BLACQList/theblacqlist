@@ -86,6 +86,10 @@ interface Props {
 export function EntityAtAGlance({ entity, mode = 'live' }: Props) {
   const { details } = entity
   const hasAddress = details.address && details.city_name && details.state_abbr
+  // "Serving …" is added here, so an owner who wrote "Serving metro Atlanta"
+  // doesn't read as "Serving Serving metro Atlanta".
+  const serviceArea =
+    entity.service_area_description?.replace(/^serv(ing|es)\s+/i, '').trim() || null
 
   const fullAddress = hasAddress
     ? [
@@ -140,7 +144,7 @@ export function EntityAtAGlance({ entity, mode = 'live' }: Props) {
             </div>
 
             {/* Location */}
-            {(hasAddress || entity.location_type !== 'physical') && (
+            {(hasAddress || entity.location_type !== 'physical' || serviceArea) && (
               <div>
                 <p className="font-subhead text-xs font-semibold text-charcoal uppercase tracking-wide mb-1.5">
                   Location
@@ -166,9 +170,15 @@ export function EntityAtAGlance({ entity, mode = 'live' }: Props) {
                       <DistanceFromYou lat={details.lat} lng={details.lng} />
                     )}
                   </>
-                ) : (
+                ) : entity.location_type !== 'physical' ? (
                   <p className="font-body text-sm text-charcoal">
                     {LOCATION_TYPE_META[entity.location_type].label}
+                  </p>
+                ) : null}
+                {/* The owner's "Area you serve" line (part D). */}
+                {serviceArea && (
+                  <p className="mt-1 font-body text-sm text-charcoal-soft break-words">
+                    Serving {serviceArea}
                   </p>
                 )}
                 {pins.length > 0 && (

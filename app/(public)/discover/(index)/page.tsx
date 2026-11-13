@@ -94,6 +94,7 @@ async function DiscoverContent({
       <div className="hidden md:block w-56 lg:w-64 shrink-0">
         <FacetSidebar
           showDeals={isFeatureEnabled('coupons')}
+          showOrderWhereSold={isFeatureEnabled('orderWhereSold')}
           cities={cities ?? []}
           categories={categories ?? []}
           groups={groups}
@@ -108,6 +109,7 @@ async function DiscoverContent({
           <div className="md:hidden">
             <MobileFilterSheet
               showDeals={isFeatureEnabled('coupons')}
+              showOrderWhereSold={isFeatureEnabled('orderWhereSold')}
               cities={cities ?? []}
               categories={categories ?? []}
               groups={groups}

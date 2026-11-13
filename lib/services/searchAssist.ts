@@ -91,6 +91,8 @@ const NO_FILTERS: ResolvedFacetParams = {
   p_levels: null,
   p_open_to_partnerships: null,
   p_has_deals: null,
+  p_platforms: null,
+  p_stockist_zip: null,
 }
 
 type CategoryRow = {

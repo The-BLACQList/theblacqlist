@@ -242,6 +242,7 @@ describe('getEnabledFeatures', () => {
       'happeningNow',
       'messaging',
       'ocrExtraction',
+      'orderWhereSold',
       'paidPostings',
       'postingSubmissions',
       'siteImport',

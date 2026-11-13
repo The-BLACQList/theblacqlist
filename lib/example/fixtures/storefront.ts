@@ -403,6 +403,30 @@ export function storefrontEntity(now: Date): EntityPageData {
         photo: null,
       },
     ],
+    orderLinks: [
+      { platform: 'doordash', label: 'DoorDash', url: 'https://www.doordash.com/store/example' },
+      { platform: 'ubereats', label: 'Uber Eats', url: 'https://www.ubereats.com/store/example' },
+    ],
+    findUsAt: [
+      {
+        id: 'cafe-stockist-1',
+        chainSlug: 'whole-foods',
+        name: 'Whole Foods',
+        nationwide: false,
+        position: 0,
+        cities: ['Atlanta, GA', 'Decatur, GA'],
+        zips: ['30318', '30308'],
+      },
+      {
+        id: 'cafe-stockist-2',
+        chainSlug: null,
+        name: 'Sample Corner Market',
+        nationwide: false,
+        position: 1,
+        cities: ['Atlanta, GA'],
+        zips: [],
+      },
+    ],
     deals: [
       {
         id: 'cafe-deal-1',
