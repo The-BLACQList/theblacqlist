@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { decodeHtml, hasUsefulFindings, readSite, titleName, widthFromUrl } from '@/lib/import/read-site'
+import { decodeHtml, hasUsefulFindings, nameChoices, readSite, titleName, titleParts, widthFromUrl } from '@/lib/import/read-site'
 
 // Saved pages stand in for owners' sites. No live site is ever fetched in CI.
 
@@ -334,6 +334,44 @@ describe('titleName', () => {
   it('a generic title is no name at all', () => {
     const f = readSite('<title>Home</title><p>Nothing else to see on this page at all, really.</p>', 'https://x.com/')
     expect(f.name).toBeNull()
+  })
+})
+
+describe('name choices', () => {
+  it('splits titles on every separator sites use', () => {
+    expect(titleParts('Glow Salon|Hair Studio|Atlanta GA')).toEqual(['Glow Salon', 'Hair Studio', 'Atlanta GA'])
+    expect(titleParts('Glow Salon » Hair')).toEqual(['Glow Salon', 'Hair'])
+    expect(titleParts('Glow Salon / Hair ~ Atlanta')).toEqual(['Glow Salon', 'Hair', 'Atlanta'])
+    expect(titleParts('Glow Salon :: Hair')).toEqual(['Glow Salon', 'Hair'])
+    expect(titleParts('Jean-Paul Bistro')).toEqual(['Jean-Paul Bistro'])
+    expect(titleParts('AC/DC Repair')).toEqual(['AC/DC Repair'])
+  })
+
+  it('offers each part once, best first, without page words or sentences', () => {
+    const long = 'We are the best natural hair salon in all of metro Atlanta and have been since the year 2004'
+    expect(
+      nameChoices('Glow Salon', ['Home | Glow Salon | Hair Studio', 'glow  salon', 'Hair Studio', long, null])
+    ).toEqual(['Glow Salon', 'Hair Studio'])
+  })
+
+  it('keeps at most six, and drops the @ on link-in-bio pages', () => {
+    expect(nameChoices(null, ['a1 | b2 | c3 | d4 | e5 | f6 | g7'])).toHaveLength(6)
+    expect(nameChoices('kingsbarbers', ['@kingsbarbers', '@kings'], true)).toEqual(['kingsbarbers', 'kings'])
+  })
+
+  it('a tagline heading no longer wins the name', () => {
+    const f = readSite(
+      '<title>Glow Salon | Atlanta Hair</title><h1>Atlanta Hair</h1><p>We do natural hair, braids and color in Atlanta.</p>',
+      'https://glow.test/'
+    )
+    expect(f.name).toBe('Glow Salon')
+    expect(f.nameOptions).toEqual(['Glow Salon', 'Atlanta Hair'])
+  })
+
+  it('a bare | still splits', () => {
+    const f = readSite('<title>Glow Salon|Hair Studio|Atlanta GA</title><p>Hair.</p>', 'https://glow.test/')
+    expect(f.name).toBe('Glow Salon')
+    expect(f.nameOptions).toEqual(['Glow Salon', 'Hair Studio', 'Atlanta GA'])
   })
 })
 

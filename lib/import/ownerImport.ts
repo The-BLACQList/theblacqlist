@@ -55,6 +55,8 @@ export interface ImportRow {
   locked: string | null
   /** A short extra line, e.g. that the text was shortened. */
   note: string | null
+  /** Name only: other names the site gives, for the owner to pick from. */
+  options?: string[]
 }
 
 export const SOCIAL_FIELDS: Record<SocialKey, string> = {
@@ -107,9 +109,19 @@ export function importRows(f: SiteFindings, now: PageNow, opts: ImportOptions): 
     })
   }
 
-  const name = f.name?.trim().slice(0, NAME_MAX) ?? ''
-  if (name && !same(name, now.name)) {
-    add({ key: 'name', label: 'Name', found: name, current: blank(now.name) ? null : now.name, card: 'basics', pairs: [['name', name]] })
+  // The page already goes by one of the site's names: nothing to offer.
+  const nameOptions = (f.nameOptions ?? []).map((n) => n.trim().slice(0, NAME_MAX)).filter(Boolean)
+  const name = f.name?.trim().slice(0, NAME_MAX) || nameOptions[0] || ''
+  if (name && !same(name, now.name) && !nameOptions.some((n) => same(n, now.name))) {
+    add({
+      key: 'name',
+      label: 'Name',
+      found: name,
+      current: blank(now.name) ? null : now.name,
+      card: 'basics',
+      pairs: [['name', name]],
+      options: nameOptions.length > 1 ? nameOptions : undefined,
+    })
   }
 
   if (f.about?.trim()) {
@@ -233,6 +245,15 @@ export function withAboutDraft(
   // Right after the name, where the about row would have been.
   const after = rows[0]?.key === 'name' ? 1 : 0
   return [...rows.slice(0, after), row, ...rows.slice(after)]
+}
+
+/**
+ * The rows with the name the owner picked or typed. A blank name sends
+ * nothing, so the page keeps the one it has.
+ */
+export function withNameChoice(rows: readonly ImportRow[], value: string): ImportRow[] {
+  const name = value.replace(/\s+/g, ' ').trim().slice(0, NAME_MAX)
+  return rows.map((r) => (r.key === 'name' ? { ...r, found: name, pairs: name ? [['name', name]] : [] } : r))
 }
 
 /** The form fields for the ticked rows. A locked row is never sent. */

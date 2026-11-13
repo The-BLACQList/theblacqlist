@@ -15,6 +15,7 @@ import {
   photoChoices,
   photoRoom,
   previewContact,
+  withNameChoice,
   type ImportOptions,
   type PageNow,
 } from '@/lib/import/ownerImport'
@@ -37,6 +38,7 @@ function findings(over: Partial<SiteFindings> = {}): SiteFindings {
     sourceHost: 'glowsalon.com',
     isLinkInBio: false,
     name: 'Glow Salon',
+    nameOptions: [],
     about: 'We do hair. We do it well.',
     phones: ['(404) 555-0100'],
     emails: ['hi@glowsalon.com'],
@@ -144,6 +146,46 @@ describe('importRows', () => {
       ['zip', '30318'],
     ])
     expect(address?.note).toMatch(/Decatur.*Atlanta, GA/)
+  })
+})
+
+describe('the name row', () => {
+  const opts = ['Glow Salon', 'Hair Studio', 'Atlanta GA']
+
+  it('carries the site’s names as choices', () => {
+    const rows = importRows(findings({ nameOptions: opts }), { ...EMPTY, name: 'My Page' }, PAID)
+    const row = rows.find((r) => r.key === 'name')
+    expect(row?.found).toBe('Glow Salon')
+    expect(row?.options).toEqual(opts)
+  })
+
+  it('has no choices when the site gives one name', () => {
+    const rows = importRows(findings({ nameOptions: ['Glow Salon'] }), { ...EMPTY, name: 'My Page' }, PAID)
+    expect(rows.find((r) => r.key === 'name')?.options).toBeUndefined()
+  })
+
+  it('is left out when the page already goes by one of them', () => {
+    const rows = importRows(findings({ nameOptions: opts }), { ...EMPTY, name: 'hair studio' }, PAID)
+    expect(keys(rows)).not.toContain('name')
+  })
+
+  it('is offered from the choices when there is no best guess', () => {
+    const rows = importRows(findings({ name: null, nameOptions: ['Hair Studio', 'Atlanta GA'] }), { ...EMPTY, name: 'X' }, PAID)
+    expect(rows.find((r) => r.key === 'name')?.found).toBe('Hair Studio')
+  })
+
+  it('withNameChoice sends the picked or typed name, and nothing when blank', () => {
+    const rows = importRows(findings({ nameOptions: opts }), { ...EMPTY, name: 'My Page' }, PAID)
+    const picked = withNameChoice(rows, '  Glow   Hair  ')
+    expect(pairsFor(picked, new Set(['name']))).toEqual([['name', 'Glow Hair']])
+    expect(pairsFor(withNameChoice(rows, '  '), new Set(['name']))).toEqual([])
+  })
+
+  it('the sheet lets the owner pick the name', () => {
+    const sheet = read('components/listings/finish/SiteImport.tsx')
+    expect(sheet).toMatch(/r\.key === 'name' && r\.options \? \(\s*<NamePicker/)
+    expect(sheet).toContain('withNameChoice(phase.rows, nameChoice)')
+    expect(sheet).toContain('Something else')
   })
 })
 

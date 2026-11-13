@@ -26,6 +26,7 @@ import {
   pairsFor,
   photoChoices,
   withAboutDraft,
+  withNameChoice,
   type ImportCard,
   type ImportOptions,
   type ImportRow,
@@ -131,6 +132,8 @@ function ImportFlow({
   const help = useWritingHelp()
   const ids = useId()
   const [draft, setDraft] = useState<AboutDraft>({ kind: 'idle' })
+  // The name the owner picked or typed, or null for our best guess.
+  const [nameChoice, setNameChoice] = useState<string | null>(null)
   // The draft's suggestion while it is still unused, so closing the sheet or
   // asking for another records it as not used, the way the About card does.
   const openDraft = useRef<string | null>(null)
@@ -168,6 +171,7 @@ function ImportFlow({
       if (openDraft.current) void dropSuggestion(openDraft.current)
       openDraft.current = null
       setDraft({ kind: 'idle' })
+      setNameChoice(null)
       setPhase({ kind: 'review', findings: result.findings, rows })
     })
   }
@@ -275,8 +279,8 @@ function ImportFlow({
   }
 
   const { findings } = phase
-  const rows =
-    draft.kind === 'ready' ? withAboutDraft(phase.rows, draft.text, now, options.aboutLimit) : phase.rows
+  const named = nameChoice === null ? phase.rows : withNameChoice(phase.rows, nameChoice)
+  const rows = draft.kind === 'ready' ? withAboutDraft(named, draft.text, now, options.aboutLimit) : named
   const siteText = (findings.siteText ?? findings.about ?? '').trim()
   // Writing help needs something to write from; a few words aren't enough.
   const canWrite = siteText.length >= 40
@@ -416,7 +420,18 @@ function ImportFlow({
                         <label htmlFor={id} className="block font-subhead text-sm font-semibold text-brand-black">
                           {r.label}
                         </label>
-                        {r.key === 'about' && draft.kind === 'ready' ? (
+                        {r.key === 'name' && r.options ? (
+                          <NamePicker
+                            idBase={id}
+                            options={r.options}
+                            value={r.found}
+                            disabled={pending}
+                            onChange={(value) => {
+                              setNameChoice(value)
+                              toggle('name', value.trim() !== '')
+                            }}
+                          />
+                        ) : r.key === 'about' && draft.kind === 'ready' ? (
                           <>
                             <p className="mt-0.5 flex items-center gap-1 font-body text-xs font-semibold text-charcoal">
                               <Sparkles className="size-3.5 shrink-0" aria-hidden="true" />
@@ -643,6 +658,83 @@ function ImportFlow({
         </p>
       </div>
     </>
+  )
+}
+
+/**
+ * The site's names as choices, plus "Something else" to type it. Sites write
+ * their titles every which way ("Glow Salon | Hair | Atlanta"), so the owner
+ * says which part is the name.
+ */
+function NamePicker({
+  idBase,
+  options,
+  value,
+  disabled,
+  onChange,
+}: {
+  idBase: string
+  options: string[]
+  value: string
+  disabled: boolean
+  onChange: (value: string) => void
+}) {
+  const [other, setOther] = useState(options.includes(value) ? '' : value)
+  const [typing, setTyping] = useState(!options.includes(value))
+  const group = `${idBase}-name`
+  return (
+    <fieldset className="mt-1 min-w-0">
+      <legend className="font-body text-xs text-charcoal-soft">Which is your business name?</legend>
+      <div className="mt-1 flex flex-col gap-1">
+        {options.map((option, i) => (
+          <label key={option} htmlFor={`${group}-${i}`} className="flex cursor-pointer items-start gap-2 font-body text-sm text-brand-black">
+            <input
+              id={`${group}-${i}`}
+              type="radio"
+              name={group}
+              checked={!typing && value === option}
+              disabled={disabled}
+              onChange={() => {
+                setTyping(false)
+                onChange(option)
+              }}
+              className="mt-1 size-3.5 shrink-0 accent-brand-black"
+            />
+            <span className="min-w-0 break-words">{option}</span>
+          </label>
+        ))}
+        <label htmlFor={`${group}-other`} className="flex cursor-pointer items-start gap-2 font-body text-sm text-brand-black">
+          <input
+            id={`${group}-other`}
+            type="radio"
+            name={group}
+            checked={typing}
+            disabled={disabled}
+            onChange={() => {
+              setTyping(true)
+              onChange(other)
+            }}
+            className="mt-1 size-3.5 shrink-0 accent-brand-black"
+          />
+          Something else
+        </label>
+        {typing && (
+          <input
+            type="text"
+            aria-label="Your business name"
+            value={other}
+            maxLength={200}
+            autoFocus
+            disabled={disabled}
+            onChange={(e) => {
+              setOther(e.target.value)
+              onChange(e.target.value)
+            }}
+            className="ml-5 rounded-lg border border-charcoal/20 bg-white px-3 py-1.5 font-body text-sm text-brand-black focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
+          />
+        )}
+      </div>
+    </fieldset>
   )
 }
 

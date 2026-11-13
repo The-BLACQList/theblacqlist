@@ -52,6 +52,12 @@ export interface SiteFindings {
   sourceHost: string
   isLinkInBio: boolean
   name: string | null
+  /**
+   * Every plausible name on the page, best guess first: the parts of the
+   * title, the site name, the logo text, the main heading. Sites write their
+   * titles every which way, so the owner picks. Empty when none was found.
+   */
+  nameOptions: string[]
   about: string | null
   /** Every distinct phone found, most trusted first. Two or more means "Which is right?". */
   phones: string[]
@@ -148,6 +154,20 @@ function cleanText(value: unknown, max = 2000): string | null {
 /** Title segments that name the page, not the business. */
 const GENERIC_SEGMENT = /^(home|home ?page|welcome|index|main|official (web)?site|official page)$/i
 
+/**
+ * Where a title splits into parts: " | ", " - ", " – ", " » ", " / ", " ~ ",
+ * " : ", " :: ", and a bare "|". A hyphen inside a word ("Jean-Paul") doesn't.
+ */
+const TITLE_SEPARATOR = /\s+(?:[|–—·•:»›~\/]|::)\s+|\s+-\s+|\s*\|\s*/
+
+/** The parts of a title, trimmed, in order. */
+export function titleParts(title: string): string[] {
+  return title
+    .split(TITLE_SEPARATOR)
+    .map((p) => p.trim())
+    .filter(Boolean)
+}
+
 const squash = (v: string): string => v.toLowerCase().replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim()
 
 /**
@@ -158,13 +178,43 @@ const squash = (v: string): string => v.toLowerCase().replace(/&amp;/g, '&').rep
  * survive, and so does a name that only starts with a generic word.
  */
 export function titleName(title: string, hints: readonly (string | null | undefined)[] = []): string {
-  const segments = title
-    .split(/\s+[|–—·•:]\s+|\s+-\s+/)
-    .map((p) => p.trim())
-    .filter(Boolean)
+  const segments = titleParts(title)
   const real = segments.filter((p) => !GENERIC_SEGMENT.test(p))
   const wanted = new Set(hints.filter((h): h is string => Boolean(h && h.trim())).map(squash))
   return real.find((p) => wanted.has(squash(p))) ?? real[0] ?? segments[0] ?? title.trim()
+}
+
+const MAX_NAME_OPTIONS = 6
+/** Longer than this is a sentence or a tagline, not a name. */
+const MAX_NAME_OPTION = 80
+
+/**
+ * The names to offer, `best` first: every part of every source, without
+ * page words ("Home"), repeats, or anything sentence-long.
+ */
+export function nameChoices(
+  best: string | null,
+  sources: readonly (string | null | undefined)[],
+  isLinkInBio = false
+): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+  const add = (raw: string | null | undefined) => {
+    let text = cleanText(raw, 200)
+    if (!text) return
+    if (isLinkInBio) text = text.replace(/^@/, '')
+    if (text.length < 2 || text.length > MAX_NAME_OPTION || GENERIC_SEGMENT.test(text)) return
+    const key = squash(text)
+    if (seen.has(key)) return
+    seen.add(key)
+    out.push(text)
+  }
+  add(best)
+  for (const source of sources) {
+    if (!source) continue
+    for (const part of titleParts(source)) add(part)
+  }
+  return out.slice(0, MAX_NAME_OPTIONS)
 }
 
 const JUNK_ABOUT = /\blinktree\b|make your link do more|link in bio|\bbeacons\b/i
@@ -656,22 +706,22 @@ export function readSite(html: string, pageUrl: string): SiteFindings {
   // Name
   const titleText = root.querySelector('title')?.text ?? ''
   const siteName = meta('meta[property="og:site_name"]')
-  const hints = [
-    siteName,
-    builder?.name,
-    root.querySelector('[class*="logo-title"], [class*="site-title"], [class*="site-name"]')?.text.trim(),
-    root.querySelector('h1')?.text.trim(),
-  ]
-  const rawName =
-    (typeof ld?.name === 'string' ? ld.name : null) ??
-    siteName ??
-    meta('meta[property="og:title"]') ??
-    (titleText ? titleText : null)
+  const logoTitle = root
+    .querySelector('[class*="logo-title"], [class*="site-title"], [class*="site-name"]')
+    ?.text.trim()
+  const heading = root.querySelector('h1')?.text.trim()
+  // Only names the site gives itself break a tie between title parts. The main
+  // heading is often a tagline that is also in the title, so it never does.
+  const hints = [siteName, builder?.name, logoTitle]
+  const ldName = typeof ld?.name === 'string' ? ld.name : null
+  const ogTitle = meta('meta[property="og:title"]')
+  const rawName = ldName ?? siteName ?? ogTitle ?? (titleText ? titleText : null)
   let name = rawName ? cleanText(titleName(rawName, hints), 120) : null
   // A title that only names the page ("Home") is no name at all.
-  if ((!name || GENERIC_SEGMENT.test(name)) && builder?.name) name = builder.name
+  if ((!name || GENERIC_SEGMENT.test(name)) && builder?.name) name = cleanText(titleName(builder.name, hints), 120)
   if (name && GENERIC_SEGMENT.test(name)) name = null
   if (name && isLinkInBio) name = name.replace(/^@/, '')
+  const nameOptions = nameChoices(name, [ldName, siteName, builder?.name, logoTitle, ogTitle, titleText, heading], isLinkInBio)
 
   // About
   const aboutCandidates = [
@@ -830,6 +880,7 @@ export function readSite(html: string, pageUrl: string): SiteFindings {
     sourceHost,
     isLinkInBio,
     name,
+    nameOptions,
     about,
     phones,
     emails,
