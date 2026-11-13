@@ -9,6 +9,7 @@ import { socialLinksAllowed, upgradeTarget, type UpgradeTarget } from '@/lib/str
 import { TIER_RANK, attributeLimit, descriptionCharLimit, faqLimit } from '@/lib/stripe/features'
 import { getCtaLabel, type CTAType } from '@/types'
 import { LivePagePreview } from '@/components/listings/LivePagePreview'
+import { extraButtonLabel, shownExtraButtons } from '@/lib/listings/pageButtons'
 import { BasicInfoSection } from '@/components/dashboard/BasicInfoSection'
 import { AboutSection } from '@/components/dashboard/AboutSection'
 import { MediaGrid } from '@/components/dashboard/MediaGrid'
@@ -56,6 +57,8 @@ interface Props {
   onboardingDrafts?: { autoStart: boolean; aboutFromSite: boolean }
   /** Growth can be bought right now (ticket 143). Left out, it reads as closed. */
   growthOpen?: boolean
+  /** Premium can be bought and this is a Growth page. Only the extra buttons note offers it. */
+  premiumOpen?: boolean
   /** The page's inbox switch, shown with the main button. Edit mode with messaging on only. */
   inbox?: { open: boolean }
 }
@@ -110,6 +113,7 @@ export function PageFinishView({
   writingHelp,
   onboardingDrafts,
   growthOpen = false,
+  premiumOpen = false,
   inbox,
 }: Props) {
   const d = data.details
@@ -163,6 +167,10 @@ export function PageFinishView({
   // Growth to a Starter page while Growth is for sale (ticket 143).
   const starterOffer: UpgradeTarget = (TIER_RANK[tier ?? 'free'] ?? 0) === 0 ? 'Starter' : null
   const moreOffer = upgradeTarget(tier, growthOpen)
+  const buttonsOffer = upgradeTarget(tier, growthOpen, premiumOpen)
+  // Extra buttons save on their own; the editor reports each change so the
+  // preview and the hidden-content line follow along.
+  const [buttons, setButtons] = useState(data.buttons)
   // Ticket 105: what the public page leaves out after a move to a lower plan.
   // Uses the saved description, the same text the page shows.
   const hidden = hiddenContent({
@@ -174,7 +182,7 @@ export function PageFinishView({
     faqs: data.faqs,
     attributeGroups: data.attributeGroups,
     selectedValueIds: data.selectedValueIds,
-    buttons: data.buttons,
+    buttons,
   })
 
   const checklist = computePageChecklist(
@@ -203,6 +211,7 @@ export function PageFinishView({
     locationLabel: data.locationLabel,
     ownershipLabel: data.ownershipLabel,
     ctaLabel,
+    extraLabels: shownExtraButtons(buttons, tier).shown.map(extraButtonLabel),
     coverUrl: data.coverUrl,
   }
 
@@ -327,8 +336,9 @@ export function PageFinishView({
                 extras={{
                   initial: data.buttons,
                   tier,
-                  upgradeTo: moreOffer,
+                  upgradeTo: buttonsOffer,
                   hasPhone: !!d?.phone,
+                  onChange: setButtons,
                 }}
               />
             </Anchor>

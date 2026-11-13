@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { checkButtonAdd } from '@/lib/stripe/planChecks'
-import { offerGrowthTo } from '@/lib/marketplace/entitlements'
+import { offerGrowthTo, offerPremiumTo } from '@/lib/marketplace/entitlements'
 import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 import { moveButton, parseExtraButton, toExtraButtons, type ExtraButton } from '@/lib/listings/pageButtons'
 
@@ -94,7 +94,8 @@ export async function addExtraButtonAction(input: {
 
   const existing = await readButtons(supabase, listing.id)
   if (!existing) return { error: TRY_AGAIN }
-  const limitError = checkButtonAdd(listing.tier, existing.length, await offerGrowthTo(listing.tier))
+  const [growthOpen, premiumOpen] = await Promise.all([offerGrowthTo(listing.tier), offerPremiumTo(listing.tier)])
+  const limitError = checkButtonAdd(listing.tier, existing.length, growthOpen, premiumOpen)
   if (limitError) return { error: limitError }
 
   const position = existing.reduce((max, b) => Math.max(max, b.position), -1) + 1

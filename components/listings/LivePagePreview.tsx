@@ -20,6 +20,8 @@ interface Props {
   ownershipLabel: string | null
   /** The main button's text, or null before the owner picks. */
   ctaLabel: string | null
+  /** Extra buttons the page shows, in order (part B). Left out on a new page. */
+  extraLabels?: string[]
   coverUrl?: string | null
   /** The part the current question fills in, outlined so the owner sees it change. */
   highlight?: PreviewPart | null
@@ -39,6 +41,7 @@ export function LivePagePreview({
   locationLabel,
   ownershipLabel,
   ctaLabel,
+  extraLabels = [],
   coverUrl,
   highlight = null,
   compact = false,
@@ -100,17 +103,27 @@ export function LivePagePreview({
             </p>
           )}
           {!compact && (
-            <span
-              className={cn(
-                'mt-3 inline-flex h-10 items-center rounded-full px-5 font-subhead text-sm font-bold',
-                ctaLabel
-                  ? 'bg-amber-gold text-brand-black'
-                  : 'border border-dashed border-white/50 text-white/60',
-                mark(highlight === 'cta')
-              )}
-            >
-              {ctaLabel ?? 'Your main button'}
-            </span>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span
+                className={cn(
+                  'inline-flex h-10 items-center rounded-full px-5 font-subhead text-sm font-bold',
+                  ctaLabel
+                    ? 'bg-amber-gold text-brand-black'
+                    : 'border border-dashed border-white/50 text-white/60',
+                  mark(highlight === 'cta')
+                )}
+              >
+                {ctaLabel ?? 'Your main button'}
+              </span>
+              {extraLabels.map((label, i) => (
+                <span
+                  key={`${i}-${label}`}
+                  className="inline-flex h-10 items-center rounded-full border border-white/60 px-5 font-subhead text-sm font-bold text-white"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
           )}
         </div>
       </div>

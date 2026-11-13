@@ -64,6 +64,14 @@ describe('checkButtonAdd', () => {
     expect(checkButtonAdd('premium', 3)).toBe('Your plan includes up to 3 extra buttons. Remove one to add another.')
     expect(checkButtonAdd('premium', 5)).not.toBeNull()
   })
+
+  it('offers Premium to a full Growth page only while Premium is for sale', () => {
+    expect(checkButtonAdd('growth', 2, false, true)).toBe(
+      'Your plan includes up to 2 extra buttons. Remove one, or upgrade to Premium for more.'
+    )
+    expect(checkButtonAdd('growth', 2, false, false)).toMatch(/Remove one to add another\.$/)
+    expect(checkButtonAdd('premium', 3, true, true)).toMatch(/Remove one to add another\.$/)
+  })
 })
 
 describe('parseExtraButton', () => {
@@ -250,7 +258,8 @@ describe('migration 20261115000000_listing_buttons (contract)', () => {
 describe('wiring (contract)', () => {
   it('the add action checks the plan limit on the owner’s own listing', () => {
     const src = read('lib/actions/dashboard/updateButtons.ts')
-    expect(src).toMatch(/checkButtonAdd\(listing\.tier, existing\.length/)
+    expect(src).toMatch(/checkButtonAdd\(listing\.tier, existing\.length, growthOpen, premiumOpen\)/)
+    expect(src).toMatch(/offerPremiumTo\(listing\.tier\)/)
     expect(src).toMatch(/\.eq\('owner_user_id', owner\.user\.id\)/)
   })
 
@@ -263,5 +272,25 @@ describe('wiring (contract)', () => {
   it('the hero and the quick bar render them', () => {
     expect(read('components/entity-page/templates/TemplateHero.tsx')).toMatch(/entity\.buttons \?\? \[\]/)
     expect(read('components/entity-page/EntityQuickActionBar.tsx')).toMatch(/entity\.buttons \?\? \[\]/)
+  })
+
+  it('the live preview shows the extras the page shows, and follows each change', () => {
+    const view = read('components/listings/PageFinishView.tsx')
+    expect(view).toMatch(/extraLabels: shownExtraButtons\(buttons, tier\)\.shown\.map\(extraButtonLabel\)/)
+    expect(view).toMatch(/onChange: setButtons/)
+    expect(view).toMatch(/upgradeTo: buttonsOffer/)
+    expect(read('components/listings/LivePagePreview.tsx')).toMatch(/extraLabels\.map\(/)
+    expect(read('components/dashboard/ExtraButtonsEditor.tsx')).toMatch(/onChange\?\.\(result\.buttons\)/)
+  })
+
+  it('the extra picker says where "Message us" went instead of hiding it', () => {
+    const src = read('components/dashboard/ExtraButtonsEditor.tsx')
+    expect(src).toMatch(/<option value="message" disabled>/)
+    expect(src).toMatch(/Delete one, or upgrade to \$\{upgradeTo\} for more\./)
+  })
+
+  it('the edit page offers Premium only to a Growth page, only for buttons', () => {
+    expect(read('app/dashboard/pages/[entityId]/edit/page.tsx')).toMatch(/offerPremiumTo\(listing\.tier\)/)
+    expect(read('lib/marketplace/entitlements.ts')).toMatch(/tier === 'growth' && \(await premiumIsOpen\(\)\)/)
   })
 })

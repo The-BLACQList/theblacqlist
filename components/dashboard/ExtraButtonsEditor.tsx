@@ -27,6 +27,8 @@ interface Props {
   upgradeTo: UpgradeTarget
   /** False when the page has no phone number, so "Call us" would go nowhere. */
   hasPhone: boolean
+  /** Called with the saved buttons after each change, so the live preview follows. */
+  onChange?: (buttons: ExtraButton[]) => void
 }
 
 const EXTRA_OPTIONS = CTA_OPTIONS.filter((o) => o.value !== 'message')
@@ -36,7 +38,7 @@ const EXTRA_OPTIONS = CTA_OPTIONS.filter((o) => o.value !== 'message')
  * Growth 2, Premium 3. Lives inside the "Buttons on your page" card, outside
  * the main button's form, so each change saves on its own.
  */
-export function ExtraButtonsEditor({ listingId, initial, tier, upgradeTo, hasPhone }: Props) {
+export function ExtraButtonsEditor({ listingId, initial, tier, upgradeTo, hasPhone, onChange }: Props) {
   const [buttons, setButtons] = useState(initial)
   const [type, setType] = useState('')
   const [value, setValue] = useState('')
@@ -62,6 +64,7 @@ export function ExtraButtonsEditor({ listingId, initial, tier, upgradeTo, hasPho
         return
       }
       setButtons(result.buttons)
+      onChange?.(result.buttons)
       onSuccess?.()
     })
   }
@@ -151,7 +154,9 @@ export function ExtraButtonsEditor({ listingId, initial, tier, upgradeTo, hasPho
         <PlanLimitNote upgradeTo={upgradeTo}>
           {limit === 0
             ? `Extra buttons are part of Starter. Upgrade to add ${extraButtonLimit('starter')} beside your main button.`
-            : `Your plan includes ${limit === 1 ? '1 extra button' : `up to ${limit} extra buttons`}. Delete one to add another.`}
+            : `Your plan includes ${limit === 1 ? '1 extra button' : `up to ${limit} extra buttons`}. ${
+                upgradeTo ? `Delete one, or upgrade to ${upgradeTo} for more.` : 'Delete one to add another.'
+              }`}
         </PlanLimitNote>
       ) : (
         <form onSubmit={add} className="space-y-3 rounded-lg bg-charcoal/5 px-3 py-3">
@@ -175,6 +180,10 @@ export function ExtraButtonsEditor({ listingId, initial, tier, upgradeTo, hasPho
                     {o.label}
                   </option>
                 ))}
+                {/* Shown so owners know where it went: the inbox adds its own Message button. */}
+                <option value="message" disabled>
+                  Message us — added by itself when your inbox is on
+                </option>
               </select>
             </div>
             <div className="min-w-[11rem] flex-1">

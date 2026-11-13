@@ -160,3 +160,16 @@ export async function growthIsOpen(): Promise<boolean> {
 export async function offerGrowthTo(tier: string | null): Promise<boolean> {
   return tier === 'starter' && (await growthIsOpen())
 }
+
+/** Whether Premium can be bought right now. Fails closed, like `growthIsOpen`. */
+export async function premiumIsOpen(): Promise<boolean> {
+  return isTierOpen(await getPlanAvailability(createServiceClient()), 'premium')
+}
+
+/**
+ * Whether the extra buttons note may offer Premium to this page. Only a Growth
+ * page is offered it, so every other plan skips the `plans` read.
+ */
+export async function offerPremiumTo(tier: string | null): Promise<boolean> {
+  return tier === 'growth' && (await premiumIsOpen())
+}
