@@ -1,0 +1,132 @@
+'use server'
+
+import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { isFeatureEnabled } from '@/lib/env'
+import { checkRateLimit } from '@/lib/security/rate-limit'
+import { TURNSTILE_ERROR, verifyTurnstileFormData } from '@/lib/security/turnstile'
+import { trackServerEvent } from '@/lib/analytics/server'
+import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
+import { MESSAGING_UNAVAILABLE_ERROR, START_RATE_LIMIT } from '@/lib/messaging/constants'
+import { isUuid, normalizeMessageBody } from '@/lib/messaging/rules'
+import { appendMessage, isBlocked, isMessagingSuspended, revalidateConversation } from '@/lib/messaging/write'
+
+export type StartConversationState = { success: true; conversationId: string } | { error: string } | null
+
+/**
+ * A customer's first message to a business, from the listing page composer.
+ *
+ * Rules (decision 2026-11-13):
+ *   - signed in; never the listing's owner
+ *   - the listing is published, not deleted, and claimed
+ *   - the inbox is open (listings.messaging_enabled) for a NEW conversation.
+ *     If this customer already has a thread with this listing, the message is
+ *     appended to it instead, and the inbox switch does not apply (existing
+ *     threads stay open).
+ *   - not blocked by the owner, not suspended. Both answer with the same
+ *     neutral error as a closed inbox, so a block is never revealed.
+ *   - Turnstile, and 5 per hour per account.
+ */
+export async function startConversationAction(
+  _prev: StartConversationState,
+  formData: FormData
+): Promise<StartConversationState> {
+  if (!isFeatureEnabled('messaging')) return { error: MESSAGING_UNAVAILABLE_ERROR }
+
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  if (!user) return { error: 'Please sign in to send a message.' }
+
+  if (!(await verifyTurnstileFormData(formData))) return { error: TURNSTILE_ERROR }
+
+  const allowed = await checkRateLimit({
+    bucket: 'message_start',
+    identifier: `user:${user.id}`,
+    ...START_RATE_LIMIT,
+  })
+  if (!allowed) return { error: "You've sent a lot of new messages. Try again in an hour." }
+
+  const listingId = formData.get('listing_id')?.toString().trim() ?? ''
+  if (!isUuid(listingId)) return { error: 'Missing listing.' }
+  const parsed = normalizeMessageBody(formData.get('body'))
+  if (!parsed.ok) return { error: parsed.error }
+
+  const service = createServiceClient()
+
+  const { data: listing } = await service
+    .from('listings')
+    .select('id, owner_user_id, status, deleted_at, messaging_enabled, entity_type')
+    .eq('id', listingId)
+    .maybeSingle()
+
+  if (!listing || listing.deleted_at || listing.status !== 'published' || !listing.owner_user_id) {
+    return { error: MESSAGING_UNAVAILABLE_ERROR }
+  }
+  if (listing.owner_user_id === user.id) return { error: "You can't message your own business." }
+
+  try {
+    if (
+      (await isMessagingSuspended(service, user.id)) ||
+      (await isBlocked(service, listing.owner_user_id, user.id))
+    ) {
+      return { error: MESSAGING_UNAVAILABLE_ERROR }
+    }
+  } catch {
+    return { error: 'Something went wrong. Please try again.' }
+  }
+
+  const { data: existing } = await service
+    .from('conversations')
+    .select('id')
+    .eq('listing_id', listingId)
+    .eq('customer_user_id', user.id)
+    .maybeSingle()
+
+  let conversationId = existing?.id ?? null
+  let created = false
+
+  if (!conversationId) {
+    if (!listing.messaging_enabled) return { error: MESSAGING_UNAVAILABLE_ERROR }
+
+    const { data: inserted, error } = await service
+      .from('conversations')
+      .insert({ listing_id: listingId, customer_user_id: user.id })
+      .select('id')
+      .single()
+
+    if (inserted) {
+      conversationId = inserted.id
+      created = true
+    } else if (error?.code === '23505') {
+      // Two submits raced; the other one created the thread. Use it.
+      const { data: raced } = await service
+        .from('conversations')
+        .select('id')
+        .eq('listing_id', listingId)
+        .eq('customer_user_id', user.id)
+        .maybeSingle()
+      conversationId = raced?.id ?? null
+    }
+    if (!conversationId) return { error: "We couldn't send that. Please try again." }
+  }
+
+  const sent = await appendMessage(service, {
+    conversationId,
+    senderId: user.id,
+    senderRole: 'customer',
+    body: parsed.body,
+  })
+  if (!sent.ok) return { error: "We couldn't send that. Please try again." }
+
+  trackServerEvent({
+    event_name: created ? ANALYTICS_EVENTS.MESSAGE_CONVERSATION_STARTED : ANALYTICS_EVENTS.MESSAGE_SENT,
+    entity_id: listingId,
+    entity_type: 'listing',
+    user_id: user.id,
+    properties: { sender_role: 'customer', source: 'listing_composer' },
+  })
+
+  revalidateConversation(conversationId)
+  return { success: true, conversationId }
+}

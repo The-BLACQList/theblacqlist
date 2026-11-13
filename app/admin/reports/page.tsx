@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 
 import { requireAdmin } from '@/lib/admin/guard'
+import { isFeatureEnabled } from '@/lib/env'
 import { createServiceClient } from '@/lib/supabase/server'
 import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
 import { QueueItemActions } from '@/components/admin/QueueItemActions'
@@ -102,6 +103,14 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Handle user-submitted correction requests and flagged listings.
         </p>
+        {isFeatureEnabled('messaging') && (
+          <Link
+            href="/admin/reports/messages"
+            className="inline-block mt-2 font-subhead text-xs font-semibold text-brand-black underline underline-offset-2 hover:text-charcoal"
+          >
+            Message reports →
+          </Link>
+        )}
       </div>
 
       {/* Status tabs */}

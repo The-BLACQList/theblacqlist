@@ -18,6 +18,7 @@ export async function resolveQueueItemAction(
   const rawPath = formData.get('revalidate_path')?.toString().trim() ?? ''
   const ALLOWED_REVALIDATE_PATHS = [
     '/admin/reports',
+    '/admin/reports/messages',
     '/admin/queue',
     '/admin/moderation',
     '/admin/reviews',

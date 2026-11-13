@@ -182,6 +182,32 @@ Fired when a review is successfully submitted.
 
 ---
 
+#### `message_conversation_started`
+
+Fired when a customer's first message to a business creates a new conversation (behind `FEATURE_MESSAGING`). A later message in the same thread fires `message_sent` instead.
+
+| Property      | Type   | Notes                     |
+| ------------- | ------ | ------------------------- |
+| `sender_role` | string | Always `'customer'`       |
+| `source`      | string | `'listing_composer'`      |
+
+**entity_id:** UUID of the listing messaged. No message text and no conversation ID.
+
+---
+
+#### `message_sent`
+
+Fired for every message after the first, from either side.
+
+| Property      | Type   | Notes                                    |
+| ------------- | ------ | ---------------------------------------- |
+| `sender_role` | string | `'customer'` \| `'owner'`                |
+| `source`      | string | `'thread'` \| `'listing_composer'`       |
+
+**entity_id:** UUID of the listing. Message text never goes to `analytics_events`.
+
+---
+
 #### `claim_started`
 
 Fired when a user clicks the "Claim this listing" button and begins the claim flow (navigates to the claim page).

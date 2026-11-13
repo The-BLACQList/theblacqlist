@@ -3,6 +3,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getAdminRole } from '@/lib/admin/guard'
 import { AccountNav, type AccountNavCounts } from '@/components/account/AccountNav'
 import { isCovered } from '@/lib/features/covered'
+import { isFeatureEnabled } from '@/lib/env'
+import { getUnreadMessageCount } from '@/lib/messaging/loaders'
 
 /**
  * AC-AB account shell: persistent grouped sidebar (desktop) / horizontal
@@ -23,7 +25,8 @@ export default async function AccountLayout({ children }: { children: React.Reac
     ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
     : '—'
 
-  const [saved, reviews, claims, claimsPending, receipts, owned, adminRole] = await Promise.all([
+  const messagingOn = isFeatureEnabled('messaging')
+  const [saved, reviews, claims, claimsPending, receipts, owned, adminRole, messagesUnread] = await Promise.all([
     supabase.from('saves').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
     supabase
       .from('reviews')
@@ -50,6 +53,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
     // Gates the Admin group in the sidebar only — /admin still guards itself.
     // Folded into the existing Promise.all so it costs no extra round-trip.
     getAdminRole(user.id),
+    messagingOn ? getUnreadMessageCount(supabase) : Promise.resolve(undefined),
   ])
 
   const counts: AccountNavCounts = {
@@ -58,6 +62,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
     claims: claims.count ?? 0,
     claimsPending: claimsPending.count ?? 0,
     receipts: receipts.count ?? 0,
+    messagesUnread,
   }
 
   return (

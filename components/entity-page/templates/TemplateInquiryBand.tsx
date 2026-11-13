@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import type { EntityPageData } from '@/types'
-import { getCtaLabel } from '@/types'
-import { getCtaHref } from '@/components/entity-page/templates/cta'
+import { getCtaHref, getEntityCtaLabel } from '@/components/entity-page/templates/cta'
 
 interface Props {
   entity: EntityPageData
@@ -16,7 +15,7 @@ interface Props {
  */
 export function TemplateInquiryBand({ entity }: Props) {
   const isUnclaimed = entity.trust_tier === 'unclaimed'
-  const ctaLabel = getCtaLabel(entity.details.cta_type, entity.details.cta_label_override)
+  const ctaLabel = getEntityCtaLabel(entity)
   const ctaHref = getCtaHref(entity)
   const email = entity.details.email
 

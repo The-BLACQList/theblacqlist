@@ -19,6 +19,11 @@ export const ANALYTICS_EVENTS = {
   // closing the sheet never counts as a share in the rollups.
   SHARE_SHEET_OPENED: 'share_sheet_opened',
 
+  // ── Messaging (2026-11-13) ─────────────────────────────────────────────────
+  // Server-side only. Properties never carry message text.
+  MESSAGE_CONVERSATION_STARTED: 'message_conversation_started',
+  MESSAGE_SENT: 'message_sent',
+
   // ── Marketplace ───────────────────────────────────────────────────────────
   MARKETPLACE_PRODUCT_VIEWED: 'marketplace_product_viewed',
   MARKETPLACE_CTA_CLICK: 'marketplace_cta_click',

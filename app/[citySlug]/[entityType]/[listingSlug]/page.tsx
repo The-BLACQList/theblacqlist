@@ -14,6 +14,8 @@ import { EntityQuickActionBar } from '@/components/entity-page/EntityQuickAction
 import { EntityTemplateOutlet } from '@/components/entity-page/templates/EntityTemplateOutlet'
 import { recordTourWitness } from '@/lib/tour/witness'
 import { showShoppedHere } from '@/lib/spend/receipt-prefill'
+import { loadListingMessaging } from '@/lib/messaging/loaders'
+import { MessageComposer } from '@/components/messaging/MessageComposer'
 
 // No `revalidate` declared on purpose: PublicHeader reads cookies in the root
 // layout, so every route is already dynamic and a revalidate here is dead —
@@ -155,7 +157,7 @@ function buildEventJsonLd(
 }
 
 export default async function EntityPage({ params }: PageProps) {
-  const { entityType, listingSlug } = await params
+  const { citySlug, entityType, listingSlug } = await params
   const entity = await getEntityPageFromDB(listingSlug)
 
   if (!entity) notFound()
@@ -215,6 +217,22 @@ export default async function EntityPage({ params }: PageProps) {
     hasReviewed = !!reviewResult.data
   }
 
+  // In-app messaging depends on who is looking (signed out, the owner, a
+  // customer with a thread already, a blocked customer), so it is resolved
+  // here and not in the shared loader. Fail-soft: undefined keeps the old
+  // mailto: CTA. A new object, so a cached loader result is never mutated.
+  // Events and jobs have no inbox switch, so they never get in-app messaging.
+  const messaging =
+    isEvent || isJob
+      ? undefined
+      : await loadListingMessaging(supabase, {
+          listingId: entity.id,
+          ownerUserId: entity.owner_user_id,
+          viewerId: user?.id ?? null,
+          listingPath: buildEntityUrl(entityType, citySlug, listingSlug),
+        })
+  const pageEntity = messaging ? { ...entity, messaging } : entity
+
   return (
     // `data-tour-listing` lets the Tester Tour remember this page so a step row
     // can offer "Back to {name}" instead of Discover (lib/tour/targets.ts).
@@ -234,7 +252,7 @@ export default async function EntityPage({ params }: PageProps) {
       {/* getEntityPageFromDB only returns published listings (and closed
           jobs, which showShoppedHere refuses), so "published" holds here. */}
       <EntityQuickActionBar
-        entity={entity}
+        entity={pageEntity}
         initialSaved={initialSaved}
         showShoppedHere={showShoppedHere({
           signedIn: Boolean(user),
@@ -257,12 +275,18 @@ export default async function EntityPage({ params }: PageProps) {
           Playwright; the key makes the invariant hold regardless of path. */}
       <EntityTemplateOutlet
         key={entity.id}
-        entity={entity}
+        entity={pageEntity}
         initialSaved={initialSaved}
         userId={user?.id ?? null}
         isOwner={isOwner}
         hasReviewed={hasReviewed}
       />
+
+      {/* One composer per page. It opens for every link to #send-message (the
+          hero, the quick bar, the inquiry band, the services links). */}
+      {messaging?.mode === 'compose' && (
+        <MessageComposer listingId={entity.id} businessName={entity.name} />
+      )}
     </div>
   )
 }
