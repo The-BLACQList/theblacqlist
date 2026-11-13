@@ -237,6 +237,7 @@ describe('getEnabledFeatures', () => {
     const { getEnabledFeatures } = await loadEnv({ VERCEL_ENV: 'preview' })
     expect(getEnabledFeatures().sort()).toEqual([
       'aiBeta',
+      'coupons',
       'earnedFeatured',
       'happeningNow',
       'messaging',

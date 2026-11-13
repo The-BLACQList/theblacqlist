@@ -134,6 +134,7 @@ export async function searchListings(
     attrs: params.attrs,
     open_now: params.open_now,
     partners: params.partners,
+    deals: params.deals,
     lat: params.lat,
     lng: params.lng,
     radius: params.radius,
@@ -186,6 +187,7 @@ export async function searchListings(
     q ||
     resolved.p_levels ||
     resolved.p_open_to_partnerships ||
+    resolved.p_has_deals ||
     resolved.p_attribute_values ||
     resolved.p_price_ranges ||
     resolved.p_open_now ||

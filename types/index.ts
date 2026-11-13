@@ -3,6 +3,7 @@
 import { VALID_ENTITY_TYPES, VALID_LOCATION_TYPES } from '@/lib/constants/listing'
 import type { ListingMessaging } from '@/lib/messaging/rules'
 import type { PublicPost } from '@/lib/listings/happeningNow'
+import type { PublicDeal } from '@/lib/listings/deals'
 
 /**
  * Both unions are DERIVED from the canonical constants rather than retyped, because
@@ -402,6 +403,11 @@ export interface EntityPageData {
    * Optional so older fixtures still type.
    */
   happeningNow?: PublicPost[]
+  /**
+   * Live deals on a Premium page, soonest ending first (part G). Optional so
+   * older fixtures still type.
+   */
+  deals?: PublicDeal[]
   related: DiscoveryEntity[]
   images: GalleryImage[]
   reviews: ReviewItem[]

@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 import { ChevronRight } from 'lucide-react'
 
 import { createClient } from '@/lib/supabase/server'
+import { isFeatureEnabled } from '@/lib/env'
 import { queryListings, LISTINGS_PAGE_SIZE } from '@/lib/listings/query'
 import { buildPageUrl } from '@/lib/listings/pagination'
 import { parseLocationParams } from '@/lib/listings/location-params'
@@ -150,13 +151,20 @@ async function CityContent({
     <div className="flex gap-6 lg:gap-8 items-start">
       {/* The same sidebar as /discover, minus the city picker: the route is the city. */}
       <div className="hidden md:block w-56 lg:w-64 shrink-0">
-        <FacetSidebar hideCityFilter categories={categories ?? []} groups={groups} counts={counts} />
+        <FacetSidebar
+          hideCityFilter
+          showDeals={isFeatureEnabled('coupons')}
+          categories={categories ?? []}
+          groups={groups}
+          counts={counts}
+        />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-3 mb-4">
           <div className="md:hidden">
             <MobileFilterSheet
               hideCityFilter
+              showDeals={isFeatureEnabled('coupons')}
               categories={categories ?? []}
               groups={groups}
               counts={counts}

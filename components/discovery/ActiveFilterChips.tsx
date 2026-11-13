@@ -109,6 +109,9 @@ export function ActiveFilterChips({
   if (searchParams.get('partners') === '1')
     chips.push({ label: 'Open to partnerships', onRemove: () => setParam('partners', '') })
 
+  if (searchParams.get('deals') === '1')
+    chips.push({ label: 'Has deals', onRemove: () => setParam('deals', '') })
+
   for (const p of getCsv('price')) chips.push({ label: p, onRemove: () => removeCsv('price', p) })
 
   for (const slug of getCsv('attrs'))

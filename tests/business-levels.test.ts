@@ -155,7 +155,7 @@ describe('the level filter', () => {
   })
 
   it('never retries without p_levels', () => {
-    expect(src('lib/listings/facets.ts')).toMatch(/'p_levels' in args \|\|\s*'p_open_to_partnerships' in args\s*\)\s*return first/)
+    expect(src('lib/listings/facets.ts')).toMatch(/'p_levels' in args \|\|\s*'p_open_to_partnerships' in args \|\|\s*'p_has_deals' in args\s*\)\s*return first/)
   })
 })
 

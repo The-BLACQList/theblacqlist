@@ -21,10 +21,11 @@ import { loadFinishData } from '@/lib/listings/finishData'
 import { PageFinishView } from '@/components/listings/PageFinishView'
 import { getWritingAllowance } from '@/lib/ai/allowance'
 import { loadOpenSuggestions } from '@/lib/ai/openSuggestions'
-import { growthIsOpen, offerPremiumTo } from '@/lib/marketplace/entitlements'
+import { growthIsOpen, offerPremiumTo, premiumIsOpen } from '@/lib/marketplace/entitlements'
 import { OWNER_MANAGES_LINE, postJobInviteOpen } from '@/lib/listings/ownerLine'
 import { initialTab } from '@/lib/listings/editTabs'
 import { toOwnerPosts } from '@/lib/listings/happeningNow'
+import { dealsAllowed, toOwnerDeals } from '@/lib/listings/deals'
 
 interface Props {
   params: Promise<{ entityId: string }>
@@ -271,34 +272,47 @@ export default async function EditPage({ params, searchParams }: Props) {
 
   // Every other page (business, creative, service provider, vendor) edits in
   // the same side-by-side finish view a new owner uses (ticket 129).
-  const [data, allowance, growthOpen, premiumOpen, inboxOpen, postRows] = await Promise.all([
-    loadFinishData(supabase, listing.id, owner.user.id),
-    getWritingAllowance(listing.id, listing.tier),
-    // Limit notes offer Growth to a Starter page only while it is for sale.
-    growthIsOpen(),
-    // The extra buttons note offers Premium to a Growth page only while it is for sale.
-    offerPremiumTo(listing.tier),
-    // Inbox switch: null hides the section (flag off, or the read failed).
-    isFeatureEnabled('messaging')
-      ? supabase
-          .from('listings')
-          .select('messaging_enabled')
-          .eq('id', listing.id)
-          .maybeSingle()
-          .then(({ data: row, error }) => (error || !row ? null : row.messaging_enabled))
-      : Promise.resolve(null),
-    // Happening now card (part F): null hides it (flag off, or the read failed).
-    isFeatureEnabled('happeningNow')
-      ? supabase
-          .from('listing_posts')
-          .select(
-            'id, headline, body, image_path, button_label, button_url, starts_at, ends_at, status, created_at'
-          )
-          .eq('listing_id', listing.id)
-          .order('created_at', { ascending: false })
-          .then(({ data: rows, error }) => (error ? null : rows))
-      : Promise.resolve(null),
-  ])
+  const dealsOn = isFeatureEnabled('coupons')
+  const [data, allowance, growthOpen, premiumOpen, inboxOpen, postRows, dealRows, premiumForDeals] =
+    await Promise.all([
+      loadFinishData(supabase, listing.id, owner.user.id),
+      getWritingAllowance(listing.id, listing.tier),
+      // Limit notes offer Growth to a Starter page only while it is for sale.
+      growthIsOpen(),
+      // The extra buttons note offers Premium to a Growth page only while it is for sale.
+      offerPremiumTo(listing.tier),
+      // Inbox switch: null hides the section (flag off, or the read failed).
+      isFeatureEnabled('messaging')
+        ? supabase
+            .from('listings')
+            .select('messaging_enabled')
+            .eq('id', listing.id)
+            .maybeSingle()
+            .then(({ data: row, error }) => (error || !row ? null : row.messaging_enabled))
+        : Promise.resolve(null),
+      // Happening now card (part F): null hides it (flag off, or the read failed).
+      isFeatureEnabled('happeningNow')
+        ? supabase
+            .from('listing_posts')
+            .select(
+              'id, headline, body, image_path, button_label, button_url, starts_at, ends_at, status, created_at'
+            )
+            .eq('listing_id', listing.id)
+            .order('created_at', { ascending: false })
+            .then(({ data: rows, error }) => (error ? null : rows))
+        : Promise.resolve(null),
+      // Deals section (part G): null hides it (flag off, or the read failed).
+      dealsOn
+        ? supabase
+            .from('listing_deals')
+            .select('id, title, description, code, terms, starts_at, ends_at, status, created_at')
+            .eq('listing_id', listing.id)
+            .order('created_at', { ascending: false })
+            .then(({ data: rows, error }) => (error ? null : rows))
+        : Promise.resolve(null),
+      // The deals note offers Premium to any page below it while it is for sale.
+      dealsOn && !dealsAllowed(listing.tier) ? premiumIsOpen() : Promise.resolve(false),
+    ])
   if (!data) notFound()
   // Writing help sits inside the fields (ticket 138). Off means the switch is
   // off, so the page renders exactly as it did before.
@@ -377,6 +391,15 @@ export default async function EditPage({ params, searchParams }: Props) {
         initialTab={initialTab(tab)}
         happeningNow={
           postRows ? { posts: toOwnerPosts(postRows), now: new Date().toISOString() } : undefined
+        }
+        deals={
+          dealRows
+            ? {
+                deals: toOwnerDeals(dealRows),
+                now: new Date().toISOString(),
+                premiumOpen: premiumForDeals,
+              }
+            : undefined
         }
       />
     </div>

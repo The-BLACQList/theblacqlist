@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import { VALID_ENTITY_TYPES } from '@/lib/constants/listing'
+import { isFeatureEnabled } from '@/lib/env'
 import { BUSINESS_LEVELS, isBusinessLevel } from '@/lib/listings/levels'
 import { expandSearchQuery } from '@/lib/search/wordFamilies'
 import {
@@ -129,6 +130,8 @@ export interface RawFacetParams {
   open_now?: boolean
   /** Only pages whose owner turned on "Open to partnerships" (ticket 134). */
   partners?: boolean
+  /** Only Premium pages with a deal up now (part G). Ignored while the coupons flag is off. */
+  deals?: boolean
   /** "Near You" — all three or none. Validated upstream (searchSchema). */
   lat?: number
   lng?: number
@@ -224,6 +227,12 @@ export interface ResolvedFacetParams {
    * rpcArgs): the functions read NULL and FALSE alike as "no filter".
    */
   p_open_to_partnerships: true | null
+  /**
+   * Premium pages with a deal up now (part G), added by
+   * 20261117000000_listing_deals.sql. TRUE or never sent (see rpcArgs), so a
+   * call without the filter resolves against the older functions too.
+   */
+  p_has_deals: true | null
 }
 
 /** The two keys only the 20260924000000 signatures accept. */
@@ -257,6 +266,7 @@ export function rpcArgs<T extends Record<string, unknown>>(args: T): Record<stri
   // unavailable"), not quietly come back as the whole directory.
   if (out.p_levels == null) delete out.p_levels
   if (out.p_open_to_partnerships == null) delete out.p_open_to_partnerships
+  if (out.p_has_deals == null) delete out.p_has_deals
   return out
 }
 
@@ -283,7 +293,8 @@ async function callWithTypeFallback(
     !first.error ||
     !TYPE_KEYS.some((k) => k in args) ||
     'p_levels' in args ||
-    'p_open_to_partnerships' in args
+    'p_open_to_partnerships' in args ||
+    'p_has_deals' in args
   )
     return first
   return rpc(fn, withoutTypeKeys(args))
@@ -443,6 +454,8 @@ export async function resolveFacetParams(
       p_type_location_types: typeLocations.length > 0 ? typeLocations : null,
       p_levels: levels.length > 0 ? levels : null,
       p_open_to_partnerships: raw.partners ? true : null,
+      // Off, the filter is dropped rather than sent to a database that may not have it.
+      p_has_deals: raw.deals && isFeatureEnabled('coupons') ? true : null,
     },
     unresolved,
   }
