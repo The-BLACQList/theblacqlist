@@ -37,7 +37,9 @@ export function TemplateInfoRail({ entity }: Props) {
   const items: string[] = []
 
   if (entity.avg_rating !== null && entity.review_count > 0) {
-    items.push(`★ ${entity.avg_rating.toFixed(1)} · ${entity.review_count.toLocaleString()} review${entity.review_count === 1 ? '' : 's'}`)
+    items.push(
+      `★ ${entity.avg_rating.toFixed(1)} · ${entity.review_count.toLocaleString()} review${entity.review_count === 1 ? '' : 's'}`
+    )
   }
   if (entity.city) items.push(`${entity.city.name}, ${entity.city.state_abbr}`)
   const locationNote = LOCATION_NOTES[entity.location_type]
@@ -59,7 +61,12 @@ export function TemplateInfoRail({ entity }: Props) {
         <ul className="flex flex-wrap items-center gap-x-6 gap-y-1.5 py-3 list-none m-0 p-0">
           {hasHours && (
             <li className="flex items-center">
-              <OpenStatus hours={entity.details.hours} surface="light" className="text-[13.5px]" />
+              <OpenStatus
+                hours={entity.details.hours}
+                overrides={entity.hoursOverrides}
+                surface="light"
+                className="text-[13.5px]"
+              />
             </li>
           )}
           {items.map((item) => (

@@ -27,6 +27,8 @@ import { EntityTeamSection } from '@/components/entity-page/EntityTeamSection'
 import { EntityShopSection } from '@/components/entity-page/EntityShopSection'
 import { EntityBookingSection } from '@/components/entity-page/EntityBookingSection'
 import { SectionMark } from '@/components/entity-page/SectionMark'
+import { EntityHighlightsSection } from '@/components/entity-page/EntityHighlightsSection'
+import { EntityCredentialsSection } from '@/components/entity-page/EntityCredentialsSection'
 import { EXAMPLE_BOOKING_NOTE } from '@/lib/entity-page/sections'
 import type { EntityTemplateProps } from '@/lib/entity-page/template'
 
@@ -97,7 +99,7 @@ export function StorefrontTemplate({
           phone or email. */}
       <SectionMark id="at-a-glance">
         <div id="visit" className="scroll-mt-32">
-          <EntityAtAGlance entity={entity} />
+          <EntityAtAGlance entity={entity} mode={mode} />
         </div>
       </SectionMark>
 
@@ -124,6 +126,10 @@ export function StorefrontTemplate({
             <EntityStorySection entity={entity} />
           </div>
         </Reveal>
+      </SectionMark>
+
+      <SectionMark id="highlights">
+        <EntityHighlightsSection highlights={entity.highlights} />
       </SectionMark>
 
       <SectionMark id="team">
@@ -159,7 +165,7 @@ export function StorefrontTemplate({
 
       <SectionMark id="gallery">
         <div id="gallery" className="scroll-mt-32">
-          <EntityMediaGallery entity={entity} images={entity.images} />
+          <EntityMediaGallery entity={entity} images={entity.images} mode={mode} />
         </div>
       </SectionMark>
       <SectionMark id="video">
@@ -193,6 +199,9 @@ export function StorefrontTemplate({
         </Reveal>
       </SectionMark>
 
+      <SectionMark id="credentials">
+        <EntityCredentialsSection credentials={entity.credentials} />
+      </SectionMark>
       <SectionMark id="trust">
         <EntityTrustSection entity={entity} />
       </SectionMark>

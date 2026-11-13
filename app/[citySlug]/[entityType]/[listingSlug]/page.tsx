@@ -7,7 +7,7 @@ import { getEntityPageFromDB } from '@/lib/listings/entityPage'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { listingMetaText } from '@/lib/listings/seo'
 import { buildJobPostingJsonLd } from '@/lib/listings/jobPosting'
-import { resolveMediaPath } from '@/lib/listings/coverImage'
+import { buildJsonLd } from '@/lib/listings/jsonLd'
 import { trackServerEvent } from '@/lib/analytics/server'
 import { ANALYTICS_EVENTS, SERVER_ONLY_EVENTS } from '@/lib/analytics/constants'
 import { EntityQuickActionBar } from '@/components/entity-page/EntityQuickActionBar'
@@ -81,49 +81,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
-function buildJsonLd(entity: Awaited<ReturnType<typeof getEntityPageFromDB>>, entityType: string) {
-  if (!entity) return null
-  const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com'
-  const { details, city } = entity
-  const logoUrl = resolveMediaPath(entity.logo_path)
-
-  const jsonLd: Record<string, unknown> = {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name: entity.name,
-    description: details.description || entity.tagline,
-    url: `${BASE_URL}${buildEntityUrl(entityType, city?.slug, entity.slug)}`,
-    // schema.org logo must be a fetchable URL. logo_path is a Storage key, so
-    // emitting it raw hands crawlers a string like "logos/abc.png" — invalid,
-    // and Google drops the property. Resolve it the same way the cover is.
-    ...(logoUrl && { logo: logoUrl }),
-    ...(entity.avg_rating && {
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: entity.avg_rating.toFixed(1),
-        reviewCount: entity.review_count,
-      },
-    }),
-  }
-
-  if (details.address) {
-    jsonLd.address = {
-      '@type': 'PostalAddress',
-      streetAddress: details.address,
-      ...(details.address_line2 && { addressLocality: details.address_line2 }),
-      addressLocality: details.city_name ?? city?.name,
-      addressRegion: details.state_abbr ?? city?.state_abbr,
-      postalCode: details.zip,
-      addressCountry: 'US',
-    }
-  }
-
-  if (details.phone) jsonLd.telephone = details.phone
-  if (details.website_url) jsonLd.sameAs = details.website_url
-
-  return jsonLd
-}
-
 function buildEventJsonLd(
   entity: Awaited<ReturnType<typeof getEntityPageFromDB>>,
   entityType: string
@@ -151,7 +108,11 @@ function buildEventJsonLd(
           address: [ev.venue_address, ev.city_name, ev.state_abbr].filter(Boolean).join(', '),
         },
     ...(ev.ticket_url && {
-      offers: { '@type': 'Offer', url: ev.ticket_url, ...(ev.price_text && { description: ev.price_text }) },
+      offers: {
+        '@type': 'Offer',
+        url: ev.ticket_url,
+        ...(ev.price_text && { description: ev.price_text }),
+      },
     }),
     ...(ev.organizer && { organizer: { '@type': 'Organization', name: ev.organizer.name } }),
   }
@@ -253,7 +214,8 @@ export default async function EntityPage({ params }: PageProps) {
   // "Send as": a page owner can write as one of their own live pages. Not on
   // jobs (people apply, not pages); the list still tells the composer which
   // inbox the sender reads.
-  const sendAsPages = showComposer && user ? await listSendAsPages(supabase, user.id, entity.id) : []
+  const sendAsPages =
+    showComposer && user ? await listSendAsPages(supabase, user.id, entity.id) : []
   const posting = postingKind(entity.entity_type)
 
   return (

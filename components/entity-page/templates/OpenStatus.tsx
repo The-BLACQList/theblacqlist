@@ -1,11 +1,13 @@
 'use client'
 
-import type { WeeklyHours } from '@/types'
+import type { HoursOverride, WeeklyHours } from '@/types'
 import { isOpenNow } from '@/lib/listings/openStatus'
 import { cn } from '@/lib/utils'
 
 interface Props {
   hours: WeeklyHours | null
+  /** Holiday / one-off hours; today's entry overrides the weekly row (ticket 196). */
+  overrides?: readonly HoursOverride[]
   /** dark = hero (gold-on-dark greens); light = info rail */
   surface: 'light' | 'dark'
   className?: string
@@ -17,10 +19,10 @@ interface Props {
  * dark). Client-side so the status reflects the viewer's clock rather
  * than the ISR render time.
  */
-export function OpenStatus({ hours, surface, className }: Props) {
+export function OpenStatus({ hours, overrides, surface, className }: Props) {
   if (!hours) return null
   // suppressHydrationWarning is intentional: time differs between server and client renders.
-  const status = isOpenNow(hours)
+  const status = isOpenNow(hours, overrides)
 
   return (
     <span

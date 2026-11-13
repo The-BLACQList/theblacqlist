@@ -23,21 +23,29 @@ import {
   type TierLimits,
 } from '@/lib/stripe/features'
 import type { PlanSlug } from '@/lib/stripe/plans'
+import { factsFor } from '@/lib/listings/facts'
+import { galleryAlbums } from '@/lib/listings/galleryAlbums'
 import type { EntityPageData, EntityType } from '@/types'
 
 export type SectionId =
   | 'hero'
   | 'logo'
+  | 'facts'
+  | 'happening-now'
   | 'info-rail'
   | 'deals'
   | 'at-a-glance'
+  | 'map'
+  | 'hours-overrides'
   | 'locations'
   | 'links'
   | 'story'
+  | 'highlights'
   | 'team'
   | 'offerings'
   | 'services'
   | 'capabilities'
+  | 'documents'
   | 'portfolio'
   | 'shop'
   | 'booking'
@@ -46,9 +54,11 @@ export type SectionId =
   | 'hiring'
   | 'events'
   | 'gallery'
+  | 'albums'
   | 'video'
   | 'inquiry'
   | 'reviews'
+  | 'credentials'
   | 'trust'
   | 'community'
   | 'activity'
@@ -110,6 +120,27 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     isFilled: (e) => Boolean(e.logo),
   },
   {
+    id: 'facts',
+    label: 'Facts line',
+    templates: ALL,
+    // Part of the basic page (founder 2026-11-13). Ticket 189 wires the live loader.
+    gate: {},
+    editor: { tool: 'Details', href: edit('details') },
+    isFilled: (e) => factsFor(e.details).length > 0,
+  },
+  {
+    id: 'happening-now',
+    label: 'Happening now',
+    templates: ALL,
+    // Main's posts (owner-experience round 2, part F). The site flag and the
+    // per-plan active-post cap gate it, as lib/listings/entityPage.ts and
+    // shownPosts do. The route renders it above the template, as the live
+    // listing route does, so it is registered but never ordered.
+    gate: { flag: 'happeningNow', limit: 'activePosts' },
+    editor: { tool: 'Happening now', href: page('posts') },
+    isFilled: (e) => (e.happeningNow?.length ?? 0) > 0,
+  },
+  {
     id: 'info-rail',
     label: 'Quick facts',
     templates: ALL,
@@ -136,6 +167,26 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     isFilled: () => true,
   },
   {
+    // Nested in At a Glance. Part of the basic page: live listings already
+    // carry lat/lng, so ticket 190 turns it on for them; until then it renders
+    // in example mode only.
+    id: 'map',
+    label: 'Location map',
+    templates: ALL,
+    gate: {},
+    editor: { tool: 'Contact & hours', href: edit('contact') },
+    isFilled: (e) => e.details.lat != null && e.details.lng != null,
+  },
+  {
+    // Nested in At a Glance. Hours are basic at every tier (ticket 196).
+    id: 'hours-overrides',
+    label: 'Special hours',
+    templates: ALL,
+    gate: {},
+    editor: { tool: 'Contact & hours', href: edit('hours') },
+    isFilled: (e) => (e.hoursOverrides?.length ?? 0) > 0,
+  },
+  {
     id: 'locations',
     label: 'Other locations',
     templates: ALL,
@@ -158,6 +209,16 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     gate: {},
     editor: { tool: 'About', href: edit('about') },
     isFilled: (e) => Boolean(e.details.description?.trim()),
+  },
+  {
+    // "Why choose us" bullets or "How it works" steps. Ticket 195 decides the
+    // tier and builds the editor; free and page('highlights') until then.
+    id: 'highlights',
+    label: 'Highlights',
+    templates: ALL,
+    gate: {},
+    editor: { tool: 'Highlights', href: page('highlights') },
+    isFilled: (e) => (e.highlights?.length ?? 0) > 0,
   },
   {
     id: 'team',
@@ -190,6 +251,17 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     gate: {},
     editor: { tool: 'Offerings', href: page('offerings') },
     isFilled: hasServices,
+  },
+  {
+    // Nested in the Offerings / Services / Capabilities heading: the menu,
+    // rate card or commission guide PDF. Ticket 194 decides the tier and the
+    // upload role; free until then.
+    id: 'documents',
+    label: 'Documents',
+    templates: ALL,
+    gate: {},
+    editor: { tool: 'Media', href: page('media') },
+    isFilled: (e) => (e.documents?.length ?? 0) > 0,
   },
   {
     id: 'portfolio',
@@ -256,6 +328,17 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     isFilled: hasImages,
   },
   {
+    // Nested in the gallery: the chip row over the grid, shown when photos
+    // are filed under two or more albums. Ticket 193 adds the column and the
+    // Growth+ gate; the live loader sets no album until then.
+    id: 'albums',
+    label: 'Photo albums',
+    templates: ALL,
+    gate: {},
+    editor: { tool: 'Photos', href: page('media') },
+    isFilled: (e) => galleryAlbums(e.images).length >= 2,
+  },
+  {
     id: 'video',
     label: 'Video',
     templates: ALL,
@@ -278,6 +361,16 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     gate: {},
     editor: { tool: 'Reviews', href: system },
     isFilled: () => true,
+  },
+  {
+    // Licences, certifications, awards and press — the trust the business
+    // brings with it. Ticket 192 decides the tier; free until then.
+    id: 'credentials',
+    label: 'Credentials & press',
+    templates: ALL,
+    gate: {},
+    editor: { tool: 'Credentials', href: page('credentials') },
+    isFilled: (e) => (e.credentials?.length ?? 0) > 0,
   },
   {
     id: 'trust',
@@ -339,6 +432,7 @@ export const TEMPLATE_SECTION_ORDER: Record<TemplateKey, readonly SectionId[]> =
     'locations',
     'links',
     'story',
+    'highlights',
     'team',
     'offerings',
     'shop',
@@ -351,6 +445,7 @@ export const TEMPLATE_SECTION_ORDER: Record<TemplateKey, readonly SectionId[]> =
     'booking',
     'inquiry',
     'reviews',
+    'credentials',
     'trust',
     'community',
     'activity',
@@ -363,6 +458,7 @@ export const TEMPLATE_SECTION_ORDER: Record<TemplateKey, readonly SectionId[]> =
     'deals',
     'locations',
     'services',
+    'highlights',
     'booking',
     'story',
     'team',
@@ -370,6 +466,7 @@ export const TEMPLATE_SECTION_ORDER: Record<TemplateKey, readonly SectionId[]> =
     'shop',
     'attributes',
     'links',
+    'credentials',
     'gallery',
     'video',
     'inquiry',
@@ -388,12 +485,14 @@ export const TEMPLATE_SECTION_ORDER: Record<TemplateKey, readonly SectionId[]> =
     'locations',
     'portfolio',
     'capabilities',
+    'highlights',
     'booking',
     'shop',
     'story',
     'team',
     'attributes',
     'links',
+    'credentials',
     'gallery',
     'video',
     'inquiry',
@@ -488,6 +587,9 @@ export function applyTierGates(
       : undefined,
     shop: allowed('shop') ? entity.shop : undefined,
     hiring: allowed('hiring') ? entity.hiring : undefined,
+    happeningNow: allowed('happening-now')
+      ? sliceTo(entity.happeningNow, limits.activePosts)
+      : undefined,
     faqs: allowed('faq') ? (sliceTo(entity.faqs, limits.faqs) ?? []) : [],
     organizerEvents: allowed('events')
       ? (sliceTo(entity.organizerEvents, limits.events) ?? [])

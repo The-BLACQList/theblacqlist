@@ -63,7 +63,35 @@ const NEW_SECTIONS: readonly SectionId[] = [
   'shop',
   'booking',
   'hiring',
+  // PR 1B
+  'highlights',
+  'credentials',
 ]
+
+/**
+ * Marks rendered inside another section's component rather than by the
+ * template: the logo and facts line in TemplateHero, the map and special
+ * hours in EntityAtAGlance, the downloads row in every offerings heading,
+ * the album chips over the gallery grid. They are registered but never
+ * listed in TEMPLATE_SECTION_ORDER.
+ */
+const NESTED_MARKS: readonly SectionId[] = [
+  'logo',
+  'facts',
+  'map',
+  'hours-overrides',
+  'documents',
+  'albums',
+]
+
+/**
+ * Marks the route renders above the template, as the live listing route does
+ * with main's Happening now band (#326). Registered, never ordered, and never
+ * in a template file.
+ */
+const ROUTE_MARKS: readonly SectionId[] = ['happening-now']
+
+const UNORDERED_MARKS: readonly SectionId[] = [...NESTED_MARKS, ...ROUTE_MARKS]
 
 function source(relPath: string): string {
   return readFileSync(path.resolve(process.cwd(), relPath), 'utf8')
@@ -73,7 +101,10 @@ function sectionMarkIds(relPath: string): string[] {
   return [...source(relPath).matchAll(/<SectionMark id="([a-z-]+)"/g)].map((m) => m[1] ?? '')
 }
 
-/** A page shaped the way lib/listings/entityPage.ts builds it today: none of the optional fields. */
+/**
+ * A page shaped the way lib/listings/entityPage.ts builds it today: none of the
+ * optional fields ticket 184 added. `happeningNow` stays — main's loader fills it.
+ */
 function legacyShaped(entity: EntityPageData): EntityPageData {
   const {
     logo: _logo,
@@ -82,9 +113,20 @@ function legacyShaped(entity: EntityPageData): EntityPageData {
     locations: _locations,
     shop: _shop,
     hiring: _hiring,
+    hoursOverrides: _hoursOverrides,
+    highlights: _highlights,
+    documents: _documents,
+    credentials: _credentials,
+    details,
     ...rest
   } = entity
-  return rest
+  const {
+    founded_year: _founded,
+    price_range: _price,
+    accepts_reservations: _reservations,
+    ...legacyDetails
+  } = details
+  return { ...rest, details: legacyDetails }
 }
 
 describe('registry shape', () => {
@@ -134,16 +176,58 @@ describe('template order', () => {
       const order = TEMPLATE_SECTION_ORDER[template]
       expect(new Set(order).size).toBe(order.length)
       for (const id of order) expect(sectionDef(id).templates, id).toContain(template)
-      // The logo is a SectionMark inside TemplateHero, not a top-level section.
+      // The nested marks render inside another section, the route marks above
+      // the template; neither is a top-level section.
       const registered = ENTITY_SECTIONS.filter(
-        (s) => s.templates.includes(template) && s.id !== 'logo'
+        (s) => s.templates.includes(template) && !UNORDERED_MARKS.includes(s.id)
       ).map((s) => s.id)
       expect([...order].sort()).toEqual(registered.sort())
     })
   }
 
-  it('the logo mark lives in the hero', () => {
-    expect(sectionMarkIds('components/entity-page/templates/TemplateHero.tsx')).toEqual(['logo'])
+  it('the logo and facts marks live in the hero', () => {
+    expect(sectionMarkIds('components/entity-page/templates/TemplateHero.tsx')).toEqual([
+      'logo',
+      'facts',
+    ])
+  })
+
+  it('the map and special-hours marks live in At a Glance', () => {
+    expect(sectionMarkIds('components/entity-page/EntityAtAGlance.tsx')).toEqual([
+      'map',
+      'hours-overrides',
+    ])
+  })
+
+  it('the albums mark is the chip row inside the gallery', () => {
+    expect(sectionMarkIds('components/entity-page/EntityMediaGallery.tsx')).toEqual(['albums'])
+  })
+
+  it('the documents mark is the row every offerings heading renders', () => {
+    expect(sectionMarkIds('components/entity-page/EntityDocumentsRow.tsx')).toEqual(['documents'])
+    for (const rel of [
+      'components/entity-page/EntityOfferingsSection.tsx',
+      'components/entity-page/templates/TemplateServices.tsx',
+      'components/entity-page/templates/TemplateCapabilities.tsx',
+    ]) {
+      expect(source(rel), rel).toContain('documentsActions(entity.documents')
+      expect(sectionMarkIds(rel), rel).toEqual([])
+    }
+  })
+
+  it('the happening-now mark is the band the example route renders above the template', () => {
+    expect(sectionMarkIds('app/example/[variant]/page.tsx')).toEqual(['happening-now'])
+    expect(source('app/example/[variant]/page.tsx')).toContain('<HappeningNowBanner')
+    for (const template of TEMPLATES) {
+      expect(source(TEMPLATE_FILES[template]), template).not.toContain('happening-now')
+    }
+  })
+
+  it('every nested and route mark is registered for every template and never ordered', () => {
+    for (const id of UNORDERED_MARKS) {
+      expect(sectionDef(id).templates).toEqual(['storefront', 'professional', 'creative'])
+      for (const template of TEMPLATES) expect(TEMPLATE_SECTION_ORDER[template]).not.toContain(id)
+    }
   })
 
   it('templateKeyFor maps every storefront, professional and creative type; events and jobs get none', () => {
@@ -239,6 +323,7 @@ describe('applyTierGates on a page that fills everything', () => {
     expect(sectionAllowed('hiring', 'premium', flagsOff)).toBe(false)
     // Main's deals are behind the coupons flag (part G), like its loader.
     expect(sectionAllowed('deals', 'premium', flagsOff)).toBe(false)
+    expect(sectionAllowed('happening-now', 'premium', flagsOff)).toBe(false)
   })
 
   it('deals follow main: Premium only, at most DEALS_ON_MAX, gone with the flag off', () => {
@@ -250,6 +335,16 @@ describe('applyTierGates on a page that fills everything', () => {
     expect(applyTierGates(page, 'premium').deals).toHaveLength(DEALS_ON_MAX)
     expect(applyTierGates(page, 'growth').deals).toBeUndefined()
     expect(applyTierGates(page, 'premium', () => false).deals).toBeUndefined()
+  })
+
+  it('happening-now follows main’s active-post cap: none on free, cut to the plan above', () => {
+    expect(full.happeningNow?.length).toBeGreaterThan(TIER_LIMITS.starter.activePosts ?? 0)
+    expect(applyTierGates(full, 'free').happeningNow).toEqual([])
+    expect(applyTierGates(full, 'starter').happeningNow).toHaveLength(
+      TIER_LIMITS.starter.activePosts ?? 0
+    )
+    expect(applyTierGates(full, 'premium').happeningNow).toEqual(full.happeningNow)
+    expect(applyTierGates(full, 'premium', () => false).happeningNow).toBeUndefined()
   })
 })
 

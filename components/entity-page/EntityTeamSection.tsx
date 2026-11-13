@@ -1,5 +1,6 @@
 import Image from 'next/image'
 import { TemplateSectionHeading } from '@/components/entity-page/templates/TemplateSectionHeading'
+import { founderFirst, splitFounderBio } from '@/lib/listings/team'
 import type { TeamMember } from '@/types'
 
 interface Props {
@@ -16,10 +17,13 @@ export function initialsFor(name: string): string {
   return `${first}${last}`.toUpperCase()
 }
 
-function Avatar({ member }: { member: TeamMember }) {
+function Avatar({ member, large = false }: { member: TeamMember; large?: boolean }) {
+  const size = large ? 'size-24 md:size-28' : 'size-20'
   if (member.photo) {
     return (
-      <span className="relative block size-20 overflow-hidden rounded-full ring-2 ring-white shadow-sm">
+      <span
+        className={`relative block ${size} shrink-0 overflow-hidden rounded-full ring-2 ring-white shadow-sm`}
+      >
         <Image
           src={member.photo.src}
           alt={member.photo.alt || member.name}
@@ -37,10 +41,44 @@ function Avatar({ member }: { member: TeamMember }) {
   return (
     <span
       aria-hidden="true"
-      className="flex size-20 items-center justify-center rounded-full bg-deep-bg font-headline text-2xl text-gold ring-2 ring-white shadow-sm"
+      className={`flex ${size} shrink-0 items-center justify-center rounded-full bg-deep-bg font-headline ${large ? 'text-3xl' : 'text-2xl'} text-gold ring-2 ring-white shadow-sm`}
     >
       {initialsFor(member.name)}
     </span>
+  )
+}
+
+/**
+ * The owner's card (ticket 107 `is_founder`): first, two columns wide, with
+ * the "Owner" label and the first line of the bio set as a pull quote. The
+ * platform exists for the person behind the business; this is where they are.
+ */
+function FounderCard({ member }: { member: TeamMember }) {
+  const { quote, rest } = splitFounderBio(member.bio)
+  return (
+    <li
+      data-testid="founder-card"
+      className="sm:col-span-2 flex flex-col sm:flex-row items-start gap-5 rounded-xl bg-white border border-gold/70 p-5 md:p-6"
+    >
+      <Avatar member={member} large />
+      <div className="min-w-0">
+        <span className="inline-flex items-center rounded-full bg-gold/20 px-2.5 py-0.5 font-subhead text-[11px] font-bold uppercase tracking-[0.12em] text-amber">
+          Owner
+        </span>
+        <p className="mt-2 font-subhead text-lg font-semibold text-brand-black">{member.name}</p>
+        {member.role && (
+          <p className="font-subhead text-xs font-bold uppercase tracking-[0.12em] text-amber mt-0.5">
+            {member.role}
+          </p>
+        )}
+        {quote && (
+          <blockquote className="mt-3 font-headline text-[19px] md:text-[21px] leading-snug text-brand-black">
+            “{quote}”
+          </blockquote>
+        )}
+        {rest && <p className="font-body text-sm leading-relaxed text-charcoal mt-2">{rest}</p>}
+      </div>
+    </li>
   )
 }
 
@@ -51,6 +89,7 @@ function Avatar({ member }: { member: TeamMember }) {
  */
 export function EntityTeamSection({ team, bare = false }: Props) {
   if (!team || team.length === 0) return null
+  const members = founderFirst(team)
 
   return (
     <section
@@ -79,29 +118,33 @@ export function EntityTeamSection({ team, bare = false }: Props) {
               : 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5'
           }
         >
-          {team.map((member) => (
-            <li
-              key={member.id}
-              className="flex flex-col items-start gap-4 rounded-xl bg-white border border-charcoal/10 p-5"
-            >
-              <Avatar member={member} />
-              <div className="min-w-0">
-                <p className="font-subhead text-base font-semibold text-brand-black">
-                  {member.name}
-                </p>
-                {member.role && (
-                  <p className="font-subhead text-xs font-bold uppercase tracking-[0.12em] text-amber mt-0.5">
-                    {member.role}
+          {members.map((member) =>
+            member.isFounder ? (
+              <FounderCard key={member.id} member={member} />
+            ) : (
+              <li
+                key={member.id}
+                className="flex flex-col items-start gap-4 rounded-xl bg-white border border-charcoal/10 p-5"
+              >
+                <Avatar member={member} />
+                <div className="min-w-0">
+                  <p className="font-subhead text-base font-semibold text-brand-black">
+                    {member.name}
                   </p>
-                )}
-                {member.bio && (
-                  <p className="font-body text-sm leading-relaxed text-charcoal mt-2">
-                    {member.bio}
-                  </p>
-                )}
-              </div>
-            </li>
-          ))}
+                  {member.role && (
+                    <p className="font-subhead text-xs font-bold uppercase tracking-[0.12em] text-amber mt-0.5">
+                      {member.role}
+                    </p>
+                  )}
+                  {member.bio && (
+                    <p className="font-body text-sm leading-relaxed text-charcoal mt-2">
+                      {member.bio}
+                    </p>
+                  )}
+                </div>
+              </li>
+            )
+          )}
         </ul>
       </div>
     </section>

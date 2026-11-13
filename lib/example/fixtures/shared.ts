@@ -41,12 +41,13 @@ export function image(file: string, alt: string): ResolvedImage {
 /** Gallery entries with stable ids, so React keys and tests do not depend on order. */
 export function gallery(
   prefix: string,
-  items: ReadonlyArray<readonly [string, string]>
+  items: ReadonlyArray<readonly [file: string, alt: string, album?: string]>
 ): GalleryImage[] {
-  return items.map(([file, alt]) => ({
+  return items.map(([file, alt, album]) => ({
     id: `${prefix}-${file.replace(/\.\w+$/, '')}`,
     src: asset(file),
     alt,
+    ...(album ? { album } : {}),
   }))
 }
 

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { documentsActions } from '@/components/entity-page/EntityDocumentsRow'
 import type { EntityPageData, ServiceItem } from '@/types'
 
 const VISIBLE_COUNT = 6
@@ -59,6 +60,7 @@ export function EntityOfferingsSection({ entity }: Props) {
           >
             Services &amp; Offerings
           </h2>
+          {documentsActions(entity.documents, '-mt-4 mb-8')}
           <div className="space-y-8">
             {groups.map((group, gi) => (
               <div key={group.label ?? `__ungrouped__${gi}`}>
@@ -93,6 +95,7 @@ export function EntityOfferingsSection({ entity }: Props) {
         >
           Services &amp; Offerings
         </h2>
+        {documentsActions(entity.documents, '-mt-4 mb-8')}
 
         <div className="divide-y divide-charcoal/10" aria-label="Services list">
           {visibleServices.map((service) => (

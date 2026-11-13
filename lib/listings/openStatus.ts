@@ -1,14 +1,7 @@
-import type { DayHours, WeeklyHours } from '@/types'
+import type { DayHours, HoursOverride, WeeklyHours } from '@/types'
+import { overrideDayHours, overrideFor } from '@/lib/listings/hoursOverrides'
 
-const DAYS = [
-  'monday',
-  'tuesday',
-  'wednesday',
-  'thursday',
-  'friday',
-  'saturday',
-  'sunday',
-] as const
+const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
 
 export function formatTime(t: string): string {
   const [hStr, mStr] = t.split(':')
@@ -19,17 +12,8 @@ export function formatTime(t: string): string {
   return `${h12}:${m} ${suffix}`
 }
 
-/**
- * Open/closed status from a listing's weekly hours, evaluated in the
- * viewer's local time — call from client components only (the same
- * pattern as EntityAtAGlance's indicator).
- */
-export function isOpenNow(hours: WeeklyHours): { open: boolean; label: string } {
-  const now = new Date()
-  const dayIndex = now.getDay() // 0=Sun, 1=Mon, ...
-  const dayKey = DAYS[dayIndex === 0 ? 6 : dayIndex - 1] as (typeof DAYS)[number]
-  const today: DayHours = hours[dayKey]
-
+/** The status of one day's hours at the given moment. */
+function statusFor(today: DayHours, now: Date): { open: boolean; label: string } {
   if (today.closed) return { open: false, label: 'Closed today' }
 
   const [oh, om] = today.open.split(':').map(Number)
@@ -45,4 +29,35 @@ export function isOpenNow(hours: WeeklyHours): { open: boolean; label: string } 
     return { open: false, label: `Closed · Opens ${formatTime(today.open)}` }
   }
   return { open: false, label: 'Closed now' }
+}
+
+/**
+ * Open/closed status from a listing's weekly hours, evaluated in the
+ * viewer's local time — call from client components only (the same
+ * pattern as EntityAtAGlance's indicator).
+ *
+ * A holiday or one-off override for today (ticket 196) wins over the weekly
+ * row: closed shows the owner's reason, open uses the override's times. The
+ * single-argument form is unchanged for the map card and popup.
+ */
+export function isOpenNow(
+  hours: WeeklyHours,
+  overrides?: readonly HoursOverride[],
+  now: Date = new Date()
+): { open: boolean; label: string } {
+  const override = overrideFor(overrides, now)
+  if (override) {
+    if (override.closed) {
+      return {
+        open: false,
+        label: override.label ? `Closed today · ${override.label}` : 'Closed today',
+      }
+    }
+    const special = overrideDayHours(override)
+    if (special) return statusFor(special, now)
+  }
+
+  const dayIndex = now.getDay() // 0=Sun, 1=Mon, ...
+  const dayKey = DAYS[dayIndex === 0 ? 6 : dayIndex - 1] as (typeof DAYS)[number]
+  return statusFor(hours[dayKey], now)
 }

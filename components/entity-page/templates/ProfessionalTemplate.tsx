@@ -26,6 +26,8 @@ import { EntityTeamSection } from '@/components/entity-page/EntityTeamSection'
 import { EntityShopSection } from '@/components/entity-page/EntityShopSection'
 import { EntityBookingSection } from '@/components/entity-page/EntityBookingSection'
 import { SectionMark } from '@/components/entity-page/SectionMark'
+import { EntityHighlightsSection } from '@/components/entity-page/EntityHighlightsSection'
+import { EntityCredentialsSection } from '@/components/entity-page/EntityCredentialsSection'
 import { EXAMPLE_BOOKING_NOTE } from '@/lib/entity-page/sections'
 import { EntityPlatformActivity } from '@/components/entity-page/EntityPlatformActivity'
 import { EntityReviewsSection } from '@/components/entity-page/EntityReviewsSection'
@@ -87,7 +89,7 @@ export function ProfessionalTemplate({
           hours, phone or email. */}
       <SectionMark id="at-a-glance">
         <div id="visit" className="scroll-mt-32">
-          <EntityAtAGlance entity={entity} />
+          <EntityAtAGlance entity={entity} mode={mode} />
         </div>
       </SectionMark>
 
@@ -113,6 +115,9 @@ export function ProfessionalTemplate({
             <div className="flex flex-col gap-12 md:gap-14 min-w-0">
               <SectionMark id="services">
                 <TemplateServices entity={entity} />
+              </SectionMark>
+              <SectionMark id="highlights">
+                <EntityHighlightsSection highlights={entity.highlights} bare />
               </SectionMark>
               <SectionMark id="booking">
                 <EntityBookingSection
@@ -156,7 +161,14 @@ export function ProfessionalTemplate({
             </div>
 
             <aside aria-label="Trust and verification">
-              <TemplateTrustPanel entity={entity} />
+              {/* One sticky wrapper for the panel and the credentials card: were
+                  the panel sticky on its own it would slide over the card. */}
+              <div className="lg:sticky lg:top-32">
+                <TemplateTrustPanel entity={entity} />
+                <SectionMark id="credentials">
+                  <EntityCredentialsSection credentials={entity.credentials} bare />
+                </SectionMark>
+              </div>
             </aside>
           </div>
         </div>
@@ -165,7 +177,7 @@ export function ProfessionalTemplate({
       <SectionMark id="gallery">
         {hasGallery && (
           <div id="gallery" className="scroll-mt-32">
-            <EntityMediaGallery entity={entity} images={entity.images} />
+            <EntityMediaGallery entity={entity} images={entity.images} mode={mode} />
           </div>
         )}
       </SectionMark>

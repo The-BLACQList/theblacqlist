@@ -1,4 +1,5 @@
 import type { EntityPageData } from '@/types'
+import { futureDateKey } from '@/lib/listings/hoursOverrides'
 import {
   ATLANTA,
   DEMO_VIDEOS,
@@ -26,18 +27,26 @@ const DESCRIPTION = [
 ].join('\n\n')
 
 const GALLERY = gallery('pro', [
-  ['pro-office.webp', 'The open-plan office in Midtown'],
-  ['pro-meeting.webp', 'The main meeting room, where diagnostics are presented'],
-  ['pro-workshop.webp', 'A pricing workshop in progress, mapped out on sticky notes'],
-  ['pro-whiteboard.webp', 'A sales pipeline sketched during a working session'],
-  ['pro-desk.webp', 'A consultant’s desk between client meetings'],
-  ['pro-notebook.webp', 'Session notes from a ninety-day planning day'],
-  ['pro-presentation.webp', 'Quarterly review on the big screen'],
-  ['pro-lobby.webp', 'Reception on the fourth floor'],
-  ['pro-laptop.webp', 'The operating dashboard every client leaves with'],
-  ['pro-skyline.webp', 'The view from the office'],
-  ['pro-handshake.webp', 'Kick-off day'],
-  ['pro-coffee-meeting.webp', 'Coffee and the first draft of a plan'],
+  ['pro-office.webp', 'The open-plan office in Midtown', 'Office'],
+  [
+    'pro-meeting.webp',
+    'The main meeting room, where diagnostics are presented',
+    'Working sessions',
+  ],
+  [
+    'pro-workshop.webp',
+    'A pricing workshop in progress, mapped out on sticky notes',
+    'Working sessions',
+  ],
+  ['pro-whiteboard.webp', 'A sales pipeline sketched during a working session', 'Working sessions'],
+  ['pro-desk.webp', 'A consultant’s desk between client meetings', 'Office'],
+  ['pro-notebook.webp', 'Session notes from a ninety-day planning day', 'Working sessions'],
+  ['pro-presentation.webp', 'Quarterly review on the big screen', 'Working sessions'],
+  ['pro-lobby.webp', 'Reception on the fourth floor', 'Office'],
+  ['pro-laptop.webp', 'The operating dashboard every client leaves with', 'Deliverables'],
+  ['pro-skyline.webp', 'The view from the office', 'Office'],
+  ['pro-handshake.webp', 'Kick-off day', 'Kick-offs'],
+  ['pro-coffee-meeting.webp', 'Coffee and the first draft of a plan', 'Kick-offs'],
 ])
 
 export function professionalEntity(now: Date): EntityPageData {
@@ -85,6 +94,9 @@ export function professionalEntity(now: Date): EntityPageData {
       cta_url: `${EXAMPLE_SITE}/book`,
       cta_label_override: 'Book a discovery call',
       ships_nationwide: false,
+      founded_year: 2016,
+      price_range: '$$$',
+      accepts_reservations: null,
       videos: DEMO_VIDEOS,
       lat: 33.7838,
       lng: -84.3838,
@@ -320,6 +332,7 @@ export function professionalEntity(now: Date): EntityPageData {
     team: [
       {
         id: 'pro-team-1',
+        isFounder: true,
         name: 'Nia Thompson',
         role: 'Founder & managing partner',
         bio: 'Former operations lead at a regional logistics company. Founded the firm in 2016.',
@@ -369,6 +382,8 @@ export function professionalEntity(now: Date): EntityPageData {
         label: 'Charlotte office',
         cityName: 'Charlotte',
         addressLine: '300 Sample Street, Suite 900',
+        lat: 35.2271,
+        lng: -80.8431,
         href: '/charlotte-nc/professional/test-business-123-charlotte',
       },
       {
@@ -436,5 +451,124 @@ export function professionalEntity(now: Date): EntityPageData {
       ],
       total: 1,
     },
+    // Happening now (main, part F): soonest ending first, inside the Premium cap
+    // of five and the 30-day window.
+    happeningNow: [
+      {
+        id: 'pro-post-1',
+        headline: 'Nia speaks at this month’s founders meetup',
+        body: 'Twenty minutes on the three numbers every owner should know before raising prices. Free, with coffee.',
+        imageUrl: asset('pro-presentation.webp'),
+        buttonLabel: 'Save a seat',
+        endsAt: futureIso(now, 9),
+      },
+      {
+        id: 'pro-post-2',
+        headline: 'Now booking Q1 discovery calls',
+        body: 'Thirty minutes, no charge, and you leave with a one-page read on where the margin is.',
+        imageUrl: null,
+        buttonLabel: 'Book a call',
+        endsAt: futureIso(now, 20),
+      },
+      {
+        id: 'pro-post-3',
+        headline: 'New: pricing diagnostic for product companies',
+        body: 'A two-week engagement that maps every SKU to its real margin and ends with a packaging proposal you can ship.',
+        imageUrl: asset('pro-whiteboard.webp'),
+        buttonLabel: 'Learn more',
+        endsAt: futureIso(now, 27),
+      },
+    ],
+    // Relative to `now`, so the sample never shows a stale holiday. Never today.
+    hoursOverrides: [
+      { date: futureDateKey(now, 5), closed: true, open: null, close: null, label: 'Team offsite' },
+      {
+        date: futureDateKey(now, 19),
+        closed: false,
+        open: '09:00',
+        close: '13:00',
+        label: 'Half day',
+      },
+    ],
+    highlights: [
+      {
+        id: 'pro-step-1',
+        kind: 'step',
+        icon: 'message-square',
+        title: 'Tell us where you are',
+        text: 'A 30-minute call about your books, your goals and what keeps you up at night. No charge, no pitch.',
+      },
+      {
+        id: 'pro-step-2',
+        kind: 'step',
+        icon: 'search',
+        title: 'We look under the hood',
+        text: 'We read the last twelve months of statements and filings and come back with a written plan and a fixed quote.',
+      },
+      {
+        id: 'pro-step-3',
+        kind: 'step',
+        icon: 'clipboard-check',
+        title: 'Clean-up and set-up',
+        text: 'We bring the books current, set up the systems and hand you a dashboard you can actually read.',
+      },
+      {
+        id: 'pro-step-4',
+        kind: 'step',
+        icon: 'rocket',
+        title: 'Ongoing support',
+        text: 'Monthly close, quarterly planning and a person who answers the phone.',
+      },
+    ],
+    documents: [
+      {
+        id: 'pro-doc-rate-card',
+        label: 'Rate card (PDF)',
+        href: 'https://example.com/test-business-123/rate-card.pdf',
+        sizeLabel: '340 KB',
+      },
+    ],
+    credentials: [
+      {
+        id: 'pro-cred-1',
+        kind: 'license',
+        title: 'Certified Public Accountant (GA)',
+        issuer: 'Example State Board of Accountancy',
+        year: 2016,
+        href: null,
+      },
+      {
+        id: 'pro-cred-2',
+        kind: 'certification',
+        title: 'Advanced small-business advisory',
+        issuer: 'Example Consulting Institute',
+        year: 2022,
+        href: null,
+      },
+      {
+        id: 'pro-cred-3',
+        kind: 'award',
+        title: 'Small-firm advisor of the year',
+        issuer: 'Example Founders Network',
+        year: 2025,
+        href: null,
+      },
+      {
+        id: 'pro-cred-4',
+        kind: 'press',
+        title: 'The accountant who speaks founder',
+        issuer: 'Example Business Review',
+        year: 2025,
+        href: 'https://example.com/press/speaks-founder',
+      },
+      {
+        id: 'pro-cred-5',
+        kind: 'press',
+        title: 'How five Atlanta firms rebuilt their books in a year',
+        issuer: 'Example Ledger',
+        year: 2024,
+        href: 'https://example.com/press/five-firms',
+      },
+    ],
   }
 }

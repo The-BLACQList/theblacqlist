@@ -8,7 +8,7 @@ import { storefrontEntity } from './storefront'
  * every Premium feature filled. Rendered by app/example/[variant] on Preview
  * and read by the staging seed (ticket 187) so the two never drift.
  *
- * `now` is injected so dates — events, coupon ends, job deadlines, review
+ * `now` is injected so dates — events, deal ends, job deadlines, review
  * ages — are always relative to the visit, and so tests can pin them.
  */
 export const EXAMPLE_VARIANTS = ['storefront', 'professional', 'creative'] as const
