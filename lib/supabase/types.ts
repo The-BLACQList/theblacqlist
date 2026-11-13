@@ -1558,6 +1558,44 @@ export type Database = {
           },
         ]
       }
+      listing_buttons: {
+        Row: {
+          created_at: string
+          id: string
+          label_override: string | null
+          listing_id: string
+          position: number
+          type: string
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label_override?: string | null
+          listing_id: string
+          position?: number
+          type: string
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label_override?: string | null
+          listing_id?: string
+          position?: number
+          type?: string
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_buttons_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_faqs: {
         Row: {
           answer: string

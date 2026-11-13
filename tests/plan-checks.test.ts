@@ -287,5 +287,11 @@ describe('the Growth offer', () => {
     expect(upgradeTarget('starter', true)).toBe('Growth')
     expect(upgradeTarget('growth', true)).toBeNull()
     expect(upgradeTarget('premium', true)).toBeNull()
+    // Premium is offered only when the caller asks (the extra buttons note).
+    expect(upgradeTarget('growth', true, true)).toBe('Premium')
+    expect(upgradeTarget('growth', false, false)).toBeNull()
+    expect(upgradeTarget('premium', true, true)).toBeNull()
+    expect(upgradeTarget('starter', false, true)).toBeNull()
+    expect(upgradeTarget('free', false, true)).toBe('Starter')
   })
 })

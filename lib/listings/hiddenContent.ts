@@ -1,5 +1,7 @@
 import { capList, shownLimits, type HiddenCount } from '@/lib/stripe/downgrade'
 import { isCreatorGroup } from '@/lib/listings/creatorAttributes'
+import { shownExtraButtons } from '@/lib/listings/pageButtons'
+import { extraButtonLimit } from '@/lib/stripe/features'
 
 // Ticket 105. What the owner's editor marks as hidden after a move to a lower
 // plan. The public page read (lib/listings/entityPage.ts) applies the same
@@ -18,6 +20,11 @@ export interface HiddenContentInput {
   faqs: readonly { id: string; question?: string | null; answer?: string | null }[]
   attributeGroups: readonly { slug: string; values: readonly { id: string }[] }[]
   selectedValueIds: readonly string[]
+  /**
+   * Extra buttons (part B). Unlike the lists above, these are capped to the
+   * current plan whether or not the page moved down (lib/listings/pageButtons.ts).
+   */
+  buttons?: readonly { id: string; position: number }[]
 }
 
 export interface HiddenContent {
@@ -66,6 +73,12 @@ export function hiddenContent(input: HiddenContentInput): HiddenContent {
     if (picked > caps.attributes) {
       counts.push({ kind: 'attributes', hidden: picked - caps.attributes, limit: caps.attributes })
     }
+  }
+
+  const buttons = shownExtraButtons(input.buttons ?? [], input.tier)
+  if (buttons.hidden.length > 0) {
+    counts.push({ kind: 'buttons', hidden: buttons.hidden.length, limit: extraButtonLimit(input.tier) })
+    for (const b of buttons.hidden) hiddenIds.add(b.id)
   }
 
   if (caps.descriptionChars !== null && (input.description ?? '').length > caps.descriptionChars) {

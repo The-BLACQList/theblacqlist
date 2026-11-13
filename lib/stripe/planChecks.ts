@@ -2,6 +2,7 @@ import {
   attributeLimit,
   canAccess,
   descriptionCharLimit,
+  extraButtonLimit,
   faqLimit,
   photoLimit,
   TIER_RANK,
@@ -62,16 +63,19 @@ export function socialLinksAllowed(tier: string | null, entityType?: string | nu
 }
 
 /** The plan an owner at a limit can move up to, or null when none is for sale. */
-export type UpgradeTarget = 'Starter' | 'Growth' | null
+export type UpgradeTarget = 'Starter' | 'Growth' | 'Premium' | null
 
 /**
  * Which plan the limit notes offer. Free gets Starter. Starter gets Growth only
- * while Growth can be bought. Everyone else gets no link.
+ * while Growth can be bought. Growth gets Premium only when the caller passes
+ * `premiumOpen` (extra buttons, part B feedback); other notes leave it out and
+ * keep offering nothing. Premium gets no link.
  */
-export function upgradeTarget(tier: string | null, growthOpen: boolean): UpgradeTarget {
+export function upgradeTarget(tier: string | null, growthOpen: boolean, premiumOpen = false): UpgradeTarget {
   const rank = TIER_RANK[tier ?? 'free'] ?? 0
   if (rank === 0) return 'Starter'
   if (tier === 'starter' && growthOpen) return 'Growth'
+  if (tier === 'growth' && premiumOpen) return 'Premium'
   return null
 }
 
@@ -185,14 +189,31 @@ export function checkPhotoAdd(
 }
 
 /**
+ * Adding one extra button (part B). `existingCount` is how many extra buttons
+ * the page has now; the main button and the automatic "Message" button don't count.
+ */
+export function checkButtonAdd(
+  tier: string | null,
+  existingCount: number,
+  growthOpen = false,
+  premiumOpen = false
+): string | null {
+  const limit = extraButtonLimit(tier)
+  if (existingCount < limit) return null
+  if (limit === 0) return 'Extra buttons are part of Starter. Upgrade to add one to your page.'
+  const what = limit === 1 ? '1 extra button' : `up to ${limit} extra buttons`
+  return `Your plan includes ${what}. ${makeRoom(tier, 'Upgrade to add more.', growthOpen, premiumOpen)}`
+}
+
+/**
  * The second sentence of a limit message. Free gets `freeText`, which may
  * mention upgrading (Starter is on sale). Starter is offered Growth while Growth
  * is for sale, and every limit Growth has is higher than Starter's. Otherwise a
  * paid plan is told how to make room.
  */
-function makeRoom(tier: string | null, freeText: string, growthOpen: boolean): string {
-  const target = upgradeTarget(tier, growthOpen)
+function makeRoom(tier: string | null, freeText: string, growthOpen: boolean, premiumOpen = false): string {
+  const target = upgradeTarget(tier, growthOpen, premiumOpen)
   if (target === 'Starter') return freeText
-  if (target === 'Growth') return 'Remove one, or upgrade to Growth for more.'
+  if (target) return `Remove one, or upgrade to ${target} for more.`
   return 'Remove one to add another.'
 }

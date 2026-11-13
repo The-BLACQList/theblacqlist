@@ -158,6 +158,11 @@ export interface TierLimits {
   descriptionChars: number | null
   /** How far back the owner analytics dashboard can look. 0 = no analytics. */
   analyticsHistoryDays: number
+  /**
+   * Buttons on the page beyond the main one (owner-experience round 2, part B).
+   * The automatic "Message" button never counts.
+   */
+  extraButtons: number
 }
 
 export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
@@ -174,6 +179,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     aiGenerationsPerMonth: 0,
     descriptionChars: 300,
     analyticsHistoryDays: 0,
+    extraButtons: 0,
   },
   starter: {
     photos: 10,
@@ -188,6 +194,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     aiGenerationsPerMonth: 10,
     descriptionChars: null,
     analyticsHistoryDays: 30,
+    extraButtons: 1,
   },
   growth: {
     photos: 25,
@@ -202,6 +209,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     aiGenerationsPerMonth: 100,
     descriptionChars: null,
     analyticsHistoryDays: 365,
+    extraButtons: 2,
   },
   premium: {
     photos: 50,
@@ -220,6 +228,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     aiGenerationsPerMonth: 500,
     descriptionChars: null,
     analyticsHistoryDays: 365,
+    extraButtons: 3,
   },
 }
 
@@ -274,6 +283,11 @@ export function jobLimit(tier: string | null): number | null {
 
 export function teamMemberLimit(tier: string | null): number | null {
   return limitsFor(tier).teamMembers
+}
+
+/** Buttons beyond the main one. Never null: every plan has a fixed number. */
+export function extraButtonLimit(tier: string | null): number {
+  return limitsFor(tier).extraButtons
 }
 
 export function locationLimit(tier: string | null): number | null {

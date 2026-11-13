@@ -391,6 +391,11 @@ export interface EntityPageData {
   attributes: EntityAttributeGroup[]
   links: EntityLink[]
   faqs: EntityFaq[]
+  /**
+   * Extra buttons beyond the main one (part B), already capped to the page's
+   * plan and resolved to real links. Optional so older fixtures still type.
+   */
+  buttons?: { id: string; href: string; label: string }[]
   related: DiscoveryEntity[]
   images: GalleryImage[]
   reviews: ReviewItem[]
