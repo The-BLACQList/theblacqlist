@@ -77,6 +77,7 @@ export type FeatureFlag =
   | 'messaging'
   | 'ocrExtraction'
   | 'orderWhereSold'
+  | 'ownerCue'
   | 'ownerReceiptReview'
   | 'paidPostings'
   | 'postingSubmissions'
@@ -142,6 +143,13 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // production) lets it be reviewed on Previews; production also needs the
   // 20261118000000 migration (GATE-DATA) first.
   orderWhereSold: 'FEATURE_ORDER_WHERE_SOLD',
+  // Gates Cue for business owners (ticket 203, round 2 part E): the "Ask Cue"
+  // item in the dashboard sidebar, its side panel and POST /api/cue/owner.
+  // Off, none of it shows and the route answers with a fallback. Closed by
+  // default on EVERY deployment (see CLOSED_BY_DEFAULT), because it sends an
+  // owner's questions and page details to a model; production also waits for
+  // the Privacy Policy update that names it (GATE-PUBLISH).
+  ownerCue: 'FEATURE_OWNER_CUE',
   // Gates in-app customer -> business messaging (2026-11-13): the in-app
   // "Send Message" composer on listing pages, /account/messages,
   // /dashboard/messages, the dashboard Inbox switch, the unread badges and every
@@ -218,6 +226,7 @@ const CLOSED_BY_DEFAULT: ReadonlySet<FeatureFlag> = new Set<FeatureFlag>([
   'collectiveOpen',
   'jobsOpen',
   'marketplaceOpen',
+  'ownerCue',
   'ownerReceiptReview',
   'receiptRead',
 ])

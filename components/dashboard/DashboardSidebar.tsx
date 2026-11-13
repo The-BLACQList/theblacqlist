@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
+import { OwnerCue } from '@/components/dashboard/OwnerCue'
 
 interface Props {
   ownerEmail?: string
@@ -29,6 +30,9 @@ interface Props {
   messagesUnread?: number
   /** happeningNow is on: "Happening now" shows under This page (part F). */
   showPosts?: boolean
+  /** ownerCue is on: "✦ Ask Cue" opens the owner Cue panel (ticket 203).
+   *  Never on Upgrade, where an owner is deciding what to pay. */
+  showOwnerCue?: boolean
 }
 
 const NAV_ITEMS = [
@@ -46,6 +50,11 @@ const NAV_ITEMS = [
   { href: '/dashboard/upgrade', label: 'Upgrade', icon: Sparkles, exact: false, needsListing: true },
 ]
 
+/** Upgrade and checkout are for deciding what to pay; Cue stays out of them. */
+export function isOwnerCueHiddenPath(pathname: string): boolean {
+  return pathname === '/dashboard/upgrade' || pathname.startsWith('/dashboard/upgrade/')
+}
+
 const MESSAGES_ITEM = {
   href: '/dashboard/messages',
   label: 'Messages',
@@ -61,6 +70,7 @@ export function DashboardSidebar({
   showReceipts = false,
   messagesUnread,
   showPosts = false,
+  showOwnerCue = false,
 }: Props) {
   const pathname = usePathname()
   const allItems =
@@ -131,6 +141,11 @@ export function DashboardSidebar({
               </Link>
             )
           })}
+          {showOwnerCue && hasListings && !isOwnerCueHiddenPath(pathname) && (
+            <div className="shrink-0 md:mt-1">
+              <OwnerCue listingId={entityId ?? null} />
+            </div>
+          )}
         </div>
 
         {/* Page-specific nav when on a page route */}
