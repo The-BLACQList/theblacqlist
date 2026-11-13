@@ -744,6 +744,57 @@ export type Database = {
         }
         Relationships: []
       }
+      conversations: {
+        Row: {
+          created_at: string
+          customer_last_read_at: string | null
+          customer_listing_id: string | null
+          customer_user_id: string
+          id: string
+          last_message_at: string
+          last_message_preview: string | null
+          listing_id: string
+          owner_last_read_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_last_read_at?: string | null
+          customer_listing_id?: string | null
+          customer_user_id: string
+          id?: string
+          last_message_at?: string
+          last_message_preview?: string | null
+          listing_id: string
+          owner_last_read_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_last_read_at?: string | null
+          customer_listing_id?: string | null
+          customer_user_id?: string
+          id?: string
+          last_message_at?: string
+          last_message_preview?: string | null
+          listing_id?: string
+          owner_last_read_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_customer_listing_id_fkey"
+            columns: ["customer_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       editorial_articles: {
         Row: {
           author_name: string
@@ -1732,6 +1783,7 @@ export type Database = {
           last_edited_by_owner_at: string | null
           location_type: string
           logo_path: string | null
+          messaging_enabled: boolean
           meta_description: string | null
           meta_title: string | null
           moderation_notes: string | null
@@ -1799,6 +1851,7 @@ export type Database = {
           last_edited_by_owner_at?: string | null
           location_type?: string
           logo_path?: string | null
+          messaging_enabled?: boolean
           meta_description?: string | null
           meta_title?: string | null
           moderation_notes?: string | null
@@ -1866,6 +1919,7 @@ export type Database = {
           last_edited_by_owner_at?: string | null
           location_type?: string
           logo_path?: string | null
+          messaging_enabled?: boolean
           meta_description?: string | null
           meta_title?: string | null
           moderation_notes?: string | null
@@ -2143,6 +2197,85 @@ export type Database = {
           width?: number | null
         }
         Relationships: []
+      }
+      message_blocks: {
+        Row: {
+          blocked_user_id: string
+          created_at: string
+          owner_user_id: string
+        }
+        Insert: {
+          blocked_user_id: string
+          created_at?: string
+          owner_user_id: string
+        }
+        Update: {
+          blocked_user_id?: string
+          created_at?: string
+          owner_user_id?: string
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          sender_user_id: string | null
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender_user_id?: string | null
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messaging_suspensions: {
+        Row: {
+          queue_item_id: string | null
+          suspended_at: string
+          suspended_by: string | null
+          user_id: string
+        }
+        Insert: {
+          queue_item_id?: string | null
+          suspended_at?: string
+          suspended_by?: string | null
+          user_id: string
+        }
+        Update: {
+          queue_item_id?: string | null
+          suspended_at?: string
+          suspended_by?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messaging_suspensions_queue_item_id_fkey"
+            columns: ["queue_item_id"]
+            isOneToOne: false
+            referencedRelation: "moderation_queue"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       moderation_queue: {
         Row: {
@@ -3399,6 +3532,7 @@ export type Database = {
         Args: { p_city_id: string; p_listing_id: string }
         Returns: string
       }
+      messaging_restricted: { Args: { p_listing_id: string }; Returns: boolean }
       owned_listing_video_count: {
         Args: { p_listing_id: string }
         Returns: number
@@ -3463,6 +3597,7 @@ export type Database = {
           placement_id: string
         }[]
       }
+      unread_message_count: { Args: never; Returns: number }
     }
     Enums: {
       [_ in never]: never

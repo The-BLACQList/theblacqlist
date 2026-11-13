@@ -72,6 +72,7 @@ export type FeatureFlag =
   | 'earnedFeatured'
   | 'jobsOpen'
   | 'marketplaceOpen'
+  | 'messaging'
   | 'ocrExtraction'
   | 'ownerReceiptReview'
   | 'paidPostings'
@@ -116,6 +117,14 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // production is the GATE-DATA write: the first run clears every flag that
   // was not earned that week (27 seeded rows at the time of writing).
   earnedFeatured: 'FEATURE_EARNED_FEATURED',
+  // Gates in-app customer -> business messaging (2026-11-13): the in-app
+  // "Send Message" composer on listing pages, /account/messages,
+  // /dashboard/messages, the dashboard Inbox switch, the unread badges and every
+  // messaging server action. Off, a message CTA falls back to its mailto: link
+  // exactly as before. The default (on in preview, off in production) lets it be
+  // reviewed on Previews; production also needs the 20261113000002 migration
+  // (GATE-DATA) before FEATURE_MESSAGING=true is set (GATE-DEPLOY).
+  messaging: 'FEATURE_MESSAGING',
   ocrExtraction: 'FEATURE_OCR_EXTRACTION',
   // E-2. Covers BOTH halves of the monetization change — charging for job
   // postings and enforcing the events cap — on purpose, even though they are

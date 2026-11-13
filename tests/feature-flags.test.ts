@@ -46,6 +46,7 @@ beforeEach(() => {
   delete process.env.FEATURE_MARKETPLACE_OPEN
   delete process.env.FEATURE_RECEIPT_READ
   delete process.env.FEATURE_OWNER_RECEIPT_REVIEW
+  delete process.env.FEATURE_MESSAGING
 })
 
 afterEach(() => {
@@ -237,6 +238,7 @@ describe('getEnabledFeatures', () => {
     expect(getEnabledFeatures().sort()).toEqual([
       'aiBeta',
       'earnedFeatured',
+      'messaging',
       'ocrExtraction',
       'paidPostings',
       'postingSubmissions',

@@ -56,6 +56,8 @@ interface Props {
   onboardingDrafts?: { autoStart: boolean; aboutFromSite: boolean }
   /** Growth can be bought right now (ticket 143). Left out, it reads as closed. */
   growthOpen?: boolean
+  /** The page's inbox switch, shown with the main button. Edit mode with messaging on only. */
+  inbox?: { open: boolean }
 }
 
 // Which section shows each draft card's field, and that field's draft key.
@@ -108,6 +110,7 @@ export function PageFinishView({
   writingHelp,
   onboardingDrafts,
   growthOpen = false,
+  inbox,
 }: Props) {
   const d = data.details
   const fromProps: Draft = {
@@ -319,6 +322,7 @@ export function PageFinishView({
                 ctaType={d?.cta_type ?? null}
                 ctaUrl={d?.cta_url ?? null}
                 ctaLabelOverride={d?.cta_label_override ?? null}
+                inbox={inbox}
               />
             </Anchor>
 

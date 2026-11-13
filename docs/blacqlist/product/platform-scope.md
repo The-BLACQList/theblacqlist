@@ -101,7 +101,7 @@ Adds AI concierge, dollar-flow map, sponsor campaigns, and community impact anal
 These will not be built at any phase without a new product decision:
 
 - **Social feed / content feed** — The BLACQList is not a social network. No timeline, no follower graph, no status updates.
-- **Messaging / DMs between users** — Contact is handled through business contact CTAs (phone, email, booking link), not on-platform messaging.
+- **Member-to-member DMs** — No messaging between members in general. The one exception, decided 2026-11-13: customer → business messaging on claimed business pages, behind `FEATURE_MESSAGING`. Each page's inbox is closed by default and the owner opts in. Only customers start a conversation; owners reply. Owners can block, either side can report, and admins can suspend. No email or realtime notifications, only an in-app unread badge. Events and jobs are excluded. Unclaimed pages keep the phone, email and booking CTAs.
 - **Ratings-only aggregator** — The platform is not built to be Yelp for Black businesses. Reviews exist in service of trust, not as the core product.
 - **Job board as a standalone product** — Job listings are one entity type on The BLACQList, not a separate product.
 - **Crowdfunding or donations** — Not a GoFundMe competitor.

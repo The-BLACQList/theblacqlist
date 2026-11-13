@@ -4,10 +4,9 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { Phone, MapPin } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { getCtaLabel } from '@/types'
 import { SaveButton } from '@/components/entity-page/SaveButton'
 import { ShareButton } from '@/components/entity-page/ShareButton'
-import { getCtaHref } from '@/components/entity-page/templates/cta'
+import { getCtaHref, getEntityCtaLabel } from '@/components/entity-page/templates/cta'
 import { trackContactTap } from '@/lib/analytics/contactTap'
 import { directionsUrl } from '@/lib/listings/directions'
 import type { EntityPageData } from '@/types'
@@ -29,7 +28,7 @@ export function EntityQuickActionBar({
 }: Props) {
   const [visible, setVisible] = useState(false)
 
-  const ctaLabel = getCtaLabel(entity.details.cta_type, entity.details.cta_label_override)
+  const ctaLabel = getEntityCtaLabel(entity)
   // Same resolution the hero uses, so the bar's button and the hero's button
   // always agree. null = no reachable destination → render no button.
   const ctaHref = getCtaHref(entity)

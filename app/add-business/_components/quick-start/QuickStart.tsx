@@ -67,7 +67,7 @@ const HIGHLIGHT: Record<QuickStep, PreviewPart | null> = {
 interface Props {
   categories: readonly QuickCategory[]
   cities: readonly CityOption[]
-  /** The owner's sign-in email: the page's contact email and the "Send a message" default. */
+  /** The owner's sign-in email: the page's contact email and the "Email us" default. */
   email: string
   /** FEATURE_SITE_IMPORT: start with "Have a website or link page?". */
   siteImport?: boolean

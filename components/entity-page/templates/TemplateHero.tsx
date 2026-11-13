@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Route } from 'next'
-import { Star } from 'lucide-react'
+import { MessageCircle, Star } from 'lucide-react'
 import { StatusBadge } from '@/components/ui/status-badge'
 import { OwnershipBadge } from '@/components/ui/ownership-badge'
 import { SaveButton } from '@/components/entity-page/SaveButton'
@@ -8,12 +8,16 @@ import { ShareButton } from '@/components/entity-page/ShareButton'
 import { CoverImage } from '@/components/media/CoverImage'
 import { cn } from '@/lib/utils'
 import { ALLY_ONE_LINER } from '@/lib/constants/listing'
-import { getCtaLabel } from '@/types'
 import type { EntityPageData } from '@/types'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
 import { categoryFilterHref, levelFilterHref } from '@/lib/listings/url'
 import { levelPill, extraLevelLabels } from '@/lib/listings/levels'
-import { getCtaHref } from '@/components/entity-page/templates/cta'
+import {
+  getCtaHref,
+  getEntityCtaLabel,
+  getSecondaryMessageHref,
+  isMessagingUnavailable,
+} from '@/components/entity-page/templates/cta'
 import { OpenStatus } from '@/components/entity-page/templates/OpenStatus'
 import { ContactLink } from '@/components/entity-page/ContactLink'
 import { isRoleClosed } from '@/lib/listings/jobPosting'
@@ -71,10 +75,15 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
   // question to answer — OpenStatus would render an empty promise there.
   const showOpenStatus = variant !== 'event' && variant !== 'job'
   const cover = resolveCoverImage(entity.cover_image_path, entity.entity_type, entity.id)
-  const ctaLabel = getCtaLabel(entity.details.cta_type, entity.details.cta_label_override)
+  const ctaLabel = getEntityCtaLabel(entity)
   // A job past its closing date offers no apply button; the page says so instead.
   const jobClosed = entity.entity_type === 'job' && isRoleClosed(entity.job?.closes_at)
   const ctaHref = jobClosed ? null : getCtaHref(entity)
+  // In-app messaging (2026-11-13): a closed inbox shows a quiet "Not accepting
+  // messages" in place of the button, and a claimed listing whose main CTA is
+  // something else gets a secondary "Message" button.
+  const messagingClosed = !jobClosed && isMessagingUnavailable(entity)
+  const messageHref = jobClosed ? null : getSecondaryMessageHref(entity)
   const typePill = TYPE_PILL_LABELS[entity.entity_type as string]
   // Creatives already carry the category as the gold eyebrow, so they get no chip.
   const categoryHref = isCreative ? null : categoryFilterHref(entity.category)
@@ -266,6 +275,26 @@ export function TemplateHero({ entity, initialSaved = false, variant }: Props) {
             >
               {ctaLabel}
             </ContactLink>
+          )}
+
+          {messagingClosed && (
+            <span
+              aria-disabled="true"
+              className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full border border-off-white/30 bg-off-white/5 text-off-white/70 font-subhead font-semibold text-sm backdrop-blur-sm cursor-not-allowed"
+            >
+              <MessageCircle className="size-4" aria-hidden="true" />
+              Not accepting messages
+            </span>
+          )}
+
+          {messageHref && (
+            <a
+              href={messageHref}
+              className="inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full border border-off-white/40 bg-off-white/10 hover:bg-off-white/20 text-white font-subhead font-bold text-sm backdrop-blur-sm transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+            >
+              <MessageCircle className="size-4" aria-hidden="true" />
+              {entity.messaging?.mode === 'thread' ? 'View messages' : 'Message'}
+            </a>
           )}
 
           {isCreative && entity.images.length > 0 && (

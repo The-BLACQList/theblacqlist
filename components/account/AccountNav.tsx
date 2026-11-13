@@ -25,6 +25,8 @@ export interface AccountNavCounts {
   claims: number
   claimsPending: number
   receipts: number
+  /** Unread messages. Undefined hides the Messages item (flag off). */
+  messagesUnread?: number
 }
 
 interface Props {
@@ -103,6 +105,10 @@ export function AccountNav({
       label: 'Activity',
       items: [
         { href: '/account', label: 'Overview' },
+        // Present only while messaging is on; the badge is the unread count.
+        ...(counts.messagesUnread !== undefined
+          ? [{ href: '/account/messages', label: 'Messages', badge: counts.messagesUnread }]
+          : []),
         { href: '/account/saved', label: 'Saved', count: counts.saved },
         { href: '/account/activity', label: 'Recently viewed' },
         { href: '/account/recommended', label: 'Recommended' },

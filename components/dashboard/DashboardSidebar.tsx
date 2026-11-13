@@ -10,6 +10,7 @@ import {
   Sparkles,
   ChevronRight,
   ReceiptText,
+  MessageCircle,
 } from 'lucide-react'
 
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
@@ -24,6 +25,8 @@ interface Props {
   receiptsToVerify?: number
   /** ownerReceiptReview is on. Off, "Receipts to verify" is hidden. */
   showReceipts?: boolean
+  /** Unread messages. Undefined hides the Messages item (flag off). */
+  messagesUnread?: number
 }
 
 const NAV_ITEMS = [
@@ -41,14 +44,25 @@ const NAV_ITEMS = [
   { href: '/dashboard/upgrade', label: 'Upgrade', icon: Sparkles, exact: false, needsListing: true },
 ]
 
+const MESSAGES_ITEM = {
+  href: '/dashboard/messages',
+  label: 'Messages',
+  icon: MessageCircle,
+  exact: false,
+  needsListing: true,
+}
+
 export function DashboardSidebar({
   ownerEmail,
   hasListings = true,
   receiptsToVerify = 0,
   showReceipts = false,
+  messagesUnread,
 }: Props) {
   const pathname = usePathname()
-  const navItems = NAV_ITEMS.filter(
+  const allItems =
+    messagesUnread === undefined ? NAV_ITEMS : [...NAV_ITEMS.slice(0, 2), MESSAGES_ITEM, ...NAV_ITEMS.slice(2)]
+  const navItems = allItems.filter(
     (item) =>
       (hasListings || !('needsListing' in item)) &&
       (showReceipts || item.href !== '/dashboard/receipts')
@@ -105,6 +119,12 @@ export function DashboardSidebar({
                     <span className="sr-only"> waiting</span>
                   </span>
                 )}
+                {href === MESSAGES_ITEM.href && messagesUnread ? (
+                  <span className="ml-auto inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-gold px-1.5 font-subhead text-[11px] font-bold text-brand-black">
+                    {messagesUnread > 99 ? '99+' : messagesUnread}
+                    <span className="sr-only"> unread</span>
+                  </span>
+                ) : null}
               </Link>
             )
           })}

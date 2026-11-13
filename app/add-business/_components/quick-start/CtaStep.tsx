@@ -39,7 +39,7 @@ export function CtaStep({ answers, onChange, problem, email, mode = 'business' }
         onChange={(v) => {
           if (v === answers.ctaType) return
           // A booking link is not a phone number, so a new type starts fresh.
-          onChange({ ctaType: v, ctaUrl: v === 'message' ? email : '' })
+          onChange({ ctaType: v, ctaUrl: v === 'email' ? email : '' })
         }}
         describedBy={typeProblem ? ERROR_ID : undefined}
       />

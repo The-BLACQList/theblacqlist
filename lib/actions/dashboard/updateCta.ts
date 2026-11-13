@@ -28,24 +28,20 @@ export async function updateCtaAction(
   if (!(VALID_CTA_TYPES as readonly string[]).includes(ctaType)) {
     return { error: 'Invalid CTA type.' }
   }
-  if (ctaType !== 'call' && !ctaUrl) {
+  // "Message us" is the in-app inbox and "Call us" uses the page's phone, so
+  // neither takes a value. "Email us" takes an address; every other type an
+  // https link.
+  const takesValue = ctaType !== 'call' && ctaType !== 'message'
+  if (takesValue && !ctaUrl) {
     return {
-      error:
-        ctaType === 'message'
-          ? 'An email address is required for this button.'
-          : 'A URL is required for this CTA type.',
+      error: ctaType === 'email' ? 'An email address is required for this button.' : 'A URL is required for this CTA type.',
     }
   }
-  // "Send a message" takes an email (the quick start saves one) or a contact
-  // page link. Every other type takes an https link.
-  const isMessageEmail = ctaType === 'message' && !!ctaUrl && EMAIL_RE.test(ctaUrl)
-  if (ctaUrl && !isMessageEmail && !ctaUrl.startsWith('https://')) {
-    return {
-      error:
-        ctaType === 'message'
-          ? 'Enter an email address, or a link that starts with https://'
-          : 'CTA URL must start with https://',
-    }
+  if (ctaType === 'email' && ctaUrl && !EMAIL_RE.test(ctaUrl)) {
+    return { error: 'Enter a valid email address.' }
+  }
+  if (takesValue && ctaType !== 'email' && ctaUrl && !ctaUrl.startsWith('https://')) {
+    return { error: 'CTA URL must start with https://' }
   }
   if (ctaLabelOverride && ctaLabelOverride.length > 50) {
     return { error: 'Button label must be 50 characters or fewer.' }
@@ -67,7 +63,7 @@ export async function updateCtaAction(
     {
       listing_id: listingId,
       cta_type: ctaType,
-      cta_url: ctaType === 'call' ? null : ctaUrl,
+      cta_url: takesValue ? ctaUrl : null,
       cta_label_override: ctaLabelOverride,
     },
     { onConflict: 'listing_id' }

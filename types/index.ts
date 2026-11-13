@@ -1,6 +1,7 @@
 // ─── Discovery / Listing Types ───────────────────────────────────────────────
 
 import { VALID_ENTITY_TYPES, VALID_LOCATION_TYPES } from '@/lib/constants/listing'
+import type { ListingMessaging } from '@/lib/messaging/rules'
 
 /**
  * Both unions are DERIVED from the canonical constants rather than retyped, because
@@ -122,6 +123,7 @@ export type CTAType =
   | 'order'
   | 'call'
   | 'message'
+  | 'email'
   | 'visit'
   | 'get-quote'
   | 'shop'
@@ -140,7 +142,8 @@ export const CTA_LABELS: Record<CTAType, string> = {
   book: 'Book Now',
   order: 'Order Now',
   call: 'Call Now',
-  message: 'Send Message',
+  message: 'Message Us',
+  email: 'Email Us',
   visit: 'Visit Us',
   'get-quote': 'Get a Quote',
   shop: 'Shop Now',
@@ -360,6 +363,13 @@ export interface EntityPageData {
   extra_levels?: string[]
   /** Owner switched on "Open to partnerships" (ticket 134). Attached fail-soft. */
   open_to_partnerships?: boolean
+  /**
+   * In-app messaging for THIS viewer (decision 2026-11-13). Set by the listing
+   * page, never by the shared loader, because it depends on who is looking.
+   * undefined: flag off, unclaimed, or the read failed — the message CTA keeps
+   * its mailto: behavior. See lib/messaging/loaders.ts loadListingMessaging.
+   */
+  messaging?: ListingMessaging
   is_featured: boolean
   /**
    * The bucket the listing won Featured in, from its latest featured_awards
