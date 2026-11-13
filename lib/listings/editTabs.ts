@@ -28,7 +28,8 @@ export const TAB_SECTIONS: Record<EditTabId, readonly string[]> = {
   basics: ['happening-now', 'basics', 'about', 'role', 'collective-name'],
   contact: ['contact', 'hours', 'main-button'],
   media: ['photos', 'video'],
-  services: ['services', 'details'],
+  // 'deals' is the edit page only (part G).
+  services: ['services', 'deals', 'details'],
   social: ['social', 'links'],
   more: ['faq', 'partnerships', 'google'],
 }
@@ -43,6 +44,7 @@ export const SCROLL_ORDER: readonly string[] = [
   'photos',
   'main-button',
   'services',
+  'deals',
   'role',
   'details',
   'partnerships',

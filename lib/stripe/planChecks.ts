@@ -9,6 +9,7 @@ import {
   TIER_RANK,
   videoLimit,
 } from '@/lib/stripe/features'
+import { DEALS_ON_MAX } from '@/lib/listings/deals'
 
 // Ticket 119. The plan limits the pricing cards promise, checked on save.
 //
@@ -225,6 +226,26 @@ export function checkPostAdd(
   const target = upgradeTarget(tier, growthOpen, premiumOpen)
   const next = target ? `End one, or upgrade to ${target} for more.` : 'End one to post another.'
   return `Your plan includes ${what}. ${next}`
+}
+
+/**
+ * Turning one deal on (part G): posting it, scheduling it, or turning a draft
+ * on. Premium only. `onCount` is how many other deals are on now, live or
+ * scheduled. Editing, ending and deleting a deal are always allowed.
+ */
+export function checkDealAdd(tier: string | null, onCount: number): string | null {
+  if (!canAccess(tier, 'coupons')) {
+    return 'Coupons and deals are part of Premium. Upgrade to put deals on your page.'
+  }
+  if (onCount >= DEALS_ON_MAX) {
+    return `You can have up to ${DEALS_ON_MAX} deals on at a time. End one to add another.`
+  }
+  return null
+}
+
+/** The plan the deals note offers: Premium, while it can be bought, to any lower plan. */
+export function dealsUpgradeTarget(tier: string | null, premiumOpen: boolean): UpgradeTarget {
+  return !canAccess(tier, 'coupons') && premiumOpen ? 'Premium' : null
 }
 
 /**

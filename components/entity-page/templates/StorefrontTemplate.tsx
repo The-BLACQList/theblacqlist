@@ -9,6 +9,7 @@ import { EntityStorySection } from '@/components/entity-page/EntityStorySection'
 import { EntityOfferingsSection } from '@/components/entity-page/EntityOfferingsSection'
 import { EntityAttributes } from '@/components/entity-page/EntityAttributes'
 import { EntityFaqSection } from '@/components/entity-page/EntityFaqSection'
+import { EntityDeals } from '@/components/entity-page/EntityDeals'
 import { EntityUpcomingEvents } from '@/components/entity-page/EntityUpcomingEvents'
 import { EntityNowHiring } from '@/components/entity-page/EntityNowHiring'
 import { EntityMediaGallery } from '@/components/entity-page/EntityMediaGallery'
@@ -42,9 +43,12 @@ export function StorefrontTemplate({
   const hasOfferings = entity.details.services.length > 0
   const hasGallery = entity.images.length > 0
 
+  const hasDeals = (entity.deals?.length ?? 0) > 0
+
   const tabs: AnchorTab[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'visit', label: 'Visit' },
+    ...(hasDeals ? [{ id: 'deals', label: 'Deals' }] : []),
     ...(hasStory ? [{ id: 'about', label: 'About' }] : []),
     ...(hasOfferings ? [{ id: 'offerings', label: 'Offerings' }] : []),
     ...(hasGallery ? [{ id: 'gallery', label: 'Gallery' }] : []),
@@ -68,6 +72,8 @@ export function StorefrontTemplate({
       <div id="visit" className="scroll-mt-32">
         <EntityAtAGlance entity={entity} />
       </div>
+
+      <EntityDeals listingId={entity.id} deals={entity.deals} now={new Date()} />
 
       <EntityLinks entity={entity} />
 

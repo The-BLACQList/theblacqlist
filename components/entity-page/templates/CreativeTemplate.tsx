@@ -12,6 +12,7 @@ import { TemplateInquiryBand } from '@/components/entity-page/templates/Template
 import { EntityLinks } from '@/components/entity-page/EntityLinks'
 import { EntityAttributes } from '@/components/entity-page/EntityAttributes'
 import { EntityFaqSection } from '@/components/entity-page/EntityFaqSection'
+import { EntityDeals } from '@/components/entity-page/EntityDeals'
 import { EntityAtAGlance } from '@/components/entity-page/EntityAtAGlance'
 import { EntityMediaGallery } from '@/components/entity-page/EntityMediaGallery'
 import { EntityVideoSection } from '@/components/entity-page/EntityVideoSection'
@@ -40,9 +41,12 @@ export function CreativeTemplate({ entity, initialSaved, userId, isOwner, hasRev
   const hasCapabilities = entity.details.services.length > 0
   const hasStory = Boolean(entity.details.description?.trim())
 
+  const hasDeals = (entity.deals?.length ?? 0) > 0
+
   const tabs: AnchorTab[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'visit', label: 'Visit' },
+    ...(hasDeals ? [{ id: 'deals', label: 'Deals' }] : []),
     ...(hasPortfolio ? [{ id: 'portfolio', label: 'Portfolio' }] : []),
     ...(hasCapabilities ? [{ id: 'capabilities', label: 'Capabilities' }] : []),
     ...(hasStory ? [{ id: 'about', label: 'About' }] : []),
@@ -65,6 +69,8 @@ export function CreativeTemplate({ entity, initialSaved, userId, isOwner, hasRev
       <div id="visit" className="scroll-mt-32">
         <EntityAtAGlance entity={entity} />
       </div>
+
+      <EntityDeals listingId={entity.id} deals={entity.deals} now={new Date()} />
 
       <Reveal>
       <div className="bg-white">

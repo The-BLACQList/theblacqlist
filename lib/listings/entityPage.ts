@@ -11,6 +11,7 @@ import { listingVideoPublicUrl } from '@/lib/video/listingVideo'
 import { resolvePageButtons, toExtraButtons } from '@/lib/listings/pageButtons'
 import { isFeatureEnabled } from '@/lib/env'
 import { shownPosts, toOwnerPosts, toPublicPost } from '@/lib/listings/happeningNow'
+import { shownDeals, toOwnerDeals, toPublicDeal } from '@/lib/listings/deals'
 import type {
   EntityPageData,
   EntityAttributeGroup,
@@ -214,6 +215,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     { data: buttonData },
     { data: criteriaData },
     { data: postData },
+    { data: dealData },
   ] = await Promise.all([
     supabase
       .from('services')
@@ -303,6 +305,19 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
           .eq('status', 'active')
           .lte('starts_at', nowIso)
           .gt('ends_at', nowIso)
+          .order('created_at', { ascending: true })
+          .limit(50)
+      : Promise.resolve({ data: null }),
+    // Deals (part G). Fail-soft, and only read with the flag on. Live ones
+    // only, as for posts: the owner's own client can read their drafts too.
+    dealsShowOn(raw.entity_type)
+      ? sb
+          .from('listing_deals')
+          .select('id, title, description, code, terms, starts_at, ends_at, status, created_at')
+          .eq('listing_id', raw.id)
+          .eq('status', 'active')
+          .lte('starts_at', nowIso)
+          .or(`ends_at.is.null,ends_at.gt."${nowIso}"`)
           .order('created_at', { ascending: true })
           .limit(50)
       : Promise.resolve({ data: null }),
@@ -822,6 +837,10 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
           toPublicPost(p, resolveMediaPath)
         )
       : [],
+    // Live deals on a Premium page, soonest ending first (lib/listings/deals.ts).
+    deals: dealsShowOn(raw.entity_type)
+      ? shownDeals(toOwnerDeals(dealData), raw.tier, new Date(nowIso)).shown.map(toPublicDeal)
+      : [],
     related,
     images,
     reviews,
@@ -833,4 +852,9 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
 /** Happening now posts show on business pages, with the flag on. Jobs and events are dated already. */
 function postsShowOn(entityType: string): boolean {
   return isFeatureEnabled('happeningNow') && entityType !== 'job' && entityType !== 'event'
+}
+
+/** Deals show on business pages, with the flag on. */
+function dealsShowOn(entityType: string): boolean {
+  return isFeatureEnabled('coupons') && entityType !== 'job' && entityType !== 'event'
 }

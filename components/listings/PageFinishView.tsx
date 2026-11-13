@@ -48,6 +48,9 @@ import { MAX_PHOTO_CANDIDATES } from '@/lib/import/limits'
 import type { WeeklyHours } from '@/types'
 import { HappeningNowCard } from '@/components/dashboard/HappeningNowCard'
 import type { OwnerPost } from '@/lib/listings/happeningNow'
+import { DealsSection } from '@/components/dashboard/DealsSection'
+import type { OwnerDeal } from '@/lib/listings/deals'
+import { dealsUpgradeTarget } from '@/lib/stripe/planChecks'
 import {
   DEFAULT_TAB,
   EDIT_TABS,
@@ -83,6 +86,11 @@ interface Props {
   initialTab?: EditTabId
   /** Happening now posts (part F). Edit mode on a business page with the flag on only. */
   happeningNow?: { posts: OwnerPost[]; now: string }
+  /**
+   * Coupons and deals (part G). Edit mode on a business page with the flag on
+   * only. `premiumOpen`: Premium can be bought right now.
+   */
+  deals?: { deals: OwnerDeal[]; now: string; premiumOpen: boolean }
 }
 
 // Which section shows each draft card's field, and that field's draft key.
@@ -147,6 +155,7 @@ export function PageFinishView({
   inbox,
   initialTab = DEFAULT_TAB,
   happeningNow,
+  deals,
 }: Props) {
   const d = data.details
   const fromProps: Draft = {
@@ -371,6 +380,16 @@ export function PageFinishView({
           tier={tier}
           upgradeTo={moreOffer}
           now={happeningNow.now}
+        />
+      ) : null,
+    deals:
+      mode === 'edit' && deals ? (
+        <DealsSection
+          listingId={data.id}
+          initial={deals.deals}
+          tier={tier}
+          upgradeTo={dealsUpgradeTarget(tier, deals.premiumOpen)}
+          initialNow={deals.now}
         />
       ) : null,
     basics: (

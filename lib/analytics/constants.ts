@@ -18,6 +18,9 @@ export const ANALYTICS_EVENTS = {
   // The share sheet opened. Separate from share_initiated so opening and
   // closing the sheet never counts as a share in the rollups.
   SHARE_SHEET_OPENED: 'share_sheet_opened',
+  // A visitor copied a deal's code on a business page (part G). entity_type
+  // 'listing', entity_id = the listing id, properties { deal_id }.
+  DEAL_CODE_COPIED: 'deal_code_copied',
 
   // ── Messaging (2026-11-13) ─────────────────────────────────────────────────
   // Server-side only. Properties never carry message text.
@@ -89,6 +92,10 @@ export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
  *            banner shows) or in the city/category strip; post_click from
  *            GET /api/happening-now/[postId]. Both server-side, so a visitor
  *            can't inflate them through /api/analytics.
+ *   deal_code_copied (part G, 2026-11-13, behind coupons): sent by the
+ *            "Copy code" button on a deal (components/entity-page/
+ *            DealCodeButton.tsx) through /api/analytics/event. Browser-sent,
+ *            so it is a rough count, the same as cta_click.
  *
  *   cta_click IS NOT ONE EVENT WITH ONE SHAPE. Two emitters write it, and they
  *   disagree about what entity_id means:

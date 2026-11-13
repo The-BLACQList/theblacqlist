@@ -62,6 +62,8 @@ export type DiscoverSearchParams = {
   open?: string
   /** "Open to partnerships" (ticket 134). `1` is the only spelling. */
   partners?: string
+  /** "Has deals" (part G). `1` is the only spelling. */
+  deals?: string
   /** "Near You" — all three or none. See lib/listings/location-params.ts. */
   lat?: string
   lng?: string
@@ -106,6 +108,7 @@ export function hasFacetFilters(params: DiscoverSearchParams): boolean {
     params.price ||
     params.attrs ||
     params.partners ||
+    params.deals ||
     isOpenNow(params)
   )
 }
@@ -159,6 +162,7 @@ export function parseDiscoverParams(
     attrs: csv(params.attrs),
     open_now: isOpenNow(params),
     partners: params.partners === '1',
+    deals: params.deals === '1',
     lat: location?.lat,
     lng: location?.lng,
     radius: location?.radius,

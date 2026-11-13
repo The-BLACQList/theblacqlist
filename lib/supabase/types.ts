@@ -1295,6 +1295,53 @@ export type Database = {
           },
         ]
       }
+      listing_deals: {
+        Row: {
+          code: string | null
+          created_at: string
+          description: string | null
+          ends_at: string | null
+          id: string
+          listing_id: string
+          starts_at: string
+          status: string
+          terms: string | null
+          title: string
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          listing_id: string
+          starts_at?: string
+          status?: string
+          terms?: string | null
+          title: string
+        }
+        Update: {
+          code?: string | null
+          created_at?: string
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          listing_id?: string
+          starts_at?: string
+          status?: string
+          terms?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_deals_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_details_business: {
         Row: {
           accepts_reservations: boolean | null
@@ -3603,6 +3650,7 @@ export type Database = {
           p_location_type?: string
           p_location_types?: string[]
           p_open_now?: boolean
+          p_has_deals?: boolean
           p_open_to_partnerships?: boolean
           p_price_ranges?: string[]
           p_q?: string
@@ -3683,6 +3731,7 @@ export type Database = {
           p_location_types?: string[]
           p_offset?: number
           p_open_now?: boolean
+          p_has_deals?: boolean
           p_open_to_partnerships?: boolean
           p_ownership_label?: string
           p_price_ranges?: string[]

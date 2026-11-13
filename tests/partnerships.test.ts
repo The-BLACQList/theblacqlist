@@ -53,7 +53,7 @@ describe('partners RPC argument', () => {
   // A retry without the type keys must not quietly widen a partners search.
   it('never retries without it', () => {
     expect(src('lib/listings/facets.ts')).toMatch(
-      /'p_open_to_partnerships' in args\s*\)\s*return first/
+      /'p_open_to_partnerships' in args \|\|\s*'p_has_deals' in args\s*\)\s*return first/
     )
   })
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { SlidersHorizontal, Clock, Handshake } from 'lucide-react'
+import { SlidersHorizontal, Clock, Handshake, Tag } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { PRICE_RANGES, type FacetGroupData, type FacetCounts } from '@/lib/listings/facets'
@@ -57,6 +57,8 @@ export interface FacetSidebarProps {
   groups: FacetGroupData[]
   counts: FacetCounts
   hideCityFilter?: boolean
+  /** Shows the "Has deals" filter (part G): the coupons flag, read on the server. */
+  showDeals?: boolean
   className?: string
 }
 
@@ -66,6 +68,7 @@ export function FacetSidebar({
   groups,
   counts,
   hideCityFilter = false,
+  showDeals = false,
   className,
 }: FacetSidebarProps) {
   const { searchParams, setParam, setParams, getCsv, toggleCsv } = useFacetParams()
@@ -85,6 +88,7 @@ export function FacetSidebar({
   const activeTrust = searchParams.get('trust_tier') ?? ''
   const openNow = searchParams.get('open_now') === '1'
   const partners = searchParams.get('partners') === '1'
+  const deals = searchParams.get('deals') === '1'
   const selectedPrices = getCsv('price')
   const selectedAttrs = getCsv('attrs')
   // Multi-select as of 2026-09-04: Products & Services is four location types at
@@ -160,6 +164,21 @@ export function FacetSidebar({
         <Handshake className="size-4 text-charcoal" aria-hidden="true" />
         <span className="text-sm font-subhead text-brand-black">Open to partnerships</span>
       </label>
+
+      {/* Has deals (part G). No count, the same as partnerships. Shown when
+          picked even with the flag off, so it can be cleared. */}
+      {(showDeals || deals) && (
+        <label className="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={deals}
+            onChange={() => setParam('deals', deals ? '' : '1')}
+            className="rounded border-charcoal/30 text-brand-black focus:ring-brand-black/20"
+          />
+          <Tag className="size-4 text-charcoal" aria-hidden="true" />
+          <span className="text-sm font-subhead text-brand-black">Has deals</span>
+        </label>
+      )}
 
       {/* Type opens by default: it is what most visitors reach for first.
           Level stays open too, being four buttons the Collective maps.

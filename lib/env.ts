@@ -69,6 +69,7 @@ export type FeatureFlag =
   | 'aiGuide'
   | 'aiOnboarding'
   | 'collectiveOpen'
+  | 'coupons'
   | 'earnedFeatured'
   | 'happeningNow'
   | 'jobsOpen'
@@ -111,6 +112,13 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // so the cover is what every deployment shows; set =true and redeploy to open
   // one.
   collectiveOpen: 'FEATURE_COLLECTIVE_OPEN',
+  // Gates coupons and deals (owner-experience round 2, part G): the Deals card
+  // on the edit page's Services tab, the deal actions, the Deals section on
+  // business pages and the "Has deals" filter on Discover. Off, none of it
+  // shows and the actions refuse. The default (on in preview, off in
+  // production) lets it be reviewed on Previews; production also needs the
+  // 20261117000000 migration (GATE-DATA) first.
+  coupons: 'FEATURE_COUPONS',
   jobsOpen: 'FEATURE_JOBS_OPEN',
   marketplaceOpen: 'FEATURE_MARKETPLACE_OPEN',
   // Gates the weekly Featured job (app/api/cron/featured). Off, the cron does

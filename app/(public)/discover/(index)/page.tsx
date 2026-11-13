@@ -24,6 +24,7 @@ import {
   type DiscoverSearchParams,
 } from '@/lib/listings/discover-params'
 import { createClient } from '@/lib/supabase/server'
+import { isFeatureEnabled } from '@/lib/env'
 
 export const metadata: Metadata = {
   title: 'Discover Black-Owned Businesses | The BLACQList',
@@ -92,6 +93,7 @@ async function DiscoverContent({
       {/* Sidebar filters — hidden on mobile, shown on md+ */}
       <div className="hidden md:block w-56 lg:w-64 shrink-0">
         <FacetSidebar
+          showDeals={isFeatureEnabled('coupons')}
           cities={cities ?? []}
           categories={categories ?? []}
           groups={groups}
@@ -105,6 +107,7 @@ async function DiscoverContent({
         <div className="flex items-center justify-between gap-3 mb-4">
           <div className="md:hidden">
             <MobileFilterSheet
+              showDeals={isFeatureEnabled('coupons')}
               cities={cities ?? []}
               categories={categories ?? []}
               groups={groups}

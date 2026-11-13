@@ -12,6 +12,7 @@ import { TemplateTrustPanel } from '@/components/entity-page/templates/TemplateT
 import { EntityLinks } from '@/components/entity-page/EntityLinks'
 import { EntityAttributes } from '@/components/entity-page/EntityAttributes'
 import { EntityFaqSection } from '@/components/entity-page/EntityFaqSection'
+import { EntityDeals } from '@/components/entity-page/EntityDeals'
 import { EntityAtAGlance } from '@/components/entity-page/EntityAtAGlance'
 import { EntityMediaGallery } from '@/components/entity-page/EntityMediaGallery'
 import { EntityVideoSection } from '@/components/entity-page/EntityVideoSection'
@@ -41,9 +42,12 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
   const hasStory = Boolean(entity.details.description?.trim())
   const hasGallery = entity.images.length > 0
 
+  const hasDeals = (entity.deals?.length ?? 0) > 0
+
   const tabs: AnchorTab[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'visit', label: 'Visit' },
+    ...(hasDeals ? [{ id: 'deals', label: 'Deals' }] : []),
     ...(hasServices ? [{ id: 'services', label: 'Services' }] : []),
     ...(hasStory ? [{ id: 'about', label: 'About' }] : []),
     ...(hasGallery ? [{ id: 'gallery', label: 'Gallery' }] : []),
@@ -65,6 +69,8 @@ export function ProfessionalTemplate({ entity, initialSaved, userId, isOwner, ha
       <div id="visit" className="scroll-mt-32">
         <EntityAtAGlance entity={entity} />
       </div>
+
+      <EntityDeals listingId={entity.id} deals={entity.deals} now={new Date()} />
 
       {/* Main content + sticky trust aside */}
       <Reveal>

@@ -90,6 +90,7 @@ const NO_FILTERS: ResolvedFacetParams = {
   p_type_location_types: null,
   p_levels: null,
   p_open_to_partnerships: null,
+  p_has_deals: null,
 }
 
 type CategoryRow = {

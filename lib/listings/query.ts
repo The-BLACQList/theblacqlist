@@ -34,6 +34,8 @@ export interface ListingsParams {
   open_now?: boolean
   /** "Open to partnerships" (ticket 134). */
   partners?: boolean
+  /** "Has deals" (part G). */
+  deals?: boolean
   /** "Near You" — all three or none. Validated upstream (searchSchema). */
   lat?: number
   lng?: number
@@ -255,6 +257,7 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     attrs: params.attrs,
     open_now: params.open_now,
     partners: params.partners,
+    deals: params.deals,
     lat: params.lat,
     lng: params.lng,
     radius: params.radius,
@@ -303,6 +306,7 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   const deepFilter = !!(
     resolved.p_levels ||
     resolved.p_open_to_partnerships ||
+    resolved.p_has_deals ||
     resolved.p_attribute_values ||
     resolved.p_price_ranges ||
     resolved.p_open_now ||
