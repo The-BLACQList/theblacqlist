@@ -8,6 +8,7 @@ import {
   CategoryRequestUpdateEmail,
   type CategoryRequestOutcome,
 } from '@/lib/email/templates/category-request-update'
+import { toTitleCase } from '@/lib/text/title-case'
 
 // The admin side of "suggest a new category" on /add-business (ticket 126).
 // Three ways to close a request, each emails the owner:
@@ -76,7 +77,8 @@ export async function reviewCategoryRequestAction(
   let createdCategoryId: string | null = null
 
   if (decision === 'add') {
-    const name = formData.get('name')?.toString().trim() ?? ''
+    // Category names are labels, so they are saved in Title Case (ticket 205).
+    const name = toTitleCase(formData.get('name')?.toString().trim() ?? '')
     if (name.length < 2 || name.length > 60) {
       return { error: 'Category name must be 2 to 60 characters.' }
     }

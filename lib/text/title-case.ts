@@ -130,7 +130,10 @@ function capitalize(part: string): string {
 
 function caseWord(core: string, mode: 'cap' | 'lower'): string {
   const preserved = PRESERVE[core.toLowerCase()]
-  if (preserved) return preserved
+  // An all-caps word that only looks like a unit is an acronym ("HR & Staffing").
+  if (preserved && !(/^[A-Z]{2,}$/.test(core) && preserved === preserved.toLowerCase())) {
+    return preserved
+  }
   // A brand-style spelling (BLACQList, iOS) is checked per hyphen part, so
   // "Link-In-Bio" can still be corrected while "Wi-Fi" keeps its capitals.
   if (!core.includes('-') && hasInnerCapital(core)) return core

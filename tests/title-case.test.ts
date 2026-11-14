@@ -103,6 +103,8 @@ describe('toTitleCase edge cases', () => {
   it('keeps units lowercase', () => {
     expect(toTitleCase(' mi', { continuesBefore: true })).toBe(' mi')
     expect(toTitleCase('Within 5 mi')).toBe('Within 5 mi')
+    // An all-caps word that looks like a unit is an acronym.
+    expect(toTitleCase('HR & Staffing')).toBe('HR & Staffing')
   })
 
   it('keeps a minor word lowercase in the middle of a hyphenated word', () => {
