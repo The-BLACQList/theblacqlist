@@ -1,0 +1,37 @@
+[
+  {
+    "file": "lib/auth/password-policy.ts",
+    "text": "A lowercase letter",
+    "reason": "Password checklist item, read as a requirement sentence, not a title."
+  },
+  {
+    "file": "lib/auth/password-policy.ts",
+    "text": "An uppercase letter",
+    "reason": "Password checklist item, read as a requirement sentence, not a title."
+  },
+  {
+    "file": "lib/auth/password-policy.ts",
+    "text": "A number",
+    "reason": "Password checklist item, read as a requirement sentence, not a title."
+  },
+  {
+    "file": "lib/auth/password-policy.ts",
+    "text": "A symbol (like ! @ # $)",
+    "reason": "Password checklist item, read as a requirement sentence, not a title."
+  },
+  {
+    "file": "lib/media/banner.ts",
+    "text": "May look blurry on a computer",
+    "reason": "Photo-quality note shown under the banner picker, a status sentence."
+  },
+  {
+    "file": "lib/media/banner.ts",
+    "text": "Good on most screens",
+    "reason": "Photo-quality note shown under the banner picker, a status sentence."
+  },
+  {
+    "file": "lib/media/banner.ts",
+    "text": "Sharp on every screen",
+    "reason": "Photo-quality note shown under the banner picker, a status sentence."
+  }
+]
