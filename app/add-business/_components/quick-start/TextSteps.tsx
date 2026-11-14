@@ -73,14 +73,14 @@ export function AboutStep({ answers, onChange, problem, mode }: StepProps) {
   const creator = mode === 'creator'
   return (
     <>
-      <StepIntro title={creator ? 'What do you make?' : 'What do you do?'}>
+      <StepIntro title={creator ? 'What Do You Make?' : 'What Do You Do?'}>
         {creator
           ? 'One to three sentences, in your own words. What you post about and who it is for.'
           : 'One to three sentences, in your own words. Who you serve and what makes you, you.'}
       </StepIntro>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={FIELD_IDS.about} className={LABEL_CLASS}>
-          What you do
+          What You Do
         </label>
         <textarea
           id={FIELD_IDS.about}
@@ -111,12 +111,12 @@ export function TaglineStep({ answers, onChange, problem, mode }: StepProps) {
   const seed = firstSentence(answers.about)
   return (
     <>
-      <StepIntro title="Your one line">
+      <StepIntro title="Your One Line">
         The short line under your name. Leave it empty and we&apos;ll use your first sentence.
       </StepIntro>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={FIELD_IDS.tagline} className={LABEL_CLASS}>
-          One line <span className="font-normal text-charcoal-soft">(optional)</span>
+          One Line <span className="font-normal text-charcoal-soft">(optional)</span>
         </label>
         <input
           id={FIELD_IDS.tagline}
@@ -145,7 +145,7 @@ export function AttestStep({ answers, onChange, problem, mode }: StepProps) {
   const ally = answers.ownership === 'ally'
   return (
     <>
-      <StepIntro title="Last thing">
+      <StepIntro title="Last Thing">
         Our team reviews every page before it goes live. Next you can add photos, hours and more,
         and see how strong your page is.
       </StepIntro>
@@ -241,7 +241,7 @@ function CreatorAttestStep({ answers, onChange, problem }: StepProps) {
   const ally = answers.ownership === 'ally'
   return (
     <>
-      <StepIntro title="Last thing">
+      <StepIntro title="Last Thing">
         Our team reviews every page before it goes live. Next you can add your niche, platforms
         and photos, and see how strong your page is.
       </StepIntro>

@@ -61,7 +61,7 @@ export function PhotoPicker({ photos, roles, onChange, broken, onBroken }: Props
 
   return (
     <fieldset className="min-w-0">
-      <legend className="font-subhead text-base font-bold text-brand-black">Photos from your site</legend>
+      <legend className="font-subhead text-base font-bold text-brand-black">Photos from Your Site</legend>
       <p id="qs-photo-hint" className={cn(HINT_CLASS, 'mt-1')}>
         Pick a logo, a cover, and {GALLERY_MAX === 1 ? 'one page photo' : `up to ${GALLERY_MAX} page photos`}.{' '}
         <span className="tabular-nums">

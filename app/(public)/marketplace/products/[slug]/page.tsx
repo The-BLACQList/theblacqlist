@@ -167,7 +167,7 @@ export default async function ProductDetailPage({ params }: Props) {
             {product.description && (
               <div className="rounded-xl bg-white border border-charcoal/10 p-5">
                 <h2 className="font-subhead text-xs font-semibold uppercase tracking-wide text-charcoal-soft mb-2">
-                  About this product
+                  About This Product
                 </h2>
                 <p className="font-body text-sm text-charcoal leading-relaxed whitespace-pre-line">
                   {product.description}
@@ -209,7 +209,7 @@ export default async function ProductDetailPage({ params }: Props) {
               className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-faint hover:text-charcoal mt-2"
             >
               <ArrowLeft className="size-3" aria-hidden="true" />
-              Back to products
+              Back to Products
             </Link>
           </div>
         </div>

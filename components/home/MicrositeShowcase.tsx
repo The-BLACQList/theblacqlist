@@ -25,7 +25,7 @@ export function MicrositeShowcase({ items }: Props) {
             href="/for-business#start"
             className="inline-flex items-center justify-center h-11 px-6 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead text-sm font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
           >
-            Get your page
+            Get Your Page
           </Link>
         </div>
 

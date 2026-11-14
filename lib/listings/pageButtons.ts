@@ -20,24 +20,24 @@ import { getCtaLabel, type CTAType } from '@/types'
 
 /** The choices in the button pickers, in menu order. */
 export const CTA_OPTIONS: { value: CTAType; label: string; requiresUrl: boolean }[] = [
-  { value: 'book', label: 'Book an appointment', requiresUrl: true },
-  { value: 'order', label: 'Order now', requiresUrl: true },
-  { value: 'call', label: 'Call us', requiresUrl: false },
-  { value: 'message', label: 'Message us (your inbox)', requiresUrl: false },
-  { value: 'email', label: 'Email us', requiresUrl: true },
-  { value: 'visit', label: 'Visit us', requiresUrl: true },
-  { value: 'get-quote', label: 'Get a quote', requiresUrl: true },
-  { value: 'shop', label: 'Shop now', requiresUrl: true },
+  { value: 'book', label: 'Book an Appointment', requiresUrl: true },
+  { value: 'order', label: 'Order Now', requiresUrl: true },
+  { value: 'call', label: 'Call Us', requiresUrl: false },
+  { value: 'message', label: 'Message Us (Your Inbox)', requiresUrl: false },
+  { value: 'email', label: 'Email Us', requiresUrl: true },
+  { value: 'visit', label: 'Visit Us', requiresUrl: true },
+  { value: 'get-quote', label: 'Get a Quote', requiresUrl: true },
+  { value: 'shop', label: 'Shop Now', requiresUrl: true },
   { value: 'subscribe', label: 'Subscribe', requiresUrl: true },
-  { value: 'contact', label: 'Contact us', requiresUrl: true },
-  { value: 'commission', label: 'Commission work', requiresUrl: true },
+  { value: 'contact', label: 'Contact Us', requiresUrl: true },
+  { value: 'commission', label: 'Commission Work', requiresUrl: true },
   { value: 'inquire', label: 'Inquire', requiresUrl: true },
-  { value: 'get-tickets', label: 'Get tickets', requiresUrl: true },
+  { value: 'get-tickets', label: 'Get Tickets', requiresUrl: true },
   { value: 'rsvp', label: 'RSVP', requiresUrl: true },
   { value: 'register', label: 'Register', requiresUrl: true },
-  { value: 'learn-more', label: 'Learn more', requiresUrl: true },
-  { value: 'apply', label: 'Apply now', requiresUrl: true },
-  { value: 'buy-now', label: 'Buy now', requiresUrl: true },
+  { value: 'learn-more', label: 'Learn More', requiresUrl: true },
+  { value: 'apply', label: 'Apply Now', requiresUrl: true },
+  { value: 'buy-now', label: 'Buy Now', requiresUrl: true },
 ]
 
 /**

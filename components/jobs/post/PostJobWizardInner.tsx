@@ -142,7 +142,7 @@ export function PostJobWizardInner({
           <div role="alert" className="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 font-subhead text-sm text-red-800">
             {banner}{' '}
             <button type="button" onClick={() => void submit()} className="font-semibold underline min-h-11">
-              Try again
+              Try Again
             </button>
           </div>
         )}
@@ -167,7 +167,7 @@ export function PostJobWizardInner({
         {step === LAST && (
           <details className="mt-6 lg:hidden rounded-lg border border-charcoal/15 bg-white p-3">
             <summary className="cursor-pointer min-h-11 flex items-center font-subhead text-sm font-semibold">
-              See how it looks
+              See How It Looks
             </summary>
             <div className="mt-3">
               <JobPreview values={values} business={business} />

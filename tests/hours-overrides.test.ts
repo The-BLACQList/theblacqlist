@@ -113,7 +113,7 @@ describe('isOpenNow with overrides', () => {
     })
     expect(isOpenNow(HOURS, [{ ...closedToday, label: null }], NOW)).toEqual({
       open: false,
-      label: 'Closed today',
+      label: 'Closed Today',
     })
   })
   it('an open override replaces the day’s times', () => {

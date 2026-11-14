@@ -20,7 +20,7 @@ function SubmitButton() {
       className="w-full h-11 rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
     >
       {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-      {pending ? 'Signing in…' : 'Sign in'}
+      {pending ? 'Signing in…' : 'Sign In'}
     </button>
   )
 }
@@ -53,7 +53,7 @@ function SignInContent() {
 
   return (
     <>
-      <h1 className="font-headline text-[26px] text-brand-black mb-1">Welcome back</h1>
+      <h1 className="font-headline text-[26px] text-brand-black mb-1">Welcome Back</h1>
       <p className="font-subhead text-sm text-charcoal mb-6">
         {fromSave
           ? 'Sign in to save places. We’ll take you right back to this one.'
@@ -77,7 +77,7 @@ function SignInContent() {
           {generalError ?? callbackError}{' '}
           {isResetLinkExpired && !generalError && (
             <Link href="/forgot-password" className="underline underline-offset-2 font-semibold">
-              Request a new link
+              Request a New Link
             </Link>
           )}
         </div>
@@ -90,7 +90,7 @@ function SignInContent() {
         {/* Email */}
         <div className="flex flex-col gap-1">
           <label htmlFor="email" className="font-subhead text-sm font-semibold text-brand-black">
-            Email address
+            Email Address
           </label>
           <input
             id="email"
@@ -160,7 +160,7 @@ function SignInContent() {
               href="/forgot-password"
               className="inline-flex min-h-11 items-center text-xs font-subhead text-charcoal hover:text-brand-black underline underline-offset-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black/20"
             >
-              Forgot password?
+              Forgot Password?
             </Link>
           </div>
         </div>

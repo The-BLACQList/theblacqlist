@@ -45,7 +45,7 @@ function SendButton() {
       className="inline-flex min-h-11 items-center gap-2 rounded-full bg-amber-gold px-5 py-2 font-subhead text-sm font-bold text-brand-black transition-colors hover:bg-light-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-      {pending ? 'Sending' : 'Send report'}
+      {pending ? 'Sending' : 'Send Report'}
     </button>
   )
 }
@@ -87,7 +87,7 @@ function ReportProblemForm({ pagePath }: { pagePath: string }) {
     <form action={action} className="mt-2" noValidate>
       <input type="hidden" name="page_path" value={pagePath} />
       <label htmlFor="report-problem-body" className="font-subhead text-sm text-charcoal">
-        What went wrong?
+        What Went Wrong?
       </label>
       <textarea
         id="report-problem-body"
@@ -152,7 +152,7 @@ export function ReportProblemButton() {
               the absolutely-positioned close button. */}
           <div className="p-6">
             <DialogHeader className="pr-8">
-              <DialogTitle>Report a problem</DialogTitle>
+              <DialogTitle>Report a Problem</DialogTitle>
               <DialogDescription>
                 Something broken, confusing, or missing on this page? Tell us here. We read
                 every report and reply if we need more detail.

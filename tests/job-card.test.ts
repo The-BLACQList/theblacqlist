@@ -159,7 +159,7 @@ describe('JobCard', () => {
     expect(html).toContain('Sable Coffee')
     expect(html).toContain('Barista')
     expect(html).toContain(`$18${EN_DASH}$22 an hour`)
-    expect(html).toContain('Full-time')
+    expect(html).toContain('Full-Time')
     expect(html).toContain('Remote')
     expect(html).toContain('Closes Nov 15')
   })

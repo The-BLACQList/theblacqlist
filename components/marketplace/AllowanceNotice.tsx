@@ -42,10 +42,10 @@ export function AllowanceNotice({ allowances, names, kind, growthOpen }: Allowan
           <div className="space-y-1">
             <h2 className="font-subhead text-sm font-semibold text-brand-black">
               {canUpgrade
-                ? `Your plan doesn't include a storefront`
+                ? `Your Plan Doesn't Include a Storefront`
                 : needsUpgrade
-                  ? `Marketplace selling isn't open yet`
-                  : `You've used all your marketplace listings`}
+                  ? `Marketplace Selling Isn't Open Yet`
+                  : `You've Used All Your Marketplace Listings`}
             </h2>
             <p className="font-body text-sm text-charcoal-soft">
               {canUpgrade
@@ -88,7 +88,13 @@ export function AllowanceNotice({ allowances, names, kind, growthOpen }: Allowan
           }
           className="inline-flex items-center h-10 px-5 rounded-full bg-brand-black text-white font-subhead font-bold text-sm hover:bg-charcoal transition-colors min-h-[44px]"
         >
-          {canUpgrade ? 'See Growth' : needsUpgrade ? 'Join the waitlist' : `Manage your ${noun}s`}
+          {canUpgrade
+            ? 'See Growth'
+            : needsUpgrade
+              ? 'Join the Waitlist'
+              : kind === 'product'
+                ? 'Manage Your Products'
+                : 'Manage Your Services'}
         </Link>
       </div>
     )

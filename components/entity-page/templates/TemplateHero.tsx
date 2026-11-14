@@ -111,7 +111,7 @@ export function TemplateHero({ entity, initialSaved = false, variant, mode = 'li
   const levelHref = levelFilterHref(entity.primary_level)
   const alsoLevels = isCreative
     ? []
-    : extraLevelLabels(entity.extra_levels).filter((l) => l !== 'Local business')
+    : extraLevelLabels(entity.extra_levels).filter((l) => l !== 'Local Business')
   // When the chip shows the category, the line under the name keeps the city only.
   const locationLine = [
     categoryHref ? null : entity.category?.name,
@@ -210,7 +210,7 @@ export function TemplateHero({ entity, initialSaved = false, variant, mode = 'li
               href="/about#who-we-feature"
               className="font-semibold text-light-gold underline underline-offset-2 hover:text-white"
             >
-              What this means
+              What This Means
             </Link>
           </p>
         )}

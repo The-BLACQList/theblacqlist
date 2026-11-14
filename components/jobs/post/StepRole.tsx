@@ -26,7 +26,7 @@ export function StepRole({ values, errors, set, businesses, categories, readines
     return (
       <section aria-labelledby="who-can-post-heading" className="rounded-lg border border-charcoal/20 bg-pale-lavender p-4">
         <h2 id="who-can-post-heading" className="font-subhead text-sm font-semibold text-brand-black">
-          Who can post a job
+          Who Can Post a Job
         </h2>
         <p className="font-subhead text-sm text-charcoal mt-1 mb-4">
           Jobs are posted by businesses on BLACQList. You need a page you own, and it needs to be live.
@@ -49,7 +49,7 @@ export function StepRole({ values, errors, set, businesses, categories, readines
           href="/add-business"
           className="mt-3 inline-flex h-11 items-center rounded-full bg-amber-gold px-5 font-subhead text-sm font-bold text-brand-black"
         >
-          Add your business
+          Add Your Business
         </Link>
       </div>
     )
@@ -57,7 +57,7 @@ export function StepRole({ values, errors, set, businesses, categories, readines
 
   return (
     <div className="flex flex-col gap-5">
-      <Field id="hiringListingId" label="Hiring business" required error={errors.hiringListingId}>
+      <Field id="hiringListingId" label="Hiring Business" required error={errors.hiringListingId}>
         {({ describedBy, invalid }) => (
           <select
             id="hiringListingId"
@@ -79,7 +79,7 @@ export function StepRole({ values, errors, set, businesses, categories, readines
         )}
       </Field>
 
-      <Field id="name" label="Job title" required error={errors.name}>
+      <Field id="name" label="Job Title" required error={errors.name}>
         {({ describedBy, invalid }) => (
           <input
             id="name"
@@ -98,7 +98,7 @@ export function StepRole({ values, errors, set, businesses, categories, readines
 
       <Field
         id="tagline"
-        label="One-line summary"
+        label="One-Line Summary"
         required
         hint="Shown under the title in search. 10 to 120 characters."
         error={errors.tagline}
@@ -152,7 +152,7 @@ export function StepRole({ values, errors, set, businesses, categories, readines
       </Field>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field id="employmentType" label="Kind of work" required error={errors.employmentType}>
+        <Field id="employmentType" label="Kind of Work" required error={errors.employmentType}>
           {({ describedBy, invalid }) => (
             <select
               id="employmentType"
@@ -173,7 +173,7 @@ export function StepRole({ values, errors, set, businesses, categories, readines
             </select>
           )}
         </Field>
-        <Field id="workplaceType" label="Where it is done" required error={errors.workplaceType}>
+        <Field id="workplaceType" label="Where It Is Done" required error={errors.workplaceType}>
           {({ describedBy, invalid }) => (
             <select
               id="workplaceType"

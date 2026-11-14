@@ -126,7 +126,7 @@ export default async function PricingPage() {
       if (!value || isTierOpen(availability, p.slug)) return []
       return [{ value, label: p.name }]
     }),
-    { value: 'pricing-addons', label: 'Add-ons (Spotlight or Boost)' },
+    { value: 'pricing-addons', label: 'Add-Ons (Spotlight or Boost)' },
   ]
   const closedTiers = waitlistOptions
     .filter((o) => o.value !== 'pricing-addons')
@@ -151,7 +151,7 @@ export default async function PricingPage() {
       {/* Plan grid */}
       <Section variant="white">
         <SectionHeading subtitle="Start free and upgrade any time. Annual billing gives you two months free.">
-          Plans for every stage of growth
+          Plans for Every Stage of Growth
         </SectionHeading>
 
         <PricingPlans availability={availability} />
@@ -162,7 +162,7 @@ export default async function PricingPage() {
         <SectionHeading
           subtitle={`${stillBuilding} are still being built. Tell us which one you want and we'll email you the day it opens, with no charge until then.`}
         >
-          Waiting on something?
+          Waiting on Something?
         </SectionHeading>
 
         <LaunchWaitlist options={waitlistOptions} id="pricing-waitlist" />
@@ -171,7 +171,7 @@ export default async function PricingPage() {
       {/* Add-ons */}
       <Section variant="cream">
         <SectionHeading subtitle="Extra visibility beyond your monthly plan. Neither is open for purchase yet — add your name and we'll tell you when it is.">
-          Add-ons & Visibility Boosts
+          Add-Ons & Visibility Boosts
         </SectionHeading>
 
         {/* No price is shown on either card. Both had one ($299–$999/mo and
@@ -194,7 +194,7 @@ export default async function PricingPage() {
               asChild
               className="w-full rounded-full bg-brand-black text-white font-body font-bold hover:bg-charcoal min-h-[44px] h-auto text-sm"
             >
-              <Link href="/for-sponsors">Talk to us about sponsorship</Link>
+              <Link href="/for-sponsors">Talk to Us About Sponsorship</Link>
             </Button>
           </div>
 
@@ -215,7 +215,7 @@ export default async function PricingPage() {
               {/* Was /sign-up — a button labelled "Join the waitlist" that
                   created an account and captured no interest. It now reaches the
                   form that actually records it. */}
-              <Link href="#pricing-waitlist">Join the waitlist</Link>
+              <Link href="#pricing-waitlist">Join the Waitlist</Link>
             </Button>
           </div>
         </div>
@@ -255,7 +255,7 @@ export default async function PricingPage() {
             id="sponsor-teaser-heading"
             className="font-headline text-3xl md:text-4xl text-white mb-4"
           >
-            Sponsor the platform powering
+            Sponsor the Platform Powering
             <br className="hidden sm:block" /> Black economic discovery.
           </h2>
           <p className="font-subhead text-pale-lavender text-base max-w-lg mx-auto mb-8">

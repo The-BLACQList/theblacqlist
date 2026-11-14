@@ -131,7 +131,7 @@ for (const { variant, template, cta } of VARIANTS) {
       // inert wrapper, so it cannot record deal_code_copied for a fake page.
       const dealCode = page.locator('[data-section="deals"] [inert] button').first()
       await expect(dealCode).toBeAttached()
-      await expect(dealCode).toContainText('Copy code')
+      await expect(dealCode).toContainText('Copy Code')
 
       // No held link opened a tab behind the page's back.
       expect(page.context().pages()).toHaveLength(1)

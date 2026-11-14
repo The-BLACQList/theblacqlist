@@ -81,7 +81,7 @@ describe('/events index page', () => {
 
   it('gives a page past the last result a way back instead of a way to post', () => {
     expect(eventsSrc).toContain('Nothing on this page')
-    expect(eventsSrc).toContain('Back to the first page')
+    expect(eventsSrc).toContain('Back to the First Page')
   })
 })
 
@@ -105,7 +105,7 @@ describe('/jobs index page', () => {
 
   it('gives a page past the last result a way back instead of a way to post', () => {
     expect(jobsSrc).toContain('Nothing on this page')
-    expect(jobsSrc).toContain('Back to the first page')
+    expect(jobsSrc).toContain('Back to the First Page')
   })
 })
 

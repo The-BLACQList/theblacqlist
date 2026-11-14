@@ -61,7 +61,7 @@ export function ProfessionalTemplate({
   const tabs: AnchorTab[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'visit', label: 'Visit' },
-    ...(hasFindUs ? [{ id: 'find-us', label: 'Find us at' }] : []),
+    ...(hasFindUs ? [{ id: 'find-us', label: 'Find Us At' }] : []),
     ...(hasDeals ? [{ id: 'deals', label: 'Deals' }] : []),
     ...(hasServices ? [{ id: 'services', label: 'Services' }] : []),
     ...(hasStory ? [{ id: 'about', label: 'About' }] : []),
@@ -154,8 +154,8 @@ export function ProfessionalTemplate({
                 {hasGallery && (
                   <section aria-labelledby="featured-work-heading">
                     <TemplateSectionHeading
-                      kicker="Featured work"
-                      heading="Recent work"
+                      kicker="Featured Work"
+                      heading="Recent Work"
                       headingId="featured-work-heading"
                     />
                     <PortfolioReel images={entity.images} />

@@ -56,12 +56,12 @@ export function SiloList({ businesses, cities, note, action }: Props) {
         )}
         <FlowNodeTable
           nodes={businessRows}
-          title="Businesses, by money spent"
+          title="Businesses, by Money Spent"
           linkToEntity
           emptyText="No business has enough receipts counted yet to show a total."
         />
         {cities.length > 0 && (
-          <FlowNodeTable nodes={[...cities]} title="Top cities" emptyText="No cities yet." />
+          <FlowNodeTable nodes={[...cities]} title="Top Cities" emptyText="No cities yet." />
         )}
       </div>
     </div>

@@ -26,7 +26,7 @@ export function EntityFindUsAt({ stockists }: Props) {
           id="find-us-heading"
           className="font-headline text-[22px] md:text-[28px] text-brand-black mb-6"
         >
-          Find us at
+          Find Us At
         </h2>
         <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {stockists.map((s) => {
@@ -57,7 +57,7 @@ export function EntityFindUsAt({ stockists }: Props) {
                   {!s.nationwide && rest.length > 0 && (
                     <details className="mt-1 font-body text-sm text-charcoal">
                       <summary className="cursor-pointer text-charcoal-soft hover:text-brand-black">
-                        Show all {areas.length} places
+                        Show All {areas.length} Places
                       </summary>
                       <p className="mt-1 break-words">{rest.join(' · ')}</p>
                     </details>

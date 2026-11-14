@@ -38,7 +38,7 @@ export default async function GuidesPage() {
           City Guides
         </p>
         <h1 className="font-headline text-4xl md:text-5xl text-brand-black leading-tight mb-4">
-          Your insider guide to Black-owned America
+          Your Insider Guide to Black-Owned America
         </h1>
         <p className="font-body text-base text-charcoal max-w-xl leading-relaxed">
           Deep-dive guides to Black-owned businesses, neighborhoods, and culture in cities across
@@ -61,7 +61,7 @@ export default async function GuidesPage() {
                 href="/discover"
                 className="inline-flex items-center justify-center mt-5 h-10 px-6 rounded-full border border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors"
               >
-                Explore businesses now
+                Explore Businesses Now
               </Link>
             </div>
           ) : (

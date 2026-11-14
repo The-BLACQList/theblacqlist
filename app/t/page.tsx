@@ -10,7 +10,7 @@ import { StartTourButton } from './StartTourButton'
 // Plan: docs/blacqlist/ops/tester-week/one-tap-link-plan-2026-10-01.md.
 
 export const metadata: Metadata = {
-  title: 'Start your tour',
+  title: 'Start Your Tour',
   robots: { index: false, follow: false },
   referrer: 'no-referrer',
 }

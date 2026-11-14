@@ -62,7 +62,7 @@ export function CreativeTemplate({
   const tabs: AnchorTab[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'visit', label: 'Visit' },
-    ...(hasFindUs ? [{ id: 'find-us', label: 'Find us at' }] : []),
+    ...(hasFindUs ? [{ id: 'find-us', label: 'Find Us At' }] : []),
     ...(hasDeals ? [{ id: 'deals', label: 'Deals' }] : []),
     ...(hasPortfolio ? [{ id: 'portfolio', label: 'Portfolio' }] : []),
     ...(hasCapabilities ? [{ id: 'capabilities', label: 'Capabilities' }] : []),
@@ -132,7 +132,7 @@ export function CreativeTemplate({
                     className="scroll-mt-32"
                   >
                     <TemplateSectionHeading
-                      kicker="Selected work"
+                      kicker="Selected Work"
                       heading="Portfolio"
                       headingId="portfolio-heading"
                     />
@@ -147,7 +147,7 @@ export function CreativeTemplate({
               <SectionMark id="highlights">
                 <EntityHighlightsSection
                   highlights={entity.highlights}
-                  title="How a commission works"
+                  title="How a Commission Works"
                   bare
                 />
               </SectionMark>

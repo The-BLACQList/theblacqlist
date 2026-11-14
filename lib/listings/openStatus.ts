@@ -14,7 +14,7 @@ export function formatTime(t: string): string {
 
 /** The status of one day's hours at the given moment. */
 function statusFor(today: DayHours, now: Date): { open: boolean; label: string } {
-  if (today.closed) return { open: false, label: 'Closed today' }
+  if (today.closed) return { open: false, label: 'Closed Today' }
 
   const [oh, om] = today.open.split(':').map(Number)
   const [ch, cm] = today.close.split(':').map(Number)
@@ -28,7 +28,7 @@ function statusFor(today: DayHours, now: Date): { open: boolean; label: string }
   if (nowMins < openMins) {
     return { open: false, label: `Closed · Opens ${formatTime(today.open)}` }
   }
-  return { open: false, label: 'Closed now' }
+  return { open: false, label: 'Closed Now' }
 }
 
 /**
@@ -50,7 +50,7 @@ export function isOpenNow(
     if (override.closed) {
       return {
         open: false,
-        label: override.label ? `Closed today · ${override.label}` : 'Closed today',
+        label: override.label ? `Closed today · ${override.label}` : 'Closed Today',
       }
     }
     const special = overrideDayHours(override)

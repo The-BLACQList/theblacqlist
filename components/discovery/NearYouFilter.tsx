@@ -109,7 +109,7 @@ export function NearYouFilter({ cities, showCityFallback = true }: NearYouFilter
             onClick={clearLocation}
             className="font-subhead text-sm text-charcoal underline underline-offset-2 hover:text-brand-black min-h-11"
           >
-            Turn off location
+            Turn Off Location
           </button>
           <p className="font-subhead text-xs text-charcoal-soft">
             Some businesses have not been mapped yet. Those will not show up in a
@@ -129,7 +129,7 @@ export function NearYouFilter({ cities, showCityFallback = true }: NearYouFilter
             ) : (
               <MapPin className="size-4" aria-hidden="true" />
             )}
-            {state === 'locating' ? 'Finding you' : 'Use my location'}
+            {state === 'locating' ? 'Finding You' : 'Use My Location'}
           </button>
 
           {failure ? (
@@ -142,7 +142,7 @@ export function NearYouFilter({ cities, showCityFallback = true }: NearYouFilter
                   onClick={locate}
                   className="font-subhead text-sm text-brand-black underline underline-offset-2 min-h-11"
                 >
-                  Try again
+                  Try Again
                 </button>
               ) : null}
 

@@ -20,7 +20,7 @@ function SubmitButton() {
       className="w-full h-11 rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
     >
       {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-      {pending ? 'Saving…' : 'Set new password'}
+      {pending ? 'Saving…' : 'Set New Password'}
     </button>
   )
 }
@@ -41,7 +41,7 @@ export default function ResetPasswordPage() {
 
   return (
     <>
-      <h1 className="font-headline text-[26px] text-brand-black mb-1">Set a new password</h1>
+      <h1 className="font-headline text-[26px] text-brand-black mb-1">Set a New Password</h1>
       <p className="font-subhead text-sm text-charcoal mb-6">
         Choose a strong password for your account.
       </p>
@@ -54,7 +54,7 @@ export default function ResetPasswordPage() {
           {generalError}{' '}
           {generalError.includes('expired') && (
             <Link href="/forgot-password" className="underline underline-offset-2 font-semibold">
-              Request a new link
+              Request a New Link
             </Link>
           )}
         </div>
@@ -64,7 +64,7 @@ export default function ResetPasswordPage() {
         {/* New password */}
         <div className="flex flex-col gap-1">
           <label htmlFor="password" className="font-subhead text-sm font-semibold text-brand-black">
-            New password
+            New Password
           </label>
           <div className="relative">
             <input
@@ -115,7 +115,7 @@ export default function ResetPasswordPage() {
             htmlFor="confirmPassword"
             className="font-subhead text-sm font-semibold text-brand-black"
           >
-            Confirm new password
+            Confirm New Password
           </label>
           <div className="relative">
             <input

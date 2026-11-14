@@ -11,28 +11,28 @@ export const metadata: Metadata = {
 const CONTACT_CHANNELS = [
   {
     icon: MessageSquare,
-    heading: 'General inquiries',
+    heading: 'General Inquiries',
     body: 'Questions about the platform, feedback, or anything else.',
     email: 'hello@theblacqlist.com',
     label: 'hello@theblacqlist.com',
   },
   {
     icon: Briefcase,
-    heading: 'Business support',
+    heading: 'Business Support',
     body: 'Help claiming your page, editing your listing, or navigating your dashboard.',
     email: 'business@theblacqlist.com',
     label: 'business@theblacqlist.com',
   },
   {
     icon: Mail,
-    heading: 'Press & media',
+    heading: 'Press & Media',
     body: 'Press inquiries, interview requests, and media kit.',
     email: 'press@theblacqlist.com',
     label: 'press@theblacqlist.com',
   },
   {
     icon: Shield,
-    heading: 'Privacy & legal',
+    heading: 'Privacy & Legal',
     body: 'Data requests, privacy concerns, and legal inquiries.',
     email: 'privacy@theblacqlist.com',
     label: 'privacy@theblacqlist.com',
@@ -74,7 +74,7 @@ export default function ContactPage() {
 
       <Section variant="cream">
         <div className="max-w-2xl">
-          <h2 className="font-headline text-2xl text-brand-black">Response times</h2>
+          <h2 className="font-headline text-2xl text-brand-black">Response Times</h2>
           <div className="mt-6 space-y-4">
             {[
               { type: 'Business support', time: 'Within 48 hours' },

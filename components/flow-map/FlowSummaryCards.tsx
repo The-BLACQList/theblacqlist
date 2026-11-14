@@ -35,14 +35,14 @@ export function FlowSummaryCards({
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-      <SummaryCard label="Total spent" value={dollars} subtext="Reported community spend" />
+      <SummaryCard label="Total Spent" value={dollars} subtext="Reported community spend" />
       <SummaryCard
-        label="Businesses supported"
+        label="Businesses Supported"
         value={uniqueBusinesses.toLocaleString()}
         subtext="Unique Black-owned businesses"
       />
       <SummaryCard
-        label="Tracked purchases"
+        label="Tracked Purchases"
         value={totalTransactions.toLocaleString()}
         subtext="Receipts approved by an admin"
       />

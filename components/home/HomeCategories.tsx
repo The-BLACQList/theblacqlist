@@ -39,7 +39,7 @@ export function HomeCategories({ categories }: Props) {
           Explore by category
         </p>
         <h2 id="categories-heading" className="font-headline text-[26px] md:text-[32px] text-brand-black">
-          What are you looking for?
+          What Are You Looking For?
         </h2>
 
         {/* Rows are set by the *worst* tile rather than the typical one. The
@@ -112,7 +112,7 @@ export function HomeCategories({ categories }: Props) {
             href="/discover"
             className="font-subhead text-sm font-bold text-amber hover:text-brand-black underline underline-offset-2 transition-colors duration-150"
           >
-            All categories on Discover →
+            All Categories on Discover →
           </Link>
         </p>
       </div>

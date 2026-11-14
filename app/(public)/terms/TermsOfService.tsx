@@ -360,7 +360,7 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
               )}
             </p>
             <h3 className="font-subhead font-semibold text-brand-black mt-4">
-              Copyright complaints (DMCA)
+              Copyright Complaints (DMCA)
             </h3>
             <p>
               We respect intellectual property rights and respond to valid notices of alleged
@@ -575,7 +575,7 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
               href="/privacy"
               className="text-amber font-bold text-lg hover:underline"
             >
-              Read our Privacy Policy →
+              Read Our Privacy Policy →
             </Link>
           </div>
         </div>

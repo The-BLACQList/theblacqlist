@@ -110,7 +110,7 @@ export function EntityOfferingsSection({ entity }: Props) {
             className="mt-6 font-subhead text-sm font-semibold text-amber hover:text-light-gold underline underline-offset-2 transition-colors"
             aria-expanded={expanded}
           >
-            {expanded ? 'Show fewer services' : `Show all ${services.length} services`}
+            {expanded ? 'Show Fewer Services' : `Show All ${services.length} Services`}
           </button>
         )}
       </div>

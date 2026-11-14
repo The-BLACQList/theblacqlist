@@ -409,20 +409,20 @@ export function SiloExperience({
       listNote = 'We show the list first on this device to save battery.'
       listAction = (
         <button type="button" className="silo-retry" onClick={() => setMapAnyway(true)}>
-          Show the map anyway
+          Show the Map Anyway
         </button>
       )
     } else if (contextLost || chunkFailed) {
       listNote = contextLost ? 'The map stopped drawing.' : "The map didn't load."
       listAction = (
         <button type="button" className="silo-retry" onClick={retryMap}>
-          Try the map again
+          Try the Map Again
         </button>
       )
     } else if (listChosen) {
       listAction = (
         <button type="button" className="silo-retry" onClick={toggleList}>
-          Back to the map
+          Back to the Map
         </button>
       )
     }
@@ -505,12 +505,12 @@ export function SiloExperience({
       <div className="silo-track" data-mode={showList ? 'list' : 'map'}>
         {!showList && (
           <a className="silo-skip" href="#silo-after">
-            Skip past the map
+            Skip Past the Map
           </a>
         )}
         {!showList && (
           <button type="button" className="silo-skip" onClick={toggleList}>
-            Explore as a list
+            Explore as a List
           </button>
         )}
         <section
@@ -611,7 +611,7 @@ export function SiloExperience({
           <div className="dock" role="toolbar" aria-label="Map controls">
             {you && (
               <button type="button" className="find" onClick={findMe}>
-                Find me
+                Find Me
               </button>
             )}
             <button
@@ -730,7 +730,7 @@ export function SiloExperience({
                   aria-pressed={reducedMotion || paused}
                   onClick={togglePause}
                 >
-                  {reducedMotion ? 'Motion is off' : 'Pause motion'}
+                  {reducedMotion ? 'Motion Is Off' : 'Pause Motion'}
                 </button>
               </div>
             </div>
@@ -743,7 +743,7 @@ export function SiloExperience({
                   aria-pressed={showList}
                   onClick={toggleList}
                 >
-                  Explore as a list
+                  Explore as a List
                 </button>
               </div>
             </div>
@@ -752,7 +752,7 @@ export function SiloExperience({
               <ShortcutsToggle on={shortcutsOn} onChange={changeShortcuts} />
             </div>
             <div className="more-group">
-              <h4>How we count</h4>
+              <h4>How We Count</h4>
               <p>
                 Every published business is on the map. A line appears once a business has at least{' '}
                 {AGGREGATE_MIN_TRANSACTIONS} counted receipts, so no total can point back at one

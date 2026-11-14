@@ -38,7 +38,7 @@ export default async function CollectionsPage() {
           Collections
         </p>
         <h1 className="font-headline text-4xl md:text-5xl text-brand-black leading-tight mb-4">
-          Curated for your community
+          Curated for Your Community
         </h1>
         <p className="font-body text-base text-charcoal max-w-xl leading-relaxed">
           Hand-picked lists of Black-owned businesses by occasion, city, and theme.
@@ -77,7 +77,7 @@ export default async function CollectionsPage() {
               href="/discover"
               className="inline-flex items-center justify-center h-11 px-6 rounded-full border border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors"
             >
-              Browse all
+              Browse All
             </Link>
           </div>
         </div>

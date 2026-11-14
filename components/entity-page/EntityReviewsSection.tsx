@@ -179,7 +179,7 @@ export function EntityReviewsSection({ entity, userId, isOwner, hasReviewed }: P
             href={`/sign-in?next=${encodeURIComponent(returnTo)}`}
             className="inline-flex min-h-11 items-center font-subhead text-sm font-semibold text-brand-black underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black/40"
           >
-            Sign in to write the first one
+            Sign In to Write the First One
           </Link>
         </div>
       </section>
@@ -239,7 +239,7 @@ export function EntityReviewsSection({ entity, userId, isOwner, hasReviewed }: P
             id="reviews-heading"
             className="font-headline text-[22px] md:text-[28px] text-brand-black mb-8"
           >
-            Write the first review
+            Write the First Review
           </h2>
         )}
 
@@ -256,7 +256,7 @@ export function EntityReviewsSection({ entity, userId, isOwner, hasReviewed }: P
         {canReview && (
           <div className="max-w-xl">
             {hasReviews && (
-              <h3 className="font-headline text-lg text-brand-black mb-4">Share your experience</h3>
+              <h3 className="font-headline text-lg text-brand-black mb-4">Share Your Experience</h3>
             )}
             {/* Behind a trigger on purpose — the form carries a Turnstile
                 widget, and mounting it here made a captcha run on every listing

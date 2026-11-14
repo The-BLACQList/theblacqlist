@@ -35,9 +35,9 @@ export function factsFor(details: FactSource): FactItem[] {
     })
   }
   if (details.accepts_reservations === true) {
-    facts.push({ key: 'reservations', label: 'Takes reservations' })
+    facts.push({ key: 'reservations', label: 'Takes Reservations' })
   } else if (details.accepts_reservations === false) {
-    facts.push({ key: 'reservations', label: 'Walk-ins only' })
+    facts.push({ key: 'reservations', label: 'Walk-Ins Only' })
   }
   return facts
 }

@@ -31,7 +31,7 @@ export function ClaimWithdrawButton({ claimId }: Props) {
           className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-red-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isPending && <Loader2 className="size-3 animate-spin" aria-hidden="true" />}
-          {isPending ? 'Withdrawing…' : 'Withdraw claim'}
+          {isPending ? 'Withdrawing…' : 'Withdraw Claim'}
         </button>
       </form>
       {state && 'error' in state && (

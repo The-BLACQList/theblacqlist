@@ -27,7 +27,7 @@ export function NowHiringView({ businessId, roles, total }: ViewProps) {
           id="now-hiring-heading"
           className="font-headline text-[22px] md:text-[28px] text-brand-black mb-6"
         >
-          Now hiring
+          Now Hiring
         </h2>
         <CardGrid cols={{ base: 1, sm: 2, lg: 3 }} gap="md">
           {roles.map((r) => (

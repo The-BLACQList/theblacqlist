@@ -69,7 +69,7 @@ export function MobileFilterSheet(props: FacetSidebarProps) {
             onClick={() => setOpen(false)}
             className="w-full h-11 rounded-full bg-brand-black text-white font-subhead font-bold text-sm hover:bg-charcoal transition-colors"
           >
-            Show results
+            Show Results
           </button>
         </div>
       </SheetContent>

@@ -11,7 +11,7 @@ export function EntityFaqSection({ faqs }: { faqs: EntityFaq[] }) {
           id="faq-heading"
           className="font-headline text-[22px] md:text-[28px] text-brand-black mb-6"
         >
-          Frequently asked questions
+          Frequently Asked Questions
         </h2>
         <div className="md:max-w-3xl divide-y divide-charcoal/10 border-y border-charcoal/10">
           {faqs.map((faq) => (

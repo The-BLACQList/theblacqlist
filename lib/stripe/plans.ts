@@ -64,7 +64,7 @@ export const PLANS: PlanMeta[] = [
       'Community reviews, checked before they post',
       'Claim it and get Verified, free',
     ],
-    cta: 'Get started',
+    cta: 'Get Started',
     highlighted: false,
   },
   {

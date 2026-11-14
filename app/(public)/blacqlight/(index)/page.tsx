@@ -162,14 +162,14 @@ export default async function BLACQLightPage({ searchParams }: Props) {
                     id="more-heading"
                     className="font-headline font-medium text-[30px] md:text-[40px] leading-[1.1] text-ink"
                   >
-                    More stories
+                    More Stories
                   </h2>
                   {!showAll && rest.length > MORE_COUNT && (
                     <Link
                       href="/blacqlight?all=1"
                       className={`${pill} border border-brand-black text-brand-black hover:bg-brand-black hover:text-off-white`}
                     >
-                      All stories
+                      All Stories
                     </Link>
                   )}
                 </div>
@@ -202,7 +202,7 @@ export default async function BLACQLightPage({ searchParams }: Props) {
                     id="directory-heading"
                     className="font-headline font-medium text-[26px] md:text-[34px] leading-[1.1] text-ink"
                   >
-                    The businesses in these stories
+                    The Businesses in These Stories
                   </h2>
                 </div>
                 <ul className="flex flex-wrap gap-3 list-none m-0 p-0">
@@ -240,7 +240,7 @@ function Empty() {
           href="/discover"
           className={`${pill} mt-5 border border-brand-black text-brand-black hover:bg-brand-black hover:text-white`}
         >
-          Explore businesses now
+          Explore Businesses Now
         </Link>
       </Container>
     </section>
@@ -263,7 +263,7 @@ function LoadFailure() {
           prefetch={false}
           className={`${pill} mt-5 bg-gold text-brand-black hover:bg-light-gold`}
         >
-          Try again
+          Try Again
         </Link>
       </Container>
     </section>

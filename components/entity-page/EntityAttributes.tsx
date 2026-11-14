@@ -24,7 +24,7 @@ export function EntityAttributes({ attributes, bare = false }: Props) {
           id="attributes-heading"
           className="font-headline text-[22px] md:text-[28px] text-brand-black mb-6"
         >
-          What this business offers
+          What This Business Offers
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-6">

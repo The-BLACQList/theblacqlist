@@ -95,6 +95,22 @@ describe('toTitleCase edge cases', () => {
     expect(toTitleCase(' of the week', { continuesBefore: true })).toBe(' of the Week')
   })
 
+  it('keeps "The" in The Collective', () => {
+    expect(toTitleCase('See the Collective')).toBe('See The Collective')
+    expect(toTitleCase('A place in The Collective')).toBe('A Place in The Collective')
+  })
+
+  it('keeps units lowercase', () => {
+    expect(toTitleCase(' mi', { continuesBefore: true })).toBe(' mi')
+    expect(toTitleCase('Within 5 mi')).toBe('Within 5 mi')
+  })
+
+  it('keeps a minor word lowercase in the middle of a hyphenated word', () => {
+    expect(toTitleCase('Your link-in-bio page')).toBe('Your Link-in-Bio Page')
+    expect(toTitleCase('Up-to-date hours')).toBe('Up-to-Date Hours')
+    expect(toTitleCase('Your Link-In-Bio Page')).toBe('Your Link-in-Bio Page')
+  })
+
   it('leaves HTML entities intact', () => {
     expect(toTitleCase('Don&apos;t send')).toBe('Don&apos;t Send')
     expect(toTitleCase('Photos &amp; video')).toBe('Photos &amp; Video')

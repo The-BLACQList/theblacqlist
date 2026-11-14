@@ -121,12 +121,12 @@ function RadiusEmptyState({
       <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4">
         {widerRadiusUrl && (
           <Link scroll={false} href={widerRadiusUrl} className={linkClass}>
-            Search a wider area
+            Search a Wider Area
           </Link>
         )}
         {clearLocationUrl && (
           <Link scroll={false} href={clearLocationUrl} className={linkClass}>
-            Browse every business
+            Browse Every Business
           </Link>
         )}
       </div>
@@ -152,7 +152,7 @@ function RadiusUnavailableState({ clearLocationUrl }: { clearLocationUrl?: strin
       </p>
       {clearLocationUrl && (
         <Link scroll={false} href={clearLocationUrl} className={`${linkClass} mt-4`}>
-          Browse every business
+          Browse Every Business
         </Link>
       )}
     </div>
@@ -179,7 +179,7 @@ function FiltersUnavailableState({ clearFiltersUrl }: { clearFiltersUrl?: string
       </p>
       {clearFiltersUrl && (
         <Link scroll={false} href={clearFiltersUrl} className={`${linkClass} mt-4`}>
-          Browse every business
+          Browse Every Business
         </Link>
       )}
     </div>
@@ -207,11 +207,11 @@ function LevelEmptyState({
       </p>
       <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 mt-4">
         <Link href="/add-business" className={linkClass}>
-          Add a business
+          Add a Business
         </Link>
         {clearFiltersUrl && (
           <Link scroll={false} href={clearFiltersUrl} className={linkClass}>
-            Browse every business
+            Browse Every Business
           </Link>
         )}
       </div>
@@ -232,7 +232,7 @@ function FilteredEmptyState({ clearFiltersUrl }: { clearFiltersUrl: string }) {
         Try removing a filter, or clear them all to see every business.
       </p>
       <Link scroll={false} href={clearFiltersUrl} className={`${linkClass} mt-4`}>
-        Clear filters
+        Clear Filters
       </Link>
     </div>
   )
@@ -331,7 +331,7 @@ export function DiscoveryGrid({
           href="/how-ranking-works"
           className="font-subhead text-sm text-amber hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber rounded-sm"
         >
-          How ranking works
+          How Ranking Works
         </Link>
       </div>
 
@@ -343,7 +343,7 @@ export function DiscoveryGrid({
             href={nextPageUrl}
             className="font-body font-bold text-sm text-brand-black border border-charcoal/30 rounded-full px-8 py-2.5 min-h-[44px] inline-flex items-center hover:bg-pale-lavender transition-colors"
           >
-            Load more
+            Load More
           </Link>
         </div>
       )}

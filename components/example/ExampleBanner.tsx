@@ -65,7 +65,7 @@ export function ExampleBanner({ variant }: Props) {
           </p>
           <details className="mt-1 text-xs text-ink-soft" data-example-allow-links="">
             <summary className="cursor-pointer select-none underline-offset-2 hover:underline">
-              Photo and video credits
+              Photo and Video Credits
             </summary>
             <p className="mt-1 leading-relaxed">
               Photos:{' '}

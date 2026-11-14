@@ -419,7 +419,7 @@ function QuickStartFlow({
               )}
             >
               {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-              {isLast ? (pending ? 'Saving…' : 'Save my draft') : 'Next'}
+              {isLast ? (pending ? 'Saving…' : 'Save My Draft') : 'Next'}
             </button>
           </div>
         </form>

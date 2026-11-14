@@ -210,8 +210,8 @@ describe('buildGuidePick', () => {
       categoryId: cat.id,
       locationType: 'physical',
     })
-    expect(pick.reason).toContain('"Hair, beauty and self-care"')
-    expect(pick.reason).toContain('"A place they visit"')
+    expect(pick.reason).toContain('"Hair, Beauty and Self-Care"')
+    expect(pick.reason).toContain('"A Place They Visit"')
   })
 
   it('leaves the subcategory open for a top-level pick that has children', () => {

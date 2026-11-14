@@ -85,7 +85,7 @@ async function JobResults({ searchParams }: { searchParams: JobsPageProps['searc
       <div className="space-y-4 rounded-xl bg-pale-lavender px-8 py-10 text-center">
         <p className="font-headline text-xl text-brand-black">Nothing on this page</p>
         <Link href={buildJobsUrl(filters)} className={ctaClass}>
-          Back to the first page
+          Back to the First Page
         </Link>
       </div>
     )
@@ -112,7 +112,7 @@ async function JobResults({ searchParams }: { searchParams: JobsPageProps['searc
               href={buildJobsUrl(filters, filters.page + 1)}
               className="inline-flex min-h-[44px] items-center rounded-full border border-charcoal/30 px-8 font-body text-sm font-bold text-brand-black transition-colors hover:bg-pale-lavender"
             >
-              Load more
+              Load More
             </Link>
           </div>
         )}
@@ -152,7 +152,7 @@ export default function JobsPage({ searchParams }: JobsPageProps) {
             </div>
             {canPost && (
               <Link href="/add-job" className={`${ctaClass} w-full shrink-0 sm:w-auto`}>
-                Post a job
+                Post a Job
               </Link>
             )}
           </div>

@@ -16,22 +16,22 @@ interface ConfirmPageProps {
 
 const COPY = {
   recovery: {
-    heading: 'Reset your password',
+    heading: 'Reset Your Password',
     body: 'Click continue to set a new password for your account.',
-    invalidHeading: 'Link invalid or expired',
+    invalidHeading: 'Link Invalid or Expired',
     invalidBody:
       'This password-reset link is missing information or has expired. Request a new one to continue.',
     invalidHref: '/forgot-password',
-    invalidCta: 'Request a new link',
+    invalidCta: 'Request a New Link',
   },
   signup: {
-    heading: 'Confirm your email',
+    heading: 'Confirm Your Email',
     body: 'Click continue to confirm your email and finish setting up your account.',
-    invalidHeading: 'Link invalid or expired',
+    invalidHeading: 'Link Invalid or Expired',
     invalidBody:
       'This confirmation link is missing information or has expired. If you already confirmed your email, just sign in.',
     invalidHref: '/sign-in',
-    invalidCta: 'Go to sign in',
+    invalidCta: 'Go to Sign In',
   },
 } as const
 

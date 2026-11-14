@@ -71,13 +71,13 @@ describe('partnership badge wording', () => {
   })
 
   it('reads "Open to brand deals" on creator cards and pages', () => {
-    expect(partnershipPill('creator', true)).toBe('Open to brand deals')
+    expect(partnershipPill('creator', true)).toBe('Open to Brand Deals')
     expect(partnershipLine('creator', true)).toBe('Open to brand deals')
   })
 
   it('reads "Open to partnerships" on every other card', () => {
     for (const type of ['business', 'restaurant', 'event', 'service_provider'] as const) {
-      expect(partnershipPill(type, true)).toBe('Open to partnerships')
+      expect(partnershipPill(type, true)).toBe('Open to Partnerships')
     }
   })
 
@@ -119,7 +119,7 @@ describe('the filtered empty state', () => {
   it('offers Clear filters on both Discover pages', () => {
     const grid = src('components/discovery/DiscoveryGrid.tsx')
     expect(grid).toContain('No results for these filters')
-    expect(grid).toMatch(/Clear filters/)
+    expect(grid).toMatch(/Clear Filters/)
     for (const page of [
       'app/(public)/discover/(index)/page.tsx',
       'app/(public)/discover/[citySlug]/page.tsx',

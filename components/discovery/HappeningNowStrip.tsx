@@ -45,7 +45,7 @@ export async function HappeningNowStrip({ cityId, categoryId, placeLabel }: Prop
           className="flex items-center gap-2 font-subhead text-sm font-semibold text-brand-black"
         >
           <span aria-hidden className="size-2 rounded-full bg-amber" />
-          Happening now <span className="font-normal text-charcoal-soft">{placeLabel}</span>
+          Happening Now <span className="font-normal text-charcoal-soft">{placeLabel}</span>
         </h2>
         <ul className="-mx-4 mt-3 flex snap-x gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:px-0">
           {items.map(({ post, listing }) => {

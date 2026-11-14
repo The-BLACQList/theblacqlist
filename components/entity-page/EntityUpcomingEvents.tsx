@@ -26,7 +26,7 @@ export function EntityUpcomingEvents({ entity }: { entity: EntityPageData }) {
           id="upcoming-events-heading"
           className="font-headline text-[22px] md:text-[28px] text-brand-black mb-6"
         >
-          Upcoming events
+          Upcoming Events
         </h2>
         <ul className="md:max-w-3xl divide-y divide-charcoal/10 border-y border-charcoal/10">
           {events.map((ev) => (

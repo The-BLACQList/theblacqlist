@@ -77,7 +77,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
           <section id="information-collected" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">2. Information We Collect</h2>
 
-            <h3 className="font-subhead font-semibold text-brand-black">Information you provide directly</h3>
+            <h3 className="font-subhead font-semibold text-brand-black">Information You Provide Directly</h3>
             <ul className="list-disc list-inside space-y-1 pl-2">
               <li>Account registration information (name, email address, password)</li>
               <li>Business listing information (business name, description, address, photos, hours, contact details) when you create or claim a listing</li>
@@ -88,7 +88,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
 
             {isNext && (
               <>
-                <h3 className="font-subhead font-semibold text-brand-black mt-4">Information from a website you give us</h3>
+                <h3 className="font-subhead font-semibold text-brand-black mt-4">Information from a Website You Give Us</h3>
                 <p>
                   If you own a business and give us a link to your business website or link-in-bio
                   page, we read that public page when you ask. We look for things you&apos;ve already
@@ -102,7 +102,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
               </>
             )}
 
-            <h3 className="font-subhead font-semibold text-brand-black mt-4">Information collected automatically</h3>
+            <h3 className="font-subhead font-semibold text-brand-black mt-4">Information Collected Automatically</h3>
             <p>When you use the platform, we automatically collect:</p>
             <ul className="list-disc list-inside space-y-1 pl-2">
               <li>Log data (browser type, operating system, referring URLs, pages visited, time and date of your visit). Your IP address is used transiently to deliver and secure the service and, where recorded for analytics, is stored only in irreversible hashed form. We do not retain your raw IP address</li>
@@ -156,7 +156,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
             {isNext && (
               <>
                 <h3 id="bringing-in-your-website" className="font-subhead font-semibold text-brand-black mt-6 scroll-mt-24">
-                  Bringing in your website (business owners only)
+                  Bringing in Your Website (Business Owners Only)
                 </h3>
                 <p>
                   When you add a business, you can give us a link to your business website or
@@ -175,7 +175,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                 </ul>
 
                 <h3 id="ai-writing-help" className="font-subhead font-semibold text-brand-black mt-6 scroll-mt-24">
-                  AI writing help (business owners only)
+                  AI Writing Help (Business Owners Only)
                 </h3>
                 <p>
                   If you use our writing help when you set up or manage a business page, we send some
@@ -269,7 +269,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                 {/* [Needs professional review] Owner Cue (ticket 203).
                     docs/blacqlist/legal/owner-cue-policy-update-2026-11.md */}
                 <h3 id="owner-cue" className="font-subhead font-semibold text-brand-black mt-6 scroll-mt-24">
-                  Cue on your dashboard (business owners only)
+                  Cue on Your Dashboard (Business Owners Only)
                 </h3>
                 <p>
                   If you own a page, you can ask Cue questions from your dashboard (the Ask Cue
@@ -320,7 +320,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                     after counsel review, together with switching FEATURE_RECEIPT_READ on.
                     docs/blacqlist/legal/receipt-reading-policy-update-2026-11.md */}
                 <h3 id="receipt-reading" className="font-subhead font-semibold text-brand-black mt-6 scroll-mt-24">
-                  Reading your receipt (only if you ask)
+                  Reading Your Receipt (Only If You Ask)
                 </h3>
                 <p>
                   When you add a receipt, you can tick &ldquo;Read my receipt for me.&rdquo; The box
@@ -614,7 +614,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                             aria-label="Cloudflare Turnstile privacy addendum (opens in new window)"
                             className="text-amber hover:underline"
                           >
-                            Turnstile privacy addendum
+                            Turnstile Privacy Addendum
                           </a>
                         </td>
                       </tr>
@@ -754,7 +754,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
               href="/terms"
               className="text-amber font-bold text-lg hover:underline"
             >
-              Read our Terms of Service →
+              Read Our Terms of Service →
             </Link>
           </div>
         </div>

@@ -51,7 +51,7 @@ export const LEVEL_META: Record<BusinessLevel, LevelMeta> = {
     emptyNoun: 'suppliers',
   },
   local: {
-    label: 'Local business',
+    label: 'Local Business',
     plural: 'Local businesses',
     pill: null,
     description: 'You serve shoppers directly: a shop, restaurant, salon or service. Online shops count.',

@@ -82,7 +82,7 @@ describe('on production', () => {
   it('metadata is the not-found title, so nothing names the sample in a <title>', async () => {
     const { page } = await loadRoutes(true)
     await expect(page.generateMetadata({ params: params('storefront') })).resolves.toEqual({
-      title: 'Page not found',
+      title: 'Page Not Found',
     })
   })
 })
@@ -93,7 +93,7 @@ describe('off production', () => {
     await expect(page.default({ params: params('nope') })).rejects.toThrow(NOT_FOUND)
     await expect(page.default({ params: params('') })).rejects.toThrow(NOT_FOUND)
     await expect(page.generateMetadata({ params: params('nope') })).resolves.toEqual({
-      title: 'Page not found',
+      title: 'Page Not Found',
     })
   })
 

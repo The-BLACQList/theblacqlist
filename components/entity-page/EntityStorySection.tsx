@@ -68,7 +68,7 @@ export function EntityStorySection({ entity }: Props) {
               className="mt-4 font-subhead text-sm font-semibold text-amber hover:text-light-gold underline underline-offset-2 transition-colors"
               aria-expanded={expanded}
             >
-              {expanded ? 'Read less' : 'Read more'}
+              {expanded ? 'Read Less' : 'Read More'}
             </button>
           )}
         </div>

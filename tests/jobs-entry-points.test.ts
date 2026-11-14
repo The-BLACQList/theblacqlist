@@ -132,7 +132,7 @@ describe('NowHiringView', () => {
       createElement(NowHiringView, { businessId: BIZ, roles: [role(1), role(2)], total: 2 })
     )
     expect(html).toContain('<h2')
-    expect(html).toContain('Now hiring')
+    expect(html).toContain('Now Hiring')
     expect(html).toContain('Role 1')
     expect(html).toContain('Role 2')
     expect(html).not.toContain('See all')

@@ -118,7 +118,7 @@ export function MapListingCard({ listing, number, selected, variant, distance, o
           href={listing.href}
           className="mx-1.5 mb-1.5 mt-1 flex min-h-11 items-center justify-center rounded-xl bg-ground text-sm font-semibold text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
         >
-          View page
+          View Page
         </Link>
       )}
     </article>

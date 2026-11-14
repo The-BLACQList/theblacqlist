@@ -117,7 +117,7 @@ export function ProductForm({
       {/* Name */}
       <div className="space-y-1">
         <label htmlFor="name" className="block font-subhead text-sm font-semibold text-brand-black">
-          Product name{' '}
+          Product Name{' '}
           <span aria-hidden="true" className="text-red-500">
             *
           </span>
@@ -190,7 +190,7 @@ export function ProductForm({
             htmlFor="compare_at_price_cents"
             className="block font-subhead text-sm font-semibold text-brand-black"
           >
-            Compare-at ($)
+            Compare-At ($)
           </label>
           <input
             id="compare_at_price_cents"
@@ -217,7 +217,7 @@ export function ProductForm({
           htmlFor="price_display_text"
           className="block font-subhead text-sm font-semibold text-brand-black"
         >
-          Price display text{' '}
+          Price Display Text{' '}
           <span className="font-normal text-charcoal-faint">(optional override)</span>
         </label>
         <input
@@ -237,7 +237,7 @@ export function ProductForm({
           htmlFor="cover_image_url"
           className="block font-subhead text-sm font-semibold text-brand-black"
         >
-          Cover image URL
+          Cover Image URL
         </label>
         <input
           id="cover_image_url"
@@ -309,7 +309,7 @@ export function ProductForm({
           htmlFor="return_policy_note"
           className="block font-subhead text-sm font-semibold text-brand-black"
         >
-          Return policy note
+          Return Policy Note
         </label>
         <input
           id="return_policy_note"

@@ -22,7 +22,7 @@ export function CreatorFitStep({ answers, onChange, problem, categories, onPicke
 
   return (
     <>
-      <StepIntro title="What do you make most?">
+      <StepIntro title="What Do You Make Most?">
         Pick the closest one. You can add your niche and platforms next.
       </StepIntro>
       <div id={FIELD_IDS.fit} tabIndex={-1} className="focus:outline-none">

@@ -43,7 +43,7 @@ export function MoreFilters({ count, children }: Props) {
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black/40'
         )}
       >
-        {count > 0 ? `More filters (${count})` : 'More filters'}
+        {count > 0 ? `More filters (${count})` : 'More Filters'}
         <ChevronDown
           className={cn(
             'size-4 shrink-0 transition-transform motion-reduce:transition-none',

@@ -174,7 +174,14 @@ const INLINE_TAGS = /^(strong|em|b|i|u|s|span|a|Link|abbr|time|mark|code|sup|sub
 function isBlockBreak(n: ts.Node | undefined): boolean {
   if (!n) return true
   if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n)) return !INLINE_TAGS.test(tagName(n))
+  // {cond && <Badge/>} renders its own element; {name} carries the label on.
+  if (ts.isJsxExpression(n) && n.expression) return containsJsx(n.expression)
   return false
+}
+
+function containsJsx(n: ts.Node): boolean {
+  if (ts.isJsxElement(n) || ts.isJsxSelfClosingElement(n) || ts.isJsxFragment(n)) return true
+  return ts.forEachChild(n, (c) => (containsJsx(c) ? true : undefined)) ?? false
 }
 
 function attrText(el: ts.JsxElement | ts.JsxSelfClosingElement, name: string): string {
@@ -208,6 +215,32 @@ function hasProseSiblings(el: ts.JsxElement): boolean {
   const parent = el.parent
   if (!ts.isJsxElement(parent)) return false
   return parent.children.some((c) => ts.isJsxText(c) && /[A-Za-z]{2}/.test(c.text))
+}
+
+type Lit = ts.StringLiteral | ts.NoSubstitutionTemplateLiteral
+
+// The string results of an expression: a literal, either branch of a ternary,
+// or the right side of `&&`, `||` and `??` ("{saving ? 'Saving…' : 'Save'}").
+function stringResults(e: ts.Expression): Lit[] {
+  if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e)) return [e]
+  if (ts.isParenthesizedExpression(e)) return stringResults(e.expression)
+  if (ts.isConditionalExpression(e))
+    return [...stringResults(e.whenTrue), ...stringResults(e.whenFalse)]
+  if (
+    ts.isBinaryExpression(e) &&
+    [
+      ts.SyntaxKind.AmpersandAmpersandToken,
+      ts.SyntaxKind.BarBarToken,
+      ts.SyntaxKind.QuestionQuestionToken,
+    ].includes(e.operatorToken.kind)
+  )
+    return [
+      ...(e.operatorToken.kind === ts.SyntaxKind.AmpersandAmpersandToken
+        ? []
+        : stringResults(e.left)),
+      ...stringResults(e.right),
+    ]
+  return []
 }
 
 export function scanSource(file: string, source: string): Hit[] {
@@ -266,7 +299,9 @@ export function scanSource(file: string, source: string): Hit[] {
       const isLink = LINK_TAGS.has(name) && !hasProseSiblings(node) && !srOnly
       if (isText || isLink) {
         // Pieces that render as words: text and inline values, not whitespace.
-        const parts = node.children.filter((c) => !(ts.isJsxText(c) && !c.text.trim()))
+        const parts = node.children.filter(
+          (c) => !(ts.isJsxText(c) && !c.text.trim()) && !(ts.isJsxExpression(c) && !c.expression) // {/* comments */}
+        )
         node.children.forEach((child) => {
           if (ts.isJsxText(child)) {
             if (!looksLikeLabel(child.text, false)) return
@@ -278,13 +313,13 @@ export function scanSource(file: string, source: string): Hit[] {
                 i > 0 && !/^\s*[:—–|·]/.test(child.text) && !isBlockBreak(parts[i - 1]),
               continuesAfter: i < parts.length - 1 && !isBlockBreak(parts[i + 1]),
             })
-          } else if (
-            ts.isJsxExpression(child) &&
-            child.expression &&
-            (ts.isStringLiteral(child.expression) ||
-              ts.isNoSubstitutionTemplateLiteral(child.expression))
-          ) {
-            checkString(child.expression, 'jsx')
+          } else if (ts.isJsxExpression(child) && child.expression) {
+            const e = child.expression
+            if (ts.isStringLiteral(e) || ts.isNoSubstitutionTemplateLiteral(e))
+              checkString(e, 'jsx')
+            // A ternary is checked only when it is the whole label (icons aside).
+            else if (parts.every((p) => p === child || isBlockBreak(p)))
+              for (const lit of stringResults(e)) checkString(lit, 'jsx')
           }
         })
       }
@@ -298,19 +333,12 @@ export function scanSource(file: string, source: string): Hit[] {
     ) {
       const init = node.initializer
       if (ts.isStringLiteral(init)) checkString(init, 'attr')
-      else if (
-        ts.isJsxExpression(init) &&
-        init.expression &&
-        (ts.isStringLiteral(init.expression) || ts.isNoSubstitutionTemplateLiteral(init.expression))
-      ) {
-        checkString(init.expression, 'attr')
-      }
+      else if (ts.isJsxExpression(init) && init.expression)
+        for (const lit of stringResults(init.expression)) checkString(lit, 'attr')
     }
 
     if (ts.isPropertyAssignment(node) && isLabelKey(node.name.getText().replace(/['"]/g, ''))) {
-      const init = node.initializer
-      if (ts.isStringLiteral(init) || ts.isNoSubstitutionTemplateLiteral(init))
-        checkString(init, 'prop')
+      for (const lit of stringResults(node.initializer)) checkString(lit, 'prop')
     }
 
     ts.forEachChild(node, visit)

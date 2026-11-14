@@ -112,7 +112,7 @@ function StarSelector({ value, onChange }: { value: number; onChange: (v: number
     // See lib/tour/targets.ts.
     <fieldset data-tour="review-rating">
       <legend className="block font-subhead text-xs font-semibold text-charcoal-soft mb-2">
-        Star rating <span aria-hidden="true">*</span>
+        Star Rating <span aria-hidden="true">*</span>
       </legend>
       <div className="flex gap-1">
         {[1, 2, 3, 4, 5].map((star) => (
@@ -197,7 +197,7 @@ export function ReviewForm({ listingId, criteria = [] }: Props) {
           className="rounded-lg border border-charcoal/12 bg-cream/40 px-4 py-3"
         >
           <legend className="px-1 font-subhead text-xs font-semibold text-charcoal-soft">
-            Your rating <span aria-hidden="true">*</span>
+            Your Rating <span aria-hidden="true">*</span>
           </legend>
           <p className="font-body text-xs text-charcoal-faint">
             Rate as many as you like. Your overall stars are their average.
@@ -248,7 +248,7 @@ export function ReviewForm({ listingId, criteria = [] }: Props) {
           htmlFor="review-body"
           className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
         >
-          Your review <span className="font-normal text-charcoal-faint">(max 2000 chars)</span>
+          Your Review <span className="font-normal text-charcoal-faint">(max 2000 chars)</span>
         </label>
         <textarea
           id="review-body"
@@ -277,7 +277,7 @@ export function ReviewForm({ listingId, criteria = [] }: Props) {
           className="inline-flex items-center gap-2 cursor-pointer rounded-lg border border-dashed border-charcoal/30 px-4 py-2.5 font-body text-sm text-charcoal hover:border-amber-gold hover:bg-amber-50/40 transition-colors"
         >
           <ImagePlus className="size-4 text-amber" aria-hidden="true" />
-          {photoNames.length > 0 ? 'Change photos' : 'Add photos'}
+          {photoNames.length > 0 ? 'Change Photos' : 'Add Photos'}
           <input
             id="review-photos"
             name="photos"
@@ -338,7 +338,7 @@ export function ReviewForm({ listingId, criteria = [] }: Props) {
           className="inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-          {isPending ? 'Submitting…' : 'Submit review'}
+          {isPending ? 'Submitting…' : 'Submit Review'}
         </button>
       </div>
     </form>

@@ -4,6 +4,8 @@
 //   npx tsx scripts/check-title-case.ts --fix      rewrite them in place
 //   npx tsx scripts/check-title-case.ts --fix app/admin components/admin
 //                                                  rewrite only under these paths
+//   npx tsx scripts/check-title-case.ts --exclude=app/admin,lib/email
+//                                                  skip these paths
 //
 // The rule is docs/blacqlist/design/title-case.md. Review every --fix diff: the
 // scanner is careful, but a label that is really a sentence belongs in
@@ -17,10 +19,18 @@ import { toTitleCase } from '../lib/text/title-case'
 const root = path.resolve(__dirname, '..')
 const args = process.argv.slice(2)
 const fix = args.includes('--fix')
-const only = args.filter((a) => !a.startsWith('--')).map((a) => a.replace(/\/$/, ''))
+const clean = (a: string) => a.replace(/\/$/, '')
+const only = args.filter((a) => !a.startsWith('--')).map(clean)
+const exclude = args
+  .filter((a) => a.startsWith('--exclude='))
+  .flatMap((a) => a.slice('--exclude='.length).split(','))
+  .map(clean)
+const under = (file: string, p: string) => file === p || file.startsWith(p + '/')
 
 const hits = scanRepo(root).filter(
-  (h) => only.length === 0 || only.some((p) => h.file === p || h.file.startsWith(p + '/'))
+  (h) =>
+    (only.length === 0 || only.some((p) => under(h.file, p))) &&
+    !exclude.some((p) => under(h.file, p))
 )
 
 if (fix) {

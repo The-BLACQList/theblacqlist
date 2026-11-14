@@ -92,7 +92,17 @@ export const PRESERVE: Readonly<Record<string, string>> = {
   'e.g.': 'e.g.',
   'i.e.': 'i.e.',
   'etc.': 'etc.',
+  // Units after a number stay lowercase ("5 mi", "10 min").
+  mi: 'mi',
+  km: 'km',
+  min: 'min',
+  mins: 'mins',
+  hr: 'hr',
+  hrs: 'hrs',
 }
+
+/** Names that include "The": the word stays capitalized before them. */
+const THE_NAMES: ReadonlySet<string> = new Set(['blacqlist', 'collective', 'blacqlight'])
 
 // Punctuation that starts a new title segment, so the next word is "first".
 const SEGMENT_BREAK = /[:—–|·?!]$/
@@ -121,14 +131,18 @@ function capitalize(part: string): string {
 function caseWord(core: string, mode: 'cap' | 'lower'): string {
   const preserved = PRESERVE[core.toLowerCase()]
   if (preserved) return preserved
-  if (hasInnerCapital(core)) return core
+  // A brand-style spelling (BLACQList, iOS) is checked per hyphen part, so
+  // "Link-In-Bio" can still be corrected while "Wi-Fi" keeps its capitals.
+  if (!core.includes('-') && hasInnerCapital(core)) return core
   if (mode === 'lower') return core.toLowerCase()
-  // Hyphenated words capitalize every part ("Black-Owned", "Sign-In").
-  return core
-    .split('-')
-    .map((p) => {
+  // Hyphenated words capitalize each part ("Black-Owned", "Sign-In") except a
+  // minor word in the middle ("Link-in-Bio", "Up-to-Date").
+  const parts = core.split('-')
+  return parts
+    .map((p, i) => {
       const pre = PRESERVE[p.toLowerCase()]
       if (pre) return pre
+      if (i > 0 && i < parts.length - 1 && MINOR_WORDS.has(p.toLowerCase())) return p.toLowerCase()
       return hasInnerCapital(p) ? p : capitalize(p)
     })
     .join('-')
@@ -195,8 +209,8 @@ export function toTitleCase(raw: string, opts: TitleCaseOptions = {}): string {
         !isFirst &&
         !isLast &&
         !(PHRASAL[prevCore.toLowerCase()] ?? []).includes(lower) &&
-        // "The" in "The BLACQList" is part of the name.
-        !(lower === 'the' && nextCore(n).toLowerCase() === 'blacqlist')
+        // "The" in "The BLACQList" and "The Collective" is part of the name.
+        !(lower === 'the' && THE_NAMES.has(nextCore(n).toLowerCase()))
       out = caseWord(core, minor ? 'lower' : 'cap')
     }
 

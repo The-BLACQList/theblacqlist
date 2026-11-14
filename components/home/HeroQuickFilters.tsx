@@ -98,7 +98,7 @@ export function HeroQuickFilters({ filters, onPick, onNear, nearOn = false }: Pr
             ) : (
               <MapPin className="size-4" aria-hidden="true" />
             )}
-            {locating ? 'Finding you…' : 'Near me'}
+            {locating ? 'Finding you…' : 'Near Me'}
           </button>
         </li>
         {filters.map((filter) => (

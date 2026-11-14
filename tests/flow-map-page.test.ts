@@ -71,7 +71,7 @@ describe('/flow-map data reads', () => {
   it('shows a failed read as a failure with a way to try again', () => {
     expect(page).toContain('We couldn&apos;t load The Collective.')
     expect(page).toMatch(/siloLoadFailed \?/)
-    expect(page).toMatch(/href="\/flow-map"\s+prefetch=\{false\}[\s\S]{0,400}Try again/)
+    expect(page).toMatch(/href="\/flow-map"\s+prefetch=\{false\}[\s\S]{0,400}Try Again/)
   })
 
   it('opens focused on the reader with ?you=1', () => {
@@ -105,13 +105,13 @@ describe('Silo loading', () => {
   it('falls back to the list when the chunk fails or the context is lost', () => {
     expect(experience).toContain('setChunkFailed(true)')
     expect(experience).toContain('setContextLost(true)')
-    expect(experience).toContain('Try the map again')
+    expect(experience).toContain('Try the Map Again')
     expect(read(SCENE)).toContain('webglcontextlost')
   })
 
   it('shows the list first on low-power devices, with a way to the map', () => {
     expect(read(SUPPORT)).toContain("'low-power'")
-    expect(experience).toContain('Show the map anyway')
+    expect(experience).toContain('Show the Map Anyway')
   })
 })
 
@@ -119,7 +119,7 @@ describe('Silo motion and keys', () => {
   const experience = read(EXPERIENCE)
 
   it('has a visible Pause motion button and honors reduced motion', () => {
-    expect(experience).toContain("'Pause motion'")
+    expect(experience).toContain("'Pause Motion'")
     expect(experience).toContain('usePrefersReducedMotion()')
     expect(experience).toMatch(/const motion = !paused && !reducedMotion/)
   })

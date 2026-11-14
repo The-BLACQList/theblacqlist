@@ -239,7 +239,7 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
           <h1 className="font-headline text-2xl md:text-3xl text-brand-black leading-tight text-balance">
             {hasAnyData
               ? `${formatDollars(totalAmountCents)} spent with businesses on the list`
-              : 'Where does our money go?'}
+              : 'Where Does Our Money Go?'}
           </h1>
           {/* [Decision — founder, 2026-10-15 (simplicity P4)] Ticket 161's three
               steps stay, folded away (ticket 171: the hero was too tall). */}
@@ -266,7 +266,7 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
               prefetch={false}
               className="inline-flex items-center gap-2 h-11 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
             >
-              Try again
+              Try Again
             </Link>
           </div>
         </div>

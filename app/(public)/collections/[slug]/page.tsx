@@ -156,7 +156,7 @@ export default async function CollectionDetailPage({ params }: Props) {
             className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-6 transition-colors"
           >
             <ArrowLeft className="size-3.5" aria-hidden="true" />
-            All collections
+            All Collections
           </Link>
           <CollectionEyebrow />
           <h1 className="font-headline text-3xl md:text-5xl text-brand-black leading-tight mb-3">
@@ -179,7 +179,7 @@ export default async function CollectionDetailPage({ params }: Props) {
               className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-8 transition-colors"
             >
               <ArrowLeft className="size-3.5" aria-hidden="true" />
-              All collections
+              All Collections
             </Link>
           )}
 
@@ -199,7 +199,7 @@ export default async function CollectionDetailPage({ params }: Props) {
           {/* Businesses */}
           <div className="mt-10 md:mt-12">
             <div className="flex items-baseline justify-between mb-4">
-              <h2 className="font-headline text-xl text-brand-black">In this collection</h2>
+              <h2 className="font-headline text-xl text-brand-black">In This Collection</h2>
               <span className="font-subhead text-xs text-charcoal-soft">
                 {entries.length} {entries.length === 1 ? 'business' : 'businesses'}
               </span>
@@ -217,7 +217,7 @@ export default async function CollectionDetailPage({ params }: Props) {
                   href="/discover"
                   className="inline-flex items-center justify-center mt-5 h-10 px-6 rounded-full border border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors"
                 >
-                  Browse all
+                  Browse All
                 </Link>
               </div>
             ) : (
@@ -253,13 +253,13 @@ export default async function CollectionDetailPage({ params }: Props) {
               href="/collections"
               className="inline-flex items-center justify-center h-11 px-6 rounded-full border border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors"
             >
-              Browse all collections
+              Browse All Collections
             </Link>
             <Link
               href="/discover"
               className="inline-flex items-center justify-center h-11 px-6 rounded-full bg-amber text-white font-subhead font-bold text-sm hover:bg-amber/90 transition-colors"
             >
-              Explore businesses
+              Explore Businesses
             </Link>
           </div>
         </div>

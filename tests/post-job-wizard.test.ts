@@ -91,6 +91,6 @@ describe('post-a-job wizard pieces', () => {
 
   it('preview falls back to a placeholder title', () => {
     const out = html(createElement(JobPreview, { values: EMPTY_POST_JOB, business: null }))
-    expect(out).toContain('Your job title')
+    expect(out).toContain('Your Job Title')
   })
 })

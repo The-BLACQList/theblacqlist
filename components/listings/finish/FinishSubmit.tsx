@@ -53,7 +53,7 @@ export function FinishSubmit({ listingId, name, missing }: Props) {
       className="rounded-xl border border-amber-gold/40 bg-white px-5 py-5"
     >
       <h2 id="send-heading" className="font-headline text-lg text-brand-black">
-        Send it for review
+        Send It for Review
       </h2>
       <p className="mt-1 font-body text-sm leading-relaxed text-charcoal">
         Our team checks every page before it goes live, usually within 3 to 5 business days.
@@ -86,13 +86,13 @@ export function FinishSubmit({ listingId, name, missing }: Props) {
           ) : (
             <Send className="size-4" aria-hidden="true" />
           )}
-          {busy ? 'Sending…' : 'Send for review'}
+          {busy ? 'Sending…' : 'Send for Review'}
         </button>
         <Link
           href={`/add-business/submitted?name=${encodeURIComponent(name)}&type=draft`}
           className="inline-flex min-h-11 items-center justify-center px-3 font-subhead text-sm font-semibold text-charcoal underline decoration-charcoal/30 underline-offset-4 hover:text-brand-black"
         >
-          Finish later
+          Finish Later
         </Link>
       </div>
     </section>

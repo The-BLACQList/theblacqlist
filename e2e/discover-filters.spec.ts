@@ -216,7 +216,7 @@ test.describe('Discover filters — the sidebar drives the URL', () => {
     // The section starts collapsed, so open it first.
     await openMoreFilters(sidebar)
     await sidebar.locator('summary', { hasText: /^How to reach them$/ }).click()
-    await sidebar.getByRole('button', { name: 'Online only', exact: true }).click()
+    await sidebar.getByRole('button', { name: 'Online Only', exact: true }).click()
     await page.waitForURL(/[?&]location_type=virtual/)
     expect(
       requireNumber(await resultTotal(page), '/discover?location_type=virtual')
@@ -370,7 +370,7 @@ test.describe('Open to partnerships (134)', () => {
     const n = await cards.count()
     expect(n).toBeGreaterThan(0)
     for (let i = 0; i < n; i++) {
-      await expect(cards.nth(i)).toContainText(/Open to (partnerships|brand deals)/)
+      await expect(cards.nth(i)).toContainText(/Open to (Partnerships|Brand Deals)/)
     }
   })
 

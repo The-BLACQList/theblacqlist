@@ -100,18 +100,18 @@ export function ActiveFilterChips({
   const location = parseLocationFromQuery((key) => searchParams.get(key))
   if (location)
     chips.push({
-      label: `Within ${location.radius} ${location.radius === 1 ? 'mile' : 'miles'}`,
+      label: `Within ${location.radius} ${location.radius === 1 ? 'Mile' : 'Miles'}`,
       onRemove: () => setParams(clearEntries(LOCATION_KEYS, searchParams.get('sort'))),
     })
 
   if (searchParams.get('open_now') === '1')
-    chips.push({ label: 'Open now', onRemove: () => setParam('open_now', '') })
+    chips.push({ label: 'Open Now', onRemove: () => setParam('open_now', '') })
 
   if (searchParams.get('partners') === '1')
-    chips.push({ label: 'Open to partnerships', onRemove: () => setParam('partners', '') })
+    chips.push({ label: 'Open to Partnerships', onRemove: () => setParam('partners', '') })
 
   if (searchParams.get('deals') === '1')
-    chips.push({ label: 'Has deals', onRemove: () => setParam('deals', '') })
+    chips.push({ label: 'Has Deals', onRemove: () => setParam('deals', '') })
 
   // One chip per delivery app, like levels (part D).
   for (const value of getCsv('order_on'))
@@ -122,7 +122,7 @@ export function ActiveFilterChips({
 
   const soldNear = searchParams.get('sold_near')
   if (soldNear)
-    chips.push({ label: `Sold near ${soldNear}`, onRemove: () => setParam('sold_near', '') })
+    chips.push({ label: `Sold Near ${soldNear}`, onRemove: () => setParam('sold_near', '') })
 
   for (const p of getCsv('price')) chips.push({ label: p, onRemove: () => removeCsv('price', p) })
 
@@ -151,7 +151,7 @@ export function ActiveFilterChips({
           onClick={() => setParams(clearEntries(clearableKeys, searchParams.get('sort')))}
           className="text-xs font-subhead text-charcoal underline underline-offset-2 hover:text-brand-black"
         >
-          Clear all
+          Clear All
         </button>
       )}
     </div>

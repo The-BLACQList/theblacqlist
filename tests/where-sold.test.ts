@@ -454,7 +454,7 @@ describe('wiring', () => {
       const src = read(`components/entity-page/templates/${t}Template.tsx`)
       expect(src).toContain('<EntityOrderOn')
       expect(src).toContain('<EntityFindUsAt')
-      expect(src).toContain("{ id: 'find-us', label: 'Find us at' }")
+      expect(src).toContain("{ id: 'find-us', label: 'Find Us At' }")
     }
   })
 

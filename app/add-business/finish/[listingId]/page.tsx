@@ -6,7 +6,7 @@ import { loadFinishData } from '@/lib/listings/finishData'
 import { PageFinishView } from '@/components/listings/PageFinishView'
 
 export const metadata = {
-  title: 'Finish your page | The BLACQList',
+  title: 'Finish Your Page | The BLACQList',
   robots: { index: false },
 }
 
@@ -45,7 +45,7 @@ export default async function FinishPage({ params, searchParams }: Props) {
             Get Listed
           </p>
           <h1 className="mb-3 font-headline text-3xl text-brand-black md:text-4xl">
-            Finish your page
+            Finish Your Page
           </h1>
           <p className="font-subhead text-base leading-relaxed text-charcoal">
             Your draft is saved. Add what you have, skip what you don&apos;t, and send it for review

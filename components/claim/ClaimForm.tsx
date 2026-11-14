@@ -14,7 +14,7 @@ interface Props {
 const ROLES = [
   { value: 'owner', label: 'Owner' },
   { value: 'manager', label: 'Manager' },
-  { value: 'authorized_agent', label: 'Authorized agent' },
+  { value: 'authorized_agent', label: 'Authorized Agent' },
 ] as const
 
 type DocUploadStatus = 'idle' | 'uploading' | 'success' | 'error'
@@ -79,7 +79,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
         <div className="flex items-start gap-3 mb-4">
           <CheckCircle className="size-6 text-amber flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div>
-            <h2 className="font-headline text-xl text-brand-black mb-1">Claim submitted!</h2>
+            <h2 className="font-headline text-xl text-brand-black mb-1">Claim Submitted!</h2>
             <p className="font-body text-sm text-charcoal leading-relaxed">
               We&apos;ll review your claim for <span className="font-semibold">{listingName}</span>{' '}
               and contact you within 3–5 business days.
@@ -90,7 +90,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
           href="/account/claims"
           className="inline-flex items-center font-subhead text-sm font-semibold text-amber hover:text-light-gold underline underline-offset-2"
         >
-          View your claims in your account
+          View Your Claims in Your Account
         </Link>
       </div>
     )
@@ -130,7 +130,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
           htmlFor="verification_email"
           className="block font-subhead text-sm font-semibold text-brand-black"
         >
-          Business email address <span aria-hidden="true">*</span>
+          Business Email Address <span aria-hidden="true">*</span>
         </label>
         <p className="font-body text-xs text-charcoal-soft">
           An email address associated with this business. We use it to verify your connection.
@@ -161,7 +161,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
           htmlFor="verification_phone"
           className="block font-subhead text-sm font-semibold text-brand-black"
         >
-          Business phone number <span className="font-normal text-charcoal-soft">(optional)</span>
+          Business Phone Number <span className="font-normal text-charcoal-soft">(optional)</span>
         </label>
         <input
           id="verification_phone"
@@ -176,7 +176,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
       {/* Role */}
       <fieldset className="space-y-2">
         <legend className="font-subhead text-sm font-semibold text-brand-black">
-          Your role at this business <span aria-hidden="true">*</span>
+          Your Role at This Business <span aria-hidden="true">*</span>
         </legend>
         {fieldErrors?.role_at_business && (
           <p role="alert" className="font-body text-xs text-red-600">
@@ -208,7 +208,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
             htmlFor="notes"
             className="block font-subhead text-sm font-semibold text-brand-black"
           >
-            Additional notes <span className="font-normal text-charcoal-soft">(optional)</span>
+            Additional Notes <span className="font-normal text-charcoal-soft">(optional)</span>
           </label>
           <span className="font-body text-xs text-charcoal-soft" aria-live="polite">
             {notesLength}/500
@@ -314,7 +314,7 @@ export function ClaimForm({ listingId, listingName }: Props) {
         className="w-full inline-flex items-center justify-center gap-2 h-12 px-6 rounded-full bg-amber-gold hover:bg-light-gold disabled:opacity-60 disabled:cursor-not-allowed text-brand-black font-subhead font-bold text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-gold"
       >
         {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-        {isPending ? 'Submitting…' : 'Submit claim'}
+        {isPending ? 'Submitting…' : 'Submit Claim'}
       </button>
 
       <p className="font-body text-xs text-charcoal-soft text-center">

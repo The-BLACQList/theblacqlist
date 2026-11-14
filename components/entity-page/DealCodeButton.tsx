@@ -56,7 +56,7 @@ export function DealCodeButton({ listingId, dealId, code }: Props) {
         ) : (
           <Copy className="size-3.5" aria-hidden="true" />
         )}
-        <span aria-live="polite">{copied ? 'Copied' : 'Copy code'}</span>
+        <span aria-live="polite">{copied ? 'Copied' : 'Copy Code'}</span>
       </button>
     </div>
   )

@@ -79,7 +79,7 @@ export function StartTourButton() {
   if (full) {
     return (
       <>
-        <h1 className="font-headline text-[26px] text-brand-black mb-1">This test is full</h1>
+        <h1 className="font-headline text-[26px] text-brand-black mb-1">This Test Is Full</h1>
         <p role="status" className="font-subhead text-sm text-charcoal mb-6">
           Thanks for wanting to help! All of our tester spots are taken. Join the waitlist and
           we&rsquo;ll let you know when The BLACQList opens.
@@ -88,7 +88,7 @@ export function StartTourButton() {
           href="/coming-soon"
           className="flex w-full h-11 items-center justify-center rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2"
         >
-          Join the waitlist
+          Join the Waitlist
         </Link>
       </>
     )
@@ -96,7 +96,7 @@ export function StartTourButton() {
 
   const heading = (
     <>
-      <h1 className="font-headline text-[26px] text-brand-black mb-1">You&rsquo;re in</h1>
+      <h1 className="font-headline text-[26px] text-brand-black mb-1">You&rsquo;re In</h1>
       <p className="font-subhead text-sm text-charcoal mb-6">
         {start?.mode === 'returning'
           ? 'You’re already one of our testers. Tap Start to pick up where you left off.'
@@ -131,7 +131,7 @@ export function StartTourButton() {
         {askRole && (
           <fieldset aria-describedby={roleError ? 'tester-start-error' : undefined}>
             <legend className="font-subhead text-sm font-semibold text-brand-black">
-              Which fits you best?
+              Which Fits You Best?
             </legend>
             <div className="mt-2 space-y-2">
               {ROLES.map(({ value, label, hint }) => (
@@ -166,7 +166,7 @@ export function StartTourButton() {
               htmlFor="tester-email"
               className="block font-subhead text-sm font-semibold text-brand-black"
             >
-              Your email
+              Your Email
             </label>
             <p id="tester-email-hint" className="mt-0.5 font-body text-xs text-charcoal-soft">
               We&rsquo;ll make your account with it. No password needed.
@@ -205,7 +205,7 @@ export function StartTourButton() {
               <>
                 {' '}
                 <Link href="/login" className="underline underline-offset-2 hover:text-red-800">
-                  Sign in
+                  Sign In
                 </Link>
               </>
             )}

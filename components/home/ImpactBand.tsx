@@ -65,7 +65,7 @@ export function ImpactBand({
               href="/account/receipts/new"
               className="inline-flex items-center justify-center h-11 px-6 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead text-sm font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             >
-              Add a receipt
+              Add a Receipt
             </Link>
             <Link
               href="/flow-map"
@@ -143,7 +143,7 @@ function CoveredBand() {
             options={[{ value: COLLECTIVE.source, label: COLLECTIVE.name }]}
             id="home-collective-waitlist"
             className="mt-3 max-w-none"
-            submitLabel="Tell me when it opens"
+            submitLabel="Tell Me When It Opens"
             successMessage="You're on the list. We'll email you the day The Collective opens."
           />
         </div>

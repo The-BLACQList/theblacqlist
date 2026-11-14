@@ -33,12 +33,12 @@ export function CollectiveFirstLook({ state, countedTotal }: Props) {
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         {state === 'out' ? (
           <Link href={FIRST_LOOK_SIGN_IN_HREF} className={BUTTON}>
-            Sign in to add a receipt
+            Sign In to Add a Receipt
             <ArrowUpRight className="size-4" aria-hidden="true" />
           </Link>
         ) : (
           <Link href="/account/receipts/new" className={BUTTON}>
-            {state === 'new' ? 'Add your first receipt' : 'Add a receipt'}
+            {state === 'new' ? 'Add Your First Receipt' : 'Add a Receipt'}
             <ArrowUpRight className="size-4" aria-hidden="true" />
           </Link>
         )}
@@ -58,7 +58,7 @@ export function CollectiveFirstLook({ state, countedTotal }: Props) {
 
       <details className="group mt-2">
         <summary className="inline-flex items-center gap-1.5 min-h-11 cursor-pointer list-none font-subhead text-sm font-semibold text-amber-700 underline-offset-4 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold/60 rounded [&::-webkit-details-marker]:hidden">
-          How it works
+          How It Works
           <ChevronDown
             className="size-4 transition-transform group-open:rotate-180 motion-reduce:transition-none"
             aria-hidden="true"

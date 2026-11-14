@@ -59,42 +59,42 @@ export interface TourStepCopy {
 
 export const TOUR_STEP_COPY: Record<TourStepKey, TourStepCopy> = {
   search_ran: {
-    title: 'Run a real search',
+    title: 'Run a Real Search',
     action: 'Search for something you would genuinely look for — a city, a category, a name.',
     retry:
       'We couldn’t confirm your search step just now. Reload in a moment — if you already searched, that still counts.',
     prompt: 'What did you search for, and did the results match what you expected?',
   },
   listing_opened: {
-    title: 'Open a listing that isn’t yours',
+    title: 'Open a Listing That Isn’t Yours',
     action: 'Open any listing that isn’t your own — from search, a city page, or a collection.',
     retry:
       'We couldn’t confirm the listing step just now. Reload in a moment — if you already opened one, that still counts.',
     prompt: null,
   },
   listing_saved: {
-    title: 'Save a place you’d actually go',
+    title: 'Save a Place You’d Actually Go',
     action: 'Save a business you’d really visit, not your own. The note after is the part we read.',
     retry:
       'We couldn’t check your saves just now. Reload in a moment — a save you already made still counts.',
     prompt: 'What made you save that one?',
   },
   map_opened: {
-    title: 'Find businesses on the map',
+    title: 'Find Businesses on the Map',
     action: 'Open the map and look around your area, or any city we cover.',
     retry:
       'We couldn’t confirm the map step just now. Reload in a moment. If you already opened the map, that still counts.',
     prompt: null,
   },
   collection_browsed: {
-    title: 'Browse a collection',
+    title: 'Browse a Collection',
     action: 'Open any collection page and look around.',
     retry:
       'We couldn’t confirm the collection step just now. Reload in a moment — if you already browsed one, that still counts.',
     prompt: null,
   },
   review_or_correction: {
-    title: 'Leave a review or report a correction',
+    title: 'Leave a Review or Report a Correction',
     action:
       'Leave a review on a listing you know, or report a correction on one that looks out of date.',
     retry:
@@ -102,7 +102,7 @@ export const TOUR_STEP_COPY: Record<TourStepKey, TourStepCopy> = {
     prompt: 'How did leaving that feel — easy, awkward, worth it?',
   },
   final_reflection: {
-    title: 'Reflect on the whole walk',
+    title: 'Reflect on the Whole Walk',
     action: 'Finish the three written steps above first — the final reflection unlocks last.',
     retry:
       'We couldn’t load your progress just now. Reload in a moment — everything you’ve done is safe.',

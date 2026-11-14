@@ -34,7 +34,7 @@ export default function FlowMapMethodologyPage() {
     <>
       <Section variant="pale-lavender">
         <PageHeader
-          title="How we count community spend"
+          title="How We Count Community Spend"
           subtitle="Where every dollar figure on this site comes from, what it means, and what it does not mean."
         />
       </Section>

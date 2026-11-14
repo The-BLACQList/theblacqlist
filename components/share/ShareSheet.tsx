@@ -307,7 +307,7 @@ function ShareSheetBody({
           id="share-post-heading"
           className="font-body text-xs font-semibold uppercase tracking-wider text-charcoal-soft"
         >
-          Post it
+          Post It
         </h3>
         <div className="mt-3 grid grid-cols-4 gap-x-2 gap-y-4">
           <Target
@@ -341,7 +341,7 @@ function ShareSheetBody({
           id="share-send-heading"
           className="font-body text-xs font-semibold uppercase tracking-wider text-charcoal-soft"
         >
-          Send it
+          Send It
         </h3>
         <div className="mt-3 grid grid-cols-4 gap-x-2 gap-y-4">
           <Target
@@ -367,12 +367,12 @@ function ShareSheetBody({
             />
           )}
           <Target
-            label="Copy link"
+            label="Copy Link"
             onClick={copyLink}
             icon={<LinkIcon className="size-5" aria-hidden="true" />}
           />
           <Target
-            label="Save image"
+            label="Save Image"
             onClick={saveImage}
             icon={<Download className="size-5" aria-hidden="true" />}
           />

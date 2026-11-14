@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     'Sell products and services from your BLACQList business page. Get listed free today, and see what a storefront needs.',
 }
 
-const WAITLIST_OPTIONS = [{ value: 'for-vendors', label: 'Marketplace vendor access' }]
+const WAITLIST_OPTIONS = [{ value: 'for-vendors', label: 'Marketplace Vendor Access' }]
 
 const STOREFRONT_POINTS = [
   'Up to 25 products and services on each business page',
@@ -62,13 +62,13 @@ function SellingOpen() {
               asChild
               className="bg-amber-gold text-brand-black font-body font-bold hover:bg-light-gold rounded-full px-7 py-3 text-base min-h-[48px] h-auto"
             >
-              <Link href="/for-business#start">List your business</Link>
+              <Link href="/for-business#start">List Your Business</Link>
             </Button>
             <Button
               asChild
               className="border border-white/40 text-white bg-transparent hover:bg-white/10 rounded-full px-7 py-3 text-base min-h-[48px] h-auto"
             >
-              <Link href="/pricing">See Growth pricing</Link>
+              <Link href="/pricing">See Growth Pricing</Link>
             </Button>
           </div>
         </Container>
@@ -76,7 +76,7 @@ function SellingOpen() {
 
       <Section variant="white">
         <SectionHeading subtitle="What a storefront gives each business page on Growth.">
-          What comes with a storefront
+          What Comes with a Storefront
         </SectionHeading>
         <ul className="mt-6 max-w-xl list-disc ml-5 space-y-2 font-subhead text-sm text-charcoal">
           {STOREFRONT_POINTS.map((point) => (
@@ -119,13 +119,13 @@ function SellingClosed() {
               asChild
               className="bg-amber-gold text-brand-black font-body font-bold hover:bg-light-gold rounded-full px-7 py-3 text-base min-h-[48px] h-auto"
             >
-              <Link href="/for-business#start">List your business</Link>
+              <Link href="/for-business#start">List Your Business</Link>
             </Button>
             <Button
               asChild
               className="border border-white/40 text-white bg-transparent hover:bg-white/10 rounded-full px-7 py-3 text-base min-h-[48px] h-auto"
             >
-              <Link href="#for-vendors-waitlist">Tell me when selling opens</Link>
+              <Link href="#for-vendors-waitlist">Tell Me When Selling Opens</Link>
             </Button>
           </div>
         </Container>
@@ -136,7 +136,7 @@ function SellingClosed() {
           Not open yet
         </span>
         <SectionHeading subtitle="Vendor storefronts are the next chapter — Black-owned vendors selling products and services directly through the platform.">
-          Marketplace vendor access is still being built
+          Marketplace Vendor Access Is Still Being Built
         </SectionHeading>
         <p className="font-subhead text-sm text-charcoal mt-4 max-w-xl">
           We are not accepting vendor sign-ups and we are not selling vendor access, because the
@@ -147,7 +147,7 @@ function SellingClosed() {
         <LaunchWaitlist
           options={WAITLIST_OPTIONS}
           id="for-vendors-waitlist"
-          submitLabel="Tell me when it opens"
+          submitLabel="Tell Me When It Opens"
           successMessage="You're on the list. We'll email you the day vendor access opens."
         />
       </Section>

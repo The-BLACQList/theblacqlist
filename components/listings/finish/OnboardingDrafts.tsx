@@ -168,7 +168,7 @@ export function OnboardingDrafts({ listingId, autoStart, aboutFromSite, aboutLim
     >
       <div className="border-b border-charcoal/8 px-5 py-4">
         <h2 id="drafts-heading" className="font-headline text-base text-brand-black">
-          Drafts for your page
+          Drafts for Your Page
         </h2>
         <p className="mt-0.5 font-body text-xs text-charcoal-soft">
           Change anything you like. Nothing is saved until you tap Use this.
@@ -183,7 +183,7 @@ export function OnboardingDrafts({ listingId, autoStart, aboutFromSite, aboutLim
         {!values && !loading && (
           <button type="button" onClick={() => ask('all', 'fresh')} className={BTN_SECONDARY}>
             <PenLine className="size-4" aria-hidden="true" />
-            Write drafts for me
+            Write Drafts for Me
           </button>
         )}
 

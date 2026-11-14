@@ -51,14 +51,14 @@ export function StepReview({ values, business, categoryName, priceLine, onEdit }
     <div className="flex flex-col gap-5">
       <dl className="rounded-xl border border-charcoal/15 bg-white px-4">
         <Row label="Business" value={business?.name ?? ''} step={0} onEdit={onEdit} />
-        <Row label="Job title" value={values.name.trim()} step={0} onEdit={onEdit} />
+        <Row label="Job Title" value={values.name.trim()} step={0} onEdit={onEdit} />
         <Row label="Summary" value={values.tagline.trim()} step={0} onEdit={onEdit} />
         <Row label="Category" value={categoryName ?? ''} step={0} onEdit={onEdit} />
-        <Row label="Kind of work" value={[kind, where].filter(Boolean).join(', ')} step={0} onEdit={onEdit} />
+        <Row label="Kind of Work" value={[kind, where].filter(Boolean).join(', ')} step={0} onEdit={onEdit} />
         <Row label="Pay" value={pay} step={1} onEdit={onEdit} />
-        <Row label="Applications close" value={closes} step={1} onEdit={onEdit} />
-        <Row label="How to apply" value={apply} step={2} onEdit={onEdit} />
-        <Row label="About this role" value={values.description.trim()} step={2} onEdit={onEdit} />
+        <Row label="Applications Close" value={closes} step={1} onEdit={onEdit} />
+        <Row label="How to Apply" value={apply} step={2} onEdit={onEdit} />
+        <Row label="About This Role" value={values.description.trim()} step={2} onEdit={onEdit} />
       </dl>
       <p className="font-subhead text-sm text-brand-black rounded-lg bg-white border border-charcoal/15 p-3">
         {priceLine.text}

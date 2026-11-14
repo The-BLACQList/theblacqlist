@@ -1,4 +1,4 @@
-// Ticket 153: the "Your role is in review" page. View-model, view markup, and the
+// Ticket 153: the "Your Role Is in Review" page. View-model, view markup, and the
 // Stripe return URLs.
 
 import { createElement } from 'react'
@@ -45,7 +45,7 @@ function review(over: Partial<ConfirmationInput> = {}) {
 describe('buildConfirmationModel', () => {
   it('included posting', () => {
     const m = review()
-    expect(m.heading).toBe('Your role is in review')
+    expect(m.heading).toBe('Your Role Is in Review')
     expect(m.costLine).toBe('Included with your Growth plan. No charge.')
     expect(m.timeline.map((s) => s.label)).toEqual(['Submitted', 'In review', 'Live', 'Closes'])
     expect(m.timeline.find((s) => s.state === 'current')?.label).toBe('In review')
@@ -83,7 +83,7 @@ describe('buildConfirmationModel', () => {
   it('live', () => {
     const m = review({ status: 'published' })
     expect(m.kind).toBe('live')
-    expect(m.heading).toBe('Your role is live')
+    expect(m.heading).toBe('Your Role Is Live')
     expect(m.timeline.find((s) => s.state === 'current')?.label).toBe('Live')
   })
 
@@ -91,7 +91,7 @@ describe('buildConfirmationModel', () => {
     const reason = publicRejectionReason('Add a pay range.\n\nAdmin notes: spammy poster')
     expect(reason).toBe('Add a pay range.')
     const m = buildConfirmationModel({ ...base, status: 'rejected', rejectionReason: reason })
-    expect(m).toMatchObject({ kind: 'rejected', heading: 'This role needs changes', reason: 'Add a pay range.' })
+    expect(m).toMatchObject({ kind: 'rejected', heading: 'This Role Needs Changes', reason: 'Add a pay range.' })
   })
 
   it('other statuses redirect', () => {
@@ -117,7 +117,7 @@ describe('PostedView', () => {
       })
     )
     expect(html.match(/<h1/g)).toHaveLength(1)
-    expect(html).toContain('Your role is in review')
+    expect(html).toContain('Your Role Is in Review')
     expect(html).toContain('Moderator at The BLACQList')
     expect(html).toContain('<ol')
     expect(html).toContain('aria-current="step"')
@@ -138,7 +138,7 @@ describe('PostedView', () => {
         publicHref: null,
       })
     )
-    expect(html).toContain("We&#x27;re confirming your payment")
+    expect(html).toContain("We&#x27;re Confirming Your Payment")
     expect(html).toContain('aria-live="polite"')
   })
 })

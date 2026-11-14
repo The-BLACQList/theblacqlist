@@ -258,7 +258,7 @@ export function AiGuide({
             htmlFor="ai-guide-input"
             className="flex items-center gap-2 font-subhead text-sm font-semibold text-off-white mb-2"
           >
-            Tell us what you&rsquo;re looking for
+            Tell Us What You&rsquo;re Looking For
             {/* Cue's panel says it uses AI; the older guide keeps its tag. */}
             {!assistant && (
               <span
@@ -358,7 +358,7 @@ export function AiGuide({
                 className={ASSISTANT_LINK}
               >
                 <MessageCircle className="size-4" aria-hidden="true" />
-                Keep chatting with Cue
+                Keep Chatting with Cue
               </button>
             </div>
           ) : (
@@ -406,7 +406,7 @@ function GuideAnswer({ answer }: { answer: Results }) {
       {nameMatches.length > 0 && (
         <div className={summary !== null ? 'mb-4' : undefined}>
           <h3 className="font-subhead text-xs font-semibold uppercase tracking-[0.08em] text-off-white/85">
-            Matching names
+            Matching Names
           </h3>
           <CardGrid entities={nameMatches} />
         </div>
@@ -424,7 +424,7 @@ function GuideAnswer({ answer }: { answer: Results }) {
         {/* A site question gets its page only; "see all" would be an empty search. */}
         {(!nothing || !page) && (
           <Link href={seeAllHref} className={LINK}>
-            See all matches
+            See All Matches
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
         )}

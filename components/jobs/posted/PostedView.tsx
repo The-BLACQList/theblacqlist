@@ -84,26 +84,26 @@ export function PostedView({ model, entityId, roleTitle, businessName, publicHre
 
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <Link href="/dashboard" className={`${primary} w-full sm:w-auto`}>
-          Back to your dashboard
+          Back to Your Dashboard
         </Link>
         {model.kind === 'rejected' ? (
           <Link href={`/dashboard/pages/${entityId}/edit`} className={`${secondary} w-full sm:w-auto`}>
-            Edit your role
+            Edit Your Role
           </Link>
         ) : (
           <>
             {canPostAnother && (
               <Link href="/add-job" className={`${secondary} w-full sm:w-auto`}>
-                Post another role
+                Post Another Role
               </Link>
             )}
             {model.kind === 'live' && publicHref ? (
               <Link href={publicHref} className={`${secondary} w-full sm:w-auto`}>
-                See your role
+                See Your Role
               </Link>
             ) : (
               <Link href={`/dashboard/pages/${entityId}/edit`} className={`${secondary} w-full sm:w-auto`}>
-                See your role
+                See Your Role
               </Link>
             )}
           </>

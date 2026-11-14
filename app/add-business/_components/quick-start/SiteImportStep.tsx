@@ -107,7 +107,7 @@ export function SiteImportStep({ answers, cities, signInEmail, onDone, onSkip }:
   if (phase.kind === 'partial') {
     return (
       <div className="flex flex-col gap-5">
-        <StepIntro title="Some photos didn't come in">
+        <StepIntro title="Some Photos Didn't Come In">
           The rest of your info is ready. You can add these photos yourself on the next page.
         </StepIntro>
         <ul className="flex flex-col gap-2">
@@ -120,7 +120,7 @@ export function SiteImportStep({ answers, cities, signInEmail, onDone, onSkip }:
         </ul>
         <div>
           <button type="button" className={PRIMARY} onClick={() => onDone(phase.patch, phase.site)}>
-            Continue without them
+            Continue Without Them
           </button>
         </div>
       </div>
@@ -164,13 +164,13 @@ export function SiteImportStep({ answers, cities, signInEmail, onDone, onSkip }:
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" className={PRIMARY} disabled={pending} onClick={() => use(f)}>
             {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {pending ? 'Bringing in photos…' : 'Use this'}
+            {pending ? 'Bringing in photos…' : 'Use This'}
           </button>
           <button type="button" className={SECONDARY} disabled={pending} onClick={() => setPhase({ kind: 'enter' })}>
-            Try another address
+            Try Another Address
           </button>
           <button type="button" className={SECONDARY} disabled={pending} onClick={onSkip}>
-            Skip, I&apos;ll type it
+            Skip, I&apos;ll Type It
           </button>
         </div>
       </div>
@@ -187,13 +187,13 @@ export function SiteImportStep({ answers, cities, signInEmail, onDone, onSkip }:
         read()
       }}
     >
-      <StepIntro title="Have a website or link page?">
+      <StepIntro title="Have a Website or Link Page?">
         We can bring in your name, about, phone, hours and photos so you type less. You check
         everything before it goes on your page.
       </StepIntro>
       <div>
         <label htmlFor={urlId} className={LABEL_CLASS}>
-          Your website or link-in-bio page
+          Your Website or Link-in-Bio Page
         </label>
         <input
           id={urlId}
@@ -222,10 +222,10 @@ export function SiteImportStep({ answers, cities, signInEmail, onDone, onSkip }:
       <ErrorLine error={error} id="qs-site-error" />
       <div className="flex flex-wrap items-center gap-2">
         <button type="submit" className={PRIMARY} disabled={pending || !url.trim()}>
-          Bring in my info
+          Bring In My Info
         </button>
         <button type="button" className={SECONDARY} disabled={pending} onClick={onSkip}>
-          Skip, I&apos;ll type it
+          Skip, I&apos;ll Type It
         </button>
       </div>
     </form>

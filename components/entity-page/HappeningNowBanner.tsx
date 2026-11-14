@@ -26,7 +26,7 @@ export function HappeningNowBanner({ posts, now }: Props) {
         {more.length > 0 && (
           <details className="group mt-2">
             <summary className="inline-flex cursor-pointer list-none items-center gap-1 rounded-full text-xs font-semibold text-gold hover:text-light-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold [&::-webkit-details-marker]:hidden">
-              +{more.length} more
+              +{more.length} More
               <ChevronDown
                 aria-hidden
                 className="size-3.5 transition-transform group-open:rotate-180"

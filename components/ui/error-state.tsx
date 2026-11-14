@@ -38,12 +38,12 @@ export function ErrorState({
           onClick={reset}
           className="bg-amber-gold text-brand-black hover:bg-light-gold rounded-full px-6 py-2.5 font-subhead font-semibold"
         >
-          Try again
+          Try Again
         </Button>
       )}
 
       <Link href={homeHref} className="text-amber hover:underline font-subhead text-sm">
-        Go home
+        Go Home
       </Link>
     </div>
   )

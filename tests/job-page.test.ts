@@ -72,14 +72,14 @@ describe('buildJobFacts', () => {
   it('lists Type, Where, Pay, Closes for an on-site paid role', () => {
     const rows = buildJobFacts(baseJob, city, NOW)
     expect(labels(rows)).toEqual(['Type', 'Where', 'Pay', 'Closes'])
-    expect(rows[0]!.value).toBe('Full-time, On-site')
+    expect(rows[0]!.value).toBe('Full-Time, On-Site')
     expect(rows[1]!.value).toBe('Austin, TX')
     expect(rows[2]!.value).toBe('$18–$22 an hour')
   })
 
   it('says Remote once: in Where, not in Type', () => {
     const rows = buildJobFacts({ ...baseJob, workplace_type: 'remote' }, city, NOW)
-    expect(rows.find((r) => r.label === 'Type')?.value).toBe('Full-time')
+    expect(rows.find((r) => r.label === 'Type')?.value).toBe('Full-Time')
     expect(rows.find((r) => r.label === 'Where')?.value).toBe('Remote')
   })
 
@@ -180,13 +180,13 @@ describe('job page markup', () => {
 
   it('renders the business block only with a hiring business, and no em dashes', () => {
     const none = html(entity({}))
-    expect(none).not.toContain('About the business')
+    expect(none).not.toContain('About the Business')
     const withBiz = html(
       entity({
         hiring: { name: 'Acme Cafe', url: '/austin/business/acme', logoUrl: null, tagline: 'Good food', cityName: 'Austin' },
       })
     )
-    expect(withBiz).toContain('About the business')
+    expect(withBiz).toContain('About the Business')
     expect(withBiz).toContain('href="/austin/business/acme"')
     expect(withBiz).not.toContain('—')
   })

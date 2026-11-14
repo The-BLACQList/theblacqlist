@@ -88,7 +88,7 @@ export default async function AddJobPage({ searchParams }: Props) {
           <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-jobs-ink mb-2">
             Jobs
           </p>
-          <h1 className="font-headline text-3xl md:text-4xl text-brand-black mb-3">Post a job</h1>
+          <h1 className="font-headline text-3xl md:text-4xl text-brand-black mb-3">Post a Job</h1>
           <p className="font-subhead text-sm text-charcoal leading-relaxed max-w-lg">
             Four short steps. Our team reviews every role before it goes live.
           </p>

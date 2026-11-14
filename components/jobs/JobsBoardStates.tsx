@@ -29,7 +29,7 @@ export function JobsError() {
         Nothing is wrong with your filters. Please try again.
       </p>
       <button type="button" onClick={() => router.refresh()} className={ctaClass}>
-        Try again
+        Try Again
       </button>
     </Panel>
   )
@@ -44,7 +44,7 @@ export function JobsNoMatch() {
         Try removing a filter to see more roles.
       </p>
       <Link href="/jobs" scroll={false} className={ctaClass}>
-        Clear filters
+        Clear Filters
       </Link>
     </Panel>
   )
@@ -61,11 +61,11 @@ export function JobsEmpty({ isOwner, postHref }: { isOwner: boolean; postHref?: 
       <div className="flex flex-col items-center justify-center gap-3 pt-2 sm:flex-row">
         {isOwner && postHref ? (
           <Link href={postHref} className={ctaClass}>
-            Post the first one
+            Post the First One
           </Link>
         ) : (
           <Link href="/discover" className={secondaryCtaClass}>
-            Browse businesses
+            Browse Businesses
           </Link>
         )}
       </div>

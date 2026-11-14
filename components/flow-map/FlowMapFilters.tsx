@@ -58,7 +58,7 @@ export function FlowMapFilters({ cities, categories }: FlowMapFiltersProps) {
       <div className="flex items-center justify-between mb-3">
         <h2 className="font-headline text-base text-brand-black flex items-center gap-2">
           <SlidersHorizontal className="size-4 text-charcoal-soft" aria-hidden="true" />
-          Filter by city or category
+          Filter by City or Category
         </h2>
         {hasActiveFilters && (
           <button
@@ -66,7 +66,7 @@ export function FlowMapFilters({ cities, categories }: FlowMapFiltersProps) {
             onClick={clearAll}
             className="font-subhead text-xs text-charcoal underline underline-offset-2 hover:text-brand-black"
           >
-            Clear all
+            Clear All
           </button>
         )}
       </div>

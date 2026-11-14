@@ -152,7 +152,7 @@ describe('Near me placement', () => {
     expect(hero).not.toMatch(/^'use client'/)
     expect(hero).toContain('<HeroQuickFilters filters={QUICK_FILTERS} />')
     const chips = read('components/home/HeroQuickFilters.tsx')
-    expect(chips.indexOf("'Near me'")).toBeLessThan(chips.indexOf('filters.map('))
+    expect(chips.indexOf("'Near Me'")).toBeLessThan(chips.indexOf('filters.map('))
     expect(chips).toContain('(pos) => done({ lat: pos.coords.latitude, lng: pos.coords.longitude })')
     expect(chips).toContain('router.push(near ? nearMeHref(near.lat, near.lng) : FALLBACK_HREF)')
   })
@@ -176,7 +176,7 @@ describe('Near me placement', () => {
   it('leads the map quick filters as a pressed toggle', () => {
     const src = read('components/map/MapFilterControls.tsx')
     expect(src).toMatch(/aria-pressed=\{near !== null\}/)
-    expect(src.indexOf("'Near me'")).toBeLessThan(src.indexOf('Open now'))
+    expect(src.indexOf("'Near Me'")).toBeLessThan(src.indexOf('Open Now'))
   })
 
   it('never logs the position', () => {

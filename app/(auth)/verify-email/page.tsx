@@ -14,7 +14,7 @@ export default async function VerifyEmailPage({ searchParams }: VerifyEmailPageP
         <Mail className="size-7 text-amber" aria-hidden="true" />
       </div>
 
-      <h1 className="font-headline text-[22px] text-brand-black mb-2">Check your inbox</h1>
+      <h1 className="font-headline text-[22px] text-brand-black mb-2">Check Your Inbox</h1>
 
       <p className="font-subhead text-sm text-charcoal leading-relaxed">
         We sent a verification link to{' '}
@@ -37,13 +37,13 @@ export default async function VerifyEmailPage({ searchParams }: VerifyEmailPageP
           href="/sign-in"
           className="inline-flex items-center justify-center w-full h-11 rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors"
         >
-          Back to sign in
+          Back to Sign In
         </Link>
         <Link
           href="/sign-up"
           className="inline-flex min-h-11 items-center justify-center font-subhead text-sm text-charcoal hover:text-brand-black underline underline-offset-2"
         >
-          Use another email
+          Use Another Email
         </Link>
       </div>
     </div>

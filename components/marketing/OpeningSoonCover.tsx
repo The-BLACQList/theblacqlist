@@ -48,13 +48,13 @@ export function OpeningSoonCover({ feature }: Props) {
               asChild
               className="bg-amber-gold text-brand-black font-body font-bold hover:bg-light-gold rounded-full px-7 py-3 text-base min-h-[48px] h-auto"
             >
-              <Link href={`#${waitlistId}`}>Tell me when it opens</Link>
+              <Link href={`#${waitlistId}`}>Tell Me When It Opens</Link>
             </Button>
             <Button
               asChild
               className="border border-white/40 text-white bg-transparent hover:bg-white/10 rounded-full px-7 py-3 text-base min-h-[48px] h-auto"
             >
-              <Link href="/discover">Browse the list</Link>
+              <Link href="/discover">Browse the List</Link>
             </Button>
           </div>
         </Container>
@@ -65,7 +65,7 @@ export function OpeningSoonCover({ feature }: Props) {
           Not open yet
         </span>
         <h2 className="font-headline text-2xl md:text-3xl text-brand-black mb-4">
-          What it will do
+          What It Will Do
         </h2>
         <ul className="space-y-2 font-subhead text-charcoal max-w-xl">
           {feature.points.map((point) => (
@@ -82,7 +82,7 @@ export function OpeningSoonCover({ feature }: Props) {
         <LaunchWaitlist
           options={[{ value: feature.source, label: feature.name }]}
           id={waitlistId}
-          submitLabel="Tell me when it opens"
+          submitLabel="Tell Me When It Opens"
           successMessage={`You're on the list. We'll email you the day ${feature.name} opens.`}
         />
       </Section>

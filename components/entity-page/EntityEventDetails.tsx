@@ -113,7 +113,7 @@ export function EntityEventDetails({ entity }: { entity: EntityPageData }) {
               className="inline-flex items-center gap-2 h-12 px-5 rounded-full border border-charcoal/20 text-brand-black font-subhead text-sm font-semibold hover:border-amber-gold hover:bg-amber-50/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold/50 transition-colors"
             >
               <CalendarPlus className="size-4 text-amber" aria-hidden="true" />
-              Add to calendar
+              Add to Calendar
             </a>
           </div>
 
@@ -131,7 +131,7 @@ export function EntityEventDetails({ entity }: { entity: EntityPageData }) {
 
           {event.description && (
             <div className="pt-2 border-t border-charcoal/10">
-              <h3 className="font-headline text-lg text-brand-black mt-5 mb-2">About this event</h3>
+              <h3 className="font-headline text-lg text-brand-black mt-5 mb-2">About This Event</h3>
               <p className="font-body text-sm leading-relaxed text-charcoal whitespace-pre-line">
                 {event.description}
               </p>

@@ -243,7 +243,7 @@ export const US_BOUNDS: [[number, number], [number, number]] = [
 
 /** The city choices in display order, with All cities first. */
 export const CITY_CHOICES: Array<{ slug: string; label: string }> = [
-  { slug: ALL_CITIES, label: 'All cities' },
+  { slug: ALL_CITIES, label: 'All Cities' },
   ...Object.entries(CITY_VIEWS).map(([slug, view]) => ({ slug, label: view.label })),
 ]
 
