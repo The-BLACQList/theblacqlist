@@ -235,7 +235,7 @@ describe('FreeMonthCard for a page that already pays', () => {
     })
     expect(html).toContain('You’re on Growth free until November 19, 2026.')
     expect(html).toContain('On November 19, 2026 you go back to Starter at $19/month.')
-    expect(html).toContain('End my plan when the free month ends')
+    expect(html).toContain('End My Plan When the Free Month Ends')
   })
 
   it('after the tester asked to end, says no charge and offers to keep the plan', () => {

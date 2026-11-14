@@ -218,7 +218,7 @@ export default async function CommunitySpendPage() {
               href="/account/receipts/new"
               className="inline-flex items-center gap-2 h-10 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
             >
-              Add a receipt
+              Add a Receipt
               <ArrowUpRight className="size-4" aria-hidden="true" />
             </Link>
           </div>
@@ -229,9 +229,9 @@ export default async function CommunitySpendPage() {
             <EmptyState
               icon={Building2}
               iconClassName="text-charcoal-faint"
-              heading="No breakdowns yet"
+              heading="No Breakdowns Yet"
               body={`Spend breaks down by business, city, and category once an approved receipt is matched to a business on The BLACQList, and once ${AGGREGATE_MIN_TRANSACTIONS} or more transactions are behind that business or city. A receipt that wasn't matched, or that sits below the threshold, still counts toward the total above.`}
-              action={{ label: 'View your receipts', href: '/account/receipts' }}
+              action={{ label: 'View Your Receipts', href: '/account/receipts' }}
               className="py-10"
             />
           </div>
@@ -244,7 +244,7 @@ export default async function CommunitySpendPage() {
               <div className="rounded-xl bg-white border border-charcoal/10 p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <Building2 className="size-4 text-amber" aria-hidden="true" />
-                  <h2 className="font-headline text-base text-brand-black">Top businesses</h2>
+                  <h2 className="font-headline text-base text-brand-black">Top Businesses</h2>
                 </div>
                 <div className="space-y-3">
                   {topBusinesses.map((b, i) => (
@@ -274,7 +274,7 @@ export default async function CommunitySpendPage() {
               <div className="rounded-xl bg-white border border-charcoal/10 p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <MapPin className="size-4 text-amber" aria-hidden="true" />
-                  <h2 className="font-headline text-base text-brand-black">Top cities</h2>
+                  <h2 className="font-headline text-base text-brand-black">Top Cities</h2>
                 </div>
                 <div className="space-y-3">
                   {topCities.map((c, i) => (
@@ -304,7 +304,7 @@ export default async function CommunitySpendPage() {
               <div className="rounded-xl bg-white border border-charcoal/10 p-5">
                 <div className="flex items-center gap-2 mb-4">
                   <Tag className="size-4 text-amber" aria-hidden="true" />
-                  <h2 className="font-headline text-base text-brand-black">Top categories</h2>
+                  <h2 className="font-headline text-base text-brand-black">Top Categories</h2>
                 </div>
                 <div className="space-y-3">
                   {topCategories.map((c, i) => (

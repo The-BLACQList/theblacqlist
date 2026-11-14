@@ -12,7 +12,7 @@ import { CountedShare } from '@/components/spend/CountedShare'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { supportShareHref } from '@/lib/share/supportCard'
 
-export const metadata: Metadata = { title: 'Your spend is counted' }
+export const metadata: Metadata = { title: 'Your Spend Is Counted' }
 
 interface CountedRow {
   id: string
@@ -95,7 +95,7 @@ export default async function CountedReceiptPage({ params }: { params: Promise<{
               Something went wrong on our end. Try again in a moment.
             </p>
             <Link href="/account/receipts" className={linkCls}>
-              Back to My receipts
+              Back to My Receipts
             </Link>
           </div>
         </div>
@@ -158,7 +158,7 @@ export default async function CountedReceiptPage({ params }: { params: Promise<{
           </div>
 
           <h1 className="font-headline text-2xl text-brand-black mt-6">
-            {onMap ? 'Your spend joined the map' : 'Your spend is counted'}
+            {onMap ? 'Your Spend Joined the Map' : 'Your Spend Is Counted'}
           </h1>
           {!onMap && (
             <p className="font-body text-sm text-charcoal mt-2 max-w-sm">{offMapReason}</p>
@@ -167,17 +167,17 @@ export default async function CountedReceiptPage({ params }: { params: Promise<{
           <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-6">
             {onMap ? (
               <Link href="/flow-map" className={primaryBtnCls}>
-                See it on the map
+                See It on the Map
                 <ArrowUpRight className="size-4" aria-hidden="true" />
               </Link>
             ) : (
               <Link href="/account/receipts" className={primaryBtnCls}>
-                See my receipts
+                See My Receipts
               </Link>
             )}
             {onMap && (
               <Link href="/account/receipts" className={linkCls}>
-                My receipts
+                My Receipts
               </Link>
             )}
           </div>
@@ -187,7 +187,7 @@ export default async function CountedReceiptPage({ params }: { params: Promise<{
           {/* Support posts only name businesses on The BLACQList (ticket 183). */}
           {receipt.listing_id !== null && (
             <Link href={supportShareHref(receipt.id)} className={`${linkCls} mt-4`}>
-              Share a verified support post
+              Share a Verified Support Post
             </Link>
           )}
 

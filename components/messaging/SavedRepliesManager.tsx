@@ -121,7 +121,7 @@ export function SavedRepliesManager({ initial }: { initial: SavedReply[] }) {
             </div>
             <div>
               <label htmlFor="new-reply-kind" className="block font-subhead text-xs font-semibold text-charcoal">
-                Offer it on
+                Offer It On
               </label>
               <select
                 id="new-reply-kind"
@@ -156,7 +156,7 @@ export function SavedRepliesManager({ initial }: { initial: SavedReply[] }) {
             className="inline-flex items-center gap-1.5 rounded-full bg-brand-black px-4 py-1.5 font-subhead text-xs font-semibold text-white disabled:opacity-50"
           >
             {isPending && deletingId === null && <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />}
-            Save reply
+            Save Reply
           </button>
         </form>
       )}

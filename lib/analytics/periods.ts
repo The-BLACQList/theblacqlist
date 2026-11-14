@@ -18,10 +18,10 @@ export interface AnalyticsPeriod {
 }
 
 export const ANALYTICS_PERIODS: readonly AnalyticsPeriod[] = [
-  { key: '7d', days: 7, label: '7 days', heading: 'Last 7 days', bucket: 'day' },
-  { key: '30d', days: 30, label: '30 days', heading: 'Last 30 days', bucket: 'day' },
-  { key: '90d', days: 90, label: '90 days', heading: 'Last 90 days', bucket: 'week' },
-  { key: '365d', days: 365, label: '12 months', heading: 'Last 12 months', bucket: 'month' },
+  { key: '7d', days: 7, label: '7 days', heading: 'Last 7 Days', bucket: 'day' },
+  { key: '30d', days: 30, label: '30 days', heading: 'Last 30 Days', bucket: 'day' },
+  { key: '90d', days: 90, label: '90 days', heading: 'Last 90 Days', bucket: 'week' },
+  { key: '365d', days: 365, label: '12 months', heading: 'Last 12 Months', bucket: 'month' },
 ]
 
 export const DEFAULT_PERIOD: PeriodKey = '30d'

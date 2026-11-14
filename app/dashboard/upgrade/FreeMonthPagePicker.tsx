@@ -30,7 +30,7 @@ export function FreeMonthPagePicker({ pages }: Props) {
     <div className="mt-4 space-y-4">
       <fieldset>
         <legend className="mb-2 font-subhead text-sm font-bold text-brand-black">
-          Which page?
+          Which Page?
         </legend>
         <ul className="space-y-2">
           {pages.map((p) => (
@@ -75,7 +75,7 @@ export function FreeMonthPagePicker({ pages }: Props) {
               {open ? (
                 <ClaimTrialButton
                   plan={tier}
-                  label={`Use it on ${name}`}
+                  label={`Use It on ${name}`}
                   pendingLabel={page.paid ? 'Starting your free month…' : undefined}
                   listingId={page.listingId}
                 />

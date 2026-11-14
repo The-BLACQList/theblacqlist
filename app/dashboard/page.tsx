@@ -61,7 +61,7 @@ function WriteWithAi({
         aria-label={`Open the writer for ${listingName}`}
         className="sm:ml-auto shrink-0 inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 rounded-full border border-charcoal/20 bg-white text-brand-black font-subhead text-sm font-semibold hover:bg-off-white transition-colors"
       >
-        Open the writer <ChevronRight className="size-4" aria-hidden="true" />
+        Open the Writer <ChevronRight className="size-4" aria-hidden="true" />
       </Link>
     </div>
   )
@@ -132,12 +132,12 @@ export default async function DashboardPage() {
               // changes how the business appears everywhere else on the site,
               // and the scored version of this check lives in Edit content's
               // Starter+ writing help, so free-tier owners only ever see it here.
-              { done: !!listing.cover_image_path, label: 'Cover photo' },
+              { done: !!listing.cover_image_path, label: 'Cover Photo' },
               { done: !!listing.tagline, label: 'Tagline' },
-              { done: !!details?.description, label: 'Business description' },
-              { done: !!details?.phone || !!details?.website_url, label: 'Contact info' },
-              { done: !!details?.cta_type, label: 'Call to action' },
-              { done: !!listing.meta_title, label: 'SEO title' },
+              { done: !!details?.description, label: 'Business Description' },
+              { done: !!details?.phone || !!details?.website_url, label: 'Contact Info' },
+              { done: !!details?.cta_type, label: 'Call to Action' },
+              { done: !!listing.meta_title, label: 'SEO Title' },
             ]
             const doneCount = completeness.filter((c) => c.done).length
             const quota = aiQuota(listing.tier)
@@ -186,7 +186,7 @@ export default async function DashboardPage() {
                       rel="noopener noreferrer"
                       className="shrink-0 inline-flex items-center gap-1.5 text-xs font-subhead text-charcoal-soft hover:text-brand-black transition-colors"
                     >
-                      View page <ExternalLink className="size-3" aria-hidden="true" />
+                      View Page <ExternalLink className="size-3" aria-hidden="true" />
                     </Link>
                   )}
                 </div>
@@ -208,7 +208,7 @@ export default async function DashboardPage() {
                     aria-label={`Edit page for ${listing.name}`}
                     className="inline-flex items-center gap-1.5 font-subhead text-sm font-semibold text-amber hover:underline"
                   >
-                    Edit page <ChevronRight className="size-4" aria-hidden="true" />
+                    Edit Page <ChevronRight className="size-4" aria-hidden="true" />
                   </Link>
                 </div>
               </div>

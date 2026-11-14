@@ -29,7 +29,7 @@ export function BasicInfoSection({ listingId, name, tagline, onDraftChange }: Pr
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
-        <h2 className="font-headline text-base text-brand-black">Basic info</h2>
+        <h2 className="font-headline text-base text-brand-black">Basic Info</h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           Your business name and tagline appear on your public page.
         </p>
@@ -42,7 +42,7 @@ export function BasicInfoSection({ listingId, name, tagline, onDraftChange }: Pr
             htmlFor="bi-name"
             className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
-            Business name <span aria-hidden="true">*</span>
+            Business Name <span aria-hidden="true">*</span>
           </label>
           <input
             id="bi-name"

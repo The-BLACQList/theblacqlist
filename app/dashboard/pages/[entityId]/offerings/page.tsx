@@ -59,7 +59,7 @@ export default async function OfferingsPage({ params }: Props) {
 
       <div className="rounded-xl border border-charcoal/10 bg-white">
         <div className="px-5 py-4 border-b border-charcoal/8">
-          <h2 className="font-headline text-base text-brand-black">Services & offerings</h2>
+          <h2 className="font-headline text-base text-brand-black">Services & Offerings</h2>
           <p className="font-body text-xs text-charcoal-soft mt-0.5">
             Add what your business offers: services, products, or classes.
           </p>

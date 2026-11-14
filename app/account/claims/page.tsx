@@ -13,11 +13,11 @@ export const metadata: Metadata = {
 
 const STATUS_LABELS: Record<string, { label: string; className: string }> = {
   pending: {
-    label: 'Pending review',
+    label: 'Pending Review',
     className: 'bg-amber-50 text-amber-700 border-amber-200',
   },
   under_review: {
-    label: 'Under review',
+    label: 'Under Review',
     className: 'bg-blue-50 text-blue-700 border-blue-200',
   },
   approved: {
@@ -78,7 +78,7 @@ export default async function AccountClaimsPage() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="font-headline text-3xl text-brand-black mb-1">My claims</h1>
+          <h1 className="font-headline text-3xl text-brand-black mb-1">My Claims</h1>
           <p className="font-subhead text-sm text-charcoal-soft">
             Listing ownership claims you&apos;ve submitted
           </p>
@@ -98,7 +98,7 @@ export default async function AccountClaimsPage() {
               href="/claim"
               className="inline-flex items-center justify-center h-10 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
             >
-              Find a listing to claim
+              Find a Listing to Claim
             </Link>
           </div>
         )}

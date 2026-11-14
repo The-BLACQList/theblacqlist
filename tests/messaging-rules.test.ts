@@ -120,8 +120,8 @@ describe('resolveListingMessaging', () => {
 
 describe('messagingCtaLabel', () => {
   it('relabels only the owner and thread modes', () => {
-    expect(messagingCtaLabel('owner', 'Send Message')).toBe('View inbox')
-    expect(messagingCtaLabel('thread', 'Send Message')).toBe('View messages')
+    expect(messagingCtaLabel('owner', 'Send Message')).toBe('View Inbox')
+    expect(messagingCtaLabel('thread', 'Send Message')).toBe('View Messages')
     expect(messagingCtaLabel('compose', 'Send Message')).toBe('Send Message')
     expect(messagingCtaLabel('sign_in', 'Send Message')).toBe('Send Message')
   })
@@ -341,7 +341,7 @@ describe('message CTA helpers', () => {
   })
 
   it('relabels the primary CTA for owners', () => {
-    expect(getEntityCtaLabel(entity('message', { mode: 'owner', href: '/dashboard/messages' }))).toBe('View inbox')
+    expect(getEntityCtaLabel(entity('message', { mode: 'owner', href: '/dashboard/messages' }))).toBe('View Inbox')
   })
 
   it('offers a secondary Message link when the primary CTA is something else', () => {

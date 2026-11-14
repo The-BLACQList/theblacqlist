@@ -65,7 +65,7 @@ describe('spotStatus', () => {
   it('a new tester with no steps has just joined', () => {
     expect(spotStatus(enrollment(), [], NOW)).toEqual({
       state: 'just_joined',
-      label: 'Just joined',
+      label: 'Just Joined',
     })
   })
 
@@ -81,7 +81,7 @@ describe('spotStatus', () => {
     )
     expect(spotStatus(e, [step('search_ran', daysAgo(5))], NOW)).toEqual({
       state: 'quiet',
-      label: 'Quiet 5 days',
+      label: 'Quiet 5 Days',
     })
   })
 

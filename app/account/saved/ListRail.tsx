@@ -45,7 +45,7 @@ export function ListRail({ lists, activeListId, totalCount }: ListRailProps) {
   return (
     <div className="mb-6">
       <nav aria-label="Saved lists" className="flex flex-wrap items-center gap-2">
-        <RailLink href="/account/saved" label="All saved" count={totalCount} active={!activeList} />
+        <RailLink href="/account/saved" label="All Saved" count={totalCount} active={!activeList} />
         {lists.map((list) => (
           <RailLink
             key={list.id}
@@ -128,7 +128,7 @@ function ActionDialog({
 function NewListButton() {
   return (
     <ActionDialog
-      title="New list"
+      title="New List"
       description="Group saved businesses however you like. Lists are private to you."
       trigger={
         <button
@@ -136,11 +136,11 @@ function NewListButton() {
           className="inline-flex items-center gap-2 min-h-[44px] px-4 rounded-full border border-dashed border-charcoal/30 font-subhead text-sm text-charcoal hover:border-charcoal/60 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
         >
           <Plus className="size-4" aria-hidden="true" />
-          New list
+          New List
         </button>
       }
     >
-      {(close) => <NameForm action={createListAction} fieldId="new-list" submitLabel="Create list" pendingLabel="Creating…" onDone={close} />}
+      {(close) => <NameForm action={createListAction} fieldId="new-list" submitLabel="Create List" pendingLabel="Creating…" onDone={close} />}
     </ActionDialog>
   )
 }
@@ -148,7 +148,7 @@ function NewListButton() {
 function RenameListButton({ list }: { list: RailList }) {
   return (
     <ActionDialog
-      title="Rename list"
+      title="Rename List"
       trigger={
         <button
           type="button"
@@ -165,7 +165,7 @@ function RenameListButton({ list }: { list: RailList }) {
           fieldId={`rename-${list.id}`}
           listId={list.id}
           defaultValue={list.name}
-          submitLabel="Save name"
+          submitLabel="Save Name"
           pendingLabel="Saving…"
           onDone={close}
         />
@@ -225,7 +225,7 @@ function NameForm({
     <form action={formAction} className="mt-5 space-y-2">
       {listId && <input type="hidden" name="list_id" value={listId} />}
       <label htmlFor={fieldId} className="block font-subhead text-sm font-semibold text-brand-black">
-        List name
+        List Name
       </label>
       <input
         id={fieldId}
@@ -266,7 +266,7 @@ function DeleteForm({ listId, onDone }: { listId: string; onDone: () => void }) 
           {state.error}
         </p>
       )}
-      <SubmitButton label="Delete list" pendingLabel="Deleting…" variant="destructive" />
+      <SubmitButton label="Delete List" pendingLabel="Deleting…" variant="destructive" />
     </form>
   )
 }

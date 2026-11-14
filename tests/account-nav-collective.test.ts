@@ -12,7 +12,7 @@ describe('collectiveItems', () => {
 
   it('shows Receipts, My spending and The Collective once it is open', () => {
     const items = collectiveItems(4, false)
-    expect(items.map((i) => i.label)).toEqual(['Receipts', 'My spending', 'The Collective'])
+    expect(items.map((i) => i.label)).toEqual(['Receipts', 'My Spending', 'The Collective'])
     expect(items.some((i) => i.soon)).toBe(false)
     expect(items[0]?.count).toBe(4)
   })

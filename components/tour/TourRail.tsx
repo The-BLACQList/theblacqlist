@@ -377,7 +377,7 @@ export function TourRail() {
               onClick={retry}
               className="mt-2 min-h-11 rounded-full border border-amber-gold/60 px-4 py-1.5 font-subhead text-sm font-bold text-amber-gold transition-colors hover:bg-amber-gold/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
             >
-              Try again
+              Try Again
             </button>
           </div>
         )}
@@ -421,7 +421,7 @@ export function TourRail() {
                     }
                     className="mt-3 inline-flex min-h-11 w-full items-center justify-center rounded-full bg-amber-gold px-5 py-2.5 font-subhead text-sm font-bold text-brand-black transition-colors hover:bg-light-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg"
                   >
-                    {tour.trialGrantedAt === null ? 'See your free month' : 'Go to your free month'}
+                    {tour.trialGrantedAt === null ? 'See Your Free Month' : 'Go to Your Free Month'}
                   </Link>
                 )}
 
@@ -433,7 +433,7 @@ export function TourRail() {
                   aria-expanded={reviewing}
                   className="mt-3 inline-flex min-h-11 items-center gap-1.5 font-subhead text-sm text-cream/70 underline underline-offset-4 transition-colors hover:text-cream focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
                 >
-                  {reviewing ? 'Hide your walk' : 'Review your walk'}
+                  {reviewing ? 'Hide Your Walk' : 'Review Your Walk'}
                   <ChevronDown
                     aria-hidden="true"
                     className={`size-4 transition-transform ${reviewing ? 'rotate-180' : ''}`}
@@ -479,7 +479,7 @@ export function TourRail() {
                   aria-hidden="true"
                   className={`size-3.5 ${checking ? 'animate-spin' : ''}`}
                 />
-                {checking ? 'Checking…' : 'Check again'}
+                {checking ? 'Checking…' : 'Check Again'}
               </button>
             )}
           </>

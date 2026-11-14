@@ -86,14 +86,14 @@ describe('UpgradePlans with a free month', () => {
   it('offers the paid upgrade when there is no free month', () => {
     const html = render(null)
     expect(html).toContain('Upgrade to Starter')
-    expect(html).not.toContain('Use your free month')
+    expect(html).not.toContain('Use Your Free Month')
   })
 
   it('points Starter at the free month instead of a paid checkout', () => {
     const html = render('ready')
     expect(html).not.toContain('Upgrade to Starter')
     expect(html).toContain('href="#free-month"')
-    expect(html).toContain('Use your free month')
+    expect(html).toContain('Use Your Free Month')
   })
 
   it('shows no buy button while the month waits for a live page', () => {

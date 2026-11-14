@@ -30,7 +30,7 @@ export function ManageSubscriptionButton({ listingId }: Props) {
         disabled={isPending}
         className="inline-flex items-center rounded-full border border-brand-black bg-white px-5 py-2 font-body font-bold text-sm text-brand-black transition-colors hover:bg-brand-black hover:text-white disabled:opacity-60 disabled:cursor-not-allowed min-h-[44px]"
       >
-        {isPending ? 'Opening…' : 'Manage subscription'}
+        {isPending ? 'Opening…' : 'Manage Subscription'}
       </button>
       {error && (
         <p role="alert" className="mt-2 font-body text-xs text-red-600">

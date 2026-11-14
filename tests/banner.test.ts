@@ -105,7 +105,7 @@ describe('wiring', () => {
     const grid = read('components/dashboard/MediaGrid.tsx')
     expect(grid).toContain('<BannerPanel')
     expect(grid).toContain('<BannerCropDialog')
-    expect(grid).toContain('Use as banner')
+    expect(grid).toContain('Use as Banner')
     // Uploads keep up to the stored size, not 1920.
     expect(grid).toMatch(/compressImage\(file: File, maxPx = 2400, quality = 0\.9\)/)
   })

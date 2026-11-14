@@ -109,7 +109,7 @@ export function CountedShare({
             htmlFor="counted-share-text"
             className="font-subhead text-xs font-semibold text-brand-black"
           >
-            Copy this to share it
+            Copy This to Share It
           </label>
           <textarea
             id="counted-share-text"

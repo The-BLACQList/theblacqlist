@@ -72,8 +72,8 @@ export function resolveListingMessaging(input: ResolveListingMessagingInput): Li
 
 /** The hero/quick-bar label when the message CTA is in-app. */
 export function messagingCtaLabel(mode: ListingMessagingMode, fallback: string): string {
-  if (mode === 'owner') return 'View inbox'
-  if (mode === 'thread') return 'View messages'
+  if (mode === 'owner') return 'View Inbox'
+  if (mode === 'thread') return 'View Messages'
   return fallback
 }
 

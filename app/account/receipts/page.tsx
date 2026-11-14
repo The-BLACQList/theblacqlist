@@ -17,7 +17,7 @@ import {
 } from '@/lib/spend/my-receipts'
 import { ReceiptsLoadError } from './ReceiptsLoadError'
 
-export const metadata: Metadata = { title: 'My receipts' }
+export const metadata: Metadata = { title: 'My Receipts' }
 
 interface ReceiptRow {
   id: string
@@ -107,7 +107,7 @@ export default async function MyReceiptsPage({
     <main>
       <div className="max-w-[640px] mx-auto space-y-6">
         <div>
-          <h1 className="font-headline text-2xl text-brand-black">My receipts</h1>
+          <h1 className="font-headline text-2xl text-brand-black">My Receipts</h1>
           <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
             Track your support for Black-owned businesses
           </p>
@@ -138,7 +138,7 @@ export default async function MyReceiptsPage({
         ) : receipts.length === 0 ? (
           <div className="rounded-xl bg-white border border-charcoal/10 px-5 py-8 sm:px-8">
             <h2 className="font-subhead text-base font-semibold text-brand-black">
-              No receipts yet
+              No Receipts Yet
             </h2>
             <ol className="mt-4 space-y-3">
               {STEPS.map(({ icon: Icon, text }, i) => (
@@ -155,7 +155,7 @@ export default async function MyReceiptsPage({
             </ol>
             <Link href="/account/receipts/new" className={`${addBtnCls} mt-6 w-full sm:w-auto`}>
               <Plus className="size-4" aria-hidden="true" />
-              Add your first receipt
+              Add Your First Receipt
             </Link>
           </div>
         ) : (
@@ -169,7 +169,7 @@ export default async function MyReceiptsPage({
                   id="counted-heading"
                   className="font-subhead text-xs text-charcoal-soft font-semibold uppercase tracking-wide"
                 >
-                  Counted so far
+                  Counted so Far
                 </h2>
                 <p className="font-headline text-3xl text-brand-black mt-1 tabular-nums">
                   {formatDollarsExact(total)}
@@ -178,7 +178,7 @@ export default async function MyReceiptsPage({
               </div>
               <Link href="/account/receipts/new" className={`${addBtnCls} w-full sm:w-auto`}>
                 <Plus className="size-4" aria-hidden="true" />
-                Add a receipt
+                Add a Receipt
               </Link>
             </section>
 

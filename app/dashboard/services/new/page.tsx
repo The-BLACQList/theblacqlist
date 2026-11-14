@@ -49,9 +49,9 @@ export default async function NewServicePage() {
           className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-faint hover:text-charcoal mb-3"
         >
           <ArrowLeft className="size-3" aria-hidden="true" />
-          Back to services
+          Back to Services
         </Link>
-        <h1 className="font-headline text-2xl text-brand-black">Add service</h1>
+        <h1 className="font-headline text-2xl text-brand-black">Add Service</h1>
         <p className="font-body text-sm text-charcoal-soft mt-0.5">
           List a new service in the BLACQList Marketplace.
         </p>
@@ -72,7 +72,7 @@ export default async function NewServicePage() {
               <ServiceForm
                 action={createServiceAction}
                 listings={eligible}
-                submitLabel="Create service"
+                submitLabel="Create Service"
               />
             </div>
           )}

@@ -143,7 +143,7 @@ function tagName(node: ts.JsxElement | ts.JsxSelfClosingElement): string {
 }
 
 /** Checkbox, radio and switch labels read as options, so they stay as written. */
-const CHOICE_TAGS = /^(input|Checkbox|Radio|RadioGroupItem|Switch|Toggle)$/
+const CHOICE_TAGS = /^(input|Checkbox|Radio|RadioGroupItem|Toggle)$|Switch$/
 
 function containsChoice(el: ts.JsxElement): boolean {
   let found = false
@@ -213,8 +213,14 @@ function choiceIds(sf: ts.SourceFile): Set<string> {
 
 function hasProseSiblings(el: ts.JsxElement): boolean {
   const parent = el.parent
-  if (!ts.isJsxElement(parent)) return false
-  return parent.children.some((c) => ts.isJsxText(c) && /[A-Za-z]{2}/.test(c.text))
+  if (!ts.isJsxElement(parent) && !ts.isJsxFragment(parent)) return false
+  const kids = parent.children
+  const next = kids[kids.indexOf(el) + 1]
+  // Words around the link, or a full stop right after it, make it part of a sentence.
+  return (
+    kids.some((c) => ts.isJsxText(c) && /[A-Za-z]{2}/.test(c.text)) ||
+    (next !== undefined && ts.isJsxText(next) && /^\s*[.,;]/.test(next.text))
+  )
 }
 
 type Lit = ts.StringLiteral | ts.NoSubstitutionTemplateLiteral

@@ -45,7 +45,7 @@ export function EventDetailsSection({ listingId, event, businesses }: Props) {
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
-        <h2 className="font-headline text-base text-brand-black">Event details</h2>
+        <h2 className="font-headline text-base text-brand-black">Event Details</h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           When and where your event happens, plus ticketing.
         </p>
@@ -108,7 +108,7 @@ export function EventDetailsSection({ listingId, event, businesses }: Props) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="ev-venue" className={labelCls}>
-                Venue name
+                Venue Name
               </label>
               <input
                 id="ev-venue"
@@ -126,7 +126,7 @@ export function EventDetailsSection({ listingId, event, businesses }: Props) {
             </div>
             <div>
               <label htmlFor="ev-venue-addr" className={labelCls}>
-                Venue address
+                Venue Address
               </label>
               <input
                 id="ev-venue-addr"
@@ -173,7 +173,7 @@ export function EventDetailsSection({ listingId, event, businesses }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="ev-ticket" className={labelCls}>
-              Ticket / RSVP link
+              Ticket / RSVP Link
             </label>
             <input
               id="ev-ticket"
@@ -227,7 +227,7 @@ export function EventDetailsSection({ listingId, event, businesses }: Props) {
 
         <div>
           <label htmlFor="ev-desc" className={labelCls}>
-            About this event
+            About This Event
           </label>
           <textarea
             id="ev-desc"
@@ -263,7 +263,7 @@ export function EventDetailsSection({ listingId, event, businesses }: Props) {
             className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {isPending ? 'Saving…' : 'Save event details'}
+            {isPending ? 'Saving…' : 'Save Event Details'}
           </button>
         </div>
       </form>

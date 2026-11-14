@@ -77,7 +77,7 @@ export function UnlistedInvite({ origin, businessName, className = '' }: Props) 
       {outcome === 'manual' && (
         <div className="mt-1">
           <label htmlFor={textId} className="font-subhead text-xs font-semibold text-brand-black">
-            Copy this and send it to the business
+            Copy This and Send It to the Business
           </label>
           <textarea
             id={textId}

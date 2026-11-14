@@ -35,7 +35,7 @@ export default async function CustomerThreadPage({ params }: Props) {
   return (
     <main>
       <div className="max-w-[960px] mx-auto">
-        <ThreadView thread={thread} backHref={CUSTOMER_INBOX_PATH} backLabel="All messages" />
+        <ThreadView thread={thread} backHref={CUSTOMER_INBOX_PATH} backLabel="All Messages" />
       </div>
     </main>
   )

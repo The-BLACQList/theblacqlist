@@ -56,7 +56,7 @@ export function OrderPlatformsSection({ listingId, initial }: Props) {
   return (
     <section className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
-        <h2 className="font-headline text-base text-brand-black">Order on</h2>
+        <h2 className="font-headline text-base text-brand-black">Order On</h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           On a delivery app? Paste the link to your store and your page shows an “Order on” button
           for it.
@@ -110,7 +110,7 @@ export function OrderPlatformsSection({ listingId, initial }: Props) {
             className="inline-flex items-center gap-1.5 h-10 px-5 rounded-full bg-brand-black text-white font-subhead text-sm font-bold hover:bg-charcoal disabled:opacity-60"
           >
             {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            Save links
+            Save Links
           </button>
           {done && !dirty && (
             <span

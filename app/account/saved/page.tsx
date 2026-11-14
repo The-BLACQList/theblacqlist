@@ -50,7 +50,7 @@ export default async function SavedListingsPage({ searchParams }: SavedPageProps
     return (
       <main>
         <div className="max-w-[960px] mx-auto">
-          <h1 className="font-headline text-3xl text-brand-black mb-2">Saved businesses</h1>
+          <h1 className="font-headline text-3xl text-brand-black mb-2">Saved Businesses</h1>
           <SavedLoadError />
         </div>
       </main>
@@ -144,7 +144,7 @@ export default async function SavedListingsPage({ searchParams }: SavedPageProps
   return (
     <main>
       <div className="max-w-[960px] mx-auto">
-        <h1 className="font-headline text-3xl text-brand-black mb-2">Saved businesses</h1>
+        <h1 className="font-headline text-3xl text-brand-black mb-2">Saved Businesses</h1>
         <p className="font-subhead text-sm text-charcoal-soft mb-8">
           {listings.length === 0
             ? 'Businesses you save will appear here.'
@@ -160,14 +160,14 @@ export default async function SavedListingsPage({ searchParams }: SavedPageProps
             <EmptyState
               level={2}
               icon={Bookmark}
-              heading="No saved businesses yet"
+              heading="No Saved Businesses Yet"
               body="Tap the heart icon on any listing to save it here for later."
-              action={{ label: 'Discover businesses', href: '/discover' }}
+              action={{ label: 'Discover Businesses', href: '/discover' }}
             />
             {interests.length > 0 && (
               <section aria-labelledby="interests-heading" className="text-center pb-8">
                 <h2 id="interests-heading" className="font-subhead text-sm text-charcoal-soft mb-3">
-                  Start with what you picked
+                  Start with What You Picked
                 </h2>
                 <ul className="flex flex-wrap justify-center gap-2">
                   {interests.map((i) => (
@@ -188,9 +188,9 @@ export default async function SavedListingsPage({ searchParams }: SavedPageProps
           <EmptyState
             level={2}
             icon={Bookmark}
-            heading={`Nothing in “${activeListName}” yet`}
+            heading={`Nothing in “${activeListName}” Yet`}
             body="Open a saved business and use its list button to file it here."
-            action={{ label: 'View all saved', href: '/account/saved' }}
+            action={{ label: 'View All Saved', href: '/account/saved' }}
           />
         ) : (
           <ul className="space-y-3" aria-label="Saved businesses">

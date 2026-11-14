@@ -58,7 +58,7 @@ export function JobDetailsSection({ listingId, job, businesses }: Props) {
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
-        <h2 className="font-headline text-base text-brand-black">Job details</h2>
+        <h2 className="font-headline text-base text-brand-black">Job Details</h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           The role, where it happens, what it pays, and how to apply.
         </p>
@@ -71,7 +71,7 @@ export function JobDetailsSection({ listingId, job, businesses }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="jb-employment" className={labelCls}>
-              Employment type
+              Employment Type
             </label>
             <select
               id="jb-employment"
@@ -94,7 +94,7 @@ export function JobDetailsSection({ listingId, job, businesses }: Props) {
           </div>
           <div>
             <label htmlFor="jb-workplace" className={labelCls}>
-              Where the work happens
+              Where the Work Happens
             </label>
             <select
               id="jb-workplace"
@@ -206,12 +206,12 @@ export function JobDetailsSection({ listingId, job, businesses }: Props) {
             posting that supplied the other. The group is what is required. */}
         <fieldset className="border border-charcoal/15 rounded-lg px-3 pt-2 pb-3">
           <legend className="font-subhead text-xs font-semibold text-charcoal-soft px-1">
-            How people apply <span className="text-red-500" aria-hidden="true">*</span>
+            How People Apply <span className="text-red-500" aria-hidden="true">*</span>
           </legend>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="jb-apply-url" className={labelCls}>
-                Application link
+                Application Link
               </label>
               <input
                 id="jb-apply-url"
@@ -229,7 +229,7 @@ export function JobDetailsSection({ listingId, job, businesses }: Props) {
             </div>
             <div>
               <label htmlFor="jb-apply-email" className={labelCls}>
-                Apply by email
+                Apply by Email
               </label>
               <input
                 id="jb-apply-email"
@@ -272,7 +272,7 @@ export function JobDetailsSection({ listingId, job, businesses }: Props) {
           {businesses.length > 0 && (
             <div>
               <label htmlFor="jb-hiring" className={labelCls}>
-                Hiring business <span className="font-normal text-charcoal-faint">(optional)</span>
+                Hiring Business <span className="font-normal text-charcoal-faint">(optional)</span>
               </label>
               <select
                 id="jb-hiring"
@@ -293,7 +293,7 @@ export function JobDetailsSection({ listingId, job, businesses }: Props) {
 
         <div>
           <label htmlFor="jb-desc" className={labelCls}>
-            About this role
+            About This Role
           </label>
           <textarea
             id="jb-desc"
@@ -329,7 +329,7 @@ export function JobDetailsSection({ listingId, job, businesses }: Props) {
             className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {isPending ? 'Saving…' : 'Save job details'}
+            {isPending ? 'Saving…' : 'Save Job Details'}
           </button>
         </div>
       </form>

@@ -101,7 +101,7 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
         <div className="rounded-xl border border-charcoal/10 bg-white px-8 py-12 text-center">
           <Lock className="size-10 text-charcoal/20 mx-auto mb-4" aria-hidden="true" />
           <h2 className="font-headline text-xl text-brand-black mb-2">
-            Analytics is a paid feature
+            Analytics Is a Paid Feature
           </h2>
           <p className="font-body text-sm text-charcoal-soft max-w-sm mx-auto mb-6">
             Upgrade to Starter or above to see page views, CTA clicks, saves, shares, and your trend
@@ -111,7 +111,7 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
             href="/dashboard/upgrade"
             className="inline-flex items-center justify-center h-10 px-6 rounded-full bg-amber-gold text-brand-black font-body font-bold text-sm hover:bg-light-gold transition-colors"
           >
-            View upgrade options
+            View Upgrade Options
           </Link>
         </div>
       </div>
@@ -269,10 +269,10 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
       {/* Lifetime totals */}
       <div>
         <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-3">
-          All time
+          All Time
         </h2>
         <div className="grid grid-cols-3 gap-4">
-          <StatCard label="Total views" value={listing.view_count ?? 0} />
+          <StatCard label="Total Views" value={listing.view_count ?? 0} />
           <StatCard label="Saves" value={listing.save_count ?? 0} />
           <StatCard label="Reviews" value={listing.review_count ?? 0} />
         </div>
@@ -284,9 +284,9 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
           {period.heading}
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard label="Page views" value={views} />
+          <StatCard label="Page Views" value={views} />
           <StatCard
-            label="CTA clicks"
+            label="CTA Clicks"
             value={cta}
             sub={marketplaceCta > 0 ? `${marketplaceCta} from marketplace` : undefined}
           />
@@ -298,15 +298,15 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
       {showPosts && (
         <div>
           <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-3">
-            Happening now, {period.heading.toLowerCase()}
+            Happening Now, {period.heading.toLowerCase()}
           </h2>
           <div className="grid grid-cols-2 gap-4">
             <StatCard
-              label="Post views"
+              label="Post Views"
               value={postViewsCount.count ?? 0}
               sub="On your page and city pages"
             />
-            <StatCard label="Post clicks" value={postClicksCount.count ?? 0} />
+            <StatCard label="Post Clicks" value={postClicksCount.count ?? 0} />
           </div>
         </div>
       )}
@@ -325,9 +325,9 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
         <div className="space-y-4">
           <div>
             <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
-              Page views, {trendCadence}
+              Page Views, {trendCadence}
             </h2>
-            <MiniChart points={trend} valueKey="page_views" label="Page views" />
+            <MiniChart points={trend} valueKey="page_views" label="Page Views" />
           </div>
           {/*
             DELIBERATELY NARROWER THAN THE TILE ABOVE, AND LABELLED TO SAY SO.
@@ -345,9 +345,9 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
           */}
           <div>
             <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">
-              Page CTA clicks, {trendCadence}
+              Page CTA Clicks, {trendCadence}
             </h2>
-            <MiniChart points={trend} valueKey="cta_clicks" label="Page CTA clicks" />
+            <MiniChart points={trend} valueKey="cta_clicks" label="Page CTA Clicks" />
           </div>
           <div>
             <h2 className="font-subhead text-xs font-semibold text-charcoal-soft uppercase tracking-wide mb-2">

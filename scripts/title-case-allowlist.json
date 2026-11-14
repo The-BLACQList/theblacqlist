@@ -33,5 +33,20 @@
     "file": "lib/media/banner.ts",
     "text": "Sharp on every screen",
     "reason": "Photo-quality note shown under the banner picker, a status sentence."
+  },
+  {
+    "file": "components/dashboard/PartnershipSection.tsx",
+    "text": "Open to brand deals",
+    "reason": "Checkbox option label (the switch), not a title."
+  },
+  {
+    "file": "components/dashboard/PartnershipSection.tsx",
+    "text": "Open to creator partnerships & sponsorships",
+    "reason": "Checkbox option label (the switch), not a title."
+  },
+  {
+    "file": "components/account/CollectivePanel.tsx",
+    "text": "more",
+    "reason": "Count suffix in \"+3 more\", not a title."
   }
 ]

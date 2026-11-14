@@ -18,7 +18,7 @@ function SubmitButton() {
       className="h-11 px-6 rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
     >
       {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-      {pending ? 'Saving…' : 'Save changes'}
+      {pending ? 'Saving…' : 'Save Changes'}
     </button>
   )
 }
@@ -45,7 +45,7 @@ export function AccountSettingsForm({ children }: Props) {
     <main>
       <div className="max-w-[640px] mx-auto">
 
-        <h1 className="font-headline text-3xl text-brand-black mb-6">Account settings</h1>
+        <h1 className="font-headline text-3xl text-brand-black mb-6">Account Settings</h1>
 
         {isSuccess && (
           <div
@@ -74,7 +74,7 @@ export function AccountSettingsForm({ children }: Props) {
                 htmlFor="display_name"
                 className="font-subhead text-sm font-semibold text-brand-black"
               >
-                Display name
+                Display Name
               </label>
               <input
                 id="display_name"

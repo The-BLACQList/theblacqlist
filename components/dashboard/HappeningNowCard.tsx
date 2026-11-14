@@ -34,7 +34,7 @@ export function HappeningNowCard({ listingId, posts, tier, upgradeTo, now }: Pro
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8 flex items-start justify-between gap-3">
         <div>
-          <h2 className="font-headline text-base text-brand-black">Happening now</h2>
+          <h2 className="font-headline text-base text-brand-black">Happening Now</h2>
           <p className="font-body text-xs text-charcoal-soft mt-0.5">
             A short dated post at the top of your page and on your city page: a sale, a pop-up, a
             new menu.
@@ -44,7 +44,7 @@ export function HappeningNowCard({ listingId, posts, tier, upgradeTo, now }: Pro
           href={href}
           className="shrink-0 inline-flex items-center gap-1 font-subhead text-sm font-semibold text-brand-black underline underline-offset-4 decoration-amber-gold hover:decoration-brand-black"
         >
-          {posts.length > 0 ? 'Manage posts' : 'Write a post'}
+          {posts.length > 0 ? 'Manage Posts' : 'Write a Post'}
           <ArrowRight className="size-3.5" aria-hidden="true" />
         </Link>
       </div>

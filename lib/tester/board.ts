@@ -67,15 +67,15 @@ export function daysSince(iso: string, now: Date): number {
 
 export function spotStatus(e: BoardEnrollment, steps: BoardStep[], now: Date): SpotStatus {
   if (e.ended_at) return { state: 'ended', label: 'Ended' }
-  if (e.trial_granted_at) return { state: 'free_used', label: 'Free month used' }
+  if (e.trial_granted_at) return { state: 'free_used', label: 'Free Month Used' }
   if (e.completed_at) {
     return isOwnerTester(e)
-      ? { state: 'free_waiting', label: 'Free month waiting' }
+      ? { state: 'free_waiting', label: 'Free Month Waiting' }
       : { state: 'done', label: 'Done' }
   }
   const idle = daysSince(lastActiveAt(e, steps), now)
-  if (idle >= QUIET_DAYS) return { state: 'quiet', label: `Quiet ${idle} days` }
-  if (steps.length === 0) return { state: 'just_joined', label: 'Just joined' }
+  if (idle >= QUIET_DAYS) return { state: 'quiet', label: `Quiet ${idle} Days` }
+  if (steps.length === 0) return { state: 'just_joined', label: 'Just Joined' }
   return { state: 'walking', label: 'Walking' }
 }
 

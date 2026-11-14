@@ -169,7 +169,7 @@ export function FaqSection({ listingId, faqs, limit, upgradeTo, hiddenIds }: Pro
                 ) : (
                   <Plus className="size-4" aria-hidden="true" />
                 )}
-                {isPending ? 'Adding…' : 'Add question'}
+                {isPending ? 'Adding…' : 'Add Question'}
               </button>
             </div>
           </form>

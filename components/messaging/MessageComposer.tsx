@@ -32,8 +32,8 @@ interface Props {
 }
 
 const HEADINGS: Record<PostingKind, { title: string; placeholder: string }> = {
-  job: { title: 'Ask about this role', placeholder: "Hi! I'm interested in this role and wanted to ask…" },
-  event: { title: 'Ask about this event', placeholder: "Hi! I'm planning to come and wanted to ask…" },
+  job: { title: 'Ask About This Role', placeholder: "Hi! I'm interested in this role and wanted to ask…" },
+  event: { title: 'Ask About This Event', placeholder: "Hi! I'm planning to come and wanted to ask…" },
 }
 
 /**
@@ -150,7 +150,7 @@ function ComposerForm({
             href={`${inboxPath}/${state.conversationId}` as Route}
             className="inline-flex items-center h-11 px-5 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
           >
-            View conversation
+            View Conversation
           </Link>
           <DialogClose
             onClick={onSent}
@@ -170,7 +170,7 @@ function ComposerForm({
       <input type="hidden" name="listing_id" value={listingId} />
       {allowSendAs && sendAsPages.length > 0 && (
         <fieldset className="space-y-1.5">
-          <legend className="font-subhead text-xs font-semibold text-charcoal-soft mb-1">Send as</legend>
+          <legend className="font-subhead text-xs font-semibold text-charcoal-soft mb-1">Send As</legend>
           <div className="flex flex-wrap gap-2">
             {[{ id: '', name: 'Me' }, ...sendAsPages].map((p) => (
               <label

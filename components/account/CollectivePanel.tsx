@@ -68,7 +68,7 @@ export function CollectivePanel({ summary, businesses }: Props) {
               id="collective-heading"
               className="font-headline font-medium text-[26px] md:text-[32px] leading-[1.15] text-ink text-balance"
             >
-              You&apos;ve spent {formatDollars(summary.totalCents)} with {businessCount}{' '}
+              You&apos;ve Spent {formatDollars(summary.totalCents)} with {businessCount}{' '}
               {businessCount === 1 ? 'business' : 'businesses'} on the list.
             </h2>
             {summary.unmatchedCents > 0 && (
@@ -96,7 +96,7 @@ export function CollectivePanel({ summary, businesses }: Props) {
               href="/account/receipts/new"
               className={`${buttonBase} bg-ink text-off-white hover:bg-brand-black`}
             >
-              Add a receipt
+              Add a Receipt
             </Link>
           ) : (
             <>
@@ -110,7 +110,7 @@ export function CollectivePanel({ summary, businesses }: Props) {
                 href="/account/receipts/new"
                 className={`${buttonBase} border border-ink text-ink hover:bg-ink/5`}
               >
-                Add a receipt
+                Add a Receipt
               </Link>
             </>
           )}
@@ -178,7 +178,7 @@ export function CollectiveSoonPanel() {
       </p>
       <div className="pt-1.5">
         <Link href="/flow-map" className={`${buttonBase} border border-ink text-ink hover:bg-ink/5`}>
-          Tell me when it opens
+          Tell Me When It Opens
         </Link>
       </div>
     </section>

@@ -36,7 +36,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/pages', label: 'My Pages', icon: FileText, exact: false },
   {
     href: '/dashboard/receipts',
-    label: 'Receipts to verify',
+    label: 'Receipts to Verify',
     icon: ReceiptText,
     exact: false,
     needsListing: true,
@@ -161,9 +161,9 @@ export function DashboardSidebar({
             </p>
             <div className="flex gap-1 overflow-x-auto md:block">
               {[
-                { href: `/dashboard/pages/${entityId}/edit`, label: 'Edit content' },
+                { href: `/dashboard/pages/${entityId}/edit`, label: 'Edit Content' },
                 ...(showPosts
-                  ? [{ href: `/dashboard/pages/${entityId}/posts`, label: 'Happening now' }]
+                  ? [{ href: `/dashboard/pages/${entityId}/posts`, label: 'Happening Now' }]
                   : []),
                 { href: `/dashboard/pages/${entityId}/offerings`, label: 'Offerings' },
                 { href: `/dashboard/pages/${entityId}/events`, label: 'Events' },
@@ -200,7 +200,7 @@ export function DashboardSidebar({
             href="/account"
             className="shrink-0 font-subhead text-xs text-white/50 hover:text-white/80 md:mt-0.5 block"
           >
-            Account settings →
+            Account Settings →
           </Link>
         </div>
       )}

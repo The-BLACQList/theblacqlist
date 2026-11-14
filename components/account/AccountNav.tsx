@@ -68,7 +68,7 @@ export function collectiveItems(receiptCount: number, covered: boolean): NavItem
   // widening scope. Renamed from "Community spend" (spec Q5, 2026-10-03).
   return [
     { href: '/account/receipts', label: 'Receipts', count: receiptCount },
-    { href: '/account/spending', label: 'My spending' },
+    { href: '/account/spending', label: 'My Spending' },
     { href: '/account/community-spend', label: 'The Collective' },
   ]
 }
@@ -110,7 +110,7 @@ export function AccountNav({
           ? [{ href: '/account/messages', label: 'Messages', badge: counts.messagesUnread }]
           : []),
         { href: '/account/saved', label: 'Saved', count: counts.saved },
-        { href: '/account/activity', label: 'Recently viewed' },
+        { href: '/account/activity', label: 'Recently Viewed' },
         { href: '/account/recommended', label: 'Recommended' },
       ],
     },
@@ -123,7 +123,7 @@ export function AccountNav({
       ],
     },
     ...(isOwner
-      ? [{ label: 'Your business', items: [{ href: '/dashboard', label: 'My business' }] }]
+      ? [{ label: 'Your Business', items: [{ href: '/dashboard', label: 'My Business' }] }]
       : []),
     {
       label: 'Account',
@@ -133,7 +133,7 @@ export function AccountNav({
     // flattened, so this shows up inline in the scroll-nav — same as
     // 'My business' already does.
     ...(isAdmin
-      ? [{ label: 'Admin', items: [{ href: '/admin', label: 'Admin dashboard' }] }]
+      ? [{ label: 'Admin', items: [{ href: '/admin', label: 'Admin Dashboard' }] }]
       : []),
   ]
 
@@ -240,7 +240,7 @@ export function AccountNav({
               type="submit"
               className="w-full text-left rounded-md px-2.5 py-2 font-subhead text-[13px] font-semibold text-red-800 hover:bg-red-50 transition-colors duration-150"
             >
-              Sign out
+              Sign Out
             </button>
           </form>
         </div>
@@ -282,7 +282,7 @@ export function AccountNav({
                 type="submit"
                 className="inline-flex items-center min-h-11 px-3 font-subhead text-[13px] font-semibold whitespace-nowrap text-red-800 border-b-2 border-transparent"
               >
-                Sign out
+                Sign Out
               </button>
             </form>
           </li>

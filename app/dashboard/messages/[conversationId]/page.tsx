@@ -44,7 +44,7 @@ export default async function OwnerThreadPage({ params }: Props) {
 
   return (
     <div className="max-w-3xl">
-      <ThreadView thread={thread} backHref={backHref} backLabel="All messages" replies={replies} />
+      <ThreadView thread={thread} backHref={backHref} backLabel="All Messages" replies={replies} />
     </div>
   )
 }

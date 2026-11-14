@@ -43,7 +43,7 @@ export default async function OwnerVerificationPage({ params }: Props) {
           href={`/dashboard/pages/${entityId}`}
           className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal-soft hover:text-charcoal mb-4"
         >
-          ← Back to listing
+          ← Back to Listing
         </Link>
         <h1 className="font-headline text-2xl text-brand-black">Get Verified</h1>
         <p className="font-body text-sm text-charcoal-soft mt-1">
@@ -63,7 +63,7 @@ export default async function OwnerVerificationPage({ params }: Props) {
             href="/claim"
             className="inline-flex items-center gap-1 mt-3 font-subhead text-xs font-semibold text-amber hover:text-light-gold"
           >
-            Claim this listing →
+            Claim This Listing →
           </Link>
         </div>
       )}

@@ -27,19 +27,19 @@ const TAB_LABELS: Record<InboxTab, string> = {
 
 const EMPTY: Record<InboxTab, { heading: string; body: string }> = {
   customers: {
-    heading: 'No messages from customers yet',
+    heading: 'No Messages from Customers Yet',
     body: 'When a customer messages you from your page, the conversation shows up here.',
   },
   jobs: {
-    heading: 'No questions about your jobs yet',
+    heading: 'No Questions About Your Jobs Yet',
     body: 'When someone asks about one of your job postings, the conversation shows up here.',
   },
   events: {
-    heading: 'No questions about your events yet',
+    heading: 'No Questions About Your Events Yet',
     body: 'When someone asks about one of your events, the conversation shows up here.',
   },
   businesses: {
-    heading: 'No business messages yet',
+    heading: 'No Business Messages Yet',
     body: 'When you message a business from its page, or a business messages yours, the conversation shows up here.',
   },
 }
@@ -89,7 +89,7 @@ export default async function OwnerMessagesPage({ searchParams }: Props) {
           className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg border border-charcoal/15 bg-white font-subhead text-xs font-semibold text-brand-black hover:bg-pale-lavender transition-colors"
         >
           <Settings className="size-3.5" aria-hidden="true" />
-          Inbox settings
+          Inbox Settings
         </Link>
       </div>
 
@@ -149,7 +149,7 @@ export default async function OwnerMessagesPage({ searchParams }: Props) {
 
       {pages.length > 1 && (
         <nav aria-label="Filter by page" className="flex flex-wrap gap-2">
-          <FilterChip href={inboxHref(tab, null)} active={!activeFilter} label="All pages" />
+          <FilterChip href={inboxHref(tab, null)} active={!activeFilter} label="All Pages" />
           {pages.map((p) => (
             <FilterChip key={p.id} href={inboxHref(tab, p.id)} active={activeFilter === p.id} label={p.name} />
           ))}

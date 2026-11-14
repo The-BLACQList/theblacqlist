@@ -108,7 +108,7 @@ describe('PostJobCard', () => {
     vi.stubEnv('FEATURE_POSTING_SUBMISSIONS', 'true')
     const html = render(true)
     expect(html).toContain('href="/add-job"')
-    expect(html).toContain('Post a job')
+    expect(html).toContain('Post a Job')
     expect(html).toContain('1 of 1 included postings left')
     expect(render(false)).toBe('')
   })

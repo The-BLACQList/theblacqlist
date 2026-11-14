@@ -23,7 +23,7 @@ function ConfirmDeleteButton({ enabled }: { enabled: boolean }) {
       className="h-11 px-5 rounded-full bg-red-600 text-white font-body font-bold text-sm hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
     >
       {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-      {pending ? 'Deleting…' : 'Permanently delete account'}
+      {pending ? 'Deleting…' : 'Permanently Delete Account'}
     </button>
   )
 }
@@ -38,7 +38,7 @@ export function DeleteAccountSection() {
       <div className="flex items-start gap-3">
         <TriangleAlert className="size-5 text-red-600 shrink-0 mt-0.5" aria-hidden="true" />
         <div>
-          <h2 className="font-headline text-lg text-brand-black">Delete account</h2>
+          <h2 className="font-headline text-lg text-brand-black">Delete Account</h2>
           <p className="font-body text-sm text-charcoal-soft mt-1">
             Permanently delete your account and personal data. This cannot be undone.
           </p>
@@ -59,7 +59,7 @@ export function DeleteAccountSection() {
           <DialogContent>
             <div className="p-6">
               <DialogHeader>
-                <DialogTitle>Delete your account?</DialogTitle>
+                <DialogTitle>Delete Your Account?</DialogTitle>
                 <DialogDescription>This is permanent and cannot be undone.</DialogDescription>
               </DialogHeader>
 
@@ -90,7 +90,7 @@ export function DeleteAccountSection() {
                   htmlFor="confirm-delete"
                   className="block font-subhead text-sm font-semibold text-brand-black"
                 >
-                  Type <span className="font-mono text-red-700">DELETE</span> to confirm
+                  Type <span className="font-mono text-red-700">DELETE</span> to Confirm
                 </label>
                 <input
                   id="confirm-delete"

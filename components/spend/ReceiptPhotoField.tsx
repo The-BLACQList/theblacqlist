@@ -151,7 +151,7 @@ export function ReceiptPhotoField({ file, onChange, hasStoredPhoto, error, focus
             className={`${btnBase} hidden pointer-coarse:inline-flex w-full sm:w-auto bg-amber-gold hover:bg-light-gold text-brand-black`}
           >
             <Camera className="size-4" aria-hidden="true" />
-            {hasStoredPhoto ? 'Take a new photo' : 'Take a photo'}
+            {hasStoredPhoto ? 'Take a New Photo' : 'Take a Photo'}
           </button>
           <button
             type="button"
@@ -160,7 +160,7 @@ export function ReceiptPhotoField({ file, onChange, hasStoredPhoto, error, focus
             className={`${btnBase} w-full sm:w-auto border border-dashed border-charcoal/30 bg-white text-charcoal-soft hover:border-amber-gold/60 hover:bg-amber-gold/5`}
           >
             <Upload className="size-4" aria-hidden="true" />
-            {hasStoredPhoto ? 'Choose a new file' : 'Choose a file'}
+            {hasStoredPhoto ? 'Choose a New File' : 'Choose a File'}
           </button>
         </div>
       )}

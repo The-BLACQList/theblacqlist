@@ -28,7 +28,7 @@ export function LevelSection({ listingId, primary, extras, allowed }: Props) {
     formProps,
   } = useSectionSave({
     id: 'role',
-    label: 'Your role',
+    label: 'Your Role',
     action: updateListingLevelsAction,
   })
   const saveLabel = useSaveLabel()
@@ -61,7 +61,7 @@ export function LevelSection({ listingId, primary, extras, allowed }: Props) {
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
-        <h2 className="font-headline text-base text-brand-black">Your role</h2>
+        <h2 className="font-headline text-base text-brand-black">Your Role</h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           Shoppers can filter by grower, maker, supplier or local business.
         </p>
@@ -71,7 +71,7 @@ export function LevelSection({ listingId, primary, extras, allowed }: Props) {
 
         <fieldset>
           <legend className="font-subhead text-xs font-semibold text-charcoal uppercase tracking-wide mb-2">
-            Main role
+            Main Role
           </legend>
           <div className="flex flex-col gap-2">
             {allowed.map((level) => (

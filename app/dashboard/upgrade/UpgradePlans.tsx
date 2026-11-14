@@ -139,7 +139,7 @@ export function UpgradePlans({
                   href="#free-month"
                   className="flex w-full h-10 items-center justify-center rounded-full bg-amber-gold font-body font-bold text-sm text-brand-black transition-colors hover:bg-light-gold"
                 >
-                  Use your free month
+                  Use Your Free Month
                 </a>
               ) : isPurchasable && freeMonthHold === 'waiting' ? (
                 <p className="font-subhead text-xs text-charcoal-soft">

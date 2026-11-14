@@ -422,7 +422,7 @@ export function ReceiptSubmissionForm({
         open={Boolean(receipt?.notes || receipt?.aggregateOptOut)}
       >
         <summary className="flex items-center justify-between min-h-11 px-4 cursor-pointer list-none font-subhead text-sm font-semibold text-brand-black [&::-webkit-details-marker]:hidden">
-          More options
+          More Options
           <ChevronDown
             className="size-4 text-charcoal-faint transition-transform group-open:rotate-180 motion-reduce:transition-none"
             aria-hidden="true"
@@ -476,11 +476,11 @@ export function ReceiptSubmissionForm({
             ? isPending
               ? 'Saving…'
               : receipt.needsFix
-                ? 'Resend for review'
-                : 'Save changes'
+                ? 'Resend for Review'
+                : 'Save Changes'
             : isPending
               ? 'Adding…'
-              : 'Add a receipt'}
+              : 'Add a Receipt'}
         </button>
       </div>
     </form>

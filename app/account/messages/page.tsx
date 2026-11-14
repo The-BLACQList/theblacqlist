@@ -36,7 +36,7 @@ export default async function CustomerMessagesPage() {
           <ConversationList
             items={items}
             basePath={CUSTOMER_INBOX_PATH}
-            emptyHeading="No messages yet"
+            emptyHeading="No Messages Yet"
             emptyBody="When a business has its inbox open, you'll see a Message button on its page. Your conversations show up here."
           />
         )}

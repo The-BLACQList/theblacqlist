@@ -69,7 +69,7 @@ export function ExplainNumbers({ listingId, allowance: initialAllowance }: Props
     >
       <div className="border-b border-charcoal/8 px-5 py-4">
         <h2 id="explain-heading" className="font-headline text-base text-brand-black">
-          What your numbers say
+          What Your Numbers Say
         </h2>
         <p className="mt-0.5 font-body text-xs text-charcoal-soft">
           A plain read on your last 30 days, and one thing to try next.
@@ -88,7 +88,7 @@ export function ExplainNumbers({ listingId, allowance: initialAllowance }: Props
             {result.kind === 'loading' && (
               <Loader2 className="size-4 animate-spin" aria-hidden="true" />
             )}
-            {result.kind === 'shown' ? 'Explain again' : 'Explain my numbers'}
+            {result.kind === 'shown' ? 'Explain Again' : 'Explain My Numbers'}
           </button>
           {left && <p className="font-body text-xs text-charcoal-faint">{left}</p>}
         </div>

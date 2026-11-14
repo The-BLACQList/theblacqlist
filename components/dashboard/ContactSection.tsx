@@ -72,7 +72,7 @@ export function ContactSection({
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
-        <h2 className="font-headline text-base text-brand-black">Contact & location</h2>
+        <h2 className="font-headline text-base text-brand-black">Contact & Location</h2>
       </div>
       <form {...formProps} className="px-5 py-4 space-y-4">
         <input type="hidden" name="listing_id" value={listingId} />
@@ -104,7 +104,7 @@ export function ContactSection({
         />
         <Field
           id="c-addr1"
-          label="Street address"
+          label="Street Address"
           name="address_line_1"
           defaultValue={addressLine1}
           placeholder="123 Auburn Ave"
@@ -118,7 +118,7 @@ export function ContactSection({
         />
         <div className="grid grid-cols-2 gap-4">
           <Field id="c-state" label="State" name="state" defaultValue={state} placeholder="GA" />
-          <Field id="c-zip" label="ZIP code" name="zip" defaultValue={zip} placeholder="30312" />
+          <Field id="c-zip" label="ZIP Code" name="zip" defaultValue={zip} placeholder="30312" />
         </div>
 
         {formState && 'error' in formState && (

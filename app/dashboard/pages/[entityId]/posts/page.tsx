@@ -33,7 +33,7 @@ export default async function PostsPage({ params }: Props) {
     return (
       <div className="max-w-2xl space-y-4">
         <div>
-          <h1 className="font-headline text-2xl text-brand-black">Happening now</h1>
+          <h1 className="font-headline text-2xl text-brand-black">Happening Now</h1>
           <p className="font-body text-sm text-charcoal-soft mt-0.5">{listing.name}</p>
         </div>
         <p className="rounded-xl border border-charcoal/10 bg-white px-5 py-4 font-body text-sm text-charcoal">
@@ -59,7 +59,7 @@ export default async function PostsPage({ params }: Props) {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h1 className="font-headline text-2xl text-brand-black">Happening now</h1>
+        <h1 className="font-headline text-2xl text-brand-black">Happening Now</h1>
         <p className="font-body text-sm text-charcoal-soft mt-0.5">{listing.name}</p>
         {listing.status !== 'published' && (
           <p className="mt-2 rounded-lg bg-pale-lavender px-3 py-2 font-body text-xs text-charcoal">

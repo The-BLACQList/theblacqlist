@@ -20,7 +20,7 @@ export async function FreeMonthNotice() {
       className="rounded-xl border border-amber-gold/50 bg-amber-gold/5 p-5"
     >
       <h2 id="free-month-notice-heading" className="font-headline text-lg text-brand-black">
-        Your free month
+        Your Free Month
       </h2>
       {state.status === 'waiting' ? (
         <p className="mt-1 max-w-xl font-body text-sm text-charcoal-soft">
@@ -35,7 +35,7 @@ export async function FreeMonthNotice() {
             href="/dashboard/upgrade#free-month"
             className="mt-3 inline-flex h-11 items-center rounded-full bg-amber-gold px-5 font-body text-sm font-bold text-brand-black transition-colors hover:bg-light-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2"
           >
-            Use your free month
+            Use Your Free Month
           </Link>
         </>
       )}

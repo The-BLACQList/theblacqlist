@@ -54,7 +54,7 @@ export function ThreadView({ thread, backHref, backLabel, replies }: Props) {
                     href={thread.listingUrl}
                     className="inline-flex items-center gap-1 hover:text-brand-black underline underline-offset-2"
                   >
-                    {thread.posting ? (thread.posting.kind === 'job' ? 'View job' : 'View event') : 'View business page'}
+                    {thread.posting ? (thread.posting.kind === 'job' ? 'View Job' : 'View Event') : 'View Business Page'}
                     <ExternalLink className="size-3" aria-hidden="true" />
                   </a>
                 )}

@@ -17,7 +17,7 @@ export function SavedLoadError() {
 
   return (
     <ErrorState
-      heading="Couldn't load your saved businesses"
+      heading="Couldn't Load Your Saved Businesses"
       body="Something went wrong on our end. Try again in a moment."
       reset={() => router.refresh()}
     />

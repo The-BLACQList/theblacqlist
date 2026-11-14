@@ -76,7 +76,7 @@ export function AboutSection({
             htmlFor="about-description"
             className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
-            Business description
+            Business Description
           </label>
           <textarea
             id="about-description"

@@ -110,7 +110,7 @@ export function DealsSection({ listingId, initial, tier, upgradeTo, initialNow }
       <div className="px-5 py-4 border-b border-charcoal/8 flex items-start justify-between gap-3">
         <div>
           <h2 className="font-headline text-base text-brand-black">
-            {editing ? 'Edit deal' : 'Deals'}
+            {editing ? 'Edit Deal' : 'Deals'}
           </h2>
           <p className="font-body text-xs text-charcoal-soft mt-0.5">
             Coupons and offers in a Deals section on your page, with a code customers can copy. You
@@ -340,7 +340,7 @@ function DealForm({
 
       <div>
         <label htmlFor="deal-description" className={LABEL}>
-          More about it <span className="font-normal text-charcoal-faint">(optional)</span>
+          More About It <span className="font-normal text-charcoal-faint">(optional)</span>
         </label>
         <input
           id="deal-description"
@@ -439,7 +439,7 @@ function DealForm({
           className="inline-flex items-center gap-1.5 h-10 px-5 rounded-full bg-brand-black text-white font-subhead text-sm font-bold hover:bg-charcoal disabled:opacity-60"
         >
           {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-          {isOn ? 'Save changes' : startLocal ? 'Schedule deal' : 'Add to my page'}
+          {isOn ? 'Save Changes' : startLocal ? 'Schedule Deal' : 'Add to My Page'}
         </button>
         <button
           type="button"
@@ -447,7 +447,7 @@ function DealForm({
           onClick={() => submit(false)}
           className="h-10 px-4 rounded-full border border-charcoal/20 font-subhead text-sm font-semibold text-brand-black hover:bg-charcoal/5 disabled:opacity-60"
         >
-          {isOn ? 'Take down and keep as draft' : 'Save draft'}
+          {isOn ? 'Take Down and Keep as Draft' : 'Save Draft'}
         </button>
       </div>
     </form>

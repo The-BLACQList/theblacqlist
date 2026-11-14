@@ -204,7 +204,7 @@ export function PublishSection({
                 className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isSubmitting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-                {isSubmitting ? 'Submitting…' : 'Submit for review'}
+                {isSubmitting ? 'Submitting…' : 'Submit for Review'}
               </button>
             </form>
           </>
@@ -240,7 +240,7 @@ export function PublishSection({
               className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-              {isPending ? 'Publishing…' : 'Publish listing'}
+              {isPending ? 'Publishing…' : 'Publish Listing'}
             </button>
           </form>
         )}
