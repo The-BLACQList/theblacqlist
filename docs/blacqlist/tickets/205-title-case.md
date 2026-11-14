@@ -2,7 +2,7 @@
 
 **Phase:** V1.5 · **Priority:** P1 · **Status:** In review (draft PR; merges after the 16–17 Nov freeze)
 **Depends on:** none. Conflicts with in-flight branches (204 chapters, the Shop worktree, `feat/header-search-cue`, `feat/prelaunch-waitlist`, `feat/shared-tester-invite`): merge this first after the freeze, then rebase them; the guard test flags any sentence-case label they add.
-**Gates:** no migration. Two GATE-DATA questions below, not applied.
+**Gates:** GATE-DATA, one migration for labels saved in the database (founder-approved 2026-11-14). Staging first; production with the merge.
 **House style:** [design/title-case.md](../design/title-case.md)
 
 **Decision record (founder, 2026-11-14):**
@@ -25,6 +25,7 @@ One commit per area:
 | Admin                       | `app/admin`, `components/admin`                                                                                                                                                  |
 | Emails and page titles      | email buttons, eyebrows, sub-heads and subjects; template-literal page titles                                                                                                    |
 | Guard                       | `tests/title-case-guard.test.ts`                                                                                                                                                 |
+| Saved labels                | migration, seed, `reviewCategoryRequest`, `scripts/ops/title-case-categories.ts` (see GATE-DATA below)                                                                           |
 
 Tests changed only where they assert on visible text. No `it(...)` title was changed. Negative assertions that look for an old label now use a case-insensitive regex, so they keep proving the label is gone.
 
@@ -37,21 +38,39 @@ Two fixes came out of the sweep:
 
 - **A preposition at the end is capitalized** under the last-word rule: "Find Us At", "Order On", "What We Stand For".
 - **Question headings use Title Case:** "What Do People Call You?", "Something Broken or Confusing?".
-- **Kept as sentences** (in the allowlist, each with a reason): the password checklist ("A lowercase letter"), the banner quality notes ("Good on most screens"), checkbox options ("Open to brand deals"), and the "+3 more" count suffix. First-person role pickers ("I come to them") are also left as sentences.
-- **Email headings that end in a full stop** ("Your claim for Mama's Kitchen is approved.") stay as sentences. Email subjects, buttons, eyebrows and sub-heads are Title Case.
+- **Kept as sentences** (in the allowlist, each with a reason): the password checklist ("A lowercase letter"), the banner quality notes ("Good on most screens"), checkbox options ("Open to brand deals"), and the "+3 more" count suffix. First-person role pickers ("I own a business") are also left as sentences.
+- **Headlines and email headings that end in a full stop** ("Your claim for Mama's Kitchen is approved.") stay as sentences, as the founder decided. Email subjects, buttons, eyebrows and sub-heads are Title Case.
 - **"Special hours"** is left in source as is because CSS already shows it in capitals.
 - **Busy-state aria-labels** that differ from the visible text only in case were left alone. Screen readers and voice control ignore case.
 - **Admin rejection presets:** only the dropdown text changed. The reason saved and emailed is unchanged.
 - **Body copy that names a button** now matches it ("Tap **Report a Problem**").
 
-## Open style question for the founder
+## Founder answers (2026-11-14)
 
-**Headlines written as a sentence, with a full stop.** About 17 page headlines read as a sentence and end in a full stop: "Your page. Your story. Your customers.", "Three steps to a page that's really yours.", "Start free. Grow when you're ready.", "This page isn't on the list." (mostly `/for-business`, `/for-vendors`, account and error pages). The same goes for the email headlines ("Your claim for Mama's Kitchen is approved."). This ticket leaves them as sentences, because the rule keeps running sentences as written. The home hero "Find & Be Found." is already Title Case, so on `/for-business` a Title Case box heading ("Is Your Business Already on the List?") sits under a sentence-case headline. Should these headlines switch to Title Case too? It is a short hand edit either way; the scanner skips anything ending in a full stop on purpose.
+1. **Headlines written as a sentence, with a full stop:** "leave it". About 17 page headlines ("Your page. Your story. Your customers.", "Start free. Grow when you're ready.", "This page isn't on the list.") and the email headlines ("Your claim for Mama's Kitchen is approved.") stay as sentences. The scanner skips anything ending in a full stop on purpose.
+2. **Saved button labels:** "Update it". Pages saved before this change can hold the old quick-start presets in `listing_details_business.cta_label_override`.
+3. **Category names in the database:** "Update them".
 
-## GATE-DATA: for the founder, not applied
+## GATE-DATA: saved labels (founder-approved, staging first)
 
-1. **Saved button labels.** Some pages saved a quick-start button label before this change, so `listing_details_business.cta_label_override` can hold "Email me", "Follow me" or "Work with me". New pages get "Email Me", "Follow Me" and "Work with Me". Should a one-off update rewrite the old rows to the new casing? The owner may have typed their own label, so only exact matches of the three presets would change.
-2. **Category names in the database.** Category display names stored in the `categories` table show as stored. The constants in `lib/categories` are now Title Case. Should the stored names be updated to match?
+Migration `supabase/migrations/20261119000000_title_case_saved_labels.sql`:
+
+| Table.column                                  | From                            | To                              |
+| --------------------------------------------- | ------------------------------- | ------------------------------- |
+| `listing_details_business.cta_label_override` | "Email me"                      | "Email Me"                      |
+|                                               | "Follow me"                     | "Follow Me"                     |
+|                                               | "Work with me"                  | "Work with Me"                  |
+| `categories.name` (`ecommerce-solutions`)     | "E-commerce Solutions"          | "E-Commerce Solutions"          |
+| `attribute_groups.name` (`audience-size`)     | "Audience size (self-reported)" | "Audience Size (Self-Reported)" |
+
+- Every UPDATE matches the old text exactly. A label an owner typed is never touched, a row edited since is left alone, and a re-run is a no-op. Rollback SQL is in the migration header.
+- The seed (`supabase/seed.sql`) carries the new names. Every other seeded category name was already Title Case; `tests/title-case-saved-labels.test.ts` keeps it that way and pins the presets to `lib/listings/quickStart.ts`.
+- The creator filter heading is in the same migration because it is the same kind of stored label (a form heading). Drop that UPDATE if the founder wants it left.
+- **Categories an admin added from a category request** exist only in each database. `scripts/ops/title-case-categories.ts` lists them (dry run by default) and renames them with `--apply --yes`, printing rollback SQL before the first write. Approving a new category now saves the name in Title Case (`reviewCategoryRequest`).
+- **Order:** staging first (migration, then the script's dry run and apply). Production goes with the merge after the 16–17 Nov freeze: the migration with the deploy, then the script's dry run against production, which needs the founder's word like any production read.
+- Tested on a throwaway Postgres 14: the migration renamed the three presets and both labels, left an owner label ("Book a discovery call"), a lowercase "email me" and NULL untouched, and a second run updated 0 rows. The script's dry run, refusal without `--yes`, apply and re-run all behaved as described.
+
+One helper fix came out of this: "HR" was read as the unit "hr" and lowercased ("hr & Staffing"). An all-caps word now stays as written. No source label had been affected.
 
 ## What the scanner and guard cannot see
 

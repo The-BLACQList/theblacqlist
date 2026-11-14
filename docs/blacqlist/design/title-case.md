@@ -15,9 +15,10 @@ The BLACQList writes its titles, headings, buttons, nav, tabs, badges and form f
 ## What stays as written
 
 - Running sentences, helper text, hints and placeholders.
-- Headings that are a full sentence ending in a full stop ("Your claim for Mama's Kitchen is approved.").
-- Anything an owner, reviewer or the database supplies: business names, post, offer, event, product and review titles, and category names stored in the database. The site never rewrites them.
-- First-person choices read as a sentence ("I come to them" in a role picker), and checkbox, radio and switch options ("Open to brand deals"). They are listed in `scripts/title-case-allowlist.json`.
+- Headings that are a full sentence ending in a full stop ("Your claim for Mama's Kitchen is approved.", "Start free. Grow when you're ready."). The founder chose to keep these as sentences (2026-11-14).
+- Anything an owner or reviewer writes: business names, post, offer, event, product and review titles, and a button label the owner typed. The site never rewrites them.
+- Labels the site itself stores in the database are Title Case: category names, filter headings and the quick-start button presets (migration `20261119000000_title_case_saved_labels.sql`). A category an admin adds from a request is saved in Title Case.
+- First-person choices read as a sentence ("I own a business" in a role picker), and checkbox, radio and switch options ("Open to brand deals"). They are listed in `scripts/title-case-allowlist.json`.
 - Text CSS already shows in capitals (`uppercase`) may stay as it is in source.
 
 ## The rule
