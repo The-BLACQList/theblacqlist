@@ -1,8 +1,8 @@
 # BLACQList Dev Ticket Index
 
-**Total tickets:** 192
+**Total tickets:** 214
 **Phases:** 0–18, plus V1 / V1.5 monetization work
-**Last updated:** 2026-11-14
+**Last updated:** 2026-11-15
 
 ---
 
@@ -201,4 +201,24 @@
 | [201](201-custom-subdomain.md) | A custom subdomain per business (name.theblacqlist.com) | V1.5 | P3 | 184 | Needs decision | Stub — founder 2026-11-13; own security and SEO review |
 | [202](202-brand-accent-colour.md) | A brand accent colour on the page | V1.5 | P3 | 184 | Needs decision | Stub — not selected by the founder 2026-11-13; kept visible to strike or pick up |
 | [203](203-owner-cue.md) | Cue for business owners, on the dashboard | V1.5 | P1 | 169, 138 | In progress | Round 2 part E; reverses 147 decision 6 for the dashboard only; prod waits for a privacy update |
-| [205](205-title-case.md) | Title Case across the site | V1.5 | P1 | — | In review | Founder 2026-11-14; draft PR, merges after the 16–17 Nov freeze; guard test; 2 GATE-DATA questions |
+| [205](205-title-case.md) | Title Case across the site | V1.5 | P1 | — | Done | Founder 2026-11-14; PR #333 merged 2026-11-15 (6b3434b); migration applied staging and prod |
+| [210](210-shop-label-and-hero.md) | Call it Shop, and fix the Marketplace hero line | V1.5 | P1 | none | Ready | Shop workshop Q8 A; copy only; was workshop 183 |
+| [211](211-brand-directory.md) | Brand directory, departments and price ranges | V1.5 | P1 | none | Ready | Shop workshop Q1 C, Q2 B; migration at GATE-DATA; counsel on the source rule |
+| [212](212-brand-claim-attest.md) | A brand claims its directory entry and attests | V1.5 | P2 | 211 | Ready | Shop workshop Q1 C; attest text needs counsel |
+| [213](213-stores-and-stockists.md) | Stores and stockists, added by the brand and reviewed | V1.5 | P1 | 211 | Ready | Shop workshop Q4 A; migration at GATE-DATA |
+| [214](214-my-stores.md) | My stores, a one-time sheet and a header chip | V1.5 | P1 | 213 | Ready | Shop workshop S4 B, Q9 C; migration; Privacy pass |
+| [215](215-shop-home.md) | The Shop home, search first with a list tray | V1.5 | P1 | 210, 211 | Ready | Shop workshop S1 B; amended 2026-11-13 for the cart |
+| [216](216-department-pages.md) | Department pages, sidebar filters with chips on a phone | V1.5 | P1 | 211 | Ready | Shop workshop S6 A; purchasable items only |
+| [217](217-product-page.md) | The product page, the shop is the first row, with a buy box | V1.5 | P1 | 211, 213, 214, 215, 221, 225 | Ready | Shop workshop S3 E; amended 2026-11-13: buy box, no outbound Buy, sold-out page |
+| [218](218-cue-shop-my-list.md) | Cue shops a list, grouped by where you buy | V1.5 | P1 | 169, 211, 213, 214, 215, 225 | Ready | Shop workshop S2 B, Q3 B, Q6 A; Ships to you becomes Add to cart |
+| [219](219-saved-lists.md) | Saved lists, "Shop this list again" and "Add list to cart" | V1.5 | P2 | 218 | Ready | Shop workshop S7 A, Q5 A; migration; Privacy pass |
+| [220](220-marketplace-legal-and-go-live-packet.md) | Marketplace legal set, counsel and CPA packet | V1.5 | P0 | none | In progress | Founder 2026-11-13; drafts only, `[Needs professional review]` |
+| [221](221-catalog-schema-variants-stock.md) | Catalog schema: variants, stock, images, files, shipping, purchasable view | V1.5 | P1 | 211 | Ready | Founder 2026-11-13: sold-out removed; migration at GATE-DATA |
+| [222](222-product-editor-photos-provenance.md) | Product editor, photo uploads with AI provenance check and attestation | V1.5 | P1 | 221 | Ready | Founder 2026-11-13 pick 4: real photos for physical items |
+| [223](223-product-review-reports-strikes.md) | Product review queue, spot checks, listing reports and strikes | V1.5 | P1 | 221, 222 | Ready | Founder 2026-11-13 pick 4 |
+| [224](224-seller-payments-onboarding.md) | Seller payments onboarding: Stripe Connect, seller agreement, INFORM | V1.5 | P1 | 221 | Ready | Test mode; Connect application GATE-SPEND |
+| [225](225-cart.md) | The cart: one cart, many shops | V1.5 | P1 | 221 | Ready | Founder 2026-11-13 pick 2; new `FEATURE_CART`, closed by default |
+| [226](226-checkout-orders-split.md) | Checkout, stock reservation, sales tax and the order split | V1.5 | P1 | 221, 224, 225 | Ready | 8% fee; Stripe Tax; migration at GATE-DATA |
+| [227](227-seller-fulfilment-transfers.md) | Seller orders, shipping, Mail Order Rule clock and transfers | V1.5 | P1 | 224, 226 | Ready | Vendors ship; transfers on ship with tracking |
+| [228](228-buyer-orders-refunds-disputes-downloads.md) | Buyer orders, digital downloads, refunds, cases and disputes | V1.5 | P1 | 226, 227 | Ready | BLACQList refunds first, recovers from the shop |
+| [229](229-marketplace-staging-rehearsal-go-live.md) | Staging rehearsal and the marketplace go-live gate | V1.5 | P1 | 210 to 228 | Blocked | No real money until CPA + attorney sign off |
