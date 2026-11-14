@@ -128,9 +128,9 @@ describe('off production', () => {
   it('titles say it is a sample', async () => {
     const { page, index } = await loadRoutes(false)
     const meta = await page.generateMetadata({ params: params('professional') })
-    expect(meta.title).toBe('Sample page: Test Business 123 (Professional)')
+    expect(meta.title).toBe('Sample Page: Test Business 123 (Professional)')
     expect(String(meta.description)).toMatch(/not a real business/i)
-    expect(index.metadata.title).toBe('Sample pages: Test Business 123')
+    expect(index.metadata.title).toBe('Sample Pages: Test Business 123')
   })
 
   it('the route is dynamic, so the production check reads the live environment', async () => {

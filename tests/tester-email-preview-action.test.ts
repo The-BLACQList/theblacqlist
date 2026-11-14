@@ -45,7 +45,7 @@ describe('renderTesterInviteAction', () => {
   it('renders the invite with its subject, keeping the link intact', async () => {
     const result = await run(base)
     expect(result).toMatchObject({
-      subject: "You're in early. Add your business to The BLACQList",
+      subject: "You're In Early. Add Your Business to The BLACQList",
     })
     if (!result || !('html' in result)) throw new Error('expected a render')
     expect(result.html).toContain(`href="${LINK}"`)
@@ -56,7 +56,7 @@ describe('renderTesterInviteAction', () => {
   it('renders the shared invite, marked as forwardable', async () => {
     const result = await run({ ...base, audience: 'shared' })
     expect(result).toMatchObject({
-      subject: "You're in early. Try The BLACQList before anyone else",
+      subject: "You're In Early. Try The BLACQList Before Anyone Else",
       shareable: true,
     })
   })
@@ -76,7 +76,7 @@ describe('renderTesterInviteAction', () => {
 
   it('renders the supporter invite subject', async () => {
     expect(await run({ ...base, audience: 'supporter' })).toMatchObject({
-      subject: "You're in early. Explore The BLACQList before anyone else",
+      subject: "You're In Early. Explore The BLACQList Before Anyone Else",
     })
   })
 
@@ -88,12 +88,12 @@ describe('renderTesterInviteAction', () => {
       first_name: 'Andrea',
     })
     expect(result).toMatchObject({
-      subject: 'Before we open: finish your walk and see The Collective',
+      subject: 'Before We Open: Finish Your Walk and See The Collective',
     })
     if (!result || !('html' in result)) throw new Error('expected a render')
     expect(result.html).toContain('Tuesday, 17 November')
     expect(result.html).toContain('Thank you, Andrea.')
-    expect(result.html).toContain('Finish your walk')
+    expect(result.html).toContain('Finish Your Walk')
   })
 
   it('refuses an opening date too long for one line', async () => {

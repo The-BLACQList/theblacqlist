@@ -43,7 +43,7 @@ describe.each(VARIANTS)('the %s tester invite email', (variant) => {
   it('puts the one-tap link it was given in the button, fragment intact', async () => {
     const html = await renderInvite({ variant, testerLink: LINK })
     expect(html).toContain(`href="${LINK}"`)
-    expect(html).toContain('Start here')
+    expect(html).toContain('Start Here')
   })
 
   it('describes the one-tap flow, not the old sign-up flow', async () => {
@@ -77,7 +77,7 @@ describe.each(VARIANTS)('the %s tester invite email', (variant) => {
 
   it('points at Report a problem', async () => {
     const html = await renderInvite({ variant, testerLink: LINK })
-    expect(html).toContain('Report a problem')
+    expect(html).toContain('Report a Problem')
   })
 
   it('invites them to explore The Collective, framed as a first look', async () => {

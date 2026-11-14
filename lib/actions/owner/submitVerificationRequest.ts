@@ -98,7 +98,7 @@ export async function submitVerificationRequest(
   if (session.user.email) {
     void sendEmail({
       to: session.user.email,
-      subject: `We received your verification request for ${listing.name}`,
+      subject: `We Received Your Verification Request for ${listing.name}`,
       react: VerificationSubmittedEmail({
         listingName: listing.name,
         listingId,
@@ -111,7 +111,7 @@ export async function submitVerificationRequest(
   if (adminRecipients.length > 0 && session.user.email) {
     void sendEmail({
       to: adminRecipients,
-      subject: `Verification requested: ${listing.name}`,
+      subject: `Verification Requested: ${listing.name}`,
       react: VerificationAdminNotificationEmail({
         listingName: listing.name,
         listingId,

@@ -117,7 +117,7 @@ export function TesterInviteEmail({
       )}
 
       <Button href={testerLink} style={styles.button}>
-        Start here
+        Start Here
       </Button>
 
       {isShared ? (
@@ -136,7 +136,7 @@ export function TesterInviteEmail({
 
       <Hr style={styles.divider} />
 
-      <Text style={styles.subheading}>What it takes: about 15 minutes</Text>
+      <Text style={styles.subheading}>What It Takes: About 15 Minutes</Text>
 
       <Text style={styles.paragraph}>
         A short guide down the side of the site walks you through it, one step at a time.

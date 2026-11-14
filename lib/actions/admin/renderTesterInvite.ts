@@ -23,12 +23,12 @@ export type TesterInvitePreviewState =
 export type TesterEmailKind = 'invite' | 'update'
 
 const INVITE_SUBJECT: Record<TesterInviteAudience, string> = {
-  owner: "You're in early. Add your business to The BLACQList",
-  supporter: "You're in early. Explore The BLACQList before anyone else",
-  shared: "You're in early. Try The BLACQList before anyone else",
+  owner: "You're In Early. Add Your Business to The BLACQList",
+  supporter: "You're In Early. Explore The BLACQList Before Anyone Else",
+  shared: "You're In Early. Try The BLACQList Before Anyone Else",
 }
 
-const UPDATE_SUBJECT = 'Before we open: finish your walk and see The Collective'
+const UPDATE_SUBJECT = 'Before We Open: Finish Your Walk and See The Collective'
 
 /** Long enough for "Tuesday, 17 November", short enough to stay one line. */
 const OPENING_DATE_MAX = 40

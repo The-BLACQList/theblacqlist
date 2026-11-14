@@ -62,12 +62,12 @@ export function CategoryRequestUpdateEmail({
           </Section>
 
           <Section style={content}>
-            <Text style={eyebrow}>Category update</Text>
+            <Text style={eyebrow}>Category Update</Text>
             <Text style={heading}>{copy.heading}</Text>
             <Text style={paragraph}>{copy.body}</Text>
 
             <Button href={`${siteUrl}/dashboard/pages/${listingId}/edit`} style={button}>
-              See your page
+              See Your Page
             </Button>
 
             <Hr style={divider} />

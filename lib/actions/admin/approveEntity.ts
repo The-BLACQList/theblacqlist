@@ -169,7 +169,7 @@ export async function approveEntityAction(
 
       await sendEmail({
         to: submitterEmail,
-        subject: `${listing.name} is live on The BLACQList`,
+        subject: `${listing.name} Is Live on The BLACQList`,
         react: EntityApprovedEmail({
           listingName: listing.name,
           listingUrl,

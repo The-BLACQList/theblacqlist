@@ -140,7 +140,7 @@ describe('invite and email copy', () => {
   })
 
   it('builds the email subject, body and footer as approved', () => {
-    expect(BUSINESS_INVITE_SUBJECT).toBe('Customers are adding your receipts on The BLACQList')
+    expect(BUSINESS_INVITE_SUBJECT).toBe('Customers Are Adding Your Receipts on The BLACQList')
     expect(businessInviteBody('Sweet Spot Bakery', 'https://theblacqlist.com')).toBe(
       'Shoppers have been adding receipts from Sweet Spot Bakery to The BLACQList. Add your business for free so they can find you: https://theblacqlist.com/add-business'
     )

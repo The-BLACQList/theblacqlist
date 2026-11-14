@@ -60,7 +60,7 @@ export function ClaimApprovedEmail({
               <>
                 {' '}
                 <Button href={`${siteUrl}/add-job`} style={secondaryButton}>
-                  Post a job
+                  Post a Job
                 </Button>
               </>
             )}

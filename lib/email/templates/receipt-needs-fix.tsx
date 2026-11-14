@@ -51,7 +51,7 @@ export function ReceiptNeedsFixEmail({
 
           {/* Content */}
           <Section style={content}>
-            <Text style={eyebrow}>Receipt needs a fix</Text>
+            <Text style={eyebrow}>Receipt Needs a Fix</Text>
             <Text style={heading}>Your receipt needs a quick fix.</Text>
             <Text style={paragraph}>
               <strong>{why}</strong>
@@ -62,7 +62,7 @@ export function ReceiptNeedsFixEmail({
             </Text>
 
             <Button href={`${siteUrl}/account/receipts/${receiptId}/edit`} style={button}>
-              Fix and resend
+              Fix and Resend
             </Button>
 
             <Hr style={divider} />

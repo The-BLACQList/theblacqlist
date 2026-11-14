@@ -23,7 +23,7 @@ describe('with a listing URL', () => {
   it('points the button at the live page', async () => {
     const html = await render(EntityApprovedEmail({ listingName: LISTING, listingUrl: LISTING_URL }))
     expect(html).toContain(`href="${LISTING_URL}"`)
-    expect(html).toContain('View your listing')
+    expect(html).toContain('View Your Listing')
   })
 
   it('names the business in the heading and the preview text', async () => {
@@ -45,8 +45,8 @@ describe('without a listing URL', () => {
   it('falls back to the dashboard rather than emitting a broken link', async () => {
     const html = await render(EntityApprovedEmail({ listingName: LISTING }))
     expect(html).toContain('href="https://theblacqlist.com/dashboard"')
-    expect(html).toContain('Go to your dashboard')
-    expect(html).not.toContain('View your listing')
+    expect(html).toContain('Go to Your Dashboard')
+    expect(html).not.toContain('View Your Listing')
   })
 
   it('never renders undefined or null into an href', async () => {
@@ -92,7 +92,7 @@ describe('owner-submitted pages (ticket 158)', () => {
     )
     expect(html).toContain('You can now post a job for it.')
     expect(html).toContain('href="https://theblacqlist.com/add-job"')
-    expect(html).toContain('Post a job')
+    expect(html).toContain('Post a Job')
   })
 
   it('stays silent about ownership for a staff-seeded approval', async () => {

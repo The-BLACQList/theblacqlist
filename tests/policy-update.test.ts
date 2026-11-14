@@ -37,7 +37,7 @@ describe('the policy update switch (ticket 139)', () => {
 
 describe('the policy update notice email', () => {
   it('says the update has happened', () => {
-    expect(policyUpdateNoticeSubject()).toBe("We've updated our Privacy Policy and Terms")
+    expect(policyUpdateNoticeSubject()).toBe("We've Updated Our Privacy Policy and Terms")
   })
 
   it('links all three live policies', async () => {

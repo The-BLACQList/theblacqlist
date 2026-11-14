@@ -435,8 +435,8 @@ export async function handlePaymentFailed(
     await sendEmail({
       to,
       subject: listingName
-        ? `We couldn't process the payment for ${listingName}`
-        : "We couldn't process your subscription payment",
+        ? `We Couldn't Process the Payment for ${listingName}`
+        : "We Couldn't Process Your Subscription Payment",
       react: PaymentFailedEmail({ listingName }),
     })
   }

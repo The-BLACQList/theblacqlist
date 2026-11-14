@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: 'Page Not Found' }
   }
   return {
-    title: `Sample page: ${EXAMPLE_NAME} (${EXAMPLE_VARIANT_LABEL[variant]})`,
+    title: `Sample Page: ${EXAMPLE_NAME} (${EXAMPLE_VARIANT_LABEL[variant]})`,
     description: `What a fully filled Premium ${EXAMPLE_VARIANT_LABEL[variant].toLowerCase()} page looks like on The BLACQList. A sample, not a real business.`,
   }
 }

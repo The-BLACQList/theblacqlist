@@ -10,8 +10,8 @@
 
 import { formatDollarsExact } from '@/lib/spend/personal-spend'
 
-export const RECEIPT_COUNTED_SUBJECT = 'Your receipt is counted'
-export const RECEIPT_NEEDS_FIX_SUBJECT = 'Your receipt needs a quick fix'
+export const RECEIPT_COUNTED_SUBJECT = 'Your Receipt Is Counted'
+export const RECEIPT_NEEDS_FIX_SUBJECT = 'Your Receipt Needs a Quick Fix'
 
 /** Used when a receipt has no matched listing and no typed business name. */
 export const UNNAMED_BUSINESS = 'a business on The BLACQList'

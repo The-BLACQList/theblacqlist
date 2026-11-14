@@ -208,8 +208,8 @@ export async function reviewCategoryRequestAction(
         to: ownerEmail,
         subject:
           outcome === 'added'
-            ? `${request.proposed_name} is now a category`
-            : `An update on the category you suggested for ${listing.name}`,
+            ? `${request.proposed_name} Is Now a Category`
+            : `An Update on the Category You Suggested for ${listing.name}`,
         react: CategoryRequestUpdateEmail({
           listingId: listing.id,
           listingName: listing.name,

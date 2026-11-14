@@ -8,7 +8,7 @@ import { EXAMPLE_NAME, EXAMPLE_VARIANTS, EXAMPLE_VARIANT_LABEL } from '@/lib/exa
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: `Sample pages: ${EXAMPLE_NAME}`,
+  title: `Sample Pages: ${EXAMPLE_NAME}`,
 }
 
 const BLURB: Record<(typeof EXAMPLE_VARIANTS)[number], string> = {

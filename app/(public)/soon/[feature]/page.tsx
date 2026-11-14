@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!isSoonFeature(feature)) return {}
   const config = SOON_FEATURES[feature]
   return {
-    title: `${config.name} is opening soon | The BLACQList`,
+    title: `${config.name} Is Opening Soon | The BLACQList`,
     description: config.blurb,
     robots: { index: false, follow: true },
   }

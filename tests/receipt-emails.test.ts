@@ -99,7 +99,7 @@ describe('ReceiptCountedEmail', () => {
     expect(countedLine(4250, BUSINESS)).toBe(`Your $42.50 at ${BUSINESS} is counted.`)
     expect(html).toContain('Your $42.50 at Sweet Auburn Bread Company is counted.')
     expect(html).toContain('Your spend joined the map.')
-    expect(html).toContain('See it on the map')
+    expect(html).toContain('See It on the Map')
     // The button opens the counted screen (ticket 166), not the map itself.
     expect(html).toContain(`href="https://x.test/account/receipts/${RECEIPT_ID}/counted"`)
   })
@@ -117,7 +117,7 @@ describe('ReceiptCountedEmail', () => {
     expect(html).not.toContain('Your spend joined the map.')
     expect(html).not.toMatch(/See it on the map/i)
     expect(html).toContain('This one isn&#x27;t on the map.')
-    expect(html).toContain('See your receipt')
+    expect(html).toContain('See Your Receipt')
     expect(html).toContain(`href="https://x.test/account/receipts/${RECEIPT_ID}/counted"`)
   })
 
@@ -139,7 +139,7 @@ describe('ReceiptCountedEmail', () => {
       ReceiptCountedEmail({ receiptId: RECEIPT_ID, amountCents: 100, businessName: BUSINESS })
     )
     expect(html).not.toContain(EM_DASH)
-    expect(RECEIPT_COUNTED_SUBJECT).toBe('Your receipt is counted')
+    expect(RECEIPT_COUNTED_SUBJECT).toBe('Your Receipt Is Counted')
   })
 })
 
@@ -155,10 +155,10 @@ describe('ReceiptNeedsFixEmail', () => {
       })
     )
     expect(html).toContain('Photo is hard to read.')
-    expect(html).toContain('Fix and resend')
+    expect(html).toContain('Fix and Resend')
     expect(html).toContain(`href="https://x.test/account/receipts/${RECEIPT_ID}/edit"`)
     expect(html).not.toContain(EM_DASH)
-    expect(RECEIPT_NEEDS_FIX_SUBJECT).toBe('Your receipt needs a quick fix')
+    expect(RECEIPT_NEEDS_FIX_SUBJECT).toBe('Your Receipt Needs a Quick Fix')
   })
 
   it('falls back to a general line when no reason was saved', async () => {
