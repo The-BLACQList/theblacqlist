@@ -26,6 +26,7 @@ Stripe does identity and business checks (KYC) and holds bank details. BLACQList
 | Fee | Amount | Base | Who pays |
 |---|---|---|---|
 | BLACQList fee | 8% | Items plus shipping charged to the shopper, before sales tax | Seller, deducted from the transfer |
+| Card statement | — | — | Shoppers see "BLACQLIST* SHOP" (founder, 2026-11-14); sellers' names are not on the statement |
 | Stripe processing | About 2.9% plus 30 cents per charge `[Assumption: standard US card pricing]` | The whole charge | Sellers, shared pro rata, deducted from transfers |
 | Stripe dispute fee | $15 per chargeback `[Assumption]` | Per dispute | Seller, unless the dispute is won or was our error |
 | Stripe Connect account and payout fees | Per Stripe pricing for Express accounts `[Assumption]` | Per active account and per payout | BLACQList |

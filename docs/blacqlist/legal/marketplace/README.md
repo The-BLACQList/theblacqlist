@@ -68,7 +68,8 @@ No attorney or CPA is engaged yet.
 
 **Before launch, outside these docs:**
 
-- Confirm the DMCA agent registration is active.
+- ~~Confirm the DMCA agent registration is active.~~ Done: registered 2026-06-30 (ticket 102). Renew by 2029-06-30.
+- Set the Stripe statement descriptor `BLACQLIST` (the founder, after the D0 watch). Shop charges show "BLACQLIST* SHOP".
 - Set up a phone line for INFORM reporting.
 - Update `marketplace-workshop-2026-11.md` and tickets 210 to 219, which still show the link-out "Buy" button.
 - Check the prohibited list against Stripe's current Restricted Businesses list.

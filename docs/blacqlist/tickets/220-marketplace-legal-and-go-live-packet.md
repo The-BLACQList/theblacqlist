@@ -45,7 +45,7 @@ Out:
 - §12, the survival list;
 - §13.5, "non-refundable";
 - §15, guest notice;
-- §9, the DMCA agent number is unconfirmed, and there's no counter-notice;
+- §9, there's no counter-notice (the DMCA agent is registered: ticket 102, 2026-06-30);
 - Privacy §2, §6 and §7, including order and tax record retention.
 
 The list is in `README.md` and `counsel-and-cpa-packet.md`.
@@ -64,5 +64,5 @@ The list is in `README.md` and `counsel-and-cpa-packet.md`.
   - the INFORM process;
   - Mail Order Rule auto-cancel;
   - product liability and insurance;
-  - the DMCA agent.
+  - the DMCA counter-notice and repeat infringer policy.
 - Copy rules hold. The drafts never say "verified Black-owned".

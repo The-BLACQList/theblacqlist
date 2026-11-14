@@ -37,7 +37,7 @@ Shop ships to the 50 US states and the District of Columbia.
 
 Prices are in US dollars. The seller sets the price and the shipping. Sales tax is worked out at checkout and shown before you pay.
 
-Payment is processed by Stripe. We do not see or store your full card number. The charge on your card statement shows BLACQList, not the seller. `[Needs professional review]`
+Payment is processed by Stripe. We do not see or store your full card number. The charge on your card statement shows "BLACQLIST* SHOP", not the seller. `[Needs professional review]`
 
 Your order is placed when you finish checkout and we email your confirmation. A seller may cancel an order it cannot fill, and you get a full refund.
 
@@ -113,7 +113,7 @@ The bullet "Any goods or services offered by listed businesses meet any particul
 | §2 The Platform | Describes "a directory and discovery platform"; refers to "Verified" or "BLACQList Certified" badges and "Users should verify business information independently before transacting" | Add Shop to the description. Badge wording conflicts with the Shop copy rule; keep it off Shop surfaces at least. `[Needs professional review]` |
 | §6 Community Content | Licence over reviews, receipts, photos | Seller product content licence lives in `seller-agreement.md` 17.2. Cross-reference it |
 | §8 Prohibited Uses | No steering clause | Add: "Ask a shopper or seller to complete a Shop purchase outside Shop" |
-| §9 Intellectual Property, DMCA | Notice address and Registration No. DMCA-1074879, which the risk review flags for confirmation | Add counter-notice and repeat infringer policy, or link `ip-and-counterfeit-takedown.md` |
+| §9 Intellectual Property, DMCA | Notice address and Registration No. DMCA-1074879 (registered 2026-06-30, ticket 102) | Add counter-notice and repeat infringer policy, or link `ip-and-counterfeit-takedown.md` |
 | §11 Limitation of Liability | Cap is the greater of $100 or "the total amount you paid to The BLACQList in the twelve months preceding the claim" | Shoppers now pay BLACQList the full order amount, so the cap grows with spend. Decide whether order payments count, and make clear the cap does not limit refunds owed under buyer protection. `[Needs professional review]` |
 | §12 Termination | Survival list "Sections 5, 8, 9, 10, 12, and 13" | Numbering looks stale since §5 Creator Pages was added. Fix, and add the Shop sections |
 | §13 Paid Plans and Billing | 13.5 "Payments are non-refundable" | Make clear §13 covers plan payments only, not Shop purchases. 13.6 already hides products on downgrade; open orders must still be filled |

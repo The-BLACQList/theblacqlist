@@ -33,7 +33,7 @@ Case and statute references in the drafts are from the drafter's general knowled
 | A6 | **Product liability.** A marketplace that takes payment, decides refunds and reviews listings may be treated as being in the chain of distribution in some states. Cases to look at include *Bolger v. Amazon.com* (Cal. Ct. App. 2020) and the *Oberdorf* litigation. What exposure does BLACQList have, does founder pre-review of restricted items add to it, and what insurance should BLACQList and sellers carry? | `seller-agreement.md` 18, 19; `prohibited-and-restricted-items.md` §4 P5 |
 | A7 | **INFORM Act process.** Can BLACQList rely on Stripe-held bank and tax data? Is a voicemail line enough for telephonic reporting? Do digital sales count? Where and how to show $20,000 seller details | `inform-act-compliance.md` |
 | A8 | **Arbitration and class waiver.** The live Terms have none (risk review Finding 3). Should the Terms, the Purchase Terms and the Seller Agreement add one together, or stay with Georgia courts? | `seller-agreement.md` 23; `buyer-terms.md` Part 3 |
-| A9 | **DMCA agent.** The Terms §9 registration number has not been confirmed active (risk review Finding 4). Confirm or register before Shop opens. Approve the counter-notice and repeat infringer policy | `ip-and-counterfeit-takedown.md` §2, §7 |
+| A9 | **DMCA agent.** Registered 2026-06-30 (ticket 102, DMCA-1074879; renew by 2029-06-30). Approve the counter-notice and repeat infringer policy | `ip-and-counterfeit-takedown.md` §2, §7 |
 | A10 | **Age minimum for buyers.** Accounts need 18+ (Terms §1, §3). Guest checkout has no account. 18+ for Shop purchases, or minors with parental consent? | `buyer-terms.md` Part 1 §2 |
 | A11 | **FTC fake reviews rule.** Shop has no reviews in v1. If they are added, 16 CFR Part 465 applies. Confirm the v1 ban on reviews in product descriptions is enough for now | `seller-agreement.md` 10.6; `buyer-terms.md` Part 1 §11 |
 | A12 | **Auto-renewal and recurring charges.** Nothing in Shop recurs in v1. Confirm no state automatic renewal law, such as California's, is triggered, and that digital memberships or subscriptions stay out until reviewed | `digital-products-policy.md` §1 |
@@ -69,7 +69,7 @@ Case and statute references in the drafts are from the drafter's general knowled
 | Terms §12 | Survival list "Sections 5, 8, 9, 10, 12, and 13" looks stale since §5 Creator Pages was added |
 | Terms §13.5 | "Payments are non-refundable" must be scoped to plan payments |
 | Terms §15, Privacy §10 | 14-day notice is promised to registered users only. Guest shoppers are not covered |
-| Terms §9 | DMCA registration number unconfirmed. No counter-notice or repeat infringer policy |
+| Terms §9 | DMCA agent registered (ticket 102, 2026-06-30). No counter-notice or repeat infringer policy |
 | Privacy §3 | "We do not ... share your information with third parties for their own marketing purposes" would break if sellers get opt-in marketing |
 | Privacy §6 | Stripe row "used when paid features become available" is already out of date |
 | Privacy §7 | 30-day deletion on account deletion needs a carve-out for order and tax records |

@@ -31,8 +31,8 @@ In:
 - **The go-live checklist,** all of which must be ✅ with a date and source:
   - [ ] An attorney has reviewed and signed off the Seller Agreement, the Buyer Terms, the §10 rewrite and the policies (220).
   - [ ] A CPA has signed off on the fee base, facilitator registrations and digital taxability, and the registrations they require are filed and entered in Stripe Tax.
-  - [ ] The Stripe Connect platform application is approved, live Connect settings match test, and the statement descriptor is set.
-  - [ ] A DMCA agent is registered with the Copyright Office.
+  - [ ] The Stripe Connect platform application is approved, live Connect settings match test, and the statement descriptor is set (`BLACQLIST`; Shop charges read "BLACQLIST* SHOP").
+  - [ ] The DMCA agent registration is current (registered 2026-06-30, ticket 102; renew by 2029-06-30).
   - [ ] Insurance is bound: general and product liability, and cyber.
   - [ ] 5 vendor conversations are held, and the first sellers are onboarded in live mode with approved products.
   - [ ] The legal pages are published (GATE-PUBLISH), and the privacy addendum is live.

@@ -25,12 +25,10 @@ Terms §9 says today:
 
 > "Our designated agent for copyright notices is The BLACQList, LLC, registered with the U.S. Copyright Office (Registration No. DMCA-1074879). Written notices may be sent to the designated agent at notice@theblacqlist.com or by mail at 3133 Maple Dr NE, Ste 240 #1130, Atlanta, GA 30305."
 
-**Flag.** `legal-pages-and-discrimination-risk-review.md` Finding 4 says the filing was submitted on 2026-06-30, but the registration was never confirmed as active in the Copyright Office directory, and the number format is unusual for a Copyright Office record. `founder-legal-details-howto.md` still lists the DMCA agent as "You register". `[Needs professional review]` Before Shop opens:
+**Status: registered.** Ticket 102 is marked done 2026-06-30: The BLACQList, LLC, Registration No. DMCA-1074879, pay.gov tracking 283O6ROF. The founder confirmed it on 2026-11-14 (decision-log, same date). The older flag in `legal-pages-and-discrimination-risk-review.md` Finding 4 is closed. Two things remain:
 
-1. Search the DMCA Designated Agent Directory at dmca.copyright.gov for The BLACQList, LLC.
-2. Confirm the listing is active, the address and email match Terms §9, and the number published is the directory's own number.
-3. If no active listing exists, register now. The fee is small, and registration must be renewed every 3 years.
-4. Add the service name "Shop" or the Shop URL to the listing if the directory asks for alternate names.
+1. **Renew by 2029-06-30.** Designations expire after 3 years.
+2. When renewing, or sooner if convenient, add "Shop" or the Shop URL as an alternate name, and keep the address and email matching Terms §9.
 
 Shop adds seller-uploaded digital files and product photos, which raises the volume of user content. The safe harbor depends on a working designated agent.
 
@@ -100,7 +98,7 @@ Terms §9 says "We will remove infringing material in appropriate cases and may 
 
 | # | Point | Rating |
 |---|---|---|
-| T1 | DMCA agent registration not confirmed active. Required for the safe harbor | High. Founder to check, counsel to confirm |
+| T1 | DMCA agent registered 2026-06-30 (ticket 102, DMCA-1074879). Renew by 2029-06-30 and add Shop as an alternate name | Low. Founder, at renewal |
 | T2 | Repeat infringer threshold and whether it covers trademark marks | Medium. Consult attorney |
 | T3 | Handling of digital files already bought after a takedown | Medium. Consult attorney |
 | T4 | Takedown target time | Low. Founder |

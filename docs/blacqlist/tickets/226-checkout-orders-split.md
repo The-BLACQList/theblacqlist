@@ -51,6 +51,7 @@ In:
      - `shipping_address_collection` set to US only, but only when the cart has a physical item;
      - `consent_collection.terms_of_service: 'required'`, with `custom_text` that includes the digital download consent from `digital-products-policy.md` when a digital item is present;
      - `payment_intent_data.transfer_group` set to the order id;
+     - `payment_intent_data.statement_descriptor_suffix: 'SHOP'`, so the charge reads "BLACQLIST* SHOP" (founder, 2026-11-14). The account's shortened descriptor `BLACQLIST` is set in the Stripe Dashboard;
      - `metadata.purpose = 'order'` and `metadata.order_id`;
      - `expires_at` 30 minutes out;
      - `customer_email` when signed in.
