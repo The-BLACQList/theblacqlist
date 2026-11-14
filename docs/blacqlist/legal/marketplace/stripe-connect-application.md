@@ -10,13 +10,13 @@
 
 ---
 
-## Fill these in first: `[Founder]` blanks
+## Fill these in first: `[Founder]` blanks (B1 and B3 done 2026-11-14)
 
 | # | Blank | Where it goes |
 |---|---|---|
-| B1 | Legal business name and EIN, exactly as already on the Stripe account | Business details |
+| B1 | ✅ The BLACQList, LLC (single-member LLC). The Stripe account was switched from sole proprietor on 2026-11-14; the EIN is on file in Stripe, not here | Business details |
 | B2 | Expected Shop volume in the first 12 months: number of sellers, orders a month, average order value | Platform profile, volume questions |
-| B3 | Support phone number (also needed for INFORM and the Seller Agreement) | Public details and platform profile |
+| B3 | ✅ Support phone on file in Stripe Public details (2026-11-14). Also needed for INFORM and the Seller Agreement | Public details and platform profile |
 | B4 | When you expect the first real-money order. Suggested answer: "after our CPA and attorney sign off, target Q1 2027" | Platform profile, timeline |
 | B5 | Whether you want supplements open at launch. Suggested answer: no, not at launch (see section 6) | Restricted business questions |
 
@@ -51,7 +51,7 @@
 **Website:** `https://theblacqlist.com`. Terms: `https://theblacqlist.com/terms`. Privacy: `https://theblacqlist.com/privacy`.
 `[Assumption]` Stripe may want to see Shop live before approval. Shop is behind a closed feature switch until counsel signs off. If they ask, offer a test-mode walkthrough or screenshots.
 
-**Support contact:** `support@theblacqlist.com` and B3.
+**Support contact:** `hello@theblacqlist.com` (founder, 2026-11-14), `https://theblacqlist.com/contact`, the phone in B3, and the mailing address published in Terms §14.
 
 ## 3. How money moves
 
@@ -140,7 +140,8 @@ Payouts then go from the seller's Stripe balance to their bank on Stripe's defau
 
 ## 7. Before you press Submit
 
-- [ ] All five `[Founder]` blanks filled.
+- [ ] All five `[Founder]` blanks filled. B2, B4 and B5 are still open.
+- [ ] Stripe Account status shows no open Tasks after the LLC switch.
 - [ ] Your attorney has glanced at the role wording: "sellers are the sellers of record; BLACQList collects payment as their limited payment collection agent and is the business of record on the card charge". This is counsel item A1/A2 and seller agreement S2.
   - Submitting does not need to wait for the full legal review. Real money waits; the application does not.
 - [ ] Test mode stays as it is. Connect test mode needs no approval, so build tickets 224 to 226 do not wait on this.
