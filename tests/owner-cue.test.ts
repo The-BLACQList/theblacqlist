@@ -564,3 +564,30 @@ describe('the corner button', () => {
     expect(rail.match(/ref=\{cornerRef\}/g)).toHaveLength(2)
   })
 })
+
+describe('the privacy policy covers it', () => {
+  const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
+  const policy = read('app/(public)/privacy/PrivacyPolicy.tsx')
+
+  it('has its own section, and the panel links to it', () => {
+    expect(policy).toMatch(/<h3 id="owner-cue"/)
+    expect(read('components/dashboard/OwnerCue.tsx')).toContain('href="/privacy#owner-cue"')
+  })
+
+  it('says what is sent, what is never seen and what is kept', () => {
+    const section = policy.slice(
+      policy.indexOf('id="owner-cue"'),
+      policy.indexOf('id="receipt-reading"')
+    )
+    expect(section).toContain('What we send:')
+    expect(section).toContain('What Cue never sees:')
+    expect(section).toContain('Cue never changes your page by')
+    expect(section).toContain('We don&apos;t save what you type or what Cue')
+  })
+
+  it('lists it under uses, providers and retention', () => {
+    expect(policy).toContain('href="#owner-cue"')
+    expect(policy).toContain('Cue on the owner dashboard')
+    expect(policy).toContain('For Cue on your dashboard, we keep a record')
+  })
+})

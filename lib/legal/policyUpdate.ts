@@ -69,6 +69,7 @@ export const TERMS_PAID_PLANS = {
  * Change this label if the page goes live on a later day.
  */
 export const PRIVACY_PROVIDERS_UPDATE = {
-  // Moved to the receipt reading update (ticket 163, PR #291) and the Cue chat (ticket 169).
-  postedOnLabel: 'October 31, 2026',
+  // Moved to the receipt reading update (ticket 163, PR #291) and the Cue chat (ticket 169),
+  // then to the owner Cue (ticket 203). Change it if this text goes live on a later day.
+  postedOnLabel: 'November 13, 2026',
 } as const
