@@ -126,6 +126,12 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                     below)
                   </li>
                   <li>
+                    Answer a business owner&apos;s questions about their own page and draft text
+                    for it, when they ask Cue on their dashboard (see{' '}
+                    <a href="#owner-cue" className="text-amber hover:underline">&ldquo;Cue on your dashboard&rdquo;</a>{' '}
+                    below)
+                  </li>
+                  <li>
                     Read a receipt photo for you, only when you tick &ldquo;Read my receipt for
                     me&rdquo; (see{' '}
                     <a href="#receipt-reading" className="text-amber hover:underline">&ldquo;Reading your receipt&rdquo;</a>{' '}
@@ -258,6 +264,56 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                     Search page
                   </Link>{' '}
                   works without it.
+                </p>
+
+                {/* [Needs professional review] Owner Cue (ticket 203).
+                    docs/blacqlist/legal/owner-cue-policy-update-2026-11.md */}
+                <h3 id="owner-cue" className="font-subhead font-semibold text-brand-black mt-6 scroll-mt-24">
+                  Cue on your dashboard (business owners only)
+                </h3>
+                <p>
+                  If you own a page, you can ask Cue questions from your dashboard (the Ask Cue
+                  button in the corner). Cue answers how-to questions, looks at your page and
+                  suggests what to add, and can write a draft for you. To do that, we send your
+                  message to Anthropic, along with some facts about your own pages.
+                </p>
+                <p>
+                  <strong>What we send:</strong>
+                </p>
+                <ul className="list-disc list-inside space-y-1 pl-2">
+                  <li>Your message, and your last few messages and Cue&apos;s replies in the same chat, so a follow-up makes sense.</li>
+                  <li>The names, kind, plan and status of the pages you own.</li>
+                  <li>When Cue looks at a page: its city and category, its tagline, up to 500 characters of its About text, how many photos, services and days of hours it has, its main button type, and which parts of the page are still missing.</li>
+                </ul>
+                <p>
+                  Before we send your messages or your page text, we take out anything that looks
+                  like an email address, a phone number, a street address, or a link, along with
+                  your name. If your name is part of a page&apos;s name, it stays in the page name.
+                  Our filter can miss things, so leave out anything you don&apos;t want shared.
+                </p>
+                <p>
+                  <strong>What Cue never sees:</strong> your messages with customers, who viewed or
+                  saved your page, your receipts, your payment details, or another owner&apos;s
+                  pages.
+                </p>
+                <p>
+                  <strong>You decide what&apos;s used.</strong> Cue never changes your page by
+                  itself. A draft from Cue (an About section, or a search title or description) uses
+                  the AI writing help above, counts toward that page&apos;s monthly drafts, and is
+                  kept the same way as other suggestions on your dashboard. It goes on your page only
+                  if you choose Use this and confirm. AI can get things wrong, so check what Cue says
+                  and read a draft before you use it.
+                </p>
+                <p>
+                  <strong>What we keep:</strong> your chat stays in your browser tab and clears when
+                  you close the tab or tap Clear chat. We don&apos;t save what you type or what Cue
+                  writes back. We keep a record that you used Cue (when, whether it worked, and how
+                  much AI it used), linked to your account so we can limit how many messages each
+                  owner sends. Anthropic handles your messages for us as a service provider, under
+                  the same contract described above under &ldquo;AI writing help.&rdquo;
+                </p>
+                <p>
+                  <strong>It&apos;s optional.</strong> You can manage your pages without it.
                 </p>
 
                 {/* [Needs professional review] Receipt reading (ticket 163). Merge only
@@ -509,7 +565,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                     <>
                       <tr>
                         <td className="border-b border-gray-200 p-3">Anthropic</td>
-                        <td className="border-b border-gray-200 p-3">Optional AI writing help for business owners (drafts you choose whether to use), and the home page guide and Cue, our AI assistant, that search our listings for what a visitor types and write a reply from what they find (not saved). Also reads a receipt photo when a shopper asks it to (what it reads is not saved)</td>
+                        <td className="border-b border-gray-200 p-3">Optional AI writing help for business owners (drafts you choose whether to use), the home page guide and Cue, our AI assistant, that search our listings for what a visitor types and write a reply from what they find (not saved), and Cue on the owner dashboard, which answers a business owner&apos;s questions about their own pages (not saved). Also reads a receipt photo when a shopper asks it to (what it reads is not saved)</td>
                         <td className="border-b border-gray-200 p-3">
                           <a
                             href="https://www.anthropic.com/legal/privacy"
@@ -592,6 +648,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                   <li>When you bring in your website, we don&apos;t keep a copy of the page. We keep only what you save to your page, plus a note of which website it came from.</li>
                   <li>For AI writing help, we keep a record that a draft was requested, without the text. If you delete your account, your name is removed from those records.</li>
                   <li>For receipt reading, we keep a record that a read was asked for, without what was read. If you delete your account, your name is removed from those records.</li>
+                  <li>For Cue on your dashboard, we keep a record that you used it, without what you typed or what Cue wrote. If you delete your account, your name is removed from those records.</li>
                 </>
               )}
               <li>We may retain certain records longer when required by law, for fraud prevention, or for legitimate business purposes such as resolving disputes</li>

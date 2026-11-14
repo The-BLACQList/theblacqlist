@@ -464,7 +464,7 @@ function OwnerCuePanel({
       <p className="shrink-0 px-4 pb-3 font-body text-[11px] leading-tight text-ink-soft">
         Cue uses AI and can get things wrong. Check a draft before you use it.{' '}
         <Link
-          href="/privacy#ai-writing-help"
+          href="/privacy#owner-cue"
           className="relative underline underline-offset-2 hover:text-off-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold rounded-sm after:absolute after:left-1/2 after:top-1/2 after:size-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
         >
           Privacy

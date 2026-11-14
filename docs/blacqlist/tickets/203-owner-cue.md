@@ -64,6 +64,8 @@ The live policy (`/privacy#ai-writing-help` and `#cue`) covers drafts and the vi
 
 Until that text is posted and in effect, `FEATURE_OWNER_CUE` stays unset in production.
 
+**Update 2026-11-13:** the flag was switched on in production with PR #331, before this text was posted. The text is now written as its own section, `/privacy#owner-cue` (not under "AI writing help"), and the panel's Privacy link points there. Review note and the gap (O1): `docs/blacqlist/legal/owner-cue-policy-update-2026-11.md`.
+
 ## Tests
 
 - Input schema: lengths, history cap, a page id that isn't a uuid.
