@@ -2,30 +2,12 @@
 
 import { useState } from 'react'
 import type { ChecklistResult } from '@/lib/ai/checklist'
+import { FINISH_ITEMS, itemLabel } from '@/lib/listings/finishItems'
 import { cn } from '@/lib/utils'
 
-// Short labels and anchors for the finish view (tickets 126 and 129). The
-// checklist's own labels are longer, written for a standalone list.
-export const FINISH_ITEMS: Record<string, { label: string; anchor: string }> = {
-  tagline: { label: 'One-line tagline', anchor: '#basics' },
-  description: { label: 'About, 100+ characters', anchor: '#about' },
-  logo: { label: 'A photo', anchor: '#photos' },
-  cover: { label: 'Cover photo', anchor: '#photos' },
-  gallery: { label: 'A second photo', anchor: '#photos' },
-  cta: { label: 'Main button', anchor: '#main-button' },
-  contact: { label: 'Phone or website', anchor: '#contact' },
-  hours: { label: 'Hours', anchor: '#hours' },
-  social: { label: 'A social link', anchor: '#social' },
-  service: { label: 'A service', anchor: '#services' },
-  meta_title: { label: 'Search title', anchor: '#google' },
-  meta_description: { label: 'Search description', anchor: '#google' },
-  niche: { label: 'A niche', anchor: '#details' },
-  sample: { label: 'A sample post or video', anchor: '#video' },
-}
-
-export function itemLabel(id: string, fallback: string): string {
-  return FINISH_ITEMS[id]?.label ?? fallback
-}
+// The labels and anchors live in lib/listings/finishItems.ts so the owner Cue
+// (ticket 203) can read them on the server.
+export { FINISH_ITEMS, itemLabel } from '@/lib/listings/finishItems'
 
 const HIGHLIGHT = ['ring-2', 'ring-amber-gold', 'ring-offset-4']
 

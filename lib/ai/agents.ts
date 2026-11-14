@@ -188,6 +188,26 @@ export const ASSISTANT_AGENT: AgentDefinition = {
   maxOutputChars: 1600,
 }
 
+/**
+ * Cue for business owners (ticket 203): a side panel on the dashboard that
+ * answers how-to questions, reads the owner's own page, links to where to fix
+ * things and asks the writing-help agents above for drafts. Like the visitor
+ * Cue it runs its own loop (`lib/ai/cue/owner/`, `app/api/cue/owner/route.ts`),
+ * never `generate()` itself, and the ceiling prices a message in
+ * `cueMessageUnits`. Its audit rows carry no listing, so a chat never uses up
+ * a page's writing allowance; the drafts it asks for do, through the normal path.
+ */
+export const OWNER_CUE_AGENT: AgentDefinition = {
+  agentType: 'owner_cue',
+  templateKey: 'OWNER_CUE',
+  suggestionType: 'none',
+  label: 'Owner assistant',
+  blurb: 'Helps owners with their dashboard and page, and asks for drafts they approve.',
+  modelTier: 'fast',
+  applyTarget: null,
+  maxOutputChars: 1600,
+}
+
 export function findAgent(agentType: string): AgentDefinition | undefined {
   return AI_AGENTS.find((a) => a.agentType === agentType)
 }
@@ -231,7 +251,7 @@ const PROMPT_VERSION_OVERRIDES: Partial<Record<AgentDefinition['templateKey'], n
 // Fails the build (via the test suite) if an agent names a template that the
 // prompt map does not route. The map is the contract prompts.ts documents.
 export function agentsWithUnroutedTemplates(): string[] {
-  return [...AI_AGENTS, ONBOARDING_AGENT, GUIDE_AGENT, ASSISTANT_AGENT].filter((a) => AGENT_PROMPT_MAP[a.agentType] !== a.templateKey).map(
+  return [...AI_AGENTS, ONBOARDING_AGENT, GUIDE_AGENT, ASSISTANT_AGENT, OWNER_CUE_AGENT].filter((a) => AGENT_PROMPT_MAP[a.agentType] !== a.templateKey).map(
     (a) => a.agentType
   )
 }

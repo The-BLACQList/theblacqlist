@@ -255,6 +255,11 @@ Never use a code that is not listed.`,
   // routed and the admin list names it.
 
   VISITOR_ASSISTANT: `Cue writes its system prompt in lib/ai/cue/prompt.ts. This template is never sent.`,
+
+  // The owner Cue (ticket 203) works the same way: its system prompt is
+  // ownerCueSystem in lib/ai/cue/owner/prompt.ts, and it runs through
+  // app/api/cue/owner/route.ts. The key keeps the owner_cue agent routed.
+  OWNER_CUE: `The owner Cue writes its system prompt in lib/ai/cue/owner/prompt.ts. This template is never sent.`,
 } as const
 
 export type PromptTemplateKey = keyof typeof PROMPT_TEMPLATES
@@ -276,4 +281,5 @@ export const AGENT_PROMPT_MAP: Record<string, PromptTemplateKey> = {
   onboarding_drafts: 'ONBOARDING_DRAFTS',
   visitor_guide: 'VISITOR_GUIDE',
   visitor_assistant: 'VISITOR_ASSISTANT',
+  owner_cue: 'OWNER_CUE',
 }

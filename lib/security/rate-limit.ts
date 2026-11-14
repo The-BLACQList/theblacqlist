@@ -40,6 +40,7 @@ export type RateLimitBucket =
   | 'place_lookup_upstream'
   | 'ai_guide'
   | 'ai_assistant'
+  | 'owner_cue'
   | 'message_start'
   | 'message_send'
   | 'message_report'

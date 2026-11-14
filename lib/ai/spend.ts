@@ -25,6 +25,8 @@
  * charged as `cueMessageUnits()` attempts: its own worst case divided by the
  * page agents' worst case, rounded up. Its input is priced as a cache write
  * (1.25 times the input price), the dearest way those tokens can be billed.
+ * The owner Cue (ticket 203) runs the same loop with the same bounds, so its
+ * rows are charged the same way (`CUE_AGENT_TYPES`).
  *
  * ── It fails closed ──────────────────────────────────────────────────────────
  * No ceiling set, a ceiling that does not parse, or a counter that cannot be
@@ -36,7 +38,7 @@
  */
 
 import { createServiceClient } from '@/lib/supabase/server'
-import { AI_AGENTS, ASSISTANT_AGENT, GUIDE_AGENT, ONBOARDING_AGENT } from './agents'
+import { AI_AGENTS, ASSISTANT_AGENT, GUIDE_AGENT, ONBOARDING_AGENT, OWNER_CUE_AGENT } from './agents'
 import { maxTokensFor, SYSTEM_PROMPT } from './anthropic'
 import { CUE_INPUT_CHAR_CAP, CUE_MAX_CALLS, CUE_MAX_TOKENS } from './cue/limits'
 
@@ -85,6 +87,9 @@ export function cueMessageUnits(): number {
   return Math.ceil(worstCaseUsdPerCueMessage() / worstCaseUsdAnyAgent())
 }
 
+/** Agents whose rows are one Cue message each, charged in units. */
+export const CUE_AGENT_TYPES: readonly string[] = [ASSISTANT_AGENT.agentType, OWNER_CUE_AGENT.agentType]
+
 /** This month's attempts as the ceiling counts them, with Cue rows in units. */
 export function chargedAttempts(allRows: number, cueRows: number): number {
   return allRows + Math.max(0, cueRows) * (cueMessageUnits() - 1)
@@ -132,7 +137,7 @@ export async function withinMonthlyCeiling(now: Date = new Date()): Promise<bool
       .from('ai_generation_requests')
       .select('id', { count: 'exact', head: true })
       .eq('provider', 'anthropic')
-      .eq('agent_type', ASSISTANT_AGENT.agentType)
+      .in('agent_type', [...CUE_AGENT_TYPES])
       .gte('created_at', since),
   ])
 

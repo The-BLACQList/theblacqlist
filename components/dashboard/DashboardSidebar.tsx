@@ -41,9 +41,27 @@ const NAV_ITEMS = [
     exact: false,
     needsListing: true,
   },
-  { href: '/dashboard/products', label: 'Products', icon: Package, exact: false, needsListing: true },
-  { href: '/dashboard/services', label: 'Services', icon: Briefcase, exact: false, needsListing: true },
-  { href: '/dashboard/upgrade', label: 'Upgrade', icon: Sparkles, exact: false, needsListing: true },
+  {
+    href: '/dashboard/products',
+    label: 'Products',
+    icon: Package,
+    exact: false,
+    needsListing: true,
+  },
+  {
+    href: '/dashboard/services',
+    label: 'Services',
+    icon: Briefcase,
+    exact: false,
+    needsListing: true,
+  },
+  {
+    href: '/dashboard/upgrade',
+    label: 'Upgrade',
+    icon: Sparkles,
+    exact: false,
+    needsListing: true,
+  },
 ]
 
 const MESSAGES_ITEM = {
@@ -64,7 +82,9 @@ export function DashboardSidebar({
 }: Props) {
   const pathname = usePathname()
   const allItems =
-    messagesUnread === undefined ? NAV_ITEMS : [...NAV_ITEMS.slice(0, 2), MESSAGES_ITEM, ...NAV_ITEMS.slice(2)]
+    messagesUnread === undefined
+      ? NAV_ITEMS
+      : [...NAV_ITEMS.slice(0, 2), MESSAGES_ITEM, ...NAV_ITEMS.slice(2)]
   const navItems = allItems.filter(
     (item) =>
       (hasListings || !('needsListing' in item)) &&
@@ -142,7 +162,9 @@ export function DashboardSidebar({
             <div className="flex gap-1 overflow-x-auto md:block">
               {[
                 { href: `/dashboard/pages/${entityId}/edit`, label: 'Edit content' },
-                ...(showPosts ? [{ href: `/dashboard/pages/${entityId}/posts`, label: 'Happening now' }] : []),
+                ...(showPosts
+                  ? [{ href: `/dashboard/pages/${entityId}/posts`, label: 'Happening now' }]
+                  : []),
                 { href: `/dashboard/pages/${entityId}/offerings`, label: 'Offerings' },
                 { href: `/dashboard/pages/${entityId}/events`, label: 'Events' },
                 { href: `/dashboard/pages/${entityId}/media`, label: 'Media' },

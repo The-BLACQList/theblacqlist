@@ -17,7 +17,7 @@
 // it: when to refetch (useTourState.ts), how a row behaves (TourStepRow.tsx),
 // and how the reflection saves (TourReflectionForm.tsx).
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { ArrowRight, ChevronDown, ChevronUp, Loader2, RefreshCw } from 'lucide-react'
@@ -114,11 +114,46 @@ function subscribeCollapse(listener: () => void): () => void {
   }
 }
 
+/**
+ * Writes how much of the bottom-right corner the rail takes, its height plus a
+ * gap, to --tour-rail-stack on <html>. The dashboard's Ask Cue button (ticket
+ * 203) reads it to sit just above the rail, so the two never overlap. The
+ * pill and the panel can both be mounted with one hidden by the viewport
+ * (display: none, so 0 tall); the tallest one showing counts.
+ */
+function useCornerHeight() {
+  const els = useRef(new Set<HTMLElement>())
+  const update = useCallback(() => {
+    let height = 0
+    for (const el of els.current) height = Math.max(height, el.getBoundingClientRect().height)
+    const style = document.documentElement.style
+    if (height > 0) style.setProperty('--tour-rail-stack', `${Math.ceil(height) + 12}px`)
+    else style.removeProperty('--tour-rail-stack')
+  }, [])
+  return useCallback(
+    (el: HTMLElement | null) => {
+      if (!el) return
+      const all = els.current
+      all.add(el)
+      const observer = new ResizeObserver(update)
+      observer.observe(el)
+      update()
+      return () => {
+        observer.disconnect()
+        all.delete(el)
+        update()
+      }
+    },
+    [update]
+  )
+}
+
 export function TourRail() {
   const pathname = usePathname()
   const router = useRouter()
   const { phase, tour, announcement, attention, checking, refresh, retry } = useTourState()
   const collapse = useSyncExternalStore(subscribeCollapse, readCollapse, serverCollapse)
+  const cornerRef = useCornerHeight()
   // null = "follow the tour" (the first unfinished step is open). A string
   // pins the tester's own choice; '' means they closed everything.
   const [openStep, setOpenStep] = useState<string | null>(null)
@@ -251,6 +286,7 @@ export function TourRail() {
 
   const pill = (
     <div
+      ref={cornerRef}
       className={`lift-over-quick-bar stack-over-assistant fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2${undecided ? ' md:hidden' : ''}`}
     >
       {/* Always mounted, for the same reason as the panel's live region: a
@@ -292,6 +328,7 @@ export function TourRail() {
 
   const panel = (
     <aside
+      ref={cornerRef}
       aria-label="Tester Tour progress"
       className={`lift-over-quick-bar stack-over-assistant fixed bottom-4 right-4 z-40 flex max-h-[70vh] w-[min(22rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-amber-gold/40 bg-deep-bg text-cream shadow-2xl${undecided ? ' max-md:hidden' : ''}`}
     >

@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { createClient } from '@/lib/supabase/server'
 import { DashboardSidebar } from '@/components/dashboard/DashboardSidebar'
+import { OwnerCue } from '@/components/dashboard/OwnerCue'
 import { isFeatureEnabled } from '@/lib/env'
 import { countReceiptsToVerify, ownedListingIds } from '@/lib/dashboard/receiptsToVerify'
 import { getUnreadMessageCount } from '@/lib/messaging/loaders'
@@ -30,9 +31,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // Off, the nav item is hidden (ownerReceiptReview, closed by default).
   const ownerReview = isFeatureEnabled('ownerReceiptReview')
   const listingIds = ownerReview && hasListings ? await ownedListingIds(owner.user.id) : []
-  const receiptsToVerify = listingIds
-    ? await countReceiptsToVerify(owner.user.id, listingIds)
-    : 0
+  const receiptsToVerify = listingIds ? await countReceiptsToVerify(owner.user.id, listingIds) : 0
 
   return (
     <div className="flex min-h-screen flex-col bg-pale-lavender md:flex-row">
@@ -45,6 +44,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
         showPosts={isFeatureEnabled('happeningNow')}
       />
       <main className="flex-1 min-w-0 p-4 sm:p-6 md:p-8">{children}</main>
+      {/* The owner Cue's corner button (ticket 203), like the visitor Cue's. */}
+      {isFeatureEnabled('ownerCue') && hasListings && <OwnerCue />}
     </div>
   )
 }

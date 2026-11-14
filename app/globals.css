@@ -705,6 +705,38 @@ body:has([data-map-side]) .stack-over-assistant {
   }
 }
 
+/* The owner Cue (ticket 203) takes the dashboard's bottom-right corner, like the
+   visitor Cue. With the Tester Tour showing, the tour keeps the corner and the
+   Ask Cue button sits just above it: TourRail writes its height plus a gap to
+   --tour-rail-stack. On the edit page the Save bar (ProfileSave,
+   data-save-bar) is sticky at the bottom, so the tour, the button and the
+   computer panel ride above it and never cover Save. On a narrow phone the
+   button shrinks to the Cue mark (its name stays "Ask Cue"), clear of the
+   centred "More below" chip. Unlayered, like the rules above. */
+.owner-cue-pill {
+  bottom: calc(var(--owner-cue-base, 1rem) + var(--tour-rail-stack, 0px));
+}
+body:has([data-save-bar]) {
+  --owner-cue-base: 6.5rem;
+}
+body:has([data-owner-cue='on']):has([data-save-bar]) .stack-over-assistant {
+  bottom: 6.5rem;
+}
+@media (width >= 48rem) {
+  body:has([data-save-bar]) .owner-cue-panel {
+    bottom: 6.5rem;
+    height: min(70dvh, 40rem, calc(100dvh - 8rem));
+  }
+}
+@media (width < 40rem) {
+  body:has([data-save-bar]) .owner-cue-pill {
+    padding-right: 0.375rem;
+  }
+  body:has([data-save-bar]) .owner-cue-pill .owner-cue-label {
+    display: none;
+  }
+}
+
 /* ─── iOS focus-zoom guard ───────────────────────────────────────────────────
    iOS Safari zooms the page when a focused field is under 16px, and the form
    controls here are text-sm (14px). One rule instead of editing every input.
@@ -714,7 +746,16 @@ body:has([data-map-side]) .stack-over-assistant {
    excluded because they have no text to zoom for. No input in the app is
    deliberately larger than 16px, so a flat 16px loses nothing. */
 @media (width < 48rem) {
-  input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden'], [type='submit'], [type='button']),
+  input:not(
+    [type='checkbox'],
+    [type='radio'],
+    [type='range'],
+    [type='color'],
+    [type='file'],
+    [type='hidden'],
+    [type='submit'],
+    [type='button']
+  ),
   select,
   textarea {
     font-size: 16px;

@@ -69,7 +69,7 @@ describe('a refusal', () => {
 
   it('tells the owner what to add, not that checks failed', () => {
     expect(ownerRejectionMessage('refusal')).toMatch(/isn't enough on your page/)
-    const action = read('lib/actions/ai/generateSuggestion.ts')
+    const action = read('lib/ai/requestSuggestion.ts')
     expect(action).toMatch(/result\.reason === 'refusal' \|\| result\.reason === 'empty'/)
     expect(action).toContain("ownerRejectionMessage('refusal')")
   })

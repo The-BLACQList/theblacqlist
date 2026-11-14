@@ -11,6 +11,7 @@
 4. **The AI writes short need names only.** Every other word is fixed text we wrote, and every business comes from our own search.
 5. **The chat is kept in this tab only** (`sessionStorage`), cleared when the tab closes or on Clear chat. Nothing is saved on our servers.
 6. **Public pages only.** Hidden on the dashboard, admin, account, sign-in, checkout and forms.
+   *Amended 2026-11-13 by [ticket 203](203-owner-cue.md):* owners get their own Cue on the dashboard, as a side panel from the sidebar. This visitor Cue stays hidden there; checkout and upgrade stay free of both.
 
 This reverses three of ticket 146's Out items: follow-up questions (the last 3 messages go with each ask), text the model writes (need names only, format-checked), and location (Near me, search only).
 
