@@ -2,9 +2,8 @@
 // that never apply themselves, help that follows plans.ts, the limits, and a
 // whole message on the scripted model. The route's guards are read as text.
 
+import type Anthropic from '@anthropic-ai/sdk'
 import { readFileSync } from 'node:fs'
-
-import { ownerCuePageId } from '@/lib/ai/cue/owner/routes'
 import { join } from 'node:path'
 
 import { describe, expect, it, vi } from 'vitest'
@@ -22,8 +21,15 @@ import {
   withinOwnerCueBudget,
 } from '@/lib/ai/cue/owner/limits'
 import { createMockOwnerCueCall } from '@/lib/ai/cue/owner/mock'
-import { buildOwnerCueMessages, ownerCueSystem } from '@/lib/ai/cue/owner/prompt'
+import {
+  buildOwnerCueMessages,
+  ownerCueSystem,
+  OWNER_CUE_PROMPT_VERSION,
+  OWNER_CUE_RULES,
+} from '@/lib/ai/cue/owner/prompt'
 import { runOwnerCue } from '@/lib/ai/cue/owner/run'
+import type { CueModelCall } from '@/lib/ai/cue/loop'
+import { ownerCuePageId } from '@/lib/ai/cue/owner/routes'
 import {
   availableSections,
   OWNER_SECTION_IDS,
@@ -442,6 +448,70 @@ describe('the route (read as text)', () => {
   it('the visitor Cue is unchanged: still hidden on the dashboard', () => {
     const routes = readFileSync(join(process.cwd(), 'lib/assistant/routes.ts'), 'utf8')
     expect(routes).toMatch(/dashboard/)
+  })
+})
+
+describe('replies read easily', () => {
+  it('the prompt asks for short paragraphs, lists and a short reply', () => {
+    expect(OWNER_CUE_PROMPT_VERSION).toBe('OWNER_CUE@2')
+    expect(OWNER_CUE_RULES).toMatch(/Steps go in a numbered list/)
+    expect(OWNER_CUE_RULES).toMatch(/bulleted list \("- "\)/)
+    expect(OWNER_CUE_RULES).toMatch(/Never write a block of more than two sentences/)
+    expect(OWNER_CUE_RULES).toMatch(/under about 120 words/)
+    expect(OWNER_CUE_RULES).not.toMatch(/One to four short sentences/)
+  })
+
+  it('words from separate model calls become separate paragraphs', async () => {
+    const reply = (content: unknown[], stop: string) =>
+      ({
+        id: 'msg_test',
+        type: 'message',
+        role: 'assistant',
+        model: 'mock-v1',
+        content,
+        stop_reason: stop,
+        stop_sequence: null,
+        usage: { input_tokens: 1, output_tokens: 1 },
+      }) as unknown as Anthropic.Message
+    let n = 0
+    const call: CueModelCall = async (_params, onText) => {
+      n++
+      if (n === 1) {
+        onText('Your page is close.')
+        return reply(
+          [
+            { type: 'text', text: 'Your page is close.' },
+            { type: 'tool_use', id: 'toolu_1', name: 'get_my_page', input: {} },
+          ],
+          'tool_use'
+        )
+      }
+      onText('Add your hours first.')
+      return reply([{ type: 'text', text: 'Add your hours first.' }], 'end_turn')
+    }
+    const ctx = context()
+    const events: { type: string; text?: string }[] = []
+    const result = await runOwnerCue({
+      call,
+      model: 'mock-v1',
+      system: ownerCueSystem(),
+      messages: buildOwnerCueMessages({
+        history: [],
+        message: 'What should I fix?',
+        pages: ctx.pages,
+        currentId: ctx.currentId,
+        writingHelp: ctx.writingHelp,
+      }),
+      ctx,
+      emit: (e) => events.push(e),
+      signal: new AbortController().signal,
+    })
+    expect(result.text).toBe('Your page is close.\n\nAdd your hours first.')
+    const streamed = events
+      .filter((e) => e.type === 'text')
+      .map((e) => e.text)
+      .join('')
+    expect(streamed).toBe('Your page is close.\n\nAdd your hours first.')
   })
 })
 

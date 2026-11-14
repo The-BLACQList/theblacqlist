@@ -78,6 +78,9 @@ export interface ToolLoopArgs {
   statusFor: (name: string, input: unknown) => string
   emit: (event: CueProgressEvent) => void
   signal: AbortSignal
+  /** Streamed between one call's words and the next's. The visitor Cue runs
+   *  them on as one paragraph (' '); the owner Cue starts a new one ('\n\n'). */
+  partBreak?: string
 }
 
 export interface ToolLoopResult {
@@ -132,7 +135,7 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
 
     let emittedThisCall = false
     const guard = new TextGuard((text) => {
-      if (!emittedThisCall && streamedAny) emit({ type: 'text', text: ' ' })
+      if (!emittedThisCall && streamedAny) emit({ type: 'text', text: args.partBreak ?? ' ' })
       emittedThisCall = true
       streamedAny = true
       emit({ type: 'text', text })

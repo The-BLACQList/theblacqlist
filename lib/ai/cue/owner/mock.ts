@@ -144,7 +144,7 @@ export function createMockOwnerCueCall(): CueModelCall {
         return toolUses(model, [{ name: 'go_to', input: { section: 'upgrade' } }])
       return say(
         model,
-        'Starter, Growth and Premium each add more to your page. The plans are on Upgrade.',
+        'Each paid plan adds more to your page:\n\n- **Starter:** writing help and more photos.\n- **Growth:** more buttons and posts.\n- **Premium:** deals and the most of everything.\n\nThe details are on Upgrade.',
         onText
       )
     }

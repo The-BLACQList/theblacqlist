@@ -18,6 +18,9 @@ import {
 import type { OwnerDraft, OwnerLink } from './events'
 import { OWNER_CUE_TOOLS, ownerStatusFor, runOwnerCueTool, type OwnerCueContext } from './tools'
 
+/** Words from separate model calls are separate paragraphs, never run together. */
+const OWNER_PART_BREAK = '\n\n'
+
 /** Said when a draft or buttons came back but no words did. */
 export const OWNER_SEE_BELOW = 'Here you go.'
 
@@ -50,9 +53,10 @@ export async function runOwnerCue(args: {
     statusFor: (name) => ownerStatusFor(name),
     emit: args.emit,
     signal: args.signal,
+    partBreak: OWNER_PART_BREAK,
   })
 
-  let text = cleanReply(loop.replyParts.join(' '))
+  let text = cleanReply(loop.replyParts.join(OWNER_PART_BREAK))
   if (loop.stop === 'refusal') text = ''
   else if (loop.stop !== 'end') text = lastFullSentence(text)
   const { drafts, links } = ctx.state
