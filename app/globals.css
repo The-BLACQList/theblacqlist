@@ -706,19 +706,21 @@ body:has([data-map-side]) .stack-over-assistant {
 }
 
 /* The owner Cue (ticket 203) takes the dashboard's bottom-right corner, like the
-   visitor Cue. The Tester Tour rail steps up above it. On the edit page the
-   Save bar (ProfileSave, data-save-bar) is sticky at the bottom, so the button
-   and the computer panel ride above it and never cover Save. On a narrow phone
-   the button shrinks to the Cue mark (its name stays "Ask Cue"), clear of the
+   visitor Cue. With the Tester Tour showing, the tour keeps the corner and the
+   Ask Cue button sits just above it: TourRail writes its height plus a gap to
+   --tour-rail-stack. On the edit page the Save bar (ProfileSave,
+   data-save-bar) is sticky at the bottom, so the tour, the button and the
+   computer panel ride above it and never cover Save. On a narrow phone the
+   button shrinks to the Cue mark (its name stays "Ask Cue"), clear of the
    centred "More below" chip. Unlayered, like the rules above. */
-body:has([data-owner-cue='on']) .stack-over-assistant {
-  bottom: 5rem;
+.owner-cue-pill {
+  bottom: calc(var(--owner-cue-base, 1rem) + var(--tour-rail-stack, 0px));
 }
-body:has([data-save-bar]) .lift-over-save-bar {
+body:has([data-save-bar]) {
+  --owner-cue-base: 6.5rem;
+}
+body:has([data-owner-cue='on']):has([data-save-bar]) .stack-over-assistant {
   bottom: 6.5rem;
-}
-body:has([data-save-bar]):has([data-owner-cue='on']) .stack-over-assistant {
-  bottom: 10.5rem;
 }
 @media (width >= 48rem) {
   body:has([data-save-bar]) .owner-cue-panel {
@@ -727,10 +729,10 @@ body:has([data-save-bar]):has([data-owner-cue='on']) .stack-over-assistant {
   }
 }
 @media (width < 40rem) {
-  body:has([data-save-bar]) .lift-over-save-bar {
+  body:has([data-save-bar]) .owner-cue-pill {
     padding-right: 0.375rem;
   }
-  body:has([data-save-bar]) .lift-over-save-bar .owner-cue-label {
+  body:has([data-save-bar]) .owner-cue-pill .owner-cue-label {
     display: none;
   }
 }
@@ -744,7 +746,16 @@ body:has([data-save-bar]):has([data-owner-cue='on']) .stack-over-assistant {
    excluded because they have no text to zoom for. No input in the app is
    deliberately larger than 16px, so a flat 16px loses nothing. */
 @media (width < 48rem) {
-  input:not([type='checkbox'], [type='radio'], [type='range'], [type='color'], [type='file'], [type='hidden'], [type='submit'], [type='button']),
+  input:not(
+    [type='checkbox'],
+    [type='radio'],
+    [type='range'],
+    [type='color'],
+    [type='file'],
+    [type='hidden'],
+    [type='submit'],
+    [type='button']
+  ),
   select,
   textarea {
     font-size: 16px;

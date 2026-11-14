@@ -22,20 +22,21 @@ import { CUE_HISTORY_TURNS, CUE_TURN_MAX_CHARS } from '@/lib/ai/cue/ask'
 import { OWNER_CUE_MESSAGE_MAX } from '@/lib/ai/cue/owner/ask'
 import { streamOwnerCue, type OwnerCueReply } from '@/lib/ai/cue/owner/client'
 import { OWNER_DRAFT_KINDS, OWNER_FALLBACK_TEXT, type OwnerDraft } from '@/lib/ai/cue/owner/events'
-import { isOwnerCueHiddenPath, ownerCuePageId } from '@/lib/ai/cue/owner/routes'
+import { ownerCuePageId } from '@/lib/ai/cue/owner/routes'
 import { cn } from '@/lib/utils'
 
 /**
  * The owner Cue (ticket 203): the same gold Ask Cue button in the bottom-right
- * corner that visitors get, on every dashboard page but Upgrade. On a computer
+ * corner that visitors get, on every dashboard page, Upgrade included. On a computer
  * it opens a panel that stays open while the owner works on the page; on a
  * phone, a full-screen sheet that closes when they follow a link. It answers
  * how-to questions, reads the owner's own pages and drafts text. A draft is a
  * pending suggestion; it reaches the page only when the owner chooses "Use
  * this" and confirms. The chat lives in this tab (sessionStorage).
  *
- * On the edit page the button and panel sit above the Save bar
- * (.lift-over-save-bar in globals.css), so Save is never covered.
+ * On the edit page the button and panel sit above the Save bar, and with the
+ * Tester Tour showing the button sits above the tour (.owner-cue-pill in
+ * globals.css), so neither Save nor the tour is covered.
  */
 
 const STORAGE_KEY = 'blacq-owner-cue-v1'
@@ -152,15 +153,12 @@ export function OwnerCue() {
     })
   }
 
-  // Upgrade and checkout are for deciding what to pay; Cue stays out of them.
-  if (isOwnerCueHiddenPath(pathname)) return null
-
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange} modal={!isDesktop}>
       <DialogPrimitive.Trigger
         data-owner-cue="on"
         aria-label="Ask Cue"
-        className="lift-over-save-bar fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 min-h-12 pl-1.5 pr-4 rounded-full bg-gold text-brand-black font-subhead text-sm font-bold shadow-lg shadow-brand-black/30 hover:bg-light-gold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black focus-visible:ring-4 focus-visible:ring-white data-[state=open]:invisible"
+        className="owner-cue-pill fixed bottom-4 right-4 z-40 inline-flex items-center gap-2 min-h-12 pl-1.5 pr-4 rounded-full bg-gold text-brand-black font-subhead text-sm font-bold shadow-lg shadow-brand-black/30 hover:bg-light-gold transition-colors duration-150 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-black focus-visible:ring-4 focus-visible:ring-white data-[state=open]:invisible"
       >
         <span className="grid place-items-center size-9 rounded-full bg-brand-black">
           <GoldBrandMark className="size-5" />
@@ -302,14 +300,12 @@ function OwnerCuePanel({
   }
 
   // The phone sheet covers the page, so following a link closes it. The
-  // computer panel stays open beside the page, except on the way to Upgrade,
-  // where Cue doesn't show.
+  // computer panel stays open beside the page.
   function onClickCapture(event: MouseEvent<HTMLDivElement>) {
+    if (isDesktop) return
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
       return
-    const link = (event.target as Element).closest('a[href]')
-    if (!link) return
-    if (!isDesktop || isOwnerCueHiddenPath(link.getAttribute('href') ?? '')) close()
+    if ((event.target as Element).closest('a[href]')) close()
   }
 
   return (

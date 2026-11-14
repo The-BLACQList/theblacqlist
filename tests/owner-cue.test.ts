@@ -4,7 +4,7 @@
 
 import { readFileSync } from 'node:fs'
 
-import { isOwnerCueHiddenPath, ownerCuePageId } from '@/lib/ai/cue/owner/routes'
+import { ownerCuePageId } from '@/lib/ai/cue/owner/routes'
 import { join } from 'node:path'
 
 import { describe, expect, it, vi } from 'vitest'
@@ -458,12 +458,9 @@ describe('the corner button', () => {
     expect(sidebar).not.toMatch(/OwnerCue/)
   })
 
-  it('hides on Upgrade and checkout', () => {
-    expect(isOwnerCueHiddenPath('/dashboard/upgrade')).toBe(true)
-    expect(isOwnerCueHiddenPath('/dashboard/upgrade/success')).toBe(true)
-    expect(isOwnerCueHiddenPath('/dashboard/upgraded')).toBe(false)
-    expect(isOwnerCueHiddenPath('/dashboard/pages')).toBe(false)
-    expect(cue).toMatch(/if \(isOwnerCueHiddenPath\(pathname\)\) return null/)
+  it('shows on every dashboard page, Upgrade included', () => {
+    expect(cue).not.toMatch(/return null/)
+    expect(cue).not.toMatch(/HiddenPath/)
   })
 
   it('reads the open page from the address', () => {
@@ -483,11 +480,17 @@ describe('the corner button', () => {
     expect(cue).toMatch(/aria-label="Ask Cue"/)
   })
 
-  it('rides above the edit page Save bar', () => {
+  it('rides above the edit page Save bar and the Tester Tour', () => {
+    const rail = read('components/tour/TourRail.tsx')
     expect(save).toMatch(/data-save-bar=""/)
-    expect(cue).toMatch(/lift-over-save-bar/)
-    expect(css).toMatch(/body:has\(\[data-save-bar\]\) \.lift-over-save-bar \{\s*bottom: 6\.5rem/)
+    expect(cue).toMatch(/owner-cue-pill fixed bottom-4/)
+    expect(css).toMatch(
+      /\.owner-cue-pill \{\s*bottom: calc\(var\(--owner-cue-base, 1rem\) \+ var\(--tour-rail-stack, 0px\)\)/
+    )
+    expect(css).toMatch(/body:has\(\[data-save-bar\]\) \{\s*--owner-cue-base: 6\.5rem/)
     expect(css).toMatch(/body:has\(\[data-save-bar\]\) \.owner-cue-panel/)
-    expect(css).toMatch(/body:has\(\[data-owner-cue='on'\]\) \.stack-over-assistant/)
+    // The tour keeps the corner; it writes its height for Cue to sit above.
+    expect(rail).toMatch(/setProperty\('--tour-rail-stack'/)
+    expect(rail.match(/ref=\{cornerRef\}/g)).toHaveLength(2)
   })
 })
