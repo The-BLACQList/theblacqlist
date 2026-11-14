@@ -32,7 +32,7 @@ export function TourReflectionForm({
   step,
   onSaved,
   initialText = '',
-  submitLabel = 'Save reflection',
+  submitLabel = 'Save Reflection',
   onCancel,
 }: {
   step: TourStepState

@@ -42,7 +42,7 @@ export function ProductForm({
   listings,
   defaultListingId,
   defaultValues,
-  submitLabel = 'Save product',
+  submitLabel = 'Save Product',
 }: ProductFormProps) {
   const router = useRouter()
   const [_state, formAction, isPending] = useActionState(

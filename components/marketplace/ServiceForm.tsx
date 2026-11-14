@@ -46,7 +46,7 @@ export function ServiceForm({
   listings,
   defaultListingId,
   defaultValues,
-  submitLabel = 'Save service',
+  submitLabel = 'Save Service',
 }: ServiceFormProps) {
   const router = useRouter()
   const [_state, formAction, isPending] = useActionState(

@@ -34,7 +34,7 @@ interface Props {
 export function ReportCorrectionForm({
   listingId,
   triggerClassName,
-  triggerLabel = 'Report an error',
+  triggerLabel = 'Report an Error',
 }: Props) {
   const [open, setOpen] = useState(false)
   const [state, formAction, isPending] = useActionState(submitCorrectionAction, null)

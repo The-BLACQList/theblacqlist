@@ -42,6 +42,9 @@ describe('title case scanner', () => {
     expect(scan('const nav = [{ label: "Claim a business", href: "/claim" }]')).toEqual([
       'Claim a business',
     ])
+    expect(scan('function F({ submitLabel = "Join the waitlist" }) { return null }')).toEqual([
+      'Join the waitlist',
+    ])
   })
 
   it('leaves placeholders, sentences and Title Case alone', () => {

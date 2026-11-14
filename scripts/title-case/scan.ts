@@ -347,6 +347,15 @@ export function scanSource(file: string, source: string): Hit[] {
       for (const lit of stringResults(node.initializer)) checkString(lit, 'prop')
     }
 
+    // A default for a label prop: `{ submitLabel = 'Join the Waitlist' }`.
+    if (
+      ts.isBindingElement(node) &&
+      node.initializer &&
+      isLabelKey((node.propertyName ?? node.name).getText())
+    ) {
+      for (const lit of stringResults(node.initializer)) checkString(lit, 'prop')
+    }
+
     ts.forEachChild(node, visit)
   }
   visit(sf)

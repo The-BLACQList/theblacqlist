@@ -15,7 +15,7 @@ interface ErrorStateProps {
 }
 
 export function ErrorState({
-  heading = 'Something went wrong',
+  heading = 'Something Went Wrong',
   body = 'An unexpected error occurred. Please try again.',
   reset,
   homeHref = '/',

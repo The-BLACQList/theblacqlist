@@ -48,5 +48,10 @@
     "file": "components/account/CollectivePanel.tsx",
     "text": "more",
     "reason": "Count suffix in \"+3 more\", not a title."
+  },
+  {
+    "file": "components/dashboard/InboxSwitch.tsx",
+    "text": "Let customers message me",
+    "reason": "Switch option label, read as a first-person sentence beside the toggle, like the other switch and checkbox options."
   }
 ]
