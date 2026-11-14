@@ -46,7 +46,7 @@ export function MintTesterLinkForm() {
         className="space-y-3"
       >
         <fieldset>
-          <legend className={LABEL_CLASS}>Who is it for</legend>
+          <legend className={LABEL_CLASS}>Who Is It For</legend>
           <div className="mt-1.5 flex flex-wrap gap-4">
             {(['supporter', 'owner', 'shared'] as const).map((value) => (
               <label
@@ -97,7 +97,7 @@ export function MintTesterLinkForm() {
         {kind === 'owner' && (
           <div>
             <label htmlFor="link-listing" className={LABEL_CLASS}>
-              Listing ID or slug (optional)
+              Listing ID or Slug (Optional)
             </label>
             <p className={HINT_CLASS}>
               Leave blank if they don&rsquo;t have a page yet. With a listing, the link signs in as
@@ -117,7 +117,7 @@ export function MintTesterLinkForm() {
         {kind !== 'shared' && (
           <div>
             <label htmlFor="link-email" className={LABEL_CLASS}>
-              {kind === 'supporter' ? 'Supporter email (optional)' : 'Owner email (optional)'}
+              {kind === 'supporter' ? 'Supporter Email (Optional)' : 'Owner Email (Optional)'}
             </label>
             <p className={HINT_CLASS}>
               {kind === 'owner' ? 'Only for an owner with no page yet. ' : ''}
@@ -142,7 +142,7 @@ export function MintTesterLinkForm() {
         )}
 
         <button type="submit" disabled={pending} className={BUTTON_CLASS}>
-          {pending ? 'Making link…' : 'Make link'}
+          {pending ? 'Making link…' : 'Make Link'}
         </button>
       </form>
 

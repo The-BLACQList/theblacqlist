@@ -73,7 +73,7 @@ export default async function AdminReviewsPage({ searchParams }: PageProps) {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-headline text-2xl text-brand-black">Review moderation</h1>
+        <h1 className="font-headline text-2xl text-brand-black">Review Moderation</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Approve or reject user-submitted reviews before they appear on listing pages.
         </p>

@@ -108,9 +108,9 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
   )
 
   const tabs: { label: string; value: StatusFilter }[] = [
-    { label: 'Needs an admin', value: 'needs_admin' },
-    { label: 'Waiting for the business', value: 'waiting' },
-    { label: 'All pending', value: 'pending_review' },
+    { label: 'Needs an Admin', value: 'needs_admin' },
+    { label: 'Waiting for the Business', value: 'waiting' },
+    { label: 'All Pending', value: 'pending_review' },
     { label: 'Approved', value: 'approved' },
     { label: 'Rejected', value: 'rejected' },
     { label: 'All', value: 'all' },
@@ -139,7 +139,7 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
           href="/admin/receipts/unlisted"
           className="inline-flex items-center min-h-11 font-subhead text-sm font-semibold text-amber-700 underline underline-offset-2 hover:text-brand-black"
         >
-          Not on the list
+          Not on the List
         </Link>
       </div>
 
@@ -262,7 +262,7 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
                               href={addListingHref(receipt.raw_business_name)}
                               className="font-semibold text-amber-700 underline underline-offset-2 hover:text-brand-black"
                             >
-                              Add {receipt.raw_business_name} as a listing
+                              Add {receipt.raw_business_name} as a Listing
                             </Link>
                           )}
                         </p>

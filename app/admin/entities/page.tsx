@@ -143,7 +143,7 @@ export default async function AdminEntitiesPage({ searchParams }: PageProps) {
             <thead>
               <tr className="border-b border-charcoal/10 bg-[#f9f9fb]">
                 <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">
-                  Business name
+                  Business Name
                 </th>
                 <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
                   Type

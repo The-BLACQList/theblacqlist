@@ -56,7 +56,7 @@ export default async function EditGuidePage({ params }: Props) {
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           Guides
         </Link>
-        <h1 className="font-headline text-2xl text-brand-black">Edit guide</h1>
+        <h1 className="font-headline text-2xl text-brand-black">Edit Guide</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">{guide.title}</p>
       </div>
 
@@ -169,7 +169,7 @@ export default async function EditGuidePage({ params }: Props) {
               type="submit"
               className="h-9 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
             >
-              Add section
+              Add Section
             </button>
           </div>
         </form>

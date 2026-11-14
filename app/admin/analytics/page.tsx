@@ -253,23 +253,23 @@ export default async function AdminAnalyticsPage() {
 
       {/* Platform health */}
       <div>
-        <SectionHeading>Platform health</SectionHeading>
+        <SectionHeading>Platform Health</SectionHeading>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <StatCard label="Registered users" value={totalUsers.toLocaleString()} />
+          <StatCard label="Registered Users" value={totalUsers.toLocaleString()} />
           <StatCard
-            label="Total claims"
+            label="Total Claims"
             value={totalClaims.toLocaleString()}
             sub={`+${claimsWeek} this week`}
           />
           <StatCard
-            label="Total saves"
+            label="Total Saves"
             value={totalSaves.toLocaleString()}
             sub={`+${savesWeek} this week`}
           />
           <StatCard label="Searches" value={searchesWeek.toLocaleString()} sub="this week" />
-          <StatCard label="Page views" value={pageViewsWeek.toLocaleString()} sub="this week" />
+          <StatCard label="Page Views" value={pageViewsWeek.toLocaleString()} sub="this week" />
           <StatCard
-            label="Last aggregation"
+            label="Last Aggregation"
             value={lastJob ? lastJob.run_date : '—'}
             sub={lastJob ? lastJob.status : 'no runs yet'}
           />
@@ -278,7 +278,7 @@ export default async function AdminAnalyticsPage() {
 
       {/* Weekly registrations chart */}
       <div>
-        <SectionHeading>New registrations — last 8 weeks</SectionHeading>
+        <SectionHeading>New Registrations — Last 8 Weeks</SectionHeading>
         <div className="rounded-xl border border-charcoal/10 bg-white px-5 py-5">
           <div className="flex items-end gap-1 w-full">
             {weeklyBuckets.map((b, i) => (
@@ -291,7 +291,7 @@ export default async function AdminAnalyticsPage() {
       {/* Top content + top searches */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div>
-          <SectionHeading>Top pages by views — last 30 days</SectionHeading>
+          <SectionHeading>Top Pages by Views — Last 30 Days</SectionHeading>
           <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
             {topListings.length === 0 ? (
               <p className="font-body text-sm text-charcoal-soft text-center py-8 px-4">
@@ -336,7 +336,7 @@ export default async function AdminAnalyticsPage() {
         </div>
 
         <div>
-          <SectionHeading>Top searches — last 30 days</SectionHeading>
+          <SectionHeading>Top Searches — Last 30 Days</SectionHeading>
           <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
             {topQueries.length === 0 ? (
               <p className="font-body text-sm text-charcoal-soft text-center py-8 px-4">
@@ -356,7 +356,7 @@ export default async function AdminAnalyticsPage() {
                       Searches
                     </th>
                     <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
-                      Avg results
+                      Avg Results
                     </th>
                   </tr>
                 </thead>
@@ -384,7 +384,7 @@ export default async function AdminAnalyticsPage() {
 
       {/* Aggregation job log */}
       <div>
-        <SectionHeading>Aggregation job log — last 5 runs</SectionHeading>
+        <SectionHeading>Aggregation Job Log — Last 5 Runs</SectionHeading>
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
           {jobLog.length === 0 ? (
             <p className="font-body text-sm text-charcoal-soft text-center py-8 px-4">
@@ -447,7 +447,7 @@ export default async function AdminAnalyticsPage() {
 
       {/* New listings per week — last 13 weeks */}
       <div>
-        <SectionHeading>New listings per week — last 13 weeks</SectionHeading>
+        <SectionHeading>New Listings per Week — Last 13 Weeks</SectionHeading>
         <div className="rounded-xl border border-charcoal/10 bg-white px-5 py-5">
           <div className="flex items-end gap-1 w-full">
             {listingGrowthBuckets.map((b, i) => (
@@ -459,7 +459,7 @@ export default async function AdminAnalyticsPage() {
 
       {/* City leaderboard */}
       <div>
-        <SectionHeading>Top cities by published listings</SectionHeading>
+        <SectionHeading>Top Cities by Published Listings</SectionHeading>
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
           {cityLeaderboard.length === 0 ? (
             <p className="font-body text-sm text-charcoal-soft text-center py-8 px-4">
@@ -479,7 +479,7 @@ export default async function AdminAnalyticsPage() {
                     Listings
                   </th>
                   <th className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
-                    % of total
+                    % of Total
                   </th>
                 </tr>
               </thead>
@@ -504,7 +504,7 @@ export default async function AdminAnalyticsPage() {
 
       {/* Search analytics link */}
       <div>
-        <SectionHeading>Search analytics</SectionHeading>
+        <SectionHeading>Search Analytics</SectionHeading>
         <Link href="/admin/analytics/search">
           <div className="rounded-xl border border-charcoal/10 bg-white px-5 py-4 hover:border-amber-gold/40 hover:bg-[#fdfaf4] transition-colors flex items-center justify-between cursor-pointer">
             <div>

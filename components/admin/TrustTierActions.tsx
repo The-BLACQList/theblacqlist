@@ -37,7 +37,7 @@ export function TrustTierActions({ listingId, currentTier }: Props) {
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="trust-tier-select" className="font-subhead text-xs text-charcoal-soft">
-          New tier
+          New Tier
         </label>
         <select
           id="trust-tier-select"
@@ -78,7 +78,7 @@ export function TrustTierActions({ listingId, currentTier }: Props) {
         disabled={pending}
         className="h-8 px-4 rounded-full bg-brand-black text-white font-body font-bold text-xs hover:bg-charcoal transition-colors disabled:opacity-50"
       >
-        {pending ? 'Saving…' : 'Update tier'}
+        {pending ? 'Saving…' : 'Update Tier'}
       </button>
     </form>
   )

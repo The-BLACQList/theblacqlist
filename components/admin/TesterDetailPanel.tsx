@@ -83,7 +83,7 @@ export function TesterDetailPanel({ tester }: Props) {
 
       <div>
         <h3 className="font-subhead text-xs font-bold uppercase tracking-wide text-ink">
-          The walk
+          The Walk
         </h3>
         <ol className="mt-2 space-y-3">
           {tester.walk.map((step, i) => (
@@ -130,7 +130,7 @@ export function TesterDetailPanel({ tester }: Props) {
                 onClick={copyEmail}
                 className="min-h-11 rounded-lg border border-charcoal/20 bg-white px-4 font-subhead text-sm font-semibold text-ink hover:border-charcoal/40"
               >
-                {copied ? 'Copied' : 'Copy email'}
+                {copied ? 'Copied' : 'Copy Email'}
               </button>
             </div>
           )}

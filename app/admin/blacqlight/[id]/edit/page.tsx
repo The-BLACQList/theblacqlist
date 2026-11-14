@@ -43,7 +43,7 @@ export default async function EditArticlePage({ params }: Props) {
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           BLACQLight
         </Link>
-        <h1 className="font-headline text-2xl text-brand-black">Edit article</h1>
+        <h1 className="font-headline text-2xl text-brand-black">Edit Article</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">{article.title}</p>
       </div>
 

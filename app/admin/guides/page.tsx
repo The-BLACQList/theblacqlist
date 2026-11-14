@@ -40,7 +40,7 @@ export default async function AdminGuidesPage() {
           className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors shrink-0"
         >
           <Plus className="size-3.5" aria-hidden="true" />
-          New guide
+          New Guide
         </Link>
       </div>
 
@@ -53,7 +53,7 @@ export default async function AdminGuidesPage() {
             className="inline-flex items-center gap-1.5 h-9 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
           >
             <Plus className="size-3.5" aria-hidden="true" />
-            New guide
+            New Guide
           </Link>
         </div>
       ) : (

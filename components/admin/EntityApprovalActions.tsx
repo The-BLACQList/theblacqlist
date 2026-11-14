@@ -7,11 +7,11 @@ import { rejectEntityAction } from '@/lib/actions/admin/rejectEntity'
 
 const REJECTION_PRESETS = [
   { label: 'Select a preset reason…', value: '' },
-  { label: 'Does not meet editorial focus', value: 'This submission does not meet our current editorial guidelines.' },
-  { label: 'Incomplete information', value: 'We need more information to review this listing. Please resubmit with complete details.' },
-  { label: 'Duplicate listing', value: 'A listing for this business already exists in our directory.' },
-  { label: 'Appears inactive', value: 'We were unable to verify that this business is currently active.' },
-  { label: 'Unverifiable information', value: 'The information provided could not be verified. Please ensure all details are accurate and resubmit.' },
+  { label: 'Does Not Meet Editorial Focus', value: 'This submission does not meet our current editorial guidelines.' },
+  { label: 'Incomplete Information', value: 'We need more information to review this listing. Please resubmit with complete details.' },
+  { label: 'Duplicate Listing', value: 'A listing for this business already exists in our directory.' },
+  { label: 'Appears Inactive', value: 'We were unable to verify that this business is currently active.' },
+  { label: 'Unverifiable Information', value: 'The information provided could not be verified. Please ensure all details are accurate and resubmit.' },
 ]
 
 interface Props {
@@ -103,7 +103,7 @@ export function EntityApprovalActions({ listingId, listingName }: Props) {
               htmlFor="reject-reason"
               className="block font-subhead text-sm font-semibold text-red-800 mb-1"
             >
-              Rejection reason <span aria-hidden="true">*</span>
+              Rejection Reason <span aria-hidden="true">*</span>
             </label>
             <select
               aria-label="Preset rejection reason"
@@ -137,7 +137,7 @@ export function EntityApprovalActions({ listingId, listingName }: Props) {
               className="flex-1 inline-flex items-center justify-center gap-2 h-10 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-subhead font-bold text-sm transition-colors"
             >
               {isRejecting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-              {isRejecting ? 'Rejecting…' : 'Confirm rejection'}
+              {isRejecting ? 'Rejecting…' : 'Confirm Rejection'}
             </button>
             <button
               type="button"

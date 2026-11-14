@@ -52,9 +52,9 @@ export default async function AdminEntityEditPage({ params }: Props) {
           className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-4 transition-colors"
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
-          Back to listing
+          Back to Listing
         </Link>
-        <h1 className="font-headline text-2xl text-brand-black">Edit listing</h1>
+        <h1 className="font-headline text-2xl text-brand-black">Edit Listing</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">{listing.name}</p>
       </div>
 

@@ -47,7 +47,7 @@ export function CopyEmailButton({ email, selectTargetId, className }: Props) {
     timer.current = setTimeout(() => setState('idle'), 2000)
   }
 
-  const label = state === 'copied' ? 'Copied' : state === 'selected' ? 'Selected, press copy' : 'Copy email'
+  const label = state === 'copied' ? 'Copied' : state === 'selected' ? 'Selected, press copy' : 'Copy Email'
 
   return (
     <>

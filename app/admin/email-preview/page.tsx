@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 import { EmailPreviewForm } from '@/components/admin/EmailPreviewForm'
 
-export const metadata: Metadata = { title: 'Email preview' }
+export const metadata: Metadata = { title: 'Email Preview' }
 
 /**
  * See a tester email exactly as a tester will, then copy it into Gmail. Two
@@ -21,7 +21,7 @@ export default function AdminEmailPreviewPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-headline text-2xl text-brand-black">Email preview</h1>
+        <h1 className="font-headline text-2xl text-brand-black">Email Preview</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Pick the invite or the tester update, paste a one-tap link from the Testers page, and say
           who it is for. See the email rendered, then copy it into a Gmail compose window. An invite

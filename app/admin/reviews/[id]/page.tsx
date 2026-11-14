@@ -117,7 +117,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
         href="/admin/reviews"
         className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal-soft hover:text-charcoal"
       >
-        ← Back to reviews
+        ← Back to Reviews
       </Link>
 
       {/* Header */}
@@ -138,7 +138,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
         <div className="lg:col-span-2 space-y-4">
           {/* Review content */}
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
-            <h2 className="font-headline text-base text-brand-black mb-3">Review content</h2>
+            <h2 className="font-headline text-base text-brand-black mb-3">Review Content</h2>
             {review.title && (
               <p className="font-subhead text-base font-semibold text-brand-black mb-2">
                 {review.title}
@@ -157,7 +157,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
                 <Row label="Rating" value={<StarRating rating={review.rating} />} />
                 {review.visit_date && (
                   <Row
-                    label="Visit date"
+                    label="Visit Date"
                     value={new Date(review.visit_date).toLocaleDateString('en-US', {
                       month: 'long',
                       day: 'numeric',
@@ -165,7 +165,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
                     })}
                   />
                 )}
-                <Row label="Verified visit" value={review.is_verified_purchase ? 'Yes' : 'No'} />
+                <Row label="Verified Visit" value={review.is_verified_purchase ? 'Yes' : 'No'} />
                 <Row label="Submitted" value={new Date(review.created_at).toLocaleString()} />
               </dl>
             </div>
@@ -227,12 +227,12 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
 
           {/* Listing info */}
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
-            <h2 className="font-headline text-base text-brand-black mb-3">Business reviewed</h2>
+            <h2 className="font-headline text-base text-brand-black mb-3">Business Reviewed</h2>
             {listing ? (
               <dl>
                 <Row label="Name" value={listing.name} />
                 <Row
-                  label="View listing"
+                  label="View Listing"
                   value={
                     entityHref ? (
                       <Link
@@ -241,14 +241,14 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
                         rel="noopener noreferrer"
                         className="font-subhead text-xs font-semibold text-amber hover:text-light-gold"
                       >
-                        Open listing page →
+                        Open Listing Page →
                       </Link>
                     ) : (
                       <Link
                         href={`/admin/entities/${listing.id}`}
                         className="font-subhead text-xs font-semibold text-amber hover:text-light-gold"
                       >
-                        Open entity admin page →
+                        Open Entity Admin Page →
                       </Link>
                     )
                   }
@@ -262,19 +262,19 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
           {/* Decision info (shown if already decided) */}
           {!isReviewable && (review.reviewed_at || review.rejection_reason) && (
             <div className="rounded-xl border border-charcoal/10 bg-white p-5">
-              <h2 className="font-headline text-base text-brand-black mb-3">Moderation decision</h2>
+              <h2 className="font-headline text-base text-brand-black mb-3">Moderation Decision</h2>
               <dl>
                 <Row
-                  label="Decided by"
+                  label="Decided By"
                   value={adminLabel ?? '—'}
                 />
                 <Row
-                  label="Decided at"
+                  label="Decided At"
                   value={review.reviewed_at ? new Date(review.reviewed_at).toLocaleString() : null}
                 />
                 {review.rejection_reason && (
                   <Row
-                    label="Rejection reason"
+                    label="Rejection Reason"
                     value={
                       <p className="whitespace-pre-wrap leading-relaxed">
                         {review.rejection_reason}
@@ -290,7 +290,7 @@ export default async function AdminReviewDetailPage({ params }: PageProps) {
         {/* Action panel */}
         <div className="space-y-4">
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
-            <h2 className="font-headline text-base text-brand-black mb-4">Admin actions</h2>
+            <h2 className="font-headline text-base text-brand-black mb-4">Admin Actions</h2>
             {isReviewable ? (
               <ReviewModerationActions reviewId={review.id} />
             ) : (

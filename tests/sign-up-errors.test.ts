@@ -142,7 +142,7 @@ describe('mapSignUpError', () => {
     // the page appends the link, and the founder read it twice on 2026-09-17.
     expect(SIGN_UP_ALREADY_REGISTERED.error).toBe('That email is already registered.')
     expect(SIGN_UP_ALREADY_REGISTERED.error).toContain('already registered')
-    expect(SIGN_UP_ALREADY_REGISTERED.error).not.toContain('Sign in instead')
+    expect(SIGN_UP_ALREADY_REGISTERED.error).not.toMatch(/Sign in instead/i)
     expect(SIGN_UP_ALREADY_REGISTERED.field).toBe('email')
   })
 })

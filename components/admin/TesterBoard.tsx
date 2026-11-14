@@ -57,7 +57,7 @@ export function TesterBoard({ testers, cap, initialNumber, links }: Props) {
             className="rounded-xl border border-[#ecd9ad] bg-[#fbf3e2] p-4"
           >
             <h2 id="needs-you-heading" className="font-subhead text-sm font-bold text-[#7a5600]">
-              Needs you
+              Needs You
             </h2>
             <ul className="mt-2 flex flex-wrap gap-2">
               {needs.map((t) => (
@@ -78,7 +78,7 @@ export function TesterBoard({ testers, cap, initialNumber, links }: Props) {
         <section aria-labelledby="spots-heading">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <h2 id="spots-heading" className={LABEL}>
-              The {cap} spots
+              The {cap} Spots
             </h2>
             <p className={`font-body text-xs ${MUTED}`}>
               {live.length} taken · {needs.length} need you · {open} open
@@ -109,7 +109,7 @@ export function TesterBoard({ testers, cap, initialNumber, links }: Props) {
         {left.length > 0 && (
           <section aria-labelledby="left-heading">
             <h2 id="left-heading" className={LABEL}>
-              Left the test
+              Left the Test
             </h2>
             <ul className="mt-2 flex flex-wrap gap-2">
               {left.map((t) => (
@@ -124,7 +124,7 @@ export function TesterBoard({ testers, cap, initialNumber, links }: Props) {
                         : 'border-charcoal/20 bg-white text-ink hover:border-charcoal/40'
                     }`}
                   >
-                    {t.label} · ended {t.endedText}
+                    {t.label} · Ended {t.endedText}
                   </button>
                 </li>
               ))}

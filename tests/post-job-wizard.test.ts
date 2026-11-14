@@ -45,7 +45,7 @@ describe('post-a-job wizard pieces', () => {
       createElement(StepPayPlace, { values: { ...values, employmentType: 'volunteer' }, errors: {}, set, business: biz })
     )
     expect(vol).toContain('Shown as Unpaid')
-    expect(vol).not.toContain('Lowest pay')
+    expect(vol).not.toMatch(/Lowest pay/i)
   })
 
   it('hides the place for remote roles', () => {

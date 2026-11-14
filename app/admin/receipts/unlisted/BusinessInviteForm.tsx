@@ -71,7 +71,7 @@ export function BusinessInviteForm({ businessName, emailedAt, optedOut, siteUrl 
   if (optedOut) {
     return (
       <button type="button" disabled className={secondaryBtn} aria-describedby={`${emailId}-off`}>
-        Email this business
+        Email This Business
         <span id={`${emailId}-off`} className="sr-only">
           {' '}
           Off: {businessName} said STOP.
@@ -84,7 +84,7 @@ export function BusinessInviteForm({ businessName, emailedAt, optedOut, siteUrl 
     return (
       <div className="space-y-1">
         <button type="button" onClick={() => setOpen(true)} className={secondaryBtn}>
-          Email this business
+          Email This Business
           <span className="sr-only">: {businessName}</span>
         </button>
         {sent && (
@@ -115,7 +115,7 @@ export function BusinessInviteForm({ businessName, emailedAt, optedOut, siteUrl 
           htmlFor={emailId}
           className="block font-subhead text-sm font-semibold text-brand-black"
         >
-          Business email
+          Business Email
         </label>
         <p className="font-body text-xs text-charcoal-soft">
           Used for this one email. We don&apos;t save it.
@@ -149,7 +149,7 @@ export function BusinessInviteForm({ businessName, emailedAt, optedOut, siteUrl 
             onClick={() => setPreviewing(true)}
             className={primaryBtn}
           >
-            Preview email
+            Preview Email
           </button>
           <button type="button" onClick={cancel} className={linkBtn}>
             Cancel
@@ -184,10 +184,10 @@ export function BusinessInviteForm({ businessName, emailedAt, optedOut, siteUrl 
               </p>
               <div className="flex flex-wrap items-center gap-3">
                 <button type="submit" disabled={pending} className={primaryBtn}>
-                  {pending ? 'Sending…' : 'Send again'}
+                  {pending ? 'Sending…' : 'Send Again'}
                 </button>
                 <button type="button" onClick={cancel} className={linkBtn}>
-                  Don&apos;t send
+                  Don&apos;t Send
                 </button>
               </div>
             </div>
@@ -195,15 +195,15 @@ export function BusinessInviteForm({ businessName, emailedAt, optedOut, siteUrl 
             <div className="flex flex-wrap items-center gap-3">
               {lastEmailedAt ? (
                 <button type="button" onClick={() => setConfirming(true)} className={primaryBtn}>
-                  Send email
+                  Send Email
                 </button>
               ) : (
                 <button type="submit" disabled={pending} className={primaryBtn}>
-                  {pending ? 'Sending…' : 'Send email'}
+                  {pending ? 'Sending…' : 'Send Email'}
                 </button>
               )}
               <button type="button" onClick={() => setPreviewing(false)} className={linkBtn}>
-                Change address
+                Change Address
               </button>
               <button type="button" onClick={cancel} className={linkBtn}>
                 Cancel

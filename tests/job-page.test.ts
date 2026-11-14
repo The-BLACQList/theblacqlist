@@ -133,7 +133,7 @@ describe('job page markup', () => {
   it('email only: shows the text and a Copy button, no Apply link', () => {
     const out = html(entity({ apply_email: 'jobs@example.com' }))
     expect(out).toContain('jobs@example.com')
-    expect(out).toContain('Copy email')
+    expect(out).toContain('Copy Email')
     expect(out).not.toContain('target="_blank"')
   })
 
@@ -141,12 +141,12 @@ describe('job page markup', () => {
     const out = html(entity({ apply_url: 'https://example.com/apply' }))
     expect(out).toContain('rel="noopener noreferrer"')
     expect(out).toContain('Apply')
-    expect(out).not.toContain('Copy email')
+    expect(out).not.toContain('Copy Email')
   })
 
   it('both: link first, then email', () => {
     const out = html(entity({ apply_url: 'https://example.com/a', apply_email: 'a@b.co' }))
-    expect(out.indexOf('https://example.com/a')).toBeLessThan(out.indexOf('Copy email'))
+    expect(out.indexOf('https://example.com/a')).toBeLessThan(out.indexOf('Copy Email'))
   })
 
   it('neither: says contact details are missing and has no bar', () => {
@@ -164,8 +164,8 @@ describe('job page markup', () => {
       entity({ closes_at: '2026-10-20T17:00:00Z', apply_email: 'a@b.co', apply_url: 'https://x.co' })
     )
     expect(out).toContain('Applications closed on October 20, 2026')
-    expect(out).not.toContain('Copy email')
-    expect(out).not.toContain('How to apply')
+    expect(out).not.toContain('Copy Email')
+    expect(out).not.toMatch(/How to apply/i)
     expect(out).not.toContain('fixed inset-x-0')
   })
 

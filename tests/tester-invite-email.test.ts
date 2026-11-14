@@ -53,7 +53,7 @@ describe.each(VARIANTS)('the %s tester invite email', (variant) => {
     // The old invite walked people through sign-up and email confirmation,
     // and warned about opening it in the same browser. None of that happens
     // on a one-tap link.
-    expect(html).not.toContain('Confirm your email')
+    expect(html).not.toMatch(/Confirm your email/i)
     expect(html).not.toMatch(/same browser/i)
     expect(html).not.toContain('?preview=')
   })

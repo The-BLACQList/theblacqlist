@@ -82,7 +82,7 @@ export default async function EditCollectionPage({ params }: Props) {
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           Collections
         </Link>
-        <h1 className="font-headline text-2xl text-brand-black">Edit collection</h1>
+        <h1 className="font-headline text-2xl text-brand-black">Edit Collection</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">{collection.title}</p>
       </div>
 
@@ -164,7 +164,7 @@ export default async function EditCollectionPage({ params }: Props) {
                       type="submit"
                       className="h-8 px-4 rounded-lg bg-charcoal/10 hover:bg-charcoal/20 text-brand-black font-subhead font-bold text-xs transition-colors"
                     >
-                      Save blurb
+                      Save Blurb
                     </button>
                   </div>
                 </form>
@@ -198,7 +198,7 @@ export default async function EditCollectionPage({ params }: Props) {
       {/* Editorial sections */}
       <div className="rounded-xl border border-charcoal/10 bg-white p-6 space-y-5">
         <div>
-          <h2 className="font-headline text-base text-brand-black">Editorial sections</h2>
+          <h2 className="font-headline text-base text-brand-black">Editorial Sections</h2>
           <p className="font-subhead text-xs text-charcoal-soft mt-0.5">
             Narrative blocks shown below the business list (e.g. &ldquo;How we chose these&rdquo;).
           </p>
@@ -239,7 +239,7 @@ export default async function EditCollectionPage({ params }: Props) {
                       type="submit"
                       className="h-8 px-4 rounded-lg bg-charcoal/10 hover:bg-charcoal/20 text-brand-black font-subhead font-bold text-xs transition-colors"
                     >
-                      Save section
+                      Save Section
                     </button>
                   </div>
                 </form>
@@ -249,7 +249,7 @@ export default async function EditCollectionPage({ params }: Props) {
                     type="submit"
                     className="font-subhead text-xs font-semibold text-red-500 hover:underline"
                   >
-                    Remove section
+                    Remove Section
                   </button>
                 </form>
               </div>
@@ -274,7 +274,7 @@ export default async function EditCollectionPage({ params }: Props) {
               type="submit"
               className="h-9 px-4 rounded-lg bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-xs transition-colors"
             >
-              Add section
+              Add Section
             </button>
           </div>
         </form>

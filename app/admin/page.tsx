@@ -66,25 +66,25 @@ export default async function AdminOverviewPage() {
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <AdminStatCard
-          label="Pending entities"
+          label="Pending Entities"
           count={pending.entities}
           href="/admin/entities"
           urgent
         />
         <AdminStatCard
-          label="Pending claims"
+          label="Pending Claims"
           count={pending.claims}
           href="/admin/claims"
           urgent
         />
         <AdminStatCard
-          label="Pending verification"
+          label="Pending Verification"
           count={pending.verifications}
           href="/admin/verification"
         />
-        <AdminStatCard label="Reports & flags" count={pending.reports} href="/admin/reports" />
+        <AdminStatCard label="Reports & Flags" count={pending.reports} href="/admin/reports" />
         <AdminStatCard
-          label="Pending receipts"
+          label="Pending Receipts"
           count={pending.receipts}
           href="/admin/receipts"
           urgent
@@ -93,7 +93,7 @@ export default async function AdminOverviewPage() {
 
       {/* Recent queue */}
       <div>
-        <h2 className="font-headline text-lg text-brand-black mb-4">Recent queue activity</h2>
+        <h2 className="font-headline text-lg text-brand-black mb-4">Recent Queue Activity</h2>
         {!recentQueue || recentQueue.length === 0 ? (
           <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-10 text-center">
             <p className="font-subhead text-sm text-charcoal-soft">
@@ -162,16 +162,16 @@ export default async function AdminOverviewPage() {
 
       {/* Quick links */}
       <div>
-        <h2 className="font-headline text-lg text-brand-black mb-4">Quick actions</h2>
+        <h2 className="font-headline text-lg text-brand-black mb-4">Quick Actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {[
-            { href: '/admin/entities', label: 'Review pending entities' },
-            { href: '/admin/claims', label: 'Review pending claims' },
-            { href: '/admin/verification', label: 'Verification queue' },
-            { href: '/admin/reviews', label: 'Review moderation' },
-            { href: '/admin/receipts', label: 'Receipt approvals' },
-            { href: '/admin/reports', label: 'Reports & corrections' },
-            { href: '/admin/analytics', label: 'Platform analytics' },
+            { href: '/admin/entities', label: 'Review Pending Entities' },
+            { href: '/admin/claims', label: 'Review Pending Claims' },
+            { href: '/admin/verification', label: 'Verification Queue' },
+            { href: '/admin/reviews', label: 'Review Moderation' },
+            { href: '/admin/receipts', label: 'Receipt Approvals' },
+            { href: '/admin/reports', label: 'Reports & Corrections' },
+            { href: '/admin/analytics', label: 'Platform Analytics' },
           ].map(({ href, label }) => (
             <Link
               key={href}

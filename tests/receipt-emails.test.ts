@@ -115,7 +115,7 @@ describe('ReceiptCountedEmail', () => {
       })
     )
     expect(html).not.toContain('Your spend joined the map.')
-    expect(html).not.toContain('See it on the map')
+    expect(html).not.toMatch(/See it on the map/i)
     expect(html).toContain('This one isn&#x27;t on the map.')
     expect(html).toContain('See your receipt')
     expect(html).toContain(`href="https://x.test/account/receipts/${RECEIPT_ID}/counted"`)

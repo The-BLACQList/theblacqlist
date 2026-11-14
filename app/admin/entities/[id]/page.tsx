@@ -71,7 +71,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
         href="/admin/entities"
         className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal-soft hover:text-charcoal"
       >
-        ← Back to entities
+        ← Back to Entities
       </Link>
 
       {/* Header */}
@@ -89,7 +89,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
         {/* Listing details */}
         <div className="lg:col-span-2 space-y-4">
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
-            <h2 className="font-headline text-base text-brand-black mb-3">Listing info</h2>
+            <h2 className="font-headline text-base text-brand-black mb-3">Listing Info</h2>
             <dl>
               <Row label="Name" value={listing.name} />
               <Row label="Tagline" value={listing.tagline} />
@@ -99,20 +99,20 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
               />
               <Row label="Category" value={category?.name} />
               <Row label="Status" value={<AdminStatusBadge status={listing.status} />} />
-              <Row label="Trust tier" value={<AdminStatusBadge status={listing.trust_tier} />} />
+              <Row label="Trust Tier" value={<AdminStatusBadge status={listing.trust_tier} />} />
               <Row label="Source" value={listing.source} />
               {listing.admin_notes && <Row label="Notes" value={listing.admin_notes} />}
               <Row
-                label="Submitted by"
+                label="Submitted By"
                 value={submitterLabel ?? (listing.submitted_by ? UNKNOWN_USER_LABEL : null)}
               />
-              <Row label="Submitted at" value={new Date(listing.created_at).toLocaleString()} />
+              <Row label="Submitted At" value={new Date(listing.created_at).toLocaleString()} />
               <Row
-                label="Ownership label"
+                label="Ownership Label"
                 value={listing.ownership_label === 'ally' ? 'Ally' : 'Black-Owned'}
               />
               <Row
-                label="Ownership attested"
+                label="Ownership Attested"
                 value={
                   listing.ownership_attested ? (
                     <span className="inline-flex items-center gap-1 text-green-700 font-semibold">
@@ -134,7 +134,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
           </div>
 
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
-            <h2 className="font-headline text-base text-brand-black mb-3">Business details</h2>
+            <h2 className="font-headline text-base text-brand-black mb-3">Business Details</h2>
             {details ? (
               <dl>
                 <Row
@@ -166,7 +166,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
                     )
                   }
                 />
-                <Row label="CTA type" value={details.cta_type} />
+                <Row label="CTA Type" value={details.cta_type} />
                 <Row label="Instagram" value={details.social_instagram} />
                 <Row label="Facebook" value={details.social_facebook} />
               </dl>
@@ -179,7 +179,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
         {/* Action panel */}
         <div className="space-y-4">
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
-            <h2 className="font-headline text-base text-brand-black mb-4">Admin actions</h2>
+            <h2 className="font-headline text-base text-brand-black mb-4">Admin Actions</h2>
             {listing.status === 'pending' ? (
               <EntityApprovalActions listingId={listing.id} listingName={listing.name} />
             ) : (
@@ -192,7 +192,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
           </div>
 
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
-            <h2 className="font-headline text-base text-brand-black mb-4">Trust tier</h2>
+            <h2 className="font-headline text-base text-brand-black mb-4">Trust Tier</h2>
             <TrustTierActions listingId={listing.id} currentTier={listing.trust_tier} />
           </div>
 
@@ -202,7 +202,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
               href={`/admin/entities/${listing.id}/edit`}
               className="w-full inline-flex items-center justify-center h-10 rounded-lg border border-charcoal/20 text-charcoal font-subhead text-sm font-semibold hover:border-charcoal/50 hover:text-brand-black transition-colors"
             >
-              Edit listing content
+              Edit Listing Content
             </Link>
           </div>
 

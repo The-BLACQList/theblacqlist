@@ -91,15 +91,15 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
   ]
 
   const TYPE_TABS = [
-    { value: 'all', label: 'All types' },
+    { value: 'all', label: 'All Types' },
     { value: 'correction', label: 'Corrections' },
-    { value: 'flagged_listing', label: 'Flagged listings' },
+    { value: 'flagged_listing', label: 'Flagged Listings' },
   ]
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-headline text-2xl text-brand-black">Reports & corrections</h1>
+        <h1 className="font-headline text-2xl text-brand-black">Reports & Corrections</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Handle user-submitted correction requests and flagged listings.
         </p>
@@ -108,7 +108,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
             href="/admin/reports/messages"
             className="inline-block mt-2 font-subhead text-xs font-semibold text-brand-black underline underline-offset-2 hover:text-charcoal"
           >
-            Message reports →
+            Message Reports →
           </Link>
         )}
       </div>
@@ -210,7 +210,7 @@ export default async function AdminReportsPage({ searchParams }: PageProps) {
                             href={`/admin/entities/${item.entity_id}`}
                             className="font-subhead text-xs font-semibold text-charcoal-soft hover:text-brand-black"
                           >
-                            View listing
+                            View Listing
                           </Link>
                         )}
                         {status === 'pending' || status === 'assigned' ? (

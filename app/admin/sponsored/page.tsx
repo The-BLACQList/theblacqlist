@@ -230,7 +230,7 @@ export default async function SponsoredPlacementsPage() {
           className="inline-flex items-center gap-2 h-10 px-5 rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors shrink-0"
         >
           <Plus className="size-4" aria-hidden="true" />
-          New placement
+          New Placement
         </Link>
       </div>
 

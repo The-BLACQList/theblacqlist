@@ -21,7 +21,7 @@ export default async function NewGuidePage() {
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           Guides
         </Link>
-        <h1 className="font-headline text-2xl text-brand-black">New guide</h1>
+        <h1 className="font-headline text-2xl text-brand-black">New Guide</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Create a new city guide. Add sections after saving.
         </p>

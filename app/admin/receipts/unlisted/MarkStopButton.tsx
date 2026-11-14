@@ -31,7 +31,7 @@ export function MarkStopButton({ businessName }: { businessName: string }) {
         onClick={() => setConfirming(true)}
         className="inline-flex items-center min-h-11 font-body text-xs font-semibold text-charcoal-soft underline underline-offset-2 hover:text-red-700 transition-colors"
       >
-        Mark STOP received
+        Mark STOP Received
         <span className="sr-only"> from {businessName}</span>
       </button>
     )

@@ -91,13 +91,13 @@ export default async function AdminUsersPage({ searchParams }: PageProps) {
                   User
                 </th>
                 <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
-                  Admin roles
+                  Admin Roles
                 </th>
                 <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden lg:table-cell">
                   Joined
                 </th>
                 <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden lg:table-cell">
-                  Last sign in
+                  Last Sign In
                 </th>
                 {isSuperAdmin && <th className="px-4 py-3" />}
               </tr>
