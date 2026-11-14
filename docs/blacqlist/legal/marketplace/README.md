@@ -31,6 +31,7 @@ No attorney or CPA is engaged yet.
 | [ip-and-counterfeit-takedown.md](ip-and-counterfeit-takedown.md) | DMCA notice and counter-notice, trademark and counterfeit claims, repeat infringers | Counsel, founder |
 | [privacy-policy-marketplace-addendum.md](privacy-policy-marketplace-addendum.md) | New privacy section and changes to existing sections | Counsel |
 | [counsel-and-cpa-packet.md](counsel-and-cpa-packet.md) | Cover memo and every question for the attorney and the CPA | Counsel, CPA |
+| [stripe-connect-application.md](stripe-connect-application.md) | Answers to paste into the Stripe Connect platform application, with the founder's blanks | Founder |
 
 ## Decided by the founder, 2026-11-13
 
