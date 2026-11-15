@@ -82,7 +82,7 @@
 | Digital | 3 days after purchase |
 | Open buyer case or chargeback | Frozen until resolved |
 
-Payouts then go from the seller's Stripe balance to their bank once a week (founder, 2026-11-15), set per account by ticket 224.
+Payouts then go from the seller's Stripe balance to their bank once a week on Mondays (founder, 2026-11-15), set per account by ticket 224.
 
 `[Needs professional review]` If Stripe asks how long funds can stay in the platform balance before transfer, say "normally under 30 days, from purchase to ship plus any hold". Confirm the number with Stripe if the form gives a limit.
 

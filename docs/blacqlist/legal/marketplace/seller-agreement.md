@@ -94,7 +94,7 @@
 - **Physical orders:** when you mark the order shipped with a valid tracking number. If you are a new seller, we hold the transfer a further 7 days. `[Assumption]` "New seller" means your first 90 days of selling or your first 10 shipped orders, whichever ends later.
 - **Digital orders:** 3 days after the purchase.
 
-6.3 **Payout to your bank.** Once a transfer reaches your connected account, Stripe pays your available balance out to your bank once a week, on a weekday we set and show on your dashboard. Bank processing times and Stripe's own payout rules apply. `[Needs professional review]` Weekly schedule chosen by the founder on 2026-11-15, mainly as a buffer for refunds and disputes. `[Assumption]` Sellers cannot change the schedule in the Express Dashboard; confirm in test mode (ticket 224).
+6.3 **Payout to your bank.** Once a transfer reaches your connected account, Stripe pays your available balance out to your bank once a week, on Mondays. We show the next payout date on your dashboard. Bank processing times and Stripe's own payout rules apply. `[Needs professional review]` Weekly schedule chosen by the founder on 2026-11-15, mainly as a buffer for refunds and disputes. `[Assumption]` Sellers cannot change the schedule in the Express Dashboard; confirm in test mode (ticket 224).
 
 6.4 **Freezes.** While a shopper has an open buyer case, or a chargeback is open, on any of your orders, we freeze your pending transfers until it is resolved. `[Assumption]` The founder's rule freezes every pending transfer of that seller. A narrower rule, freezing only the amount in dispute plus a margin, would be fairer and easier to defend. Founder and counsel to choose.
 

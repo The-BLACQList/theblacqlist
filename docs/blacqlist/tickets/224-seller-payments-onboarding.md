@@ -28,7 +28,7 @@ In:
   RLS lets the owner read their own row. Every write goes through the service role.
 - **Onboarding on the dashboard** at `/dashboard/sell`, as drawn on round 3 board R3-5. The steps:
   1. Seller Agreement: show the text with a version, then "I agree". This records the version, time and user.
-  2. Payouts with Stripe: create the connected account, with `controller` settings for Express-style dashboard access and Stripe-owned losses set to the application per our recovery model (counsel and Stripe settings confirm). Send the seller to an Account Link, with return and refresh routes. Set the payout schedule to weekly on creation (`settings.payouts.schedule.interval = 'weekly'`, `weekly_anchor` = the chosen weekday; founder 2026-11-15, see `fees-and-payouts.md` section 9).
+  2. Payouts with Stripe: create the connected account, with `controller` settings for Express-style dashboard access and Stripe-owned losses set to the application per our recovery model (counsel and Stripe settings confirm). Send the seller to an Account Link, with return and refresh routes. Set the payout schedule to weekly on creation (`settings.payouts.schedule.interval = 'weekly'`, `weekly_anchor = 'monday'`; founder 2026-11-15, see `fees-and-payouts.md` section 9).
   3. Shipping profile (221).
   4. Return policy default.
   5. First product (222).
@@ -54,7 +54,7 @@ Out:
 ## Checks
 
 - With the Stripe CLI in test mode, an onboarding flow with a test account reaches `charges_enabled` and `payouts_enabled`, and the seller's approved product appears in the view. When `account.updated` disables payouts, it disappears.
-- A new test connected account has a weekly payout schedule on the chosen weekday, and the seller can't switch it to daily from the Express Dashboard.
+- A new test connected account has a weekly payout schedule on Mondays, and the seller can't switch it to daily from the Express Dashboard.
 - Connect webhook replays are idempotent: the same event twice is processed once.
 - A seller can't onboard for a listing they don't own, and a listing below Growth sees an upgrade prompt.
 - The INFORM job flags a seeded seller at 200 sales and $5,000, and doesn't flag one at 199 sales.
