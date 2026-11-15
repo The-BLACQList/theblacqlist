@@ -31,7 +31,7 @@ The BLACQList generates value for Black-owned businesses by surfacing them to in
 | ------------------------------------------ | ---- | ---------------- | --------------- | ---------------- |
 | Full BLACQList Page                        | ✓    | ✓                | ✓               | ✓                |
 | Hours, contact & social links              | ✓    | ✓                | ✓               | ✓                |
-| Marketplace listings (products & services) | ✓    | ✓                | ✓               | ✓                |
+| Shop products & services (D-M: Growth and up; 8% fee on cart sales) | —    | —                | ✓               | ✓                |
 | Community reviews                          | ✓    | ✓                | ✓               | ✓                |
 | Basic analytics                            | ✓    | ✓                | ✓               | ✓                |
 | Verified badge                             | —    | ✓                | ✓               | ✓                |
@@ -103,8 +103,9 @@ Rationale beyond the arithmetic:
   all-in vendor cost approaches 15%, which is above what a small vendor will accept without a
   materially stronger demand guarantee than the platform can currently make.
 
-**Status: proposed, pending founder confirmation.** Marketplace checkout is V2 and Stripe Connect is
-not built, so nothing is live and this is reversible. Confirm before any Connect work begins.
+**Status: decided.** The 8% take rate was confirmed 2026-11-11 (D1). On 2026-11-13 the founder chose to build the
+one-cart marketplace now with Stripe Connect in test mode (tickets 220 to 229). No real money moves until a CPA and an
+attorney sign off. The fee base, items plus shipping with tax excluded, is for the CPA to confirm.
 Sensitivity: at an 8% take, $1M/yr of marketplace revenue requires **$12.5M GMV/yr** — against a
 stated V2 target of $10K total GMV, so this is a long-dated line, not a near-term one.
 
