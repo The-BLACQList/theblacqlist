@@ -80,6 +80,34 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Listing not found', code: 'NOT_FOUND' }, { status: 404 })
   }
 
+  // A linked location (ticket 110) is already covered by the Premium plan on
+  // its primary page. Its own plan would fight the primary over its tier, so
+  // the owner unlinks it first. A missing table (migration not applied yet)
+  // means no links exist; any other read error stops the checkout.
+  const { data: coveredBy, error: coveredError } = await supabase
+    .from('listing_location_links')
+    .select('primary_listing_id')
+    .eq('location_listing_id', listingId)
+    .maybeSingle()
+
+  if (coveredError && coveredError.code !== '42P01') {
+    console.error('[create-checkout-session] location link lookup failed:', coveredError.message)
+    return NextResponse.json(
+      { error: 'Could not check your current plan. Please try again.', code: 'SERVER_ERROR' },
+      { status: 500 }
+    )
+  }
+  if (coveredBy) {
+    return NextResponse.json(
+      {
+        error:
+          'This page is covered by the Premium plan on another of your pages. Unlink it under Locations to give it its own plan.',
+        code: 'COVERED_BY_LOCATION',
+      },
+      { status: 409 }
+    )
+  }
+
   // One live subscription per listing. A second one would leave two Stripe
   // subscriptions fighting over `listings.tier`, and whichever ended first
   // would downgrade the listing while the other was still paid. Plan changes go

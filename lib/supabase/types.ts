@@ -1414,6 +1414,42 @@ export type Database = {
           },
         ]
       }
+      listing_location_links: {
+        Row: {
+          created_at: string
+          location_listing_id: string
+          owner_user_id: string
+          primary_listing_id: string
+        }
+        Insert: {
+          created_at?: string
+          location_listing_id: string
+          owner_user_id: string
+          primary_listing_id: string
+        }
+        Update: {
+          created_at?: string
+          location_listing_id?: string
+          owner_user_id?: string
+          primary_listing_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_location_links_location_listing_id_fkey"
+            columns: ["location_listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_location_links_primary_listing_id_fkey"
+            columns: ["primary_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_order_platforms: {
         Row: {
           created_at: string

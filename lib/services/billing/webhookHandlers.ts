@@ -37,6 +37,7 @@ import { PaymentFailedEmail } from '@/lib/email/templates/payment-failed'
 import type { PlanSlug } from '@/lib/stripe/plans'
 import { jobPostingExpiryFrom } from '@/lib/stripe/jobPostings'
 import { transitionToPendingReview } from '@/lib/listings/submitForReview'
+import { syncLocationTiers, type LocationTierChange } from '@/lib/services/billing/locationTiers'
 
 type ServiceClient = ReturnType<typeof createServiceClient>
 
@@ -269,6 +270,13 @@ export async function handleSubscriptionUpsert(
     })
   }
 
+  // Linked locations (ticket 110) follow the primary: Premium covers them, a
+  // drop below Premium returns them to Free (links kept). Throws on a failed
+  // write, so Stripe retries; already-synced pages are not rewritten.
+  const locationChanges: LocationTierChange[] = tierWritten
+    ? await syncLocationTiers(supabase, listingId, newTier)
+    : []
+
   // The audit row records what actually happened, not what was intended. Before
   // this, `afterState.tier` was written unconditionally — so a failed or
   // no-op write produced a log asserting a tier change that never occurred,
@@ -287,12 +295,14 @@ export async function handleSubscriptionUpsert(
       ...(sibling ? { live_sibling: sibling.subscriptionId } : {}),
       ...(tierWritten ? {} : { tier_write: 'no_matching_listing', intended_tier: newTier }),
       ...(unresolvedPriceId ? { price_unresolved: unresolvedPriceId } : {}),
+      ...(locationChanges.length ? { locations: locationChanges } : {}),
     },
   })
 
   if (tierWritten && newTier !== prevTier) {
     await revalidateListingPage(supabase, listingId)
   }
+  for (const change of locationChanges) await revalidateListingPage(supabase, change.id)
 }
 
 export async function handleSubscriptionDeleted(
@@ -368,6 +378,11 @@ export async function handleSubscriptionDeleted(
     })
   }
 
+  // Linked locations go back to Free with the primary (links kept, ticket 110).
+  const locationChanges: LocationTierChange[] = tierWritten
+    ? await syncLocationTiers(supabase, listingId, newTier)
+    : []
+
   await writeSystemAuditLog({
     actorUserId: userId,
     action: 'subscription_canceled',
@@ -379,12 +394,14 @@ export async function handleSubscriptionDeleted(
       status: 'canceled',
       ...(sibling ? { live_sibling: sibling.subscriptionId } : {}),
       ...(tierWritten ? {} : { tier_write: 'no_matching_listing', intended_tier: newTier }),
+      ...(locationChanges.length ? { locations: locationChanges } : {}),
     },
   })
 
   if (tierWritten) {
     await revalidateListingPage(supabase, listingId)
   }
+  for (const change of locationChanges) await revalidateListingPage(supabase, change.id)
 }
 
 export async function handlePaymentFailed(

@@ -18,6 +18,13 @@ import { isPriceRange } from '@/lib/listings/facts'
 import { loadProfileShop } from '@/lib/marketplace/profileShop'
 import { TEAM_COLUMNS, toOwnerTeam, toPublicTeam, type OwnerTeamMember } from '@/lib/listings/team'
 import { toBookingSettings } from '@/lib/listings/booking'
+import {
+  LOCATION_LINK_COLUMNS,
+  coversLocations,
+  toLocationLinkRows,
+  toLocationLinks,
+  type LocationListingRow,
+} from '@/lib/listings/locations'
 import type {
   BookingConfig,
   EntityPageData,
@@ -28,6 +35,7 @@ import type {
   EventDetails,
   JobDetails,
   JobHiring,
+  LocationLink,
   OrganizerEvent,
   BusinessDetails,
   WeeklyHours,
@@ -255,6 +263,13 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
       )
     : Promise.resolve(null)
 
+  // Other locations (ticket 110): the pages one Premium plan covers. A linked
+  // page carries the primary's tier while covered, so the same check works
+  // from either side. Fail-soft like the reads above.
+  const locationsPromise: Promise<LocationLink[]> = locationsShowOn(raw)
+    ? loadLocations(sb, raw.id).catch(() => [])
+    : Promise.resolve([])
+
   const nowIso = new Date().toISOString()
   const [
     { data: servicesData },
@@ -393,6 +408,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
   // The first ones the page's plan shows, in the owner's order.
   const team = toPublicTeam(await teamPromise, teamMemberLimit(raw.tier), resolveMediaPath)
   const booking = await bookingPromise
+  const locations = await locationsPromise
 
   // After a move to a lower plan, content over the new plan's limits is hidden
   // here and only here: nothing is deleted, and an upgrade shows it all again
@@ -928,6 +944,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     ...(team.length > 0 ? { team } : {}),
     // Left out when the form is off, the same way.
     ...(booking ? { booking } : {}),
+    ...(locations.length > 0 ? { locations } : {}),
     service_area_description: raw.service_area_description?.trim() || null,
     related,
     images,
@@ -941,6 +958,53 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
 function teamShowsOn(listing: { tier: string | null; entity_type: string }): boolean {
   if (listing.entity_type === 'job' || listing.entity_type === 'event') return false
   return canAccess(listing.tier, 'team_members')
+}
+
+/** Other locations show on business pages whose plan covers them (ticket 110). */
+function locationsShowOn(listing: { tier: string | null; entity_type: string }): boolean {
+  if (listing.entity_type === 'job' || listing.entity_type === 'event') return false
+  return coversLocations(listing.tier)
+}
+
+/**
+ * The group's other published pages. The page may be the primary or one of
+ * its linked locations; either way the group is the primary plus its links.
+ * Throws on a read error (the caller turns that into no list).
+ */
+async function loadLocations(sb: SupabaseClient, selfId: string): Promise<LocationLink[]> {
+  const { data: mine, error } = await sb
+    .from('listing_location_links')
+    .select(LOCATION_LINK_COLUMNS)
+    .or(`primary_listing_id.eq.${selfId},location_listing_id.eq.${selfId}`)
+  if (error) throw error
+  const own = toLocationLinkRows(mine)
+  if (own.length === 0) return []
+
+  const asLocation = own.find((l) => l.location_listing_id === selfId)
+  let links = own
+  if (asLocation) {
+    const { data: group, error: groupError } = await sb
+      .from('listing_location_links')
+      .select(LOCATION_LINK_COLUMNS)
+      .eq('primary_listing_id', asLocation.primary_listing_id)
+    if (groupError) throw groupError
+    links = toLocationLinkRows(group)
+  }
+  const primaryId = asLocation ? asLocation.primary_listing_id : selfId
+  const order = [primaryId, ...links.map((l) => l.location_listing_id)]
+  const others = order.filter((id) => id !== selfId)
+  if (others.length === 0) return []
+
+  const { data: rows, error: rowsError } = await sb
+    .from('listings')
+    .select(
+      'id, slug, name, entity_type, cities!listings_city_id_fkey(name, slug), listing_details_business(address_line_1, city_text, lat, lng)'
+    )
+    .in('id', others)
+    .eq('status', 'published')
+    .is('deleted_at', null)
+  if (rowsError) throw rowsError
+  return toLocationLinks(selfId, order, (rows ?? []) as unknown as LocationListingRow[])
 }
 
 /** The booking form shows on Premium business pages with an owner, with the flag on (ticket 109). */
