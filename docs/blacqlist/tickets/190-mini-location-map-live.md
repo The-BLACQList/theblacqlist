@@ -1,6 +1,6 @@
 # 190: The mini location map on live pages
 
-**Status:** Planned — from the 184 plan, founder 2026-11-13. Not started. Own branch and draft PR off `origin/main` once 184 has merged; **no merge before Wed 18 Nov 2026** (launch merge freeze).
+**Status:** In PR — stacked on 189 (#336), which stacks on 185 (#335). No migration. Merge needs the founder's OK. Scope note: the geocoding piece was already done — `updateListingContentAction` (owner editor), `updateEntityContentAction` (admin) and `createListing` all call `geocodeAddress` when the street line changes, so the work here is the live flip and the lazy load. Extra locations already pin from `entity.locations`; 110 adds the group members without touching this component. The 2026-11-13 freeze line is stale.
 **Follows:** 184 (`EntityLocationMap`, `LocationMapCanvas`, `lib/listings/locationPins.ts`), 110 (all pins for a location group)
 **Area:** business pages (the Visit block)
 **Gates:** none for the code. Perf budget: no change to LCP on a listing with a map (the map is below the fold); measure on Preview with Lighthouse before and after.
