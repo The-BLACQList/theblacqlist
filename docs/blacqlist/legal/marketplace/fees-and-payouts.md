@@ -3,7 +3,7 @@
 > **Disclaimer:** This output is informational and does not constitute legal advice. Requirements vary by jurisdiction, business type, and product specifics. Consult a licensed attorney for guidance applicable to your situation before relying on any of the following.
 
 **Status:** Draft. [Needs professional review]. Not live.
-**Last updated:** 2026-11-13
+**Last updated:** 2026-11-15
 **Audience:** the CPA first, then counsel and the founder. Sellers once approved. Whoever builds the checkout split and transfer jobs.
 **Depends on:** `seller-agreement.md` (sections 4 to 9), `shipping-and-delivery-policy.md`, `digital-products-policy.md`, `returns-refunds-buyer-protection.md`.
 
@@ -29,7 +29,11 @@ Stripe does identity and business checks (KYC) and holds bank details. BLACQList
 | Card statement | — | — | Shoppers see "BLACQLIST* SHOP" (founder, 2026-11-14); sellers' names are not on the statement |
 | Stripe processing | About 2.9% plus 30 cents per charge `[Assumption: standard US card pricing]` | The whole charge | Sellers, shared pro rata, deducted from transfers |
 | Stripe dispute fee | $15 per chargeback `[Assumption]` | Per dispute | Seller, unless the dispute is won or was our error |
-| Stripe Connect account and payout fees | Per Stripe pricing for Express accounts `[Assumption]` | Per active account and per payout | BLACQList |
+| Stripe Connect active account | $2 per month for each seller paid out that month (Stripe pricing, checked 2026-11-15) | Per active seller per month | BLACQList |
+| Stripe Connect payout | 0.25% plus 25 cents per payout (checked 2026-11-15) | Per payout to a seller's bank | BLACQList |
+| Stripe Connect funds routing | 0.25% of payout volume (checked 2026-11-15) | Money paid out to sellers | BLACQList |
+| Stripe Tax | 0.5% per transaction where registered, Checkout pricing (checked 2026-11-15) | The whole charge | BLACQList at launch `[Assumption: studio recommendation 2026-11-15, founder to confirm]` |
+| 1099 filing | $2.99 per federal e-file, $1.49 per state e-file, $2.99 per mailed form (checked 2026-11-15) | Per seller per year | BLACQList |
 | Plan subscription | Per Terms §13 | Monthly or yearly | Seller, billed separately |
 
 **`[Needs professional review]` Fee base, for the CPA.** The founder chose items plus shipping, excluding tax. The other option is items only. Questions:
@@ -125,6 +129,8 @@ Stripe does identity and business checks (KYC) and holds bank details. BLACQList
 
 BLACQList's fee revenue for this cart is 544 cents. The Connect account and payout fees in section 2 come out of that.
 
+Section 9 shows what is left after those costs.
+
 ## 6. The remainder rule with three shops
 
 With two shops the rounded shares almost always add up exactly. With three or more they may not. Example: an actual Stripe fee of 100 cents shared by three shops with equal parts.
@@ -156,3 +162,37 @@ The other way: an actual fee of 101 cents with exact shares of 33.50, 33.50 and 
 | F4 | 1099-K filer of record and 2026 thresholds, federal and state |
 | F5 | How to account for held funds owed to sellers, and the rounding remainder |
 | F6 | Whether BLACQList's own fee is taxable in any state |
+| F7 | Which states make BLACQList a marketplace facilitator, and where it must register before the first sale |
+| F8 | Who is merchant of record under separate charges and transfers (usually the platform) |
+| F9 | Taxability by state of shipping, digital goods, BLACQList's fee and Growth subscriptions |
+| F10 | How to account for and reserve against chargebacks and negative seller balances BLACQList carries |
+
+## 9. Can BLACQList afford the Connect fees? (checked 2026-11-15)
+
+`[Assumption]` Stripe prices from stripe.com/connect/pricing and /tax/pricing on 2026-11-15 (US, "you handle pricing", which fits one cart with many sellers). Tax rate 7% for illustration. The venture studio re-ran the numbers on 2026-11-15 and got the same results.
+
+**Per order, if each order gets its own payout (the worst case):**
+
+| | $50 order | $15 digital order |
+|---|---|---|
+| BLACQList fee, 8% | $4.00 | $1.20 |
+| Stripe Tax, 0.5% of the charge | −$0.27 | −$0.08 |
+| Payout, 0.25% + 25¢ | −$0.36 | −$0.28 |
+| Funds routing, 0.25% | −$0.11 | −$0.03 |
+| **Left before the $2 monthly account fee** | **$3.26** | **$0.81** |
+
+- The $2 per active seller each month is covered many times over by the required Growth plan ($49 a month).
+- Payouts are charged per payout, not per order. A daily payout bundles that day's sales, so one payout per order is the worst case.
+- The 8% only goes negative below roughly a $3.50 to $4 order, because of the fixed 25¢ per payout.
+- Daily payouts can cost up to about $7.50 per seller a month; weekly about $1.25.
+
+**Bigger risk: losses, not fees.** With `losses_collector = application`, BLACQList carries chargebacks and negative seller balances it can't recover. One lost $50 chargeback costs about the margin on 20 orders of $50. Sections 2 and 7 put the dispute fee and the refunded order on the seller first; BLACQList pays only what it can't recover.
+
+**Open for the founder** (studio recommendations 2026-11-15, not decided):
+
+1. Keep 8% with no fixed per-order fee for now. Revisit after the vendor re-test (D-019, next-actions #19). Optional: a $5 minimum price for digital items.
+2. Payouts weekly, or daily with a 7-day delay, instead of Stripe's default daily. Mainly a buffer for refunds and disputes; lower payout fees are a side benefit. Set it before the Seller Agreement's timing wording is final. `[Needs professional review]`
+3. BLACQList absorbs Stripe Tax's 0.5% at launch, since it collects and remits the tax as the marketplace. Revisit after 30 days of real data.
+4. Confirm the fee credit back on refunds (section 7).
+
+`[Needs professional review]` For the attorney: whether holding funds before transfer raises any money-transmission concern under this setup.
