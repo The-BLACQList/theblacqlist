@@ -65,7 +65,7 @@ No attorney or CPA is engaged yet.
 
 **For the CPA:** fee base; marketplace facilitator registration timing and thresholds; digital goods taxability; who bears processing on tax; 1099-K filer.
 
-**For the founder:** every `[Assumption]` in the set. The main ones: new-seller definition; freeze scope; fee credit on refunds; strike window and expiry; appeal window; insurance limit; 3-day pre-download refund; one 30-day window for physical problems; $250 signature threshold; retention periods.
+**For the founder:** every `[Assumption]` in the set. The main ones: new-seller definition; freeze scope; strike window and expiry; appeal window; insurance limit; 3-day pre-download refund; one 30-day window for physical problems; $250 signature threshold; retention periods.
 
 **Before launch, outside these docs:**
 

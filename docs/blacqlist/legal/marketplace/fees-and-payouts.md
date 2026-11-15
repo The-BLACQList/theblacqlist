@@ -145,10 +145,10 @@ The other way: an actual fee of 101 cents with exact shares of 33.50, 33.50 and 
 
 - **Full refund of Shop A's order after transfer:** the shopper gets 5,987 back: 5,595 for items and shipping, and 392 tax.
   - The 392 tax comes from the tax BLACQList is holding, or is claimed back from the state if already paid.
-  - Shop A owes the 5,595 less our fee credit of 448, so 5,147.
-  - We reverse the 4,949 transfer and take the other 198 from Shop A's next transfers.
-  - Shop A's net result: received 4,949, paid back 5,147, so −198. That is its share of the Stripe fee, which Stripe does not return on refunds.
-  - `[Assumption]` Founder to confirm we credit our fee back on refunds.
+  - Shop A owes the full 5,595. BLACQList keeps its 448 fee on refunds (founder, 2026-11-15).
+  - We reverse the 4,949 transfer and take the other 646 from Shop A's next transfers.
+  - Shop A's net result: received 4,949, paid back 5,595, so −646. That is our 448 fee plus its 198 share of the Stripe fee, which Stripe does not return on refunds.
+  - Partial refunds work the same way: the seller repays the refunded amount in full and the fee is not credited back.
 - **Recovery order:** transfer reversal, then offset against future transfers, then connected account debit if Stripe allows, then invoice (Seller Agreement 8.3).
 - **Negative balances** on Express accounts are BLACQList's liability to Stripe if not recovered (Seller Agreement 8.4).
 
@@ -194,6 +194,6 @@ The other way: an actual fee of 101 cents with exact shares of 33.50, 33.50 and 
 2. **Weekly payouts** instead of Stripe's default daily. Mainly a buffer for refunds and disputes while BLACQList carries losses; lower payout fees are a side benefit. Seller Agreement 6.3 now says weekly. `[Needs professional review]` Counsel reviews the timing wording. `[Assumption]` The weekday is not chosen yet; Monday by default.
 3. **BLACQList pays Stripe Tax's 0.5% at launch**, since it collects and remits the tax as the marketplace. Revisit after 30 days of real sales.
 
-Still open: the fee credit back on refunds (section 7).
+4. **BLACQList keeps its 8% fee on refunds**, full or partial (founder, 2026-11-15; section 7). `[Needs professional review]` Counsel checks the Seller Agreement states it clearly enough.
 
 `[Needs professional review]` For the attorney: whether holding funds before transfer raises any money-transmission concern under this setup.

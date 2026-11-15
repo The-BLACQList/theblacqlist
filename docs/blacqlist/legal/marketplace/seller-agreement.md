@@ -79,7 +79,7 @@
 
 5.3 **Your plan is separate.** Your Growth or higher plan is billed under Terms §13. The Shop fee is in addition to your plan.
 
-5.4 **Fees on refunds.** If an order is fully or partly refunded, we credit back our 8% fee on the refunded amount. Stripe does not return its processing fee when a payment is refunded, so your share of that fee is not credited back. `[Assumption]` Founder to confirm.
+5.4 **Fees on refunds.** If an order is fully or partly refunded, we keep our 8% fee and do not credit it back. Stripe does not return its processing fee when a payment is refunded, so your share of that fee is not credited back either. You repay the full refunded amount under section 8. (Founder, 2026-11-15.)
 
 5.5 **Dispute fees.** If a shopper's bank opens a chargeback on your order, Stripe charges a dispute fee, currently $15 `[Assumption]`. You pay it unless the chargeback is decided in your favour or was caused by our error.
 

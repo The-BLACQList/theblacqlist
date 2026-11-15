@@ -5,7 +5,7 @@
 **Status:** Draft. [Needs professional review]. Not live.
 **Last updated:** 2026-11-13
 **Audience:** shoppers and sellers once approved. Counsel. Whoever builds the buyer case flow and the seller return policy form.
-**Depends on:** `seller-agreement.md` (sections 7, 8, 13), `buyer-terms.md`, `shipping-and-delivery-policy.md`, `digital-products-policy.md`, `fees-and-payouts.md` (recovery and fee credits).
+**Depends on:** `seller-agreement.md` (sections 7, 8, 13), `buyer-terms.md`, `shipping-and-delivery-policy.md`, `digital-products-policy.md`, `fees-and-payouts.md` (recovery and fees on refunds).
 
 ---
 
@@ -73,7 +73,7 @@ Nothing here limits your rights under law, such as implied warranties the seller
 
 - **Your return policy.** Set it in your shop settings: whether you accept change-of-mind returns, the window, who pays return shipping, and any items you don't take back, such as custom or perishable items. It must not contradict buyer protection. A policy that says "no refunds" is shown with buyer protection next to it.
 - **Respond within 3 business days.** If you don't, we decide.
-- **Recovery.** If we refund a shopper on your order, you owe it to us. We recover it by transfer reversal, then offset against future transfers, then an invoice (Seller Agreement 8.3). We credit back our 8% fee on the refunded amount. Stripe's processing fee is not returned. See `fees-and-payouts.md`.
+- **Recovery.** If we refund a shopper on your order, you owe it to us. We recover it by transfer reversal, then offset against future transfers, then an invoice (Seller Agreement 8.3). We keep our 8% fee on the refunded amount, and Stripe's processing fee is not returned. See `fees-and-payouts.md`.
 - **Our fault.** If a refund was caused by our error, we bear it.
 - **Strikes.** A pattern of upheld cases, such as frequent "not as described", counts toward strikes.
 

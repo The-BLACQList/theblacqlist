@@ -37,7 +37,7 @@ In:
 - **Refunds,** one path in `lib/marketplace/refunds.ts`, used by sellers (full or partial), the admin, the auto-cancel (227) and case outcomes:
   - **Before the transfer:** `stripe.refunds.create` on the PaymentIntent for the amount, and the seller order is adjusted.
   - **After the transfer:** the refund, plus `stripe.transfers.createReversal` for the seller's share of the refunded amount.
-  - **The fee on refunds:** BLACQList returns its 8% share on a full refund. Stripe's own fee isn't returned by Stripe, and is borne per `fees-and-payouts.md`, for counsel and the CPA to confirm.
+  - **The fee on refunds:** BLACQList keeps its 8% on full and partial refunds (founder, 2026-11-15), and the seller repays the full refunded amount. Stripe's own fee isn't returned by Stripe, and is borne per `fees-and-payouts.md`.
   - If a reversal fails because the seller's balance is short, record it as owed and offset it against the next transfer.
 - **Disputes:** `charge.dispute.created`, `updated` and `closed` on the platform webhook.
   - `created` freezes every pending transfer of the shops in that order, emails those sellers for evidence (tracking, photos), and alerts the admin.

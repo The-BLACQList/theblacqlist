@@ -34,7 +34,7 @@ Out:
 - The INFORM Act needs a phone number for reporting suspicious listings, and BLACQList has none published.
 - What counts as a new seller.
 - When a case or dispute is open, freeze all of a seller's pending transfers or only the disputed amount.
-- Credit the 8% fee back on refunds.
+- Keep the 8% fee on refunds; the seller repays the full refunded amount (founder, 2026-11-15).
 - The strike window.
 - A $1M insurance expectation for sellers.
 
