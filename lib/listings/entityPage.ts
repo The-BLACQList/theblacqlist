@@ -13,6 +13,7 @@ import { isFeatureEnabled } from '@/lib/env'
 import { shownPosts, toOwnerPosts, toPublicPost } from '@/lib/listings/happeningNow'
 import { shownDeals, toOwnerDeals, toPublicDeal } from '@/lib/listings/deals'
 import { STOCKIST_SELECT, toOrderLinks, toStockists } from '@/lib/listings/whereSold'
+import { entityLogo } from '@/lib/listings/logo'
 import type {
   EntityPageData,
   EntityAttributeGroup,
@@ -822,6 +823,8 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     featured_bucket: featuredBucket,
     is_sponsored: raw.is_sponsored,
     logo_path: raw.logo_path,
+    // Beside the name in the hero, claimed pages only (ticket 185, lib/listings/logo.ts).
+    logo: entityLogo(raw),
     cover_image_path: raw.cover_image_path,
     avg_rating: raw.avg_rating,
     review_count: raw.review_count,

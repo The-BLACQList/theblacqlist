@@ -77,6 +77,9 @@ export interface FinishData {
   metaDescription: string | null
   coverImagePath: string | null
   coverUrl: string | null
+  /** `listings.logo_path` (ticket 185): the stored path, and its public address. */
+  logoPath: string | null
+  logoUrl: string | null
   ownershipLabel: string | null
   categoryName: string | null
   locationLabel: string | null
@@ -140,7 +143,7 @@ export async function loadFinishData(
     .from('listings')
     .select(
       `id, name, slug, status, trust_tier, entity_type, tier, source, tagline,
-       meta_title, meta_description, cover_image_path, ownership_label,
+       meta_title, meta_description, cover_image_path, logo_path, ownership_label,
        categories!listings_category_id_fkey(name),
        cities!listings_city_id_fkey(slug, name, states!cities_state_id_fkey(code)),
        listing_details_business(${DETAIL_COLUMNS})`
@@ -274,6 +277,8 @@ export async function loadFinishData(
     metaDescription: row.meta_description ?? null,
     coverImagePath: row.cover_image_path ?? null,
     coverUrl: resolveMediaPath(row.cover_image_path),
+    logoPath: row.logo_path ?? null,
+    logoUrl: resolveMediaPath(row.logo_path),
     // Same rule as the public page: only an ally page carries a label.
     ownershipLabel: ownership === 'ally' ? ownershipLabelText('ally', row.entity_type) : null,
     categoryName: category?.name ?? null,

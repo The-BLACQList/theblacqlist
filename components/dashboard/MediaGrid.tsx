@@ -18,6 +18,7 @@ import {
 import { deleteMediaAction } from '@/lib/actions/dashboard/deleteMedia'
 import { updateMediaAltTextAction } from '@/lib/actions/dashboard/updateMediaAltText'
 import { BannerCropDialog, BannerPanel, type BannerSource } from '@/components/dashboard/BannerEditor'
+import { LogoPanel } from '@/components/dashboard/LogoPanel'
 
 interface MediaItem {
   id: string
@@ -35,6 +36,11 @@ interface Props {
   coverImagePath: string | null
   /** Photos the public page leaves out after a move to a lower plan (ticket 105). */
   hiddenIds?: ReadonlySet<string>
+  /**
+   * The logo editor (ticket 185). Business-shaped pages pass it; events and
+   * jobs, which show no logo, leave it out.
+   */
+  logo?: { url: string | null; creator: boolean; claimed: boolean }
 }
 
 function AltTextForm({ item }: { item: MediaItem }) {
@@ -387,6 +393,7 @@ export function MediaGrid({
   listingId,
   coverImagePath,
   hiddenIds,
+  logo,
 }: Props) {
   const [cropSource, setCropSource] = useState<BannerSource | null>(null)
   const closeCrop = () => {
@@ -405,6 +412,14 @@ export function MediaGrid({
         </p>
       </div>
       <div className="px-5 py-4 space-y-4">
+        {logo && (
+          <LogoPanel
+            listingId={listingId}
+            logoUrl={logo.url}
+            creator={logo.creator}
+            claimed={logo.claimed}
+          />
+        )}
         <BannerPanel
           listingId={listingId}
           bannerUrl={coverImagePath ? bannerUrl(supabaseStorageUrl, coverImagePath) : null}

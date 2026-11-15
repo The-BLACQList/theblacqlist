@@ -37,6 +37,11 @@ interface ListingFields {
    * drive cover uploads unable to see whether a cover exists.
    */
   cover_image_path: string | null
+  /**
+   * The logo is its own column too (ticket 185). The logo item used to pass on
+   * any gallery photo, so a page with one photo and no logo was told it had one.
+   */
+  logo_path: string | null
   /** Socials are free on creator pages (ticket 133), so they stay reachable on Free. */
   entity_type?: string | null
 }
@@ -112,11 +117,11 @@ export function computePageChecklist(
     },
     {
       id: 'logo',
-      label: 'Logo or profile image uploaded',
-      hint: 'Upload a logo or a clear photo of your business. Pages with images get 3× more clicks.',
+      label: 'Logo uploaded',
+      hint: 'Upload your logo. It shows beside your business name at the top of your page and on the map.',
       category: 'required',
       weight: 10,
-      passed: mediaCount >= 1,
+      passed: !!listing.logo_path?.trim(),
     },
     {
       id: 'cover',
