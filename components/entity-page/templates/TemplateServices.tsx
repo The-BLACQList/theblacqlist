@@ -30,8 +30,8 @@ export function TemplateServices({ entity }: Props) {
     return (
       <section id="services" aria-labelledby="services-heading" className="scroll-mt-32">
         <TemplateSectionHeading
-          kicker="What we offer"
-          heading="Services & packages"
+          kicker="What We Offer"
+          heading="Services & Packages"
           headingId="services-heading"
           actions={documentsActions(entity.documents)}
         />
@@ -66,7 +66,7 @@ export function TemplateServices({ entity }: Props) {
             href={getCtaHref(entity)!}
             className="inline-flex items-center justify-center h-11 px-6 rounded-full border-[1.5px] border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
           >
-            Request a service →
+            Request a Service →
           </a>
         )}
       </section>
@@ -80,8 +80,8 @@ export function TemplateServices({ entity }: Props) {
   return (
     <section id="services" aria-labelledby="services-heading" className="scroll-mt-32">
       <TemplateSectionHeading
-        kicker="What we offer"
-        heading="Services & packages"
+        kicker="What We Offer"
+        heading="Services & Packages"
         headingId="services-heading"
         actions={documentsActions(entity.documents)}
       />
@@ -101,7 +101,7 @@ export function TemplateServices({ entity }: Props) {
               href={ctaHref}
               className="mt-2 self-start font-subhead text-sm font-bold text-white underline underline-offset-4 hover:text-gold transition-colors duration-150"
             >
-              Request this service →
+              Request This Service →
             </a>
           )}
         </article>

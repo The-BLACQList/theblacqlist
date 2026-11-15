@@ -36,7 +36,7 @@ export function FitSuggest({ fit, parents, problem, onChange, onBack, maxName }:
     <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-1.5">
         <label htmlFor="qs-request-parent" className={LABEL_CLASS}>
-          Closest group
+          Closest Group
         </label>
         <select
           id="qs-request-parent"
@@ -59,7 +59,7 @@ export function FitSuggest({ fit, parents, problem, onChange, onBack, maxName }:
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor={FIELD_IDS.requestName} className={LABEL_CLASS}>
-          New category name
+          New Category Name
         </label>
         <input
           id={FIELD_IDS.requestName}
@@ -75,7 +75,7 @@ export function FitSuggest({ fit, parents, problem, onChange, onBack, maxName }:
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="qs-request-words" className={LABEL_CLASS}>
-          Anything we should know?{' '}
+          Anything We Should Know?{' '}
           <span className="font-normal text-charcoal-soft">(optional)</span>
         </label>
         <textarea
@@ -101,7 +101,7 @@ export function FitSuggest({ fit, parents, problem, onChange, onBack, maxName }:
         onClick={onBack}
         className="self-start font-subhead text-sm font-semibold text-brand-black underline underline-offset-2 min-h-[44px]"
       >
-        Back to the suggestions
+        Back to the Suggestions
       </button>
     </div>
   )

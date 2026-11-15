@@ -17,7 +17,7 @@ export function TemplateCapabilities({ entity }: Props) {
   return (
     <section id="capabilities" aria-labelledby="capabilities-heading" className="scroll-mt-32">
       <TemplateSectionHeading
-        kicker="What we do"
+        kicker="What We Do"
         heading="Capabilities"
         headingId="capabilities-heading"
         actions={documentsActions(entity.documents)}

@@ -66,7 +66,7 @@ export function ClaimApprovalActions({ claimId, claimantName }: Props) {
           className="w-full inline-flex items-center justify-center gap-2 h-11 rounded-lg bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-subhead font-bold text-sm transition-colors"
         >
           {isApproving && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-          {isApproving ? 'Approving…' : 'Approve claim'}
+          {isApproving ? 'Approving…' : 'Approve Claim'}
         </button>
       </form>
 
@@ -78,7 +78,7 @@ export function ClaimApprovalActions({ claimId, claimantName }: Props) {
           disabled={isApproving || isRejecting}
           className="w-full inline-flex items-center justify-center h-11 rounded-lg border border-red-300 text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed font-subhead font-bold text-sm transition-colors"
         >
-          Reject claim
+          Reject Claim
         </button>
       ) : (
         <form
@@ -91,7 +91,7 @@ export function ClaimApprovalActions({ claimId, claimantName }: Props) {
               htmlFor="claim-reject-reason"
               className="block font-subhead text-sm font-semibold text-red-800 mb-1"
             >
-              Rejection reason <span aria-hidden="true">*</span>
+              Rejection Reason <span aria-hidden="true">*</span>
             </label>
             <textarea
               id="claim-reject-reason"
@@ -115,7 +115,7 @@ export function ClaimApprovalActions({ claimId, claimantName }: Props) {
               className="flex-1 inline-flex items-center justify-center gap-2 h-10 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-subhead font-bold text-sm transition-colors"
             >
               {isRejecting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-              {isRejecting ? 'Rejecting…' : 'Confirm rejection'}
+              {isRejecting ? 'Rejecting…' : 'Confirm Rejection'}
             </button>
             <button
               type="button"

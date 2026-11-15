@@ -47,7 +47,7 @@ export default async function AdminCollectionsPage() {
           className="inline-flex items-center gap-1.5 h-9 px-4 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors shrink-0"
         >
           <Plus className="size-3.5" aria-hidden="true" />
-          New collection
+          New Collection
         </Link>
       </div>
 
@@ -64,7 +64,7 @@ export default async function AdminCollectionsPage() {
             className="inline-flex items-center gap-1.5 h-9 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
           >
             <Plus className="size-3.5" aria-hidden="true" />
-            New collection
+            New Collection
           </Link>
         </div>
       ) : (

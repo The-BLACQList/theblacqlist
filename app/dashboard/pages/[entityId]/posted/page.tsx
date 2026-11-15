@@ -10,7 +10,7 @@ import {
 } from '@/lib/jobs/confirmation'
 import { PostedView } from '@/components/jobs/posted/PostedView'
 
-export const metadata = { title: 'Your role | The BLACQList' }
+export const metadata = { title: 'Your Role | The BLACQList' }
 
 // Reads the ledger on every request; a stale "in review" would be wrong.
 export const dynamic = 'force-dynamic'

@@ -138,7 +138,7 @@ export function ReceiptListRow({
               href={`/account/receipts/${id}/edit`}
               className="inline-flex items-center justify-center h-11 px-5 w-full sm:w-auto rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold/60"
             >
-              Fix and resend
+              Fix and Resend
               <span className="sr-only"> your {businessName} receipt</span>
             </Link>
           )}
@@ -152,7 +152,7 @@ export function ReceiptListRow({
               href={countedReceiptHref(id)}
               className="inline-flex items-center min-h-11 px-2 font-subhead text-xs font-semibold text-amber-700 underline underline-offset-2 hover:text-brand-black"
             >
-              See it counted
+              See It Counted
               <span className="sr-only"> for your {businessName} receipt</span>
             </Link>
           )}

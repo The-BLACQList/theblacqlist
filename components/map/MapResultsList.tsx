@@ -39,7 +39,7 @@ export function MapResultsList({
         href="/discover"
         className="inline-flex min-h-11 items-center text-sm font-bold text-amber underline underline-offset-2"
       >
-        Browse on Discover instead
+        Browse on Discover Instead
       </Link>
     </div>
   ) : listings.length === 0 && !loading && near ? (
@@ -51,7 +51,7 @@ export function MapResultsList({
           onClick={() => onRadius(wider)}
           className="mt-1 inline-flex min-h-11 items-center text-sm font-bold text-amber underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
         >
-          Show {wider} miles
+          Show {wider} Miles
         </button>
       )}
     </div>

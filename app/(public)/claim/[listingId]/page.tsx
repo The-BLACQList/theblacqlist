@@ -55,7 +55,7 @@ export default async function ClaimListingPage({ params }: PageProps) {
         <div className="max-w-[640px] mx-auto">
           <div className="bg-white rounded-xl border border-charcoal/10 p-6 md:p-8">
             <h1 className="font-headline text-2xl text-brand-black mb-2">
-              This listing has already been claimed
+              This Listing Has Already Been Claimed
             </h1>
             <p className="font-body text-sm text-charcoal leading-relaxed mb-4">
               <span className="font-semibold">{listing.name}</span> has already been claimed by its
@@ -72,7 +72,7 @@ export default async function ClaimListingPage({ params }: PageProps) {
               href="/claim"
               className="inline-flex items-center font-subhead text-sm font-semibold text-amber hover:text-light-gold underline underline-offset-2"
             >
-              Search for another listing
+              Search for Another Listing
             </Link>
           </div>
         </div>
@@ -95,7 +95,7 @@ export default async function ClaimListingPage({ params }: PageProps) {
         <div className="max-w-[640px] mx-auto">
           <div className="bg-white rounded-xl border border-amber-gold/30 p-6 md:p-8">
             <h1 className="font-headline text-2xl text-brand-black mb-2">
-              You already have a pending claim
+              You Already Have a Pending Claim
             </h1>
             <p className="font-body text-sm text-charcoal leading-relaxed mb-4">
               You submitted a claim for <span className="font-semibold">{listing.name}</span>.
@@ -105,7 +105,7 @@ export default async function ClaimListingPage({ params }: PageProps) {
               href="/account/claims"
               className="inline-flex items-center font-subhead text-sm font-semibold text-amber hover:text-light-gold underline underline-offset-2"
             >
-              View your claims in your account
+              View Your Claims in Your Account
             </Link>
           </div>
         </div>
@@ -130,7 +130,7 @@ export default async function ClaimListingPage({ params }: PageProps) {
             href="/claim"
             className="font-subhead text-xs text-charcoal-soft hover:text-charcoal underline underline-offset-2"
           >
-            ← Back to search
+            ← Back to Search
           </Link>
         </nav>
 
@@ -150,7 +150,7 @@ export default async function ClaimListingPage({ params }: PageProps) {
         {/* Page header */}
         <div className="mb-6">
           <h1 className="font-headline text-2xl md:text-3xl text-brand-black mb-1">
-            Submit a claim
+            Submit a Claim
           </h1>
           <p className="font-body text-sm text-charcoal leading-relaxed">
             Provide your contact details and tell us your role at this business. We&apos;ll review

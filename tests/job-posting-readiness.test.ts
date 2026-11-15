@@ -101,7 +101,7 @@ describe('PostingChecklist', () => {
   it('none: step 1 is current, with add and claim links', () => {
     const out = html({ state: 'none' })
     expect(out).toContain('Own a business page')
-    expect(out).toContain('Add your business')
+    expect(out).toContain('Add Your Business')
     expect(out).toContain('Already listed? Find and claim it')
     expect(out).toContain('href="/add-business"')
     expect(out.match(/aria-current="step"/g)).toHaveLength(1)
@@ -113,13 +113,13 @@ describe('PostingChecklist', () => {
     expect(out).toContain('Done')
     expect(out).toContain('Sweet Tea Bakery is still a draft.')
     expect(out).toContain('href="/dashboard/pages/abc/edit"')
-    expect(out).toContain('Finish your page')
+    expect(out).toContain('Finish Your Page')
   })
 
   it('review: names the page and the 3 to 5 business days', () => {
     const out = html({ state: 'review', name: 'Sweet Tea Bakery' })
     expect(out).toContain('Sweet Tea Bakery: in review, usually 3 to 5 business days.')
-    expect(out).toContain('See your page')
+    expect(out).toContain('See Your Page')
   })
 
   it('writes every step state as text, not colour alone', () => {
@@ -182,8 +182,8 @@ describe('StepRole with readiness', () => {
 
   it('shows the checklist when the user has no live page', () => {
     const out = step({ state: 'draft', pageId: 'abc', pageName: 'Sweet Tea Bakery' })
-    expect(out).toContain('Who can post a job')
-    expect(out).toContain('Finish your page')
+    expect(out).toContain('Who Can Post a Job')
+    expect(out).toContain('Finish Your Page')
     expect(out).not.toContain('You need a published business page first')
   })
 

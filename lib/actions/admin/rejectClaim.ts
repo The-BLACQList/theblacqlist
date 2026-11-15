@@ -82,7 +82,7 @@ export async function rejectClaimAction(
       if (claimantEmail) {
         await sendEmail({
           to: claimantEmail,
-          subject: `An update on your claim for ${listingName}`,
+          subject: `An Update on Your Claim for ${listingName}`,
           react: ClaimRejectedEmail({ listingName, reason }),
         })
       }

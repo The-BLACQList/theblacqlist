@@ -78,7 +78,7 @@ export async function rejectEntityAction(
       if (submitterEmail) {
         await sendEmail({
           to: submitterEmail,
-          subject: `An update on your submission for ${listing.name}`,
+          subject: `An Update on Your Submission for ${listing.name}`,
           react: EntityRejectedEmail({ listingName: listing.name, reason }),
         })
       }

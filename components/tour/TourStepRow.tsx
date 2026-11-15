@@ -341,7 +341,7 @@ export function TourStepRow({
               className="mt-2 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/25 px-4 py-1.5 font-subhead text-sm text-cream transition-colors hover:border-amber-gold hover:text-amber-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
             >
               <Crosshair className="size-4" aria-hidden="true" />
-              Show me
+              Show Me
             </button>
           )}
 

@@ -88,7 +88,7 @@ export function JobFilters({ options, total }: Props) {
             })}
           </ChipGroup>
         )}
-        <ChipGroup label="Kind of work">
+        <ChipGroup label="Kind of Work">
           {JOB_TYPE_CHIP_ORDER.map((t) => {
             const on = filters.types.includes(t)
             return (
@@ -117,7 +117,7 @@ export function JobFilters({ options, total }: Props) {
             onClick={() => go({ where: null, types: [] })}
             className="min-h-[44px] rounded-sm font-subhead text-sm text-amber hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
           >
-            Clear filters
+            Clear Filters
           </button>
         )}
       </div>
@@ -129,7 +129,7 @@ export function JobFilters({ options, total }: Props) {
 export function JobFiltersFallback() {
   return (
     <div className="space-y-4" aria-hidden="true">
-      <ChipGroup label="Kind of work">
+      <ChipGroup label="Kind of Work">
         {JOB_TYPE_CHIP_ORDER.map((t) => (
           <button key={t} type="button" disabled className={cn(chipBase, chipOff)}>
             {JOB_EMPLOYMENT_TYPE_META[t].label}

@@ -205,7 +205,7 @@ export function CueSearchAnswer({ query, near }: { query: string; near: NearPoin
                 className={ASSISTANT_LINK}
               >
                 <MessageCircle className="size-4" aria-hidden="true" />
-                Keep chatting with Cue
+                Keep Chatting with Cue
               </button>
             </>
           )}

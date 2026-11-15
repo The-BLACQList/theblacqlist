@@ -52,7 +52,7 @@ export default async function CorrectionsPage({ searchParams }: PageProps) {
       <Section variant="deep-bg" as="header">
         <div className="max-w-2xl">
           <h1 className="font-headline text-3xl md:text-5xl font-bold text-white leading-tight text-balance">
-            Suggest a correction
+            Suggest a Correction
           </h1>
           <p className="font-subhead text-base md:text-lg text-off-white/90 mt-4 leading-relaxed">
             Business hours change. Places move. Numbers get disconnected. If something on a listing
@@ -66,7 +66,7 @@ export default async function CorrectionsPage({ searchParams }: PageProps) {
           {listing ? (
             <>
               <SectionHeading subtitle={listing.name}>
-                What&rsquo;s wrong with this listing?
+                What&rsquo;s Wrong with This Listing?
               </SectionHeading>
               <p className="font-subhead text-base text-charcoal leading-relaxed mt-4">
                 Pick everything that looks off. If none of the options fit, choose{' '}
@@ -76,7 +76,7 @@ export default async function CorrectionsPage({ searchParams }: PageProps) {
                 <ReportCorrectionForm
                   listingId={listing.id}
                   triggerClassName={TRIGGER_CLASS}
-                  triggerLabel="Report a problem"
+                  triggerLabel="Report a Problem"
                 />
               </div>
             </>
@@ -89,7 +89,7 @@ export default async function CorrectionsPage({ searchParams }: PageProps) {
                     : 'Corrections are tied to a specific listing.'
                 }
               >
-                {listingId ? 'That listing isn’t available' : 'Find the listing first'}
+                {listingId ? 'That Listing Isn’t Available' : 'Find the Listing First'}
               </SectionHeading>
               <p className="font-subhead text-base text-charcoal leading-relaxed mt-4">
                 Search for the business, open its page, and use{' '}
@@ -101,13 +101,13 @@ export default async function CorrectionsPage({ searchParams }: PageProps) {
                   asChild
                   className="bg-amber-gold text-brand-black font-body font-bold hover:bg-light-gold rounded-full px-6 py-2.5 min-h-[44px] h-auto"
                 >
-                  <Link href="/search">Search listings</Link>
+                  <Link href="/search">Search Listings</Link>
                 </Button>
                 <Button
                   asChild
                   className="border border-charcoal/25 text-brand-black bg-transparent hover:bg-charcoal/5 rounded-full px-6 py-2.5 min-h-[44px] h-auto"
                 >
-                  <Link href="/discover">Browse the directory</Link>
+                  <Link href="/discover">Browse the Directory</Link>
                 </Button>
               </div>
             </>
@@ -118,7 +118,7 @@ export default async function CorrectionsPage({ searchParams }: PageProps) {
       <Section variant="cream">
         <div className="max-w-2xl">
           <SectionHeading subtitle="So you know what you're signing up for.">
-            What happens next
+            What Happens Next
           </SectionHeading>
           <ul className="mt-6 space-y-3 font-subhead text-sm md:text-base text-charcoal leading-relaxed">
             {[

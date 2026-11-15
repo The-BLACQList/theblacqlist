@@ -84,7 +84,7 @@ export function ReceiptImageButton({ receiptId, filePath, businessLabel }: Props
         className="inline-flex items-center gap-1.5 h-11 px-4 rounded-full border border-charcoal/20 text-charcoal-soft hover:border-amber-gold/40 hover:text-amber font-subhead text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
       >
         <ImageIcon className="size-3.5" aria-hidden="true" />
-        {isPdf ? 'View PDF' : 'View receipt'}
+        {isPdf ? 'View PDF' : 'View Receipt'}
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
@@ -120,7 +120,7 @@ export function ReceiptImageButton({ receiptId, filePath, businessLabel }: Props
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 h-10 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
                   >
-                    Open PDF in a new tab
+                    Open PDF in a New Tab
                     <ExternalLink className="size-4" aria-hidden="true" />
                   </a>
                 ) : (

@@ -13,10 +13,10 @@ import { EmptyState } from '@/components/ui/empty-state'
 export function GetListedEmptyState() {
   return (
     <EmptyState
-      heading="Create your BLACQList page"
+      heading="Create Your BLACQList Page"
       body="Let's get you found. Find your business to claim it, or make a new page."
-      action={{ href: '/claim', label: 'Find my business to claim' }}
-      secondaryAction={{ href: '/add-business', label: 'Create a new page' }}
+      action={{ href: '/claim', label: 'Find My Business to Claim' }}
+      secondaryAction={{ href: '/add-business', label: 'Create a New Page' }}
       icon={Store}
     />
   )

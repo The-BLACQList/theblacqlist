@@ -226,12 +226,12 @@ describe('creator mode', () => {
   })
 
   it('offers Email, Follow and Work with me', () => {
-    expect(ctasFor('creator').map((c) => c.label)).toEqual(['Email', 'Follow', 'Work with me'])
+    expect(ctasFor('creator').map((c) => c.label)).toEqual(['Email', 'Follow', 'Work with Me'])
     expect(ctasFor('business').map((c) => c.value)).not.toContain('inquire')
   })
 
   it('finds creator buttons only in creator mode', () => {
-    expect(findCta('inquire', 'creator')?.labelOverride).toBe('Work with me')
+    expect(findCta('inquire', 'creator')?.labelOverride).toBe('Work with Me')
     expect(findCta('inquire')).toBeUndefined()
     expect(findCta('call', 'creator')).toBeUndefined()
   })

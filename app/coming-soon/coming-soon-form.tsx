@@ -17,7 +17,7 @@ function SubmitButton() {
       className="inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-full bg-amber-gold px-7 font-body text-sm font-bold text-brand-black transition-colors hover:bg-light-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg disabled:cursor-not-allowed disabled:opacity-60"
     >
       {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-      {pending ? 'Adding you…' : 'Notify me'}
+      {pending ? 'Adding you…' : 'Notify Me'}
     </button>
   )
 }

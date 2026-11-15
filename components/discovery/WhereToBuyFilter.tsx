@@ -88,7 +88,7 @@ function SoldNearInput({ current }: { current: string }) {
         className="flex items-center gap-1.5 mb-1 font-subhead text-xs font-semibold text-charcoal"
       >
         <MapPin className="size-3.5" aria-hidden="true" />
-        Sold in stores near
+        Sold in Stores Near
       </label>
       <div className="flex gap-2">
         <input

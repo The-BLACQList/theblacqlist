@@ -36,17 +36,17 @@ const SPONSOR_TYPES = [
 const HOW_IT_WORKS = [
   {
     step: '01',
-    title: 'Submit an inquiry',
+    title: 'Submit an Inquiry',
     body: "Tell us about your organization, target audience, and campaign goals. We'll follow up within 2 business days.",
   },
   {
     step: '02',
-    title: 'Receive a tailored proposal',
+    title: 'Receive a Tailored Proposal',
     body: "We'll send a sponsorship proposal with placement options, audience data, and pricing within 5 business days of your inquiry.",
   },
   {
     step: '03',
-    title: 'Launch your campaign',
+    title: 'Launch Your Campaign',
     body: 'Go live with homepage, city-level, or category placements. Your brand alongside the businesses your audience already trusts.',
   },
 ]
@@ -64,7 +64,7 @@ export default function ForSponsorsPage() {
             id="for-sponsors-heading"
             className="font-headline text-4xl md:text-5xl text-white leading-tight mb-4"
           >
-            Partner with the platform
+            Partner with the Platform
             <br className="hidden sm:block" />
             powering Black economic discovery.
           </h1>
@@ -92,7 +92,7 @@ export default function ForSponsorsPage() {
       {/* Who sponsors BLACQList */}
       <Section variant="white">
         <SectionHeading subtitle="From local community organizations to national brands, we match sponsors with the audiences they want to reach authentically.">
-          Who sponsors BLACQList?
+          Who Sponsors BLACQList?
         </SectionHeading>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
@@ -111,7 +111,7 @@ export default function ForSponsorsPage() {
       {/* How it works */}
       <Section variant="cream">
         <SectionHeading subtitle="Simple, transparent, and built around your goals.">
-          How it works
+          How It Works
         </SectionHeading>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
@@ -130,7 +130,7 @@ export default function ForSponsorsPage() {
       {/* Placement add-ons */}
       <Section variant="white">
         <SectionHeading subtitle="Targeted placements available as standalone campaigns or add-ons to a monthly sponsorship.">
-          Placement options
+          Placement Options
         </SectionHeading>
 
         {/* No price on either card, matching /pricing. Both used to print one
@@ -170,7 +170,7 @@ export default function ForSponsorsPage() {
               className="w-full rounded-full bg-brand-black text-white font-body font-bold hover:bg-charcoal min-h-[44px] h-auto text-sm"
             >
               {/* Was /sign-up, which made an account and recorded no interest. */}
-              <Link href="/pricing#pricing-waitlist">Join the waitlist</Link>
+              <Link href="/pricing#pricing-waitlist">Join the Waitlist</Link>
             </Button>
           </div>
         </div>
@@ -180,7 +180,7 @@ export default function ForSponsorsPage() {
       <Section variant="pale-lavender">
         <div className="text-center max-w-xl mx-auto">
           <SectionHeading subtitle="Email us at sponsors@theblacqlist.com and we'll respond within 2 business days.">
-            Ready to partner?
+            Ready to Partner?
           </SectionHeading>
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
             <Button

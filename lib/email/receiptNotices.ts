@@ -5,7 +5,7 @@ import { ReceiptNeedsFixEmail } from '@/lib/email/templates/receipt-needs-fix'
 import { ReceiptToVerifyEmail } from '@/lib/email/templates/receipt-to-verify'
 import {
   maskBuyerName,
-  receiptToVerifyLine,
+  receiptToVerifySubject,
   shouldNotifyOwner,
 } from '@/lib/spend/owner-receipts'
 import {
@@ -129,7 +129,7 @@ export async function sendReceiptToVerifyEmail(
 
     await sendEmail({
       to,
-      subject: receiptToVerifyLine(buyer, listing.name),
+      subject: receiptToVerifySubject(buyer, listing.name),
       react: ReceiptToVerifyEmail({ buyer, businessName: listing.name, siteUrl: siteUrl() }),
     })
 

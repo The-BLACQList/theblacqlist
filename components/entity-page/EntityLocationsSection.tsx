@@ -25,8 +25,8 @@ export function EntityLocationsSection({ locations, bare = false }: Props) {
       <div className={bare ? undefined : 'max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8'}>
         {bare ? (
           <TemplateSectionHeading
-            kicker="More than one door"
-            heading="Also at"
+            kicker="More Than One Door"
+            heading="Also At"
             headingId="locations-heading"
           />
         ) : (
@@ -34,7 +34,7 @@ export function EntityLocationsSection({ locations, bare = false }: Props) {
             id="locations-heading"
             className="font-headline text-[22px] md:text-[28px] text-brand-black mb-6"
           >
-            Also at
+            Also At
           </h2>
         )}
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:max-w-3xl">

@@ -62,7 +62,7 @@ export function EditorialRail({ articles, guides }: Props) {
               id="editorial-rail-heading"
               className="font-headline text-[26px] md:text-[32px] text-brand-black"
             >
-              More stories &amp; city guides
+              More Stories &amp; City Guides
             </h2>
           </div>
           <Link

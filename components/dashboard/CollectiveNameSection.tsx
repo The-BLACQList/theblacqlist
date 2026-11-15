@@ -27,7 +27,7 @@ export function CollectiveNameSection({ listingId, optedIn }: Props) {
     formProps,
   } = useSectionSave({
     id: 'collective-name',
-    label: 'Shopper posts',
+    label: 'Shopper Posts',
     action: updateListingContentAction,
   })
   const saveLabel = useSaveLabel()
@@ -35,7 +35,7 @@ export function CollectiveNameSection({ listingId, optedIn }: Props) {
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
-        <h2 className="font-headline text-base text-brand-black">Shopper posts</h2>
+        <h2 className="font-headline text-base text-brand-black">Shopper Posts</h2>
       </div>
       <form {...formProps} className="px-5 py-4 space-y-4">
         <input type="hidden" name="listing_id" value={listingId} />

@@ -149,7 +149,7 @@ export async function approveClaimAction(
     if (claimantEmail) {
       await sendEmail({
         to: claimantEmail,
-        subject: `Your claim for ${listing.name} has been approved`,
+        subject: `Your Claim for ${listing.name} Has Been Approved`,
         react: ClaimApprovedEmail({ listingName: listing.name, postJobOpen: postJobInviteOpen() }),
       })
     }

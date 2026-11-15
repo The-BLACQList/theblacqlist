@@ -70,7 +70,7 @@ export function inviteMessage(origin: string): string {
 
 // ── The founder's email (O2 B) ───────────────────────────────────────────────
 
-export const BUSINESS_INVITE_SUBJECT = 'Customers are adding your receipts on The BLACQList'
+export const BUSINESS_INVITE_SUBJECT = 'Customers Are Adding Your Receipts on The BLACQList'
 
 export function businessInviteBody(businessName: string, origin: string): string {
   return `Shoppers have been adding receipts from ${businessName} to The BLACQList. Add your business for free so they can find you: ${origin}${ADD_BUSINESS_PATH}`

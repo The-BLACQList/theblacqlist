@@ -41,7 +41,7 @@ export function HiddenContentNotice({
             href="/dashboard/upgrade"
             className="inline-flex items-center min-h-[44px] font-subhead font-bold text-sm text-brand-black underline underline-offset-4 decoration-amber-gold hover:decoration-brand-black"
           >
-            Upgrade to Growth to show them again
+            Upgrade to Growth to Show Them Again
           </Link>
         )}
       </div>

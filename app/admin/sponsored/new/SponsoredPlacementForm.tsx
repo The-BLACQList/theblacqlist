@@ -222,7 +222,7 @@ export function SponsoredPlacementForm({ cities, categories }: Props) {
           disabled={pending || !selectedListing}
           className="h-10 px-6 rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {pending ? 'Creating…' : 'Create placement'}
+          {pending ? 'Creating…' : 'Create Placement'}
         </button>
         <Link
           href="/admin/sponsored"

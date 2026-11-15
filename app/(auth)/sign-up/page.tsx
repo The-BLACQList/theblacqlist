@@ -43,7 +43,7 @@ function SubmitButton() {
       className="w-full h-11 rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
     >
       {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-      {pending ? 'Creating account…' : 'Create account'}
+      {pending ? 'Creating account…' : 'Create Account'}
     </button>
   )
 }
@@ -83,7 +83,7 @@ function SignUpContent() {
         <div className="w-14 h-14 rounded-full bg-amber-gold/10 flex items-center justify-center mx-auto mb-4">
           <Mail className="size-7 text-amber" aria-hidden="true" />
         </div>
-        <h1 className="font-headline text-[22px] text-brand-black mb-2">Check your inbox</h1>
+        <h1 className="font-headline text-[22px] text-brand-black mb-2">Check Your Inbox</h1>
         <p className="font-subhead text-sm text-charcoal leading-relaxed">
           We sent a verification link to{' '}
           <span className="font-semibold text-brand-black">
@@ -109,7 +109,7 @@ function SignUpContent() {
 
   return (
     <>
-      <h1 className="font-headline text-[26px] text-brand-black mb-1">Create your account</h1>
+      <h1 className="font-headline text-[26px] text-brand-black mb-1">Create Your Account</h1>
       <p className="font-subhead text-sm text-charcoal mb-6">
         Join The BLACQList. It&apos;s free.
       </p>
@@ -134,7 +134,7 @@ function SignUpContent() {
             htmlFor="displayName"
             className="font-subhead text-sm font-semibold text-brand-black"
           >
-            Display name <span aria-hidden="true">*</span>
+            Display Name <span aria-hidden="true">*</span>
           </label>
           <input
             id="displayName"
@@ -167,7 +167,7 @@ function SignUpContent() {
         {/* Email */}
         <div className="flex flex-col gap-1">
           <label htmlFor="email" className="font-subhead text-sm font-semibold text-brand-black">
-            Email address <span aria-hidden="true">*</span>
+            Email Address <span aria-hidden="true">*</span>
           </label>
           <input
             id="email"
@@ -193,7 +193,7 @@ function SignUpContent() {
                   href={next ? `/sign-in?next=${encodeURIComponent(next)}` : '/sign-in'}
                   className="underline underline-offset-2"
                 >
-                  Sign in instead
+                  Sign In Instead
                 </Link>
               )}
             </p>

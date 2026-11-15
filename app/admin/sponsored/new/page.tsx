@@ -26,7 +26,7 @@ export default async function NewSponsoredPlacementPage() {
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           Sponsored Placements
         </Link>
-        <h1 className="font-headline text-2xl text-brand-black">New sponsored placement</h1>
+        <h1 className="font-headline text-2xl text-brand-black">New Sponsored Placement</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Configure a listing to appear at a fixed position in discover results.
         </p>

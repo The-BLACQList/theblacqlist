@@ -21,7 +21,7 @@ export default async function NewArticlePage() {
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           BLACQLight
         </Link>
-        <h1 className="font-headline text-2xl text-brand-black">New article</h1>
+        <h1 className="font-headline text-2xl text-brand-black">New Article</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Write a new BLACQLight story or spotlight piece.
         </p>

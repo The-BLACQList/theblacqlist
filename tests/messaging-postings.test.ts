@@ -88,10 +88,10 @@ describe('postingInboxOpen', () => {
 
 describe('messageButtonLabel / postingTag', () => {
   it('names the button for what is being asked about', () => {
-    expect(messageButtonLabel('compose', 'job')).toBe('Ask about this role')
-    expect(messageButtonLabel('sign_in', 'event')).toBe('Ask about this event')
+    expect(messageButtonLabel('compose', 'job')).toBe('Ask About This Role')
+    expect(messageButtonLabel('sign_in', 'event')).toBe('Ask About This Event')
     expect(messageButtonLabel('compose', null)).toBe('Message')
-    expect(messageButtonLabel('thread', 'job')).toBe('View messages')
+    expect(messageButtonLabel('thread', 'job')).toBe('View Messages')
   })
 
   it('tags inbox rows', () => {

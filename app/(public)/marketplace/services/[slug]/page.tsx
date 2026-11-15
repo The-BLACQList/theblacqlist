@@ -178,7 +178,7 @@ export default async function ServiceDetailPage({ params }: Props) {
             {svc.description && (
               <div className="rounded-xl bg-white border border-charcoal/10 p-5">
                 <h2 className="font-subhead text-xs font-semibold uppercase tracking-wide text-charcoal-soft mb-2">
-                  About this service
+                  About This Service
                 </h2>
                 <p className="font-body text-sm text-charcoal leading-relaxed whitespace-pre-line">
                   {svc.description}
@@ -191,7 +191,7 @@ export default async function ServiceDetailPage({ params }: Props) {
               className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-faint hover:text-charcoal"
             >
               <ArrowLeft className="size-3" aria-hidden="true" />
-              Back to services
+              Back to Services
             </Link>
           </div>
         </div>

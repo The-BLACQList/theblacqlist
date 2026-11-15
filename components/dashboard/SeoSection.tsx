@@ -36,7 +36,7 @@ export function SeoSection({ listingId, metaTitle, metaDescription, name, descri
             htmlFor="seo-title"
             className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
-            SEO title <span className="font-normal text-charcoal-faint">(max 60 chars)</span>
+            SEO Title <span className="font-normal text-charcoal-faint">(max 60 chars)</span>
           </label>
           <input
             id="seo-title"
@@ -60,7 +60,7 @@ export function SeoSection({ listingId, metaTitle, metaDescription, name, descri
             htmlFor="seo-desc"
             className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
-            SEO description <span className="font-normal text-charcoal-faint">(max 160 chars)</span>
+            SEO Description <span className="font-normal text-charcoal-faint">(max 160 chars)</span>
           </label>
           <textarea
             id="seo-desc"

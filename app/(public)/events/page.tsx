@@ -62,7 +62,7 @@ async function EventResults({ searchParams }: { searchParams: EventsPageProps['s
           </p>
           <div className="pt-2">
             <Link href="/events" className={ctaClass}>
-              Back to the first page
+              Back to the First Page
             </Link>
           </div>
         </div>
@@ -79,11 +79,11 @@ async function EventResults({ searchParams }: { searchParams: EventsPageProps['s
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
           {canPost && (
             <Link href="/add-event" className={ctaClass}>
-              Post an event
+              Post an Event
             </Link>
           )}
           <Link href="/discover" className={secondaryCtaClass}>
-            Browse businesses
+            Browse Businesses
           </Link>
         </div>
       </div>
@@ -122,7 +122,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
             </div>
             {canPost && (
               <Link href="/add-event" className={`${ctaClass} shrink-0 self-start sm:self-auto`}>
-                Post an event
+                Post an Event
               </Link>
             )}
           </div>

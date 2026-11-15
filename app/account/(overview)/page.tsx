@@ -249,23 +249,23 @@ export default async function AccountOverviewPage() {
   const collectiveSoon = isCovered('collective')
 
   const allStats: Array<{ value: string; label: string; href: string; gold?: boolean; cta?: string }> = [
-    { value: savedCount === null ? '–' : String(savedCount), label: 'Saved places', href: '/account/saved' },
+    { value: savedCount === null ? '–' : String(savedCount), label: 'Saved Places', href: '/account/saved' },
     {
       value: reviewsCount === null ? '–' : String(reviewsCount),
-      label: 'Reviews written',
+      label: 'Reviews Written',
       href: '/account/reviews',
     },
     {
       value: spend ? String(spend.approvedReceiptCount) : '–',
-      label: 'Receipts approved',
+      label: 'Receipts Approved',
       href: '/account/receipts',
     },
     {
       value: spend ? formatDollars(spend.totalCents) : '–',
-      label: 'Spent, approved receipts only',
+      label: 'Spent, Approved Receipts Only',
       href: spend && spend.totalCents === 0 ? '/account/receipts/new' : '/account/spending',
       gold: true,
-      cta: spend && spend.totalCents === 0 ? 'Add a receipt' : undefined,
+      cta: spend && spend.totalCents === 0 ? 'Add a Receipt' : undefined,
     },
   ]
   const stats = collectiveSoon ? allStats.slice(0, 2) : allStats
@@ -313,7 +313,7 @@ export default async function AccountOverviewPage() {
                 href="/account/claims"
                 className="inline-flex min-h-[44px] items-center font-subhead text-sm font-semibold text-light-gold underline underline-offset-2 hover:text-off-white"
               >
-                View claim
+                View Claim
               </Link>
             </div>
           )
@@ -371,14 +371,14 @@ export default async function AccountOverviewPage() {
       <section aria-labelledby="recent-saved-heading">
         <div className="flex items-baseline justify-between gap-4 mb-4">
           <h2 id="recent-saved-heading" className="font-headline font-medium text-[26px] text-ink">
-            Recently saved
+            Recently Saved
           </h2>
           {savedCount !== null && savedCount > 0 && (
             <Link
               href="/account/saved"
               className="inline-flex min-h-[44px] items-center font-subhead text-sm font-semibold text-amber underline underline-offset-2 hover:text-brand-black"
             >
-              All saved ({savedCount})
+              All Saved ({savedCount})
             </Link>
           )}
         </div>
@@ -442,7 +442,7 @@ export default async function AccountOverviewPage() {
               href="/discover"
               className="inline-flex min-h-[44px] items-center font-subhead text-sm font-semibold text-amber underline underline-offset-2 hover:text-brand-black"
             >
-              Discover businesses
+              Discover Businesses
             </Link>
           </div>
         )}
@@ -452,38 +452,38 @@ export default async function AccountOverviewPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         <section aria-labelledby="activity-rows-heading">
           <h2 id="activity-rows-heading" className="font-headline font-medium text-[22px] text-ink mb-3">
-            Your activity
+            Your Activity
           </h2>
           <ul className="list-none m-0 p-0 border-b border-hairline">
             <RowLink
               href="/account/saved"
-              label="All saved"
+              label="All Saved"
               meta={savedCount ? String(savedCount) : null}
             />
-            <RowLink href="/account/activity" label="Recently viewed" />
+            <RowLink href="/account/activity" label="Recently Viewed" />
             <RowLink href="/account/recommended" label="Recommended" />
           </ul>
         </section>
 
         <section aria-labelledby="contrib-rows-heading">
           <h2 id="contrib-rows-heading" className="font-headline font-medium text-[22px] text-ink mb-3">
-            Your contributions
+            Your Contributions
           </h2>
           <ul className="list-none m-0 p-0 border-b border-hairline">
             <RowLink
               href="/account/claims"
-              label="My claims"
+              label="My Claims"
               meta={pendingClaim ? '1 pending' : latestClaim ? latestClaim.status : null}
               metaStrong={Boolean(pendingClaim)}
             />
             <RowLink
               href="/account/reviews"
-              label="My reviews"
+              label="My Reviews"
               meta={reviewsCount ? `${reviewsCount} published` : null}
             />
             <RowLink
               href="/account/receipts"
-              label="My receipts"
+              label="My Receipts"
               meta={
                 collectiveSoon
                   ? 'Opening soon'
@@ -531,13 +531,13 @@ export default async function AccountOverviewPage() {
               href={buildEntityUrl(ownedListing.entity_type, ownedListing.cities?.slug, ownedListing.slug)}
               className="inline-flex min-h-[46px] items-center justify-center px-[22px] rounded-[3px] border border-charcoal text-off-white font-subhead text-[15px] font-semibold hover:bg-off-white/10 transition-colors duration-150"
             >
-              View page
+              View Page
             </Link>
             <Link
               href="/dashboard"
               className="inline-flex min-h-[46px] items-center justify-center px-[22px] rounded-[3px] bg-gold hover:bg-light-gold text-brand-black font-subhead text-[15px] font-semibold transition-colors duration-150"
             >
-              Manage my page
+              Manage My Page
             </Link>
           </div>
         </section>
@@ -565,7 +565,7 @@ export default async function AccountOverviewPage() {
               href="/claim"
               className="inline-flex w-full sm:w-auto min-h-[46px] items-center justify-center px-[22px] rounded-[3px] bg-gold hover:bg-light-gold text-brand-black font-subhead text-[15px] font-semibold transition-colors duration-150"
             >
-              Claim your business
+              Claim Your Business
             </Link>
             {/* Claiming only works for a business already on the site, so the
                 other way in sits right under it (ticket 050). */}
@@ -592,7 +592,7 @@ export default async function AccountOverviewPage() {
             type="submit"
             className="inline-flex min-h-[44px] items-center font-subhead text-sm font-semibold text-red-800 hover:text-red-900 underline underline-offset-2"
           >
-            Sign out
+            Sign Out
           </button>
         </form>
       </div>

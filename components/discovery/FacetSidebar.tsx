@@ -136,7 +136,7 @@ export function FacetSidebar({
             onClick={clearAll}
             className="text-xs font-subhead text-charcoal underline underline-offset-2 hover:text-brand-black"
           >
-            Clear all
+            Clear All
           </button>
         )}
       </div>
@@ -253,7 +253,7 @@ export function FacetSidebar({
       {/* Delivery apps and "sold near" zip (part D). Shown when set even with
           the flag off, so the filter can be cleared. */}
       {(showOrderWhereSold || whereToBuyActive) && (
-        <FilterSection title="Where to buy" active={whereToBuyActive}>
+        <FilterSection title="Where to Buy" active={whereToBuyActive}>
           <WhereToBuyFilter />
         </FilterSection>
       )}
@@ -322,7 +322,7 @@ export function FacetSidebar({
       {/* How to reach them: the online-only / no-fixed-address axis. Mirrors the
           owner-side "Where you operate" wording. No per-option counts, matching
           Ownership and Trust Level. */}
-      <FilterSection title="How to reach them" active={selectedLocationTypes.length > 0}>
+      <FilterSection title="How to Reach Them" active={selectedLocationTypes.length > 0}>
         <div className="flex flex-col gap-1" role="group" aria-label="Filter by how to reach them">
           {LOCATION_TYPES.map(({ value, label }) => {
             const isActive = selectedLocationTypes.includes(value)

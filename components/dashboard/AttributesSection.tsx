@@ -92,7 +92,7 @@ export function AttributesSection({
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
         <h2 className="font-headline text-base text-brand-black">
-          {creator ? 'Creator details' : <>Attributes &amp; amenities</>}
+          {creator ? 'Creator Details' : <>Attributes &amp; amenities</>}
         </h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           {creator

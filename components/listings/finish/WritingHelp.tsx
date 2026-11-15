@@ -374,7 +374,7 @@ export function SuggestionPanel({ field, fieldId, mode = 'field', charLimit = nu
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             {mode === 'copy' ? (
               <button type="button" onClick={() => copy(suggestion.text)} className={BTN_PRIMARY}>
-                Copy caption
+                Copy Caption
               </button>
             ) : (
               <>
@@ -386,7 +386,7 @@ export function SuggestionPanel({ field, fieldId, mode = 'field', charLimit = nu
                   }}
                   className={BTN_PRIMARY}
                 >
-                  Use this
+                  Use This
                 </button>
                 <button
                   type="button"
@@ -395,7 +395,7 @@ export function SuggestionPanel({ field, fieldId, mode = 'field', charLimit = nu
                   aria-describedby={blocked ? `${uid}-blocked-card` : undefined}
                   className={BTN_SECONDARY}
                 >
-                  Try again
+                  Try Again
                 </button>
               </>
             )}
@@ -409,7 +409,7 @@ export function SuggestionPanel({ field, fieldId, mode = 'field', charLimit = nu
               }}
               className={BTN_QUIET}
             >
-              Not this
+              Not This
             </button>
           </div>
           {blocked && mode === 'field' && (
@@ -433,7 +433,7 @@ export function SuggestionPanel({ field, fieldId, mode = 'field', charLimit = nu
             }}
             className={BTN_SECONDARY}
           >
-            Put mine back
+            Put Mine Back
           </button>
         </div>
       )}
@@ -444,7 +444,7 @@ export function SuggestionPanel({ field, fieldId, mode = 'field', charLimit = nu
             htmlFor={`${uid}-reason`}
             className="mb-1 block font-subhead text-xs font-semibold text-charcoal-soft"
           >
-            Why not? <span className="font-normal text-charcoal-faint">(optional)</span>
+            Why Not? <span className="font-normal text-charcoal-faint">(optional)</span>
           </label>
           <input
             ref={reasonRef}
@@ -503,7 +503,7 @@ export function CaptionHelp({ initial }: { initial?: Suggestion }) {
   return (
     <div className="flex flex-col gap-3">
       <div>
-        <h3 className="font-subhead text-sm font-semibold text-brand-black">Instagram caption</h3>
+        <h3 className="font-subhead text-sm font-semibold text-brand-black">Instagram Caption</h3>
         <p className="mt-0.5 font-body text-xs text-charcoal-soft">
           A caption about your business to copy into a post. It isn&apos;t added to your page.
         </p>

@@ -29,7 +29,7 @@ export default async function SubmittedPage({ searchParams }: Props) {
           </p>
 
           <h1 className="font-headline text-3xl md:text-4xl text-brand-black mb-4">
-            {listingName} has been saved as a draft
+            {listingName} Has Been Saved as a Draft
           </h1>
 
           <p className="font-subhead text-sm text-charcoal leading-relaxed max-w-sm mx-auto mb-8">
@@ -52,13 +52,13 @@ export default async function SubmittedPage({ searchParams }: Props) {
               href="/dashboard/pages"
               className="inline-flex h-11 items-center justify-center rounded-full bg-brand-black px-6 font-subhead text-sm font-bold text-white hover:bg-charcoal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black focus-visible:ring-offset-2"
             >
-              My listings
+              My Listings
             </Link>
             <Link
               href="/add-business"
               className="inline-flex h-11 items-center justify-center rounded-full border border-charcoal/30 px-6 font-subhead text-sm font-semibold text-charcoal hover:border-charcoal/60 hover:text-brand-black transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black focus-visible:ring-offset-2"
             >
-              Add another listing
+              Add Another Listing
             </Link>
           </div>
         </div>
@@ -80,7 +80,7 @@ export default async function SubmittedPage({ searchParams }: Props) {
         </p>
 
         <h1 className="font-headline text-3xl md:text-4xl text-brand-black mb-4">
-          {listingName} is under review
+          {listingName} Is Under Review
         </h1>
 
         <p className="font-subhead text-sm text-charcoal leading-relaxed max-w-sm mx-auto mb-8">
@@ -113,13 +113,13 @@ export default async function SubmittedPage({ searchParams }: Props) {
             href="/discover"
             className="inline-flex h-11 items-center justify-center rounded-full bg-brand-black px-6 font-subhead text-sm font-bold text-white hover:bg-charcoal transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black focus-visible:ring-offset-2"
           >
-            Explore the directory
+            Explore the Directory
           </Link>
           <Link
             href="/account"
             className="inline-flex h-11 items-center justify-center rounded-full border border-charcoal/30 px-6 font-subhead text-sm font-semibold text-charcoal hover:border-charcoal/60 hover:text-brand-black transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black focus-visible:ring-offset-2"
           >
-            My account
+            My Account
           </Link>
         </div>
       </div>

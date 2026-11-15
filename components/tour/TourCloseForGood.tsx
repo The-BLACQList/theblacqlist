@@ -52,7 +52,7 @@ export function TourCloseForGood({
         className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-cream/30 px-5 py-2 font-subhead text-sm font-bold text-cream transition-colors hover:border-cream/60 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold disabled:cursor-not-allowed disabled:opacity-60"
       >
         {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-        {pending ? 'Closing…' : 'Close the tour for good'}
+        {pending ? 'Closing…' : 'Close the Tour for Good'}
       </button>
       <p className="mt-2 font-subhead text-xs text-cream/60">
         {kind === 'owner'

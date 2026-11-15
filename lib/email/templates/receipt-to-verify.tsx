@@ -40,7 +40,7 @@ export function ReceiptToVerifyEmail({
           </Section>
 
           <Section style={content}>
-            <Text style={eyebrow}>A receipt to verify</Text>
+            <Text style={eyebrow}>A Receipt to Verify</Text>
             <Text style={heading}>{line}</Text>
             <Text style={paragraph}>
               They uploaded a receipt to show it. Check it against your own records. Once you verify
@@ -49,7 +49,7 @@ export function ReceiptToVerifyEmail({
             </Text>
 
             <Button href={`${siteUrl}/dashboard/receipts`} style={button}>
-              Verify the receipt
+              Verify the Receipt
             </Button>
 
             <Hr style={divider} />

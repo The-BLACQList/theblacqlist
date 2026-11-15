@@ -27,7 +27,7 @@ export function CtaStep({ answers, onChange, problem, email, mode = 'business' }
 
   return (
     <>
-      <StepIntro title="What should your main button do?">
+      <StepIntro title="What Should Your Main Button Do?">
         The big button on your page. Pick the one thing you most want people to do.
       </StepIntro>
       <ChoiceCards

@@ -110,7 +110,7 @@ export function HomeMapBand() {
             id="map-band-heading"
             className="font-headline text-[clamp(1.75rem,1.2rem+2vw,2.5rem)] leading-tight text-brand-black text-balance"
           >
-            See every business on the map
+            See Every Business on the Map
           </h2>
           <p className="font-body text-[15px] text-charcoal mt-3 max-w-[44ch] text-pretty">
             Find Black-owned businesses near you or wherever you are headed. Start from the
@@ -120,7 +120,7 @@ export function HomeMapBand() {
             href="/map"
             className="inline-flex items-center justify-center h-12 px-7 mt-6 rounded-full bg-brand-black hover:bg-charcoal text-white font-subhead text-sm font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
           >
-            Open the map
+            Open the Map
             <span aria-hidden="true" className="ml-2">→</span>
           </Link>
         </div>

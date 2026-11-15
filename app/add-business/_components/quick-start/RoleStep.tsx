@@ -31,7 +31,7 @@ export function RoleStep({ answers, onChange, problem, categories }: Props) {
 
   return (
     <>
-      <StepIntro title="What's your main role?">
+      <StepIntro title="What's Your Main Role?">
         Pick the one that fits best. Shoppers can filter by it.
       </StepIntro>
       <div id={FIELD_IDS.role} tabIndex={-1} className="focus:outline-none">

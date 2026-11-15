@@ -41,7 +41,7 @@ export function ReceiptEmailsSection({ initialOn }: Props) {
       <div className="flex items-center gap-2 mb-4">
         <Mail className="size-4 text-amber-700" aria-hidden="true" />
         <h2 id="receipt-emails-heading" className="font-headline text-lg text-brand-black">
-          Receipt emails
+          Receipt Emails
         </h2>
       </div>
 

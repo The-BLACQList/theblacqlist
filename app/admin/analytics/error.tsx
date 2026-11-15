@@ -15,7 +15,7 @@ export default function AdminAnalyticsError({
         onClick={reset}
         className="inline-flex items-center justify-center h-9 px-5 rounded-lg border border-charcoal/20 text-charcoal font-subhead font-semibold text-sm hover:border-charcoal/40 transition-colors"
       >
-        Try again
+        Try Again
       </button>
     </div>
   )

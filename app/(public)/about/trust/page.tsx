@@ -61,7 +61,7 @@ export default function TrustPage() {
       <Section variant="deep-bg" as="header">
         <div className="max-w-2xl">
           <h1 className="font-headline text-3xl md:text-5xl font-bold text-white leading-tight text-balance">
-            How trust works here
+            How Trust Works Here
           </h1>
           <p className="font-subhead text-base md:text-lg text-off-white/90 mt-4 leading-relaxed">
             Trust is visible and earned, not assumed. Every listing on The BLACQList carries one of
@@ -74,7 +74,7 @@ export default function TrustPage() {
       <Section variant="white">
         <div className="max-w-3xl">
           <SectionHeading subtitle="Four tiers, in order. A listing moves up one rung at a time.">
-            The trust ladder
+            The Trust Ladder
           </SectionHeading>
 
           <ol className="mt-8 space-y-6">
@@ -107,7 +107,7 @@ export default function TrustPage() {
       <Section variant="cream">
         <div className="max-w-2xl">
           <SectionHeading subtitle="All six, or it doesn't happen. There is no waiting list and no way to ask.">
-            What Certified requires
+            What Certified Requires
           </SectionHeading>
           <ul className="mt-6 space-y-3">
             {CERTIFICATION_CRITERIA.map((criterion) => (
@@ -181,20 +181,20 @@ export default function TrustPage() {
             onDark
             subtitle="Trust holds because the community keeps it honest. If something on a page is wrong, tell us."
           >
-            Found something wrong?
+            Found Something Wrong?
           </SectionHeading>
           <div className="flex flex-col sm:flex-row gap-3 mt-6">
             <Button
               asChild
               className="bg-amber-gold text-brand-black font-body font-bold hover:bg-light-gold rounded-full px-6 py-2.5 min-h-[44px] h-auto"
             >
-              <Link href="/corrections">Suggest a correction</Link>
+              <Link href="/corrections">Suggest a Correction</Link>
             </Button>
             <Button
               asChild
               className="border border-white/40 text-white bg-transparent hover:bg-white/10 rounded-full px-6 py-2.5 min-h-[44px] h-auto"
             >
-              <Link href="/for-business#start">Claim or add your business</Link>
+              <Link href="/for-business#start">Claim or Add Your Business</Link>
             </Button>
           </div>
         </div>

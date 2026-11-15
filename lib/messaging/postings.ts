@@ -67,9 +67,9 @@ export function postingInboxOpen(input: PostingInboxInput, now: Date = new Date(
 
 /** The listing page's secondary message button. */
 export function messageButtonLabel(mode: string | undefined, kind: PostingKind | null): string {
-  if (mode === 'thread') return 'View messages'
-  if (kind === 'job') return 'Ask about this role'
-  if (kind === 'event') return 'Ask about this event'
+  if (mode === 'thread') return 'View Messages'
+  if (kind === 'job') return 'Ask About This Role'
+  if (kind === 'event') return 'Ask About This Event'
   return 'Message'
 }
 

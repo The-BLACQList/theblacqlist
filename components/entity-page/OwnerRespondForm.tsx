@@ -30,7 +30,7 @@ export function OwnerRespondForm({ reviewId, listingId }: Props) {
         onClick={() => setOpen(true)}
         className="mt-2 font-body text-xs font-semibold text-charcoal-soft hover:text-brand-black underline underline-offset-2 transition-colors"
       >
-        Respond as owner
+        Respond as Owner
       </button>
     )
   }
@@ -59,7 +59,7 @@ export function OwnerRespondForm({ reviewId, listingId }: Props) {
           disabled={pending}
           className="h-8 px-4 rounded-full bg-brand-black text-white font-body font-bold text-xs hover:bg-charcoal transition-colors disabled:opacity-50"
         >
-          {pending ? 'Saving…' : 'Post response'}
+          {pending ? 'Saving…' : 'Post Response'}
         </button>
         <button
           type="button"

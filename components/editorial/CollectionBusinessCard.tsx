@@ -104,7 +104,7 @@ export function CollectionBusinessCard({ listing, blurb, headline, position }: P
           href={href}
           className="inline-flex items-center gap-1 mt-3 font-subhead text-xs font-bold text-amber hover:underline"
         >
-          View page
+          View Page
           <span aria-hidden="true">→</span>
         </Link>
       </div>

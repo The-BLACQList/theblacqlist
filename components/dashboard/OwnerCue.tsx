@@ -351,7 +351,7 @@ function OwnerCuePanel({
               onClick={onClear}
               className="min-h-11 px-3 mr-1 rounded-md font-subhead text-sm font-semibold text-ink-soft hover:text-off-white hover:underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
             >
-              Clear chat
+              Clear Chat
             </button>
           )}
           <DialogPrimitive.Close className="grid place-items-center size-11 rounded-md text-off-white hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold">
@@ -644,7 +644,7 @@ function DraftCard({
             onClick={() => setConfirming(true)}
             className={cn(button, 'bg-gold text-brand-black hover:bg-light-gold')}
           >
-            Use this
+            Use This
           </button>
           <button
             type="button"
@@ -652,7 +652,7 @@ function DraftCard({
             onClick={() => void setAside()}
             className={cn(button, 'border border-white/30 text-off-white hover:bg-white/10')}
           >
-            Not now
+            Not Now
           </button>
         </div>
       )}
@@ -668,7 +668,7 @@ function DraftCard({
               onClick={() => void use()}
               className={cn(button, 'bg-gold text-brand-black hover:bg-light-gold')}
             >
-              {busy ? 'Saving…' : 'Replace it'}
+              {busy ? 'Saving…' : 'Replace It'}
             </button>
             <button
               type="button"

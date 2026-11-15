@@ -184,7 +184,7 @@ export function LinksSection({ listingId, links }: Props) {
               ) : (
                 <Plus className="size-4" aria-hidden="true" />
               )}
-              {isPending ? 'Adding…' : 'Add link'}
+              {isPending ? 'Adding…' : 'Add Link'}
             </button>
           </div>
         </form>

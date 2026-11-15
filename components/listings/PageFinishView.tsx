@@ -485,7 +485,7 @@ export function PageFinishView({
       <div className="flex flex-col gap-4">
         <div className="rounded-xl border border-charcoal/10 bg-white">
           <div className="border-b border-charcoal/8 px-5 py-4">
-            <h2 className="font-headline text-base text-brand-black">Services and offerings</h2>
+            <h2 className="font-headline text-base text-brand-black">Services and Offerings</h2>
             <p className="mt-0.5 font-body text-xs text-charcoal-soft">
               What you offer: services, products, or classes.
             </p>

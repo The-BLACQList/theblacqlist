@@ -75,7 +75,7 @@ export function ProblemReportActions({ reportId, status, prRef }: Props) {
                     disabled={isPending}
                     className="font-subhead text-xs font-semibold text-amber hover:text-brand-black disabled:opacity-50"
                   >
-                    Mark triaged
+                    Mark Triaged
                   </button>
                 </form>
                 <span aria-hidden="true" className="text-charcoal/20">
@@ -115,7 +115,7 @@ export function ProblemReportActions({ reportId, status, prRef }: Props) {
               disabled={isPending}
               className="font-subhead text-xs font-semibold text-green-700 hover:text-green-900 disabled:opacity-50"
             >
-              Mark fixed
+              Mark Fixed
             </button>
           </form>
         </>

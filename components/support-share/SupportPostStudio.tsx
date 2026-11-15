@@ -254,14 +254,14 @@ export function SupportPostStudio({ post }: Props) {
             }}
           >
             <Camera className="size-5 text-amber-700" aria-hidden="true" />
-            Take a photo
+            Take a Photo
             <span className="ml-auto font-body text-xs font-normal text-charcoal-soft">
               you, your order, the spot
             </span>
           </button>
           <label className={cn(choiceCls, 'focus-within:ring-2 focus-within:ring-amber-gold/60')}>
             <ImageIcon className="size-5 text-amber-700" aria-hidden="true" />
-            Choose from camera roll
+            Choose from Camera Roll
             <span className="ml-auto font-body text-xs font-normal text-charcoal-soft">
               a photo from your visit
             </span>
@@ -269,7 +269,7 @@ export function SupportPostStudio({ post }: Props) {
           </label>
           <button type="button" className={choiceCls} onClick={chooseBrandCard}>
             <Sparkles className="size-5 text-amber-700" aria-hidden="true" />
-            No photo, use the brand card
+            No Photo, Use the Brand Card
           </button>
         </div>
       )}
@@ -330,7 +330,7 @@ export function SupportPostStudio({ post }: Props) {
             {preparing ? 'Getting it ready…' : 'Share'}
           </button>
           <button type="button" className={linkCls} onClick={() => setStep('choose')}>
-            {photo ? 'Change photo' : 'Add a photo'}
+            {photo ? 'Change Photo' : 'Add a Photo'}
           </button>
         </div>
       )}
@@ -348,7 +348,7 @@ export function SupportPostStudio({ post }: Props) {
         <ShareSheet
           open={sheetOpen}
           onOpenChange={setSheetOpen}
-          title="Share your support"
+          title="Share Your Support"
           caption={post.caption}
           url={post.url}
           campaign="support_share"

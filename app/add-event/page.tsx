@@ -36,7 +36,7 @@ export default async function AddEventPage() {
           <p className="font-subhead text-xs font-semibold uppercase tracking-widest text-amber mb-2">
             Get Listed
           </p>
-          <h1 className="font-headline text-3xl md:text-4xl text-brand-black mb-3">Add an event</h1>
+          <h1 className="font-headline text-3xl md:text-4xl text-brand-black mb-3">Add an Event</h1>
           <p className="font-subhead text-sm text-charcoal leading-relaxed max-w-lg">
             Share a Black-owned or Black-centered event. Submissions are reviewed by our team before
             going live.

@@ -10,11 +10,11 @@
 
 export const EDIT_TABS = [
   { id: 'basics', label: 'Basics' },
-  { id: 'contact', label: 'Contact & buttons' },
-  { id: 'media', label: 'Photos & video' },
+  { id: 'contact', label: 'Contact & Buttons' },
+  { id: 'media', label: 'Photos & Video' },
   { id: 'services', label: 'Services' },
-  { id: 'where', label: 'Where to find us' },
-  { id: 'social', label: 'Social & links' },
+  { id: 'where', label: 'Where to Find Us' },
+  { id: 'social', label: 'Social & Links' },
   { id: 'more', label: 'More' },
 ] as const
 

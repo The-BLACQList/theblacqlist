@@ -74,7 +74,7 @@ export function WhereToFindSection({ listingId, initial, chains }: Props) {
       <div className="px-5 py-4 border-b border-charcoal/8 flex items-start justify-between gap-3">
         <div>
           <h2 className="font-headline text-base text-brand-black">
-            {editing ? `Edit ${editing.name}` : 'Find us at'}
+            {editing ? `Edit ${editing.name}` : 'Find Us At'}
           </h2>
           <p className="font-body text-xs text-charcoal-soft mt-0.5">
             Stores that carry your products. Your page lists them, and customers can search Discover
@@ -303,7 +303,7 @@ function StockistForm({
       {!nationwide && (
         <div>
           <label htmlFor={areaId} className={LABEL}>
-            Cities and zips where it’s sold
+            Cities and Zips Where It’s Sold
           </label>
           <div className="flex gap-2">
             <input
@@ -367,7 +367,7 @@ function StockistForm({
         className="inline-flex items-center gap-1.5 h-10 px-5 rounded-full bg-brand-black text-white font-subhead text-sm font-bold hover:bg-charcoal disabled:opacity-60"
       >
         {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-        {editing ? 'Save store' : 'Add store'}
+        {editing ? 'Save Store' : 'Add Store'}
       </button>
     </form>
   )

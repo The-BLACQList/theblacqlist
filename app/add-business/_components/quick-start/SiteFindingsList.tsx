@@ -30,7 +30,7 @@ function rows(f: SiteFindings): Row[] {
     { label: 'Address', value: place || null },
     { label: 'Hours', value: openDays ? `Open ${openDays} ${openDays === 1 ? 'day' : 'days'} a week` : null },
     {
-      label: 'Social links',
+      label: 'Social Links',
       value: socials ? `${socials} found` : null,
       note: socials ? 'Saved now. They show on your page with Starter.' : undefined,
     },
@@ -80,13 +80,13 @@ export function WhichIsRight({ conflicts, choices, onChange }: ConflictProps) {
     <section aria-labelledby="qs-which-title" className="flex flex-col gap-5 rounded-xl border border-amber-gold/60 bg-amber-gold/10 p-4">
       <div>
         <h3 id="qs-which-title" className="font-subhead text-base font-bold text-brand-black">
-          Which is right?
+          Which Is Right?
         </h3>
         <p className={HINT_CLASS}>Your site and your answers don&apos;t match here. Pick one for your page.</p>
       </div>
 
       {conflicts.name && (
-        <Question title="Business name">
+        <Question title="Business Name">
           <ChoiceCards
             name="qs-which-name"
             legend="Business name"
@@ -103,7 +103,7 @@ export function WhichIsRight({ conflicts, choices, onChange }: ConflictProps) {
       )}
 
       {conflicts.phones.length > 1 && (
-        <Question title="Phone number">
+        <Question title="Phone Number">
           <ChoiceCards
             name="qs-which-phone"
             legend="Phone number"
@@ -117,7 +117,7 @@ export function WhichIsRight({ conflicts, choices, onChange }: ConflictProps) {
       )}
 
       {conflicts.email && (
-        <Question title="Email on your page">
+        <Question title="Email on Your Page">
           <ChoiceCards
             name="qs-which-email"
             legend="Email on your page"

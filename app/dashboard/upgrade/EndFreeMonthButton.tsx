@@ -70,7 +70,7 @@ export function EndFreeMonthButton({ cancelling, returnTierName }: Props) {
               className="inline-flex h-11 items-center justify-center gap-2 rounded-full bg-red-700 px-5 font-body text-sm font-bold text-white transition-colors hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-              End my plan then
+              End My Plan Then
             </button>
             <button
               type="button"
@@ -78,13 +78,13 @@ export function EndFreeMonthButton({ cancelling, returnTierName }: Props) {
               disabled={pending}
               className={secondary}
             >
-              Never mind
+              Never Mind
             </button>
           </div>
         </div>
       ) : (
         <button type="button" onClick={() => setConfirming(true)} className={secondary}>
-          End my plan when the free month ends
+          End My Plan When the Free Month Ends
         </button>
       )}
       {error && (

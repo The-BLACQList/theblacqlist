@@ -37,8 +37,8 @@ export function EntityBookingSection({ booking, name, inertNote, bare = false }:
       <div className={bare ? undefined : 'max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8'}>
         {bare ? (
           <TemplateSectionHeading
-            kicker="Reserve a time"
-            heading="Request a booking"
+            kicker="Reserve a Time"
+            heading="Request a Booking"
             headingId="booking-heading"
           />
         ) : (
@@ -46,7 +46,7 @@ export function EntityBookingSection({ booking, name, inertNote, bare = false }:
             id="booking-heading"
             className="font-headline text-[22px] md:text-[28px] text-brand-black mb-2"
           >
-            Request a booking
+            Request a Booking
           </h2>
         )}
         <p className="font-body text-sm text-charcoal max-w-prose mb-6">
@@ -65,7 +65,7 @@ export function EntityBookingSection({ booking, name, inertNote, bare = false }:
             <legend className="sr-only">Your request</legend>
             <div>
               <label htmlFor="booking-name" className={LABEL}>
-                Your name
+                Your Name
               </label>
               <input
                 id="booking-name"
@@ -90,14 +90,14 @@ export function EntityBookingSection({ booking, name, inertNote, bare = false }:
             {booking.askDate && (
               <div>
                 <label htmlFor="booking-date" className={LABEL}>
-                  Preferred date
+                  Preferred Date
                 </label>
                 <input id="booking-date" name="requested_date" type="date" className={INPUT} />
               </div>
             )}
             <div>
               <label htmlFor="booking-window" className={LABEL}>
-                Time of day
+                Time of Day
               </label>
               <select id="booking-window" name="time_window" className={INPUT} defaultValue="any">
                 <option value="any">Any time</option>
@@ -109,7 +109,7 @@ export function EntityBookingSection({ booking, name, inertNote, bare = false }:
             {booking.askPartySize && (
               <div>
                 <label htmlFor="booking-party" className={LABEL}>
-                  Party size
+                  Party Size
                 </label>
                 <input
                   id="booking-party"
@@ -124,7 +124,7 @@ export function EntityBookingSection({ booking, name, inertNote, bare = false }:
             )}
             <div className="sm:col-span-2">
               <label htmlFor="booking-message" className={LABEL}>
-                Anything else?
+                Anything Else?
               </label>
               <textarea
                 id="booking-message"
@@ -143,7 +143,7 @@ export function EntityBookingSection({ booking, name, inertNote, bare = false }:
               className="inline-flex items-center justify-center gap-2 h-12 px-7 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:bg-gold"
             >
               <CalendarCheck className="size-4" aria-hidden="true" />
-              Send request
+              Send Request
             </button>
             <p id="booking-inert-note" className="font-body text-xs text-charcoal-soft">
               {inertNote ?? 'No payment is taken. The business confirms by email.'}

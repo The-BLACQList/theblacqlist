@@ -1,0 +1,57 @@
+[
+  {
+    "file": "lib/auth/password-policy.ts",
+    "text": "A lowercase letter",
+    "reason": "Password checklist item, read as a requirement sentence, not a title."
+  },
+  {
+    "file": "lib/auth/password-policy.ts",
+    "text": "An uppercase letter",
+    "reason": "Password checklist item, read as a requirement sentence, not a title."
+  },
+  {
+    "file": "lib/auth/password-policy.ts",
+    "text": "A number",
+    "reason": "Password checklist item, read as a requirement sentence, not a title."
+  },
+  {
+    "file": "lib/auth/password-policy.ts",
+    "text": "A symbol (like ! @ # $)",
+    "reason": "Password checklist item, read as a requirement sentence, not a title."
+  },
+  {
+    "file": "lib/media/banner.ts",
+    "text": "May look blurry on a computer",
+    "reason": "Photo-quality note shown under the banner picker, a status sentence."
+  },
+  {
+    "file": "lib/media/banner.ts",
+    "text": "Good on most screens",
+    "reason": "Photo-quality note shown under the banner picker, a status sentence."
+  },
+  {
+    "file": "lib/media/banner.ts",
+    "text": "Sharp on every screen",
+    "reason": "Photo-quality note shown under the banner picker, a status sentence."
+  },
+  {
+    "file": "components/dashboard/PartnershipSection.tsx",
+    "text": "Open to brand deals",
+    "reason": "Checkbox option label (the switch), not a title."
+  },
+  {
+    "file": "components/dashboard/PartnershipSection.tsx",
+    "text": "Open to creator partnerships & sponsorships",
+    "reason": "Checkbox option label (the switch), not a title."
+  },
+  {
+    "file": "components/account/CollectivePanel.tsx",
+    "text": "more",
+    "reason": "Count suffix in \"+3 more\", not a title."
+  },
+  {
+    "file": "components/dashboard/InboxSwitch.tsx",
+    "text": "Let customers message me",
+    "reason": "Switch option label, read as a first-person sentence beside the toggle, like the other switch and checkbox options."
+  }
+]

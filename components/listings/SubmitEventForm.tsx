@@ -56,7 +56,7 @@ export function SubmitEventForm({ categories, host }: Props) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="name" className={labelCls}>
-          Event name <span className="text-red-500" aria-hidden="true">*</span>
+          Event Name <span className="text-red-500" aria-hidden="true">*</span>
         </label>
         <input id="name" name="name" type="text" maxLength={120} required className={inputCls('name')} placeholder="e.g. Juneteenth Block Party" />
         {fieldErr('name') && <p role="alert" className={errCls}>{fieldErr('name')}</p>}
@@ -64,7 +64,7 @@ export function SubmitEventForm({ categories, host }: Props) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="tagline" className={labelCls}>
-          Short description <span className="text-red-500" aria-hidden="true">*</span>
+          Short Description <span className="text-red-500" aria-hidden="true">*</span>
         </label>
         <input id="tagline" name="tagline" type="text" maxLength={120} required className={inputCls('tagline')} placeholder="One line shown on event cards (10–120 chars)" />
         {fieldErr('tagline') && <p role="alert" className={errCls}>{fieldErr('tagline')}</p>}
@@ -133,14 +133,14 @@ export function SubmitEventForm({ categories, host }: Props) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="flex flex-col gap-1">
             <label htmlFor="venue_name" className={labelCls}>
-              Venue name <span className="text-red-500" aria-hidden="true">*</span>
+              Venue Name <span className="text-red-500" aria-hidden="true">*</span>
             </label>
             <input id="venue_name" name="venue_name" type="text" className={inputCls('venue_name')} placeholder="e.g. The Met Atlanta" />
             {fieldErr('venue_name') && <p role="alert" className={errCls}>{fieldErr('venue_name')}</p>}
           </div>
           <div className="flex flex-col gap-1">
             <label htmlFor="venue_address" className={labelCls}>
-              Venue address <span className="font-normal text-charcoal-soft text-xs">(optional)</span>
+              Venue Address <span className="font-normal text-charcoal-soft text-xs">(optional)</span>
             </label>
             <input id="venue_address" name="venue_address" type="text" className={inputCls('venue_address')} placeholder="Street, city" />
           </div>
@@ -161,7 +161,7 @@ export function SubmitEventForm({ categories, host }: Props) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
           <label htmlFor="ticket_url" className={labelCls}>
-            Ticket / RSVP link <span className="font-normal text-charcoal-soft text-xs">(optional)</span>
+            Ticket / RSVP Link <span className="font-normal text-charcoal-soft text-xs">(optional)</span>
           </label>
           <input id="ticket_url" name="ticket_url" type="url" className={inputCls('ticket_url')} placeholder="https://…" />
           {fieldErr('ticket_url') && <p role="alert" className={errCls}>{fieldErr('ticket_url')}</p>}
@@ -176,7 +176,7 @@ export function SubmitEventForm({ categories, host }: Props) {
 
       <div className="flex flex-col gap-1">
         <label htmlFor="description" className={labelCls}>
-          About this event <span className="text-red-500" aria-hidden="true">*</span>
+          About This Event <span className="text-red-500" aria-hidden="true">*</span>
         </label>
         <textarea
           id="description"
@@ -214,7 +214,7 @@ export function SubmitEventForm({ categories, host }: Props) {
         className="inline-flex items-center justify-center gap-2 h-12 rounded-full bg-amber-gold text-brand-black font-subhead text-sm font-bold hover:bg-amber-gold/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-        {isPending ? 'Creating…' : 'Create event draft'}
+        {isPending ? 'Creating…' : 'Create Event Draft'}
       </button>
       <p className="font-subhead text-xs text-charcoal-soft text-center">
         You&apos;ll land on the event editor next, where you can add photos and submit it for review.

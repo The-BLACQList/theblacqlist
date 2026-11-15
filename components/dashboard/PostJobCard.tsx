@@ -52,7 +52,7 @@ export function PostJobCard({ readiness, quotaLine }: Props) {
             href="/add-job"
             className={`${buttonCls} bg-amber-gold text-brand-black transition-colors hover:bg-light-gold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber`}
           >
-            Post a job
+            Post a Job
           </Link>
         ) : (
           <button
@@ -61,7 +61,7 @@ export function PostJobCard({ readiness, quotaLine }: Props) {
             aria-describedby="post-job-reason"
             className={`${buttonCls} cursor-not-allowed border border-charcoal/15 bg-off-white text-charcoal-soft`}
           >
-            Post a job
+            Post a Job
           </button>
         )}
       </div>

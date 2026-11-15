@@ -110,7 +110,7 @@ export default async function AdminVerificationPage({ searchParams }: PageProps)
                   Listing
                 </th>
                 <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">
-                  Trust tier
+                  Trust Tier
                 </th>
                 <th className="text-left px-4 py-3 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden lg:table-cell">
                   Verification

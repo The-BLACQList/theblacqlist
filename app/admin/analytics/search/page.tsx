@@ -105,7 +105,7 @@ export default async function SearchAnalyticsPage({ searchParams }: Props) {
       <div>
         <div className="flex items-center justify-between mb-3">
           <SectionHeading>
-            Zero-result queries, last {PERIOD_DAYS[period]} days
+            Zero-Result Queries, Last {PERIOD_DAYS[period]} Days
             {cityRow?.data ? ` · ${cityRow.data.name}` : ''}
           </SectionHeading>
           <a
@@ -136,7 +136,7 @@ export default async function SearchAnalyticsPage({ searchParams }: Props) {
                     <th scope="col" className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide w-8">#</th>
                     <th scope="col" className="text-left px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">Query</th>
                     <th scope="col" className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide">Count</th>
-                    <th scope="col" className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">Last searched</th>
+                    <th scope="col" className="text-right px-4 py-2.5 font-subhead text-xs text-charcoal-soft uppercase tracking-wide hidden md:table-cell">Last Searched</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-charcoal/5">

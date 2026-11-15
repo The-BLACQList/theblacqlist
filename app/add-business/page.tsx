@@ -100,7 +100,7 @@ export default async function AddBusinessPage({ searchParams }: PageProps) {
             Get Listed
           </p>
           <h1 className="mb-3 font-headline text-3xl text-brand-black md:text-4xl">
-            {creator ? 'Add your creator page' : 'Add your business'}
+            {creator ? 'Add Your Creator Page' : 'Add Your Business'}
           </h1>
           <p className="font-subhead text-base leading-relaxed text-charcoal">
             {creator

@@ -73,7 +73,7 @@ export function EntityShopSection({ shop, bare = false }: Props) {
       <div className={bare ? undefined : 'max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8'}>
         {bare ? (
           <TemplateSectionHeading
-            kicker="Take something home"
+            kicker="Take Something Home"
             heading="Shop"
             headingId="shop-heading"
           />
@@ -101,7 +101,7 @@ export function EntityShopSection({ shop, bare = false }: Props) {
             href={shop.shopAllHref as Route}
             className="inline-flex items-center justify-center h-11 px-6 rounded-full border-[1.5px] border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
           >
-            Shop all{shop.total > shop.items.length ? ` (${shop.total})` : ''} →
+            Shop All{shop.total > shop.items.length ? ` (${shop.total})` : ''} →
           </Link>
         </div>
       </div>

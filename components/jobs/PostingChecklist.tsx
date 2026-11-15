@@ -35,7 +35,7 @@ function CurrentStep({ readiness }: { readiness: NotLive }) {
       return (
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
           <Link href="/add-business" className={primaryCls}>
-            Add your business
+            Add Your Business
           </Link>
           <Link href="/add-business" className={linkCls}>
             Already listed? Find and claim it
@@ -47,7 +47,7 @@ function CurrentStep({ readiness }: { readiness: NotLive }) {
         <div className="mt-1">
           <p className="font-body text-sm text-charcoal">{readiness.pageName} is still a draft.</p>
           <Link href={`/dashboard/pages/${readiness.pageId}/edit`} className={`${primaryCls} mt-2`}>
-            Finish your page
+            Finish Your Page
           </Link>
         </div>
       )
@@ -58,7 +58,7 @@ function CurrentStep({ readiness }: { readiness: NotLive }) {
             {readiness.name}: in review, usually 3 to 5 business days.
           </p>
           <Link href="/dashboard" className={linkCls}>
-            See your page
+            See Your Page
           </Link>
         </div>
       )

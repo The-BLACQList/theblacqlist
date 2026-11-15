@@ -34,7 +34,7 @@ export function MessagingSuspensionActions({ queueId, reportedUserId, suspended 
             disabled={liftPending}
             className="font-subhead text-xs font-semibold text-charcoal-soft hover:text-charcoal disabled:opacity-50"
           >
-            Lift suspension
+            Lift Suspension
           </button>
         </form>
       ) : (
@@ -52,7 +52,7 @@ export function MessagingSuspensionActions({ queueId, reportedUserId, suspended 
             disabled={suspendPending}
             className="font-subhead text-xs font-semibold text-red-700 hover:text-red-900 disabled:opacity-50"
           >
-            Suspend messaging
+            Suspend Messaging
           </button>
         </form>
       )}

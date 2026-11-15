@@ -2,7 +2,7 @@
 
 **Total tickets:** 192
 **Phases:** 0–18, plus V1 / V1.5 monetization work
-**Last updated:** 2026-11-13
+**Last updated:** 2026-11-14
 
 ---
 
@@ -201,3 +201,4 @@
 | [201](201-custom-subdomain.md) | A custom subdomain per business (name.theblacqlist.com) | V1.5 | P3 | 184 | Needs decision | Stub — founder 2026-11-13; own security and SEO review |
 | [202](202-brand-accent-colour.md) | A brand accent colour on the page | V1.5 | P3 | 184 | Needs decision | Stub — not selected by the founder 2026-11-13; kept visible to strike or pick up |
 | [203](203-owner-cue.md) | Cue for business owners, on the dashboard | V1.5 | P1 | 169, 138 | In progress | Round 2 part E; reverses 147 decision 6 for the dashboard only; prod waits for a privacy update |
+| [205](205-title-case.md) | Title Case across the site | V1.5 | P1 | — | In review | Founder 2026-11-14; draft PR, merges after the 16–17 Nov freeze; guard test; 2 GATE-DATA questions |

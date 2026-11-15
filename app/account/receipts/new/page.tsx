@@ -68,9 +68,9 @@ export default async function NewReceiptPage({
             className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-4 transition-colors"
           >
             <ArrowLeft className="size-3.5" aria-hidden="true" />
-            My receipts
+            My Receipts
           </Link>
-          <h1 className="font-headline text-2xl text-brand-black">Add a receipt</h1>
+          <h1 className="font-headline text-2xl text-brand-black">Add a Receipt</h1>
           <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
             Record a purchase at a business on the list to add your spend to The Collective.
           </p>

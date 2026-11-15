@@ -55,7 +55,7 @@ export default function HowRankingWorksPage() {
     <>
       <Section variant="pale-lavender">
         <PageHeader
-          title="How ranking works"
+          title="How Ranking Works"
           subtitle="What decides the order of search results, in plain language, and in the order it actually happens."
         />
       </Section>

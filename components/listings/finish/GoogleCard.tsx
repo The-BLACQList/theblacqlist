@@ -75,7 +75,7 @@ export function GoogleCard({
     formProps,
   } = useSectionSave({
     id: 'google',
-    label: 'How you show up on Google',
+    label: 'How You Show Up on Google',
     action: async (prev: SaveState, formData: FormData): Promise<SaveState> => {
       const nextTitle = formData.get('meta_title')?.toString().trim() ?? ''
       const nextDesc = formData.get('meta_description')?.toString().trim() ?? ''
@@ -103,7 +103,7 @@ export function GoogleCard({
     >
       <div className="border-b border-charcoal/8 px-5 py-4">
         <h2 id="google-heading" className="font-headline text-base text-brand-black">
-          How you show up on Google
+          How You Show Up on Google
         </h2>
         <p className="mt-0.5 font-body text-xs text-charcoal-soft">
           {hasSaved
@@ -136,7 +136,7 @@ export function GoogleCard({
               }}
               className="inline-flex h-11 w-full items-center justify-center rounded-lg border border-charcoal/20 bg-white px-4 font-subhead text-sm font-semibold text-brand-black transition-colors hover:border-amber-gold sm:w-auto"
             >
-              Use this
+              Use This
             </button>
           </div>
         )}
@@ -152,7 +152,7 @@ export function GoogleCard({
                 htmlFor="seo-title"
                 className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
               >
-                Search title{' '}
+                Search Title{' '}
                 <span className="font-normal text-charcoal-faint">(up to {SEO_TITLE_MAX})</span>
               </label>
               <input
@@ -182,7 +182,7 @@ export function GoogleCard({
                 htmlFor="seo-desc"
                 className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
               >
-                Search description{' '}
+                Search Description{' '}
                 <span className="font-normal text-charcoal-faint">
                   (up to {SEO_DESCRIPTION_MAX})
                 </span>

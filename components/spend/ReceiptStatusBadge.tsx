@@ -4,7 +4,7 @@ interface Props {
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   pending_review: {
-    label: 'Pending review',
+    label: 'Pending Review',
     className: 'bg-amber-50 text-amber-700 border border-amber-200',
   },
   approved: {

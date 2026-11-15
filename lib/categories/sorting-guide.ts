@@ -66,25 +66,25 @@ export interface GuideWhere {
 export const GUIDE_WHERE: readonly GuideWhere[] = [
   {
     id: 'visit',
-    label: 'A place they visit',
+    label: 'A Place They Visit',
     hint: 'A shop, studio, office or restaurant',
     locationType: 'physical',
   },
   {
     id: 'come_to_them',
-    label: 'I come to them',
+    label: 'I Come to Them',
     hint: 'Homes, offices or events',
     locationType: 'service_area',
   },
   {
     id: 'online',
-    label: 'Online or shipped',
+    label: 'Online or Shipped',
     hint: 'Online sessions, a web shop, or mail orders',
     locationType: 'virtual',
   },
   {
     id: 'popups',
-    label: 'Pop-ups and markets',
+    label: 'Pop-Ups and Markets',
     hint: 'Markets, festivals, a truck or a booth',
     locationType: 'traveling',
   },
@@ -112,7 +112,7 @@ const c = (slug: string, ...fits: GuideWhereId[]): GuideCandidate => ({ slug, fi
 export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
   {
     id: 'food',
-    label: 'Food and drink',
+    label: 'Food and Drink',
     hint: 'Restaurants, bakeries, catering, groceries',
     candidates: [
       c('restaurants', 'visit'),
@@ -129,7 +129,7 @@ export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
   },
   {
     id: 'beauty',
-    label: 'Hair, beauty and self-care',
+    label: 'Hair, Beauty and Self-Care',
     hint: 'Hair, barbers, braids, nails, skin, makeup',
     candidates: [
       c('hair-salons', 'visit'),
@@ -145,7 +145,7 @@ export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
   },
   {
     id: 'health',
-    label: 'Health and fitness',
+    label: 'Health and Fitness',
     hint: 'Gyms, trainers, therapy, doctors, dentists',
     candidates: [
       c('fitness-studios', 'visit'),
@@ -165,7 +165,7 @@ export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
   },
   {
     id: 'money_law',
-    label: 'Help with money, law or business',
+    label: 'Help with Money, Law or Business',
     hint: 'Lawyers, taxes, insurance, real estate, consulting',
     candidates: [
       c('law-legal-services', 'visit'),
@@ -185,7 +185,7 @@ export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
   },
   {
     id: 'tech',
-    label: 'Tech and digital',
+    label: 'Tech and Digital',
     hint: 'IT help, software, apps, websites, data',
     candidates: [
       c('it-support-managed-services', 'come_to_them'),
@@ -200,7 +200,7 @@ export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
   },
   {
     id: 'creative',
-    label: 'Creative work',
+    label: 'Creative Work',
     hint: 'Photo, video, design, music, writing, marketing',
     candidates: [
       c('photography', 'come_to_them'),
@@ -218,7 +218,7 @@ export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
   },
   {
     id: 'make_sell',
-    label: 'Things I make or sell',
+    label: 'Things I Make or Sell',
     hint: 'Clothing, jewelry, candles, gifts, body care',
     leansVendor: true,
     candidates: [
@@ -240,7 +240,7 @@ export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
   },
   {
     id: 'home',
-    label: 'Home and repair',
+    label: 'Home and Repair',
     hint: 'Cleaning, repairs, contractors, moving, yards',
     candidates: [
       c('cleaning-services'),
@@ -259,7 +259,7 @@ export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
   },
   {
     id: 'events',
-    label: 'Events and parties',
+    label: 'Events and Parties',
     hint: 'Planning, DJs, venues, rentals, decor',
     candidates: [
       c('event-planning'),
@@ -274,7 +274,7 @@ export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
   },
   {
     id: 'learning',
-    label: 'Learning, kids and family',
+    label: 'Learning, Kids and Family',
     hint: 'Tutoring, childcare, classes, youth programs',
     candidates: [
       c('academic-tutoring', 'online', 'come_to_them'),
@@ -294,7 +294,7 @@ export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
   },
   {
     id: 'community',
-    label: 'Community and causes',
+    label: 'Community and Causes',
     hint: 'Churches, nonprofits, mentoring, culture',
     candidates: [
       c('churches-places-of-worship', 'visit'),
@@ -310,7 +310,7 @@ export const GUIDE_ANSWERS: readonly GuideAnswer[] = [
   },
   {
     id: 'cars_travel',
-    label: 'Cars, travel and delivery',
+    label: 'Cars, Travel and Delivery',
     hint: 'Mechanics, detailing, rides, travel, delivery',
     candidates: [
       c('auto-repair-mechanics', 'visit'),
@@ -637,7 +637,7 @@ function topParent(category: GuideCategory, categories: readonly GuideCategory[]
  *      Professional, Photography → Creative), so the guide and the directory
  *      agree on what a listing is
  *   3. "Things I make or sell" → Vendor
- *   4. "I come to them", or a bank that is online only → Service Provider
+ *   4. "I Come to Them", or a bank that is online only → Service Provider
  *      (a bank with a branch is a Business, not a Professional
  *      [Decision - founder, 2026-10-08])
  *   5. otherwise Business

@@ -67,7 +67,7 @@ export function CategoryRequestActions({
         <input type="hidden" name="request_id" value={requestId} />
         <input type="hidden" name="decision" value="add" />
         <label htmlFor={nameId} className="font-subhead text-xs font-semibold text-charcoal-soft">
-          Add as a new category
+          Add as a New Category
         </label>
         <div className="flex items-center gap-2">
           <input
@@ -94,7 +94,7 @@ export function CategoryRequestActions({
         <input type="hidden" name="request_id" value={requestId} />
         <input type="hidden" name="decision" value="move" />
         <label htmlFor={moveId} className="font-subhead text-xs font-semibold text-charcoal-soft">
-          Or move to one we have
+          Or Move to One We Have
         </label>
         <div className="flex items-center gap-2">
           <select
@@ -136,7 +136,7 @@ export function CategoryRequestActions({
           disabled={isPending}
           className="font-subhead text-xs font-semibold text-charcoal-soft hover:text-charcoal disabled:opacity-50"
         >
-          Decline and leave it where it is
+          Decline and Leave It Where It Is
         </button>
       </form>
     </div>

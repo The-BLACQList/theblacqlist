@@ -101,7 +101,7 @@ describe('wiring', () => {
   it('the interstitial accepts sign-up links and shows sign-up copy', () => {
     const src = read('app/auth/confirm/page.tsx')
     expect(src).toContain('parseConfirmLinkType')
-    expect(src).toContain('Confirm your email')
+    expect(src).toContain('Confirm Your Email')
     expect(src).not.toMatch(/type === 'recovery'\s*$/m)
   })
 

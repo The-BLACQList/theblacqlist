@@ -575,7 +575,7 @@ describe('done state — a finished row can be reviewed and edited', () => {
 
   it('offers an edit that starts from the saved note', () => {
     const src = review()
-    expect(src).toContain('Edit your note')
+    expect(src).toContain('Edit Your Note')
     expect(src).toMatch(/initialText=\{note \?\? ''\}/)
     expect(src).toContain('onCancel={onCancel}')
   })

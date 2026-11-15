@@ -30,7 +30,7 @@ describe.each(VARIANTS)('the %s tester update email', (variant) => {
 
   it('asks them to finish the walk, and names the final note', async () => {
     const html = await renderUpdate({ variant, testerLink: LINK })
-    expect(html).toContain('Finish your walk')
+    expect(html).toContain('Finish Your Walk')
     expect(html).toContain('would you tell a friend')
   })
 
@@ -71,7 +71,7 @@ describe.each(VARIANTS)('the %s tester update email', (variant) => {
 
   it('points at both feedback channels', async () => {
     const html = await renderUpdate({ variant, testerLink: LINK })
-    expect(html).toContain('Report a problem')
+    expect(html).toContain('Report a Problem')
     expect(html).toContain('reply to this email')
   })
 

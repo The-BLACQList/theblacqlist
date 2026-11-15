@@ -82,7 +82,7 @@ export function EntityJobDetails({ entity, now = new Date() }: Props) {
           {job.description && (
             <section aria-labelledby="job-about-heading">
               <h2 id="job-about-heading" className="font-headline text-xl text-brand-black mb-3">
-                About the role
+                About the Role
               </h2>
               <p className="font-body text-base leading-relaxed text-charcoal whitespace-pre-line">
                 {job.description}

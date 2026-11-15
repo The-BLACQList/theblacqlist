@@ -90,7 +90,7 @@ export function ReceiptReviewRow({ receipt }: { receipt: ReceiptToVerify }) {
             disabled={busy}
             className="min-h-11 px-5 rounded-full border border-charcoal/20 text-charcoal-soft hover:text-brand-black font-subhead font-bold text-sm transition-colors disabled:opacity-60"
           >
-            Not ours
+            Not Ours
           </button>
         )}
       </div>
@@ -139,7 +139,7 @@ export function ReceiptReviewRow({ receipt }: { receipt: ReceiptToVerify }) {
               disabled={busy}
               className="min-h-11 px-5 rounded-full bg-brand-black text-white font-subhead font-bold text-sm disabled:opacity-60"
             >
-              {rejecting ? 'Sending…' : 'Send to shopper'}
+              {rejecting ? 'Sending…' : 'Send to Shopper'}
             </button>
             <button
               type="button"

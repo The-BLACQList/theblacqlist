@@ -7,7 +7,7 @@ import { listReceiptsToVerify, ownedListingIds } from '@/lib/dashboard/receiptsT
 import { ADMIN_FALLBACK_DAYS } from '@/lib/spend/owner-receipts'
 import { ReceiptReviewRow } from '@/components/dashboard/ReceiptReviewRow'
 
-export const metadata: Metadata = { title: 'Receipts to verify | BLACQList Dashboard' }
+export const metadata: Metadata = { title: 'Receipts to Verify | BLACQList Dashboard' }
 
 // =============================================================================
 // /dashboard/receipts — the business verifies its own receipts (ticket 183)
@@ -27,7 +27,7 @@ export default async function ReceiptsToVerifyPage() {
   return (
     <div className="max-w-3xl space-y-6">
       <div>
-        <h1 className="font-headline text-2xl text-brand-black mb-2">Receipts to verify</h1>
+        <h1 className="font-headline text-2xl text-brand-black mb-2">Receipts to Verify</h1>
         <p className="font-body text-sm text-charcoal-soft max-w-xl">
           Shoppers upload receipts to show they supported you. Check each one against your own
           records. When you verify it, their purchase counts toward The Collective and they can

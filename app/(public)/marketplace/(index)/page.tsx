@@ -131,7 +131,7 @@ export default async function MarketplacePage() {
               className="inline-flex items-center gap-1 font-subhead text-sm font-semibold text-amber hover:text-light-gold transition-colors"
               aria-label="View all products"
             >
-              View all <ArrowRight className="size-4" aria-hidden="true" />
+              View All <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           </div>
 
@@ -152,7 +152,7 @@ export default async function MarketplacePage() {
                 href="/for-business#start"
                 className="inline-flex items-center gap-1.5 mt-4 font-subhead text-sm font-semibold text-amber hover:text-light-gold"
               >
-                List your business <ArrowRight className="size-4" aria-hidden="true" />
+                List Your Business <ArrowRight className="size-4" aria-hidden="true" />
               </Link>
             </div>
           )}
@@ -174,7 +174,7 @@ export default async function MarketplacePage() {
               className="inline-flex items-center gap-1 font-subhead text-sm font-semibold text-amber hover:text-light-gold transition-colors"
               aria-label="View all services"
             >
-              View all <ArrowRight className="size-4" aria-hidden="true" />
+              View All <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           </div>
 
@@ -214,13 +214,13 @@ export default async function MarketplacePage() {
               href="/for-business#start"
               className="inline-flex items-center gap-2 h-11 px-6 rounded-full bg-brand-black text-white font-subhead font-bold text-sm hover:bg-charcoal transition-colors min-h-[44px]"
             >
-              List your business
+              List Your Business
             </Link>
             <Link
               href="/for-vendors"
               className="inline-flex items-center gap-2 h-11 px-6 rounded-full border border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors min-h-[44px]"
             >
-              {growthOpen ? 'How selling works' : 'When selling opens'}
+              {growthOpen ? 'How Selling Works' : 'When Selling Opens'}
             </Link>
           </div>
         </section>

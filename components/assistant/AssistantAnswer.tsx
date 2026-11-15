@@ -75,7 +75,7 @@ function FallbackReply({ ask, reply, onAsk }: { ask: string; reply: Fallback; on
         {onAsk && (
           <button type="button" onClick={() => onAsk(ask)} className={ASSISTANT_LINK}>
             <RotateCcw className="size-4" aria-hidden="true" />
-            Try again
+            Try Again
           </button>
         )}
         <Link href={reply.href} className={ASSISTANT_LINK}>
@@ -227,7 +227,7 @@ function ActionRow({ actions, handlers }: { actions: AssistantAction[]; handlers
             <li key={key}>
               <button type="button" onClick={() => jump(action.ids, action.label)} className={JUMP_BUTTON}>
                 <CornerDownRight className="size-4" aria-hidden="true" />
-                Take me to {action.label}
+                Take Me to {action.label}
               </button>
             </li>
           )

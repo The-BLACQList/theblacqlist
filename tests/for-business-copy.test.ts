@@ -36,8 +36,8 @@ describe('/for-business copy', () => {
     expect(canAccess('starter', 'analytics')).toBe(true)
     expect(canAccess('free', 'review_response')).toBe(false)
     expect(canAccess('starter', 'review_response')).toBe(true)
-    expect(page).toMatch(/title: 'See who finds you',[\s\S]{0,120}starter: true/)
-    expect(page).toMatch(/title: 'Reviews you can answer',[\s\S]{0,120}starter: true/)
+    expect(page).toMatch(/title: 'See Who Finds You',[\s\S]{0,120}starter: true/)
+    expect(page).toMatch(/title: 'Reviews You Can Answer',[\s\S]{0,120}starter: true/)
   })
 
   // Verified is free for every claimed owner (founder, 2026-10-03). The
@@ -52,7 +52,7 @@ describe('/for-business copy', () => {
     expect(canAccess('starter', 'listing_video')).toBe(true)
     expect(canAccess('free', 'social_links')).toBe(false)
     expect(page).toContain('Add more photos, a video, and common questions on Starter.')
-    expect(page).toContain("title: 'Hours, website, and contact'")
+    expect(page).toContain("title: 'Hours, Website, and Contact'")
   })
 
   it('uses the shared plans component with no Most Popular flag', () => {

@@ -36,7 +36,7 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride, inbox
     formProps,
   } = useSectionSave({
     id: 'main-button',
-    label: 'Main button',
+    label: 'Main Button',
     action: updateCtaAction,
   })
   const saveLabel = useSaveLabel()
@@ -57,7 +57,7 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride, inbox
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
         <h2 className="font-headline text-base text-brand-black">
-          {extras ? 'Buttons on your page' : 'Main button'}
+          {extras ? 'Buttons on Your Page' : 'Main Button'}
         </h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           The buttons at the top of your public page. Choose the actions that best fit your business.
@@ -65,14 +65,14 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride, inbox
       </div>
       <form {...formProps} className="px-5 py-4 space-y-4">
         <input type="hidden" name="listing_id" value={listingId} />
-        {extras && <h3 className="font-subhead text-sm font-bold text-brand-black">Main button</h3>}
+        {extras && <h3 className="font-subhead text-sm font-bold text-brand-black">Main Button</h3>}
 
         <div>
           <label
             htmlFor="cta-type"
             className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
-            Action type <span aria-hidden="true">*</span>
+            Action Type <span aria-hidden="true">*</span>
           </label>
           <select
             id="cta-type"
@@ -121,7 +121,7 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride, inbox
             htmlFor="cta-label"
             className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
-            Button label override{' '}
+            Button Label Override{' '}
             <span className="font-normal text-charcoal-faint">(optional, max 50 chars)</span>
           </label>
           <input
@@ -196,13 +196,13 @@ export function CtaSection({ listingId, ctaType, ctaUrl, ctaLabelOverride, inbox
                 href={`${OWNER_INBOX_PATH}?listing=${listingId}` as Route}
                 className="font-subhead text-xs font-semibold text-brand-black underline underline-offset-2 hover:text-charcoal"
               >
-                Go to inbox
+                Go to Inbox
               </Link>
               <Link
                 href={`${OWNER_INBOX_PATH}/settings` as Route}
                 className="font-subhead text-xs font-semibold text-brand-black underline underline-offset-2 hover:text-charcoal"
               >
-                Inbox settings
+                Inbox Settings
               </Link>
             </span>
           </div>

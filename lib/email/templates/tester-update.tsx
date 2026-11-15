@@ -53,7 +53,7 @@ export function TesterUpdateEmail({
       siteUrl={siteUrl}
       preview="Before we open: finish your walk, and take a first look at The Collective."
     >
-      <Text style={styles.eyebrow}>Tester update</Text>
+      <Text style={styles.eyebrow}>Tester Update</Text>
       <Text style={styles.heading}>{firstName ? `Thank you, ${firstName}.` : 'Thank you.'}</Text>
 
       {/* One string, not text around an expression: React would split it with
@@ -64,7 +64,7 @@ export function TesterUpdateEmail({
 
       <Hr style={styles.divider} />
 
-      <Text style={styles.subheading}>1. Finish your walk</Text>
+      <Text style={styles.subheading}>1. Finish Your Walk</Text>
 
       <Text style={styles.paragraph}>
         Pick up where you left off in the guide down the side of the site. The last note, what
@@ -81,14 +81,14 @@ export function TesterUpdateEmail({
       )}
 
       <Button href={testerLink} style={styles.button}>
-        Pick up where you left off
+        Pick Up Where You Left Off
       </Button>
 
       <Text style={styles.note}>
         Tap the button, then tap Start. We sign you back in. No password needed.
       </Text>
 
-      <Text style={styles.subheading}>2. See what&rsquo;s coming next</Text>
+      <Text style={styles.subheading}>2. See What&rsquo;s Coming Next</Text>
 
       <CollectiveFirstLook siteUrl={siteUrl} />
 

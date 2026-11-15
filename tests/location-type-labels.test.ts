@@ -7,7 +7,7 @@
 //
 //     Service_area
 //
-// on its own page, while Discover's facet said "Comes to you" for the same row.
+// on its own page, while Discover's facet said "Comes to You" for the same row.
 // Three label sets existed and two disagreed. The vocabulary now lives once, in
 // LOCATION_TYPE_META, and the facet derives from it.
 // =============================================================================
@@ -40,7 +40,7 @@ describe('LOCATION_TYPE_META', () => {
   })
 
   it('reads "Comes to you" for service_area — the value the founder saw broken', () => {
-    expect(LOCATION_TYPE_META.service_area.label).toBe('Comes to you')
+    expect(LOCATION_TYPE_META.service_area.label).toBe('Comes to You')
   })
 })
 
@@ -53,7 +53,7 @@ describe('the Discover facet derives from the same table', () => {
     for (const { value, label } of LOCATION_TYPES) {
       expect(label).toBe(LOCATION_TYPE_META[value].label)
     }
-    expect(LOCATION_TYPE_LABEL.service_area).toBe('Comes to you')
+    expect(LOCATION_TYPE_LABEL.service_area).toBe('Comes to You')
   })
 })
 

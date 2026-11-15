@@ -10,13 +10,13 @@ export function StepApply({ values, errors, set }: StepProps) {
           other one. The group is what is required. */}
       <fieldset className="flex flex-col gap-3">
         <legend className="font-subhead text-sm font-semibold text-brand-black">
-          How people apply <span className="text-red-700" aria-hidden="true">*</span>
+          How People Apply <span className="text-red-700" aria-hidden="true">*</span>
         </legend>
         <p className="font-subhead text-xs text-charcoal-soft">
           Add at least one. It becomes the Apply button on your posting.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field id="applyUrl" label="Application link" error={errors.applyUrl}>
+          <Field id="applyUrl" label="Application Link" error={errors.applyUrl}>
             {({ describedBy, invalid }) => (
               <input
                 id="applyUrl"
@@ -32,7 +32,7 @@ export function StepApply({ values, errors, set }: StepProps) {
               />
             )}
           </Field>
-          <Field id="applyEmail" label="Or an email to apply to" error={errors.applyEmail}>
+          <Field id="applyEmail" label="Or an Email to Apply To" error={errors.applyEmail}>
             {({ describedBy, invalid }) => (
               <input
                 id="applyEmail"
@@ -53,7 +53,7 @@ export function StepApply({ values, errors, set }: StepProps) {
 
       <Field
         id="description"
-        label="About this role"
+        label="About This Role"
         required
         hint="What the role involves, who you are looking for, and what you offer. 20 to 2000 characters."
         error={errors.description}

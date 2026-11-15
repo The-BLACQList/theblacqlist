@@ -16,7 +16,7 @@ export function InviteTesterForm() {
           htmlFor="invite-listing"
           className="block font-subhead text-sm font-semibold text-brand-black"
         >
-          Listing ID or slug
+          Listing ID or Slug
         </label>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           The listing&rsquo;s owner becomes the tester, and their free month lands on their own
@@ -47,7 +47,7 @@ export function InviteTesterForm() {
         disabled={pending}
         className="rounded-lg bg-brand-black px-4 py-2 font-subhead text-sm font-semibold text-white transition-colors hover:bg-charcoal disabled:opacity-50"
       >
-        {pending ? 'Inviting…' : 'Invite tester'}
+        {pending ? 'Inviting…' : 'Invite Tester'}
       </button>
     </form>
   )
@@ -85,7 +85,7 @@ export function EndEnrollmentButton({
           onClick={() => setConfirming(true)}
           className="min-h-11 rounded-lg border border-[#e8c7c4] bg-white px-4 font-subhead text-sm font-semibold text-[#a02a1f] hover:bg-[#fdf1ef]"
         >
-          End and free this spot
+          End and Free This Spot
         </button>
       </div>
     )
@@ -114,7 +114,7 @@ export function EndEnrollmentButton({
           disabled={pending}
           className="min-h-11 rounded-lg border border-charcoal/20 bg-white px-4 font-subhead text-sm font-semibold text-brand-black hover:border-charcoal/40 disabled:opacity-50"
         >
-          Keep them
+          Keep Them
         </button>
         <button
           type="submit"

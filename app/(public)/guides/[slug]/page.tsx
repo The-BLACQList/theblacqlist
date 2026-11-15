@@ -74,7 +74,7 @@ export default async function GuideDetailPage({ params }: Props) {
           className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-6 transition-colors"
         >
           <ArrowLeft className="size-3.5" aria-hidden="true" />
-          All guides
+          All Guides
         </Link>
 
         <div className="flex flex-wrap items-center gap-3 mb-3">
@@ -146,13 +146,13 @@ export default async function GuideDetailPage({ params }: Props) {
               href="/guides"
               className="inline-flex items-center justify-center h-10 px-5 rounded-full border border-brand-black text-brand-black font-subhead font-bold text-sm hover:bg-brand-black hover:text-white transition-colors"
             >
-              All guides
+              All Guides
             </Link>
             <Link
               href="/discover"
               className="inline-flex items-center justify-center h-10 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
             >
-              Explore businesses
+              Explore Businesses
             </Link>
           </div>
         </div>

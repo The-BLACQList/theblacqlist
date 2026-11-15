@@ -150,7 +150,7 @@ export function VerificationUploadForm({ listingId, rejectionNotes }: Props) {
           ) : files.length >= MAX_FILES ? (
             `Maximum ${MAX_FILES} files reached`
           ) : (
-            'Choose file(s) to upload'
+            'Choose File(s) to Upload'
           )}
         </label>
         <input
@@ -222,7 +222,7 @@ export function VerificationUploadForm({ listingId, rejectionNotes }: Props) {
           className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-full bg-amber-gold hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed text-brand-black font-subhead font-bold text-sm transition-colors"
         >
           {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-          Submit for verification
+          Submit for Verification
         </button>
       </form>
     </div>

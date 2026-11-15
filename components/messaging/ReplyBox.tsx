@@ -167,7 +167,7 @@ function SaveAsReply({ body, kind }: { body: string; kind: ReplyOptions['kind'] 
           className="inline-flex items-center gap-1 font-subhead font-semibold text-charcoal-soft hover:text-brand-black underline underline-offset-2 disabled:no-underline disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <BookmarkPlus className="size-3.5" aria-hidden="true" />
-          Save as reply
+          Save as Reply
         </button>
         {message && (
           <p role={message.ok ? 'status' : 'alert'} className={message.ok ? 'text-charcoal-soft' : 'text-red-700'}>
@@ -182,7 +182,7 @@ function SaveAsReply({ body, kind }: { body: string; kind: ReplyOptions['kind'] 
     <div className="flex flex-wrap items-end gap-2 rounded-xl bg-charcoal/5 px-3 py-2.5">
       <div className="min-w-[12rem] flex-1">
         <label htmlFor="saved-reply-title" className="block font-subhead text-xs font-semibold text-charcoal">
-          Name this reply
+          Name This Reply
         </label>
         <input
           id="saved-reply-title"

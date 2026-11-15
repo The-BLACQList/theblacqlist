@@ -9,7 +9,7 @@ import { buildSupportPost, supportScreen, type SupportReceipt } from '@/lib/shar
 import { getAppUrl } from '@/lib/env'
 import { SupportPostStudio } from '@/components/support-share/SupportPostStudio'
 
-export const metadata: Metadata = { title: 'Share your support' }
+export const metadata: Metadata = { title: 'Share Your Support' }
 
 const linkCls =
   'inline-flex items-center min-h-11 font-subhead text-sm font-semibold text-amber-700 underline-offset-4 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold/60 rounded'
@@ -83,7 +83,7 @@ export default async function SupportSharePage({
               Something went wrong on our end. Try again in a moment.
             </p>
             <Link href="/account/receipts" className={linkCls}>
-              Back to My receipts
+              Back to My Receipts
             </Link>
           </div>
         </div>
@@ -120,7 +120,7 @@ export default async function SupportSharePage({
               href={isNew ? '/account/receipts?submitted=true' : '/account/receipts'}
               className={linkCls}
             >
-              {isNew ? 'Not now' : 'Back to My receipts'}
+              {isNew ? 'Not Now' : 'Back to My Receipts'}
             </Link>
           </div>
         </section>

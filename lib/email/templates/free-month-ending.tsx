@@ -27,7 +27,7 @@ interface FreeMonthEndingEmailProps {
 }
 
 export function freeMonthEndingSubject(tierName: string): string {
-  return `Your free ${tierName} month ends soon`
+  return `Your Free ${tierName} Month Ends Soon`
 }
 
 export function FreeMonthEndingEmail({
@@ -49,7 +49,7 @@ export function FreeMonthEndingEmail({
           </Section>
 
           <Section style={content}>
-            <Text style={eyebrow}>Your free month</Text>
+            <Text style={eyebrow}>Your Free Month</Text>
             <Text style={headingStyle}>{heading}</Text>
             <Text style={paragraph}>
               {`You'll go back to ${returnTierName} at $${returnPrice}/month. Nothing to do if that's what you want.`}
@@ -59,7 +59,7 @@ export function FreeMonthEndingEmail({
             </Text>
 
             <Button href={`${siteUrl}/dashboard/upgrade#free-month`} style={button}>
-              See your plan
+              See Your Plan
             </Button>
 
             <Hr style={divider} />

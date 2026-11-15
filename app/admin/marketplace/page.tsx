@@ -52,10 +52,10 @@ export default async function AdminMarketplacePage() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Active products', count: productCounts.active },
-          { label: 'Draft products', count: productCounts.draft },
-          { label: 'Active services', count: serviceCounts.active },
-          { label: 'Draft services', count: serviceCounts.draft },
+          { label: 'Active Products', count: productCounts.active },
+          { label: 'Draft Products', count: productCounts.draft },
+          { label: 'Active Services', count: serviceCounts.active },
+          { label: 'Draft Services', count: serviceCounts.draft },
         ].map(({ label, count }) => (
           <div key={label} className="rounded-xl border border-charcoal/10 bg-white p-5">
             <p className="font-subhead text-xs text-charcoal-soft uppercase tracking-wide mb-1">
@@ -73,7 +73,7 @@ export default async function AdminMarketplacePage() {
             id="products-heading"
             className="font-subhead text-base font-semibold text-brand-black"
           >
-            Recent products
+            Recent Products
           </h2>
           <Link
             href="/marketplace/products"
@@ -81,7 +81,7 @@ export default async function AdminMarketplacePage() {
             rel="noopener noreferrer"
             className="font-subhead text-xs text-amber hover:text-light-gold"
           >
-            View public marketplace →
+            View Public Marketplace →
           </Link>
         </div>
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
@@ -159,7 +159,7 @@ export default async function AdminMarketplacePage() {
             id="services-heading"
             className="font-subhead text-base font-semibold text-brand-black"
           >
-            Recent services
+            Recent Services
           </h2>
           <Link
             href="/marketplace/services"
@@ -167,7 +167,7 @@ export default async function AdminMarketplacePage() {
             rel="noopener noreferrer"
             className="font-subhead text-xs text-amber hover:text-light-gold"
           >
-            View public marketplace →
+            View Public Marketplace →
           </Link>
         </div>
         <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">

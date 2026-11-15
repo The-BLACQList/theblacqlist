@@ -82,13 +82,13 @@ export function BlacqlightFeature({ article }: Props) {
               href={`/blacqlight/${article.slug}`}
               className="inline-flex items-center justify-center h-11 px-6 rounded-full border-[1.5px] border-brand-black text-brand-black font-subhead text-sm font-bold hover:bg-brand-black hover:text-white transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
             >
-              Read the story
+              Read the Story
             </Link>
             <Link
               href="/blacqlight"
               className="inline-flex items-center font-subhead text-sm font-bold text-amber hover:text-brand-black underline underline-offset-2 transition-colors duration-150"
             >
-              All BLACQLight stories →
+              All BLACQLight Stories →
             </Link>
           </div>
         </div>

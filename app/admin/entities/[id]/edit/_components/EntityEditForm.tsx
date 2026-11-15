@@ -58,7 +58,7 @@ export function EntityEditForm({ listingId, name, tagline, details }: Props) {
       <div className="rounded-xl border border-charcoal/10 bg-white p-5 space-y-4">
         <h2 className="font-headline text-base text-brand-black">Listing</h2>
         <div>
-          <label htmlFor="name" className={labelCls}>Business name <span className="text-red-500">*</span></label>
+          <label htmlFor="name" className={labelCls}>Business Name <span className="text-red-500">*</span></label>
           <input id="name" name="name" type="text" required maxLength={200} defaultValue={name} className={inputCls} />
         </div>
         <div>
@@ -69,7 +69,7 @@ export function EntityEditForm({ listingId, name, tagline, details }: Props) {
 
       {/* Business details */}
       <div className="rounded-xl border border-charcoal/10 bg-white p-5 space-y-4">
-        <h2 className="font-headline text-base text-brand-black">Business details</h2>
+        <h2 className="font-headline text-base text-brand-black">Business Details</h2>
         <div>
           <label htmlFor="description" className={labelCls}>Description</label>
           <textarea
@@ -96,11 +96,11 @@ export function EntityEditForm({ listingId, name, tagline, details }: Props) {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label htmlFor="address_line_1" className={labelCls}>Address line 1</label>
+            <label htmlFor="address_line_1" className={labelCls}>Address Line 1</label>
             <input id="address_line_1" name="address_line_1" type="text" defaultValue={details?.address_line_1 ?? ''} className={inputCls} />
           </div>
           <div>
-            <label htmlFor="address_line_2" className={labelCls}>Address line 2</label>
+            <label htmlFor="address_line_2" className={labelCls}>Address Line 2</label>
             <input id="address_line_2" name="address_line_2" type="text" defaultValue={details?.address_line_2 ?? ''} className={inputCls} />
           </div>
           <div>
@@ -108,7 +108,7 @@ export function EntityEditForm({ listingId, name, tagline, details }: Props) {
             <input id="state" name="state" type="text" maxLength={2} defaultValue={details?.state ?? ''} className={inputCls} />
           </div>
           <div>
-            <label htmlFor="zip" className={labelCls}>ZIP code</label>
+            <label htmlFor="zip" className={labelCls}>ZIP Code</label>
             <input id="zip" name="zip" type="text" maxLength={10} defaultValue={details?.zip ?? ''} className={inputCls} />
           </div>
         </div>
@@ -116,7 +116,7 @@ export function EntityEditForm({ listingId, name, tagline, details }: Props) {
 
       {/* Social links */}
       <div className="rounded-xl border border-charcoal/10 bg-white p-5 space-y-4">
-        <h2 className="font-headline text-base text-brand-black">Social links</h2>
+        <h2 className="font-headline text-base text-brand-black">Social Links</h2>
         {(
           [
             ['social_instagram', 'Instagram', details?.social_instagram],
@@ -142,7 +142,7 @@ export function EntityEditForm({ listingId, name, tagline, details }: Props) {
           className="inline-flex items-center justify-center gap-2 h-11 px-6 rounded-full bg-brand-black text-white font-subhead text-sm font-bold hover:bg-charcoal transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-          {isPending ? 'Saving…' : 'Save changes'}
+          {isPending ? 'Saving…' : 'Save Changes'}
         </button>
       </div>
     </form>

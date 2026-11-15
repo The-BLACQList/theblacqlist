@@ -63,9 +63,9 @@ export default async function NewPageEventPage({ params }: Props) {
           className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-faint hover:text-charcoal mb-3"
         >
           <ArrowLeft className="size-3" aria-hidden="true" />
-          Back to events
+          Back to Events
         </Link>
-        <h1 className="font-headline text-2xl text-brand-black">New event</h1>
+        <h1 className="font-headline text-2xl text-brand-black">New Event</h1>
         <p className="font-body text-sm text-charcoal-soft mt-0.5">{listing.name}</p>
       </div>
 

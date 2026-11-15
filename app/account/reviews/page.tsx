@@ -12,9 +12,9 @@ export const metadata: Metadata = { title: 'My Reviews | The BLACQList' }
 // RLS ("reviews: authenticated read published or own") lets a user read their own
 // reviews at any status, so no migration is needed for this view.
 const REVIEW_STATUS: Record<string, { label: string; className: string }> = {
-  intake: { label: 'Pending review', className: 'bg-amber-50 text-amber-700 border-amber-200' },
+  intake: { label: 'Pending Review', className: 'bg-amber-50 text-amber-700 border-amber-200' },
   pending_approval: {
-    label: 'Under review',
+    label: 'Under Review',
     className: 'bg-blue-50 text-blue-700 border-blue-200',
   },
   published: { label: 'Published', className: 'bg-green-50 text-green-700 border-green-200' },
@@ -73,7 +73,7 @@ export default async function MyReviewsPage() {
     <main>
       <div className="max-w-[960px] mx-auto">
 
-        <h1 className="font-headline text-3xl text-brand-black mb-2">My reviews</h1>
+        <h1 className="font-headline text-3xl text-brand-black mb-2">My Reviews</h1>
         <p className="font-subhead text-sm text-charcoal-soft mb-8">
           {reviews.length === 0
             ? 'Reviews you write will appear here, along with their status.'
@@ -85,7 +85,7 @@ export default async function MyReviewsPage() {
             <div className="w-16 h-16 rounded-full bg-white border border-charcoal/10 flex items-center justify-center mb-4">
               <MessageSquare className="size-7 text-charcoal-faint" aria-hidden="true" />
             </div>
-            <h2 className="font-headline text-xl text-brand-black mb-2">No reviews yet</h2>
+            <h2 className="font-headline text-xl text-brand-black mb-2">No Reviews Yet</h2>
             <p className="font-subhead text-sm text-charcoal-soft max-w-xs leading-relaxed">
               Visit a business page and share your experience. Your reviews show up here.
             </p>
@@ -93,7 +93,7 @@ export default async function MyReviewsPage() {
               href="/discover"
               className="mt-6 inline-flex items-center justify-center h-11 px-6 rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors"
             >
-              Discover businesses
+              Discover Businesses
             </Link>
           </div>
         ) : (

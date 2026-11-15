@@ -7,7 +7,7 @@
 //   • The basemap stacks two files: a country file drawn below DETAIL_ZOOM and
 //     the metro file from DETAIL_ZOOM up. These tests keep the two from drawing
 //     the same thing twice.
-//   • /map opens on All cities unless ?city= names a city it knows.
+//   • /map opens on All Cities unless ?city= names a city it knows.
 //   • The homepage picture projects its dots with the same math that drew the
 //     outline. The dots are illustration only (founder, 2026-10-14): no counts,
 //     no names, spread coast to coast.
@@ -101,7 +101,7 @@ describe('initialCity', () => {
   })
 
   it('lists All cities first, then every city view', () => {
-    expect(CITY_CHOICES[0]).toEqual({ slug: ALL_CITIES, label: 'All cities' })
+    expect(CITY_CHOICES[0]).toEqual({ slug: ALL_CITIES, label: 'All Cities' })
     expect(CITY_CHOICES.slice(1).map((c) => c.slug)).toEqual(Object.keys(CITY_VIEWS))
   })
 })

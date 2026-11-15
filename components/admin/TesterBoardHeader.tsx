@@ -46,7 +46,7 @@ export function TesterBoardHeader({ taken, cap }: { taken: number; cap: number }
             onClick={() => toggle('invite')}
             className={OUTLINE}
           >
-            Invite by listing
+            Invite by Listing
           </button>
           <button
             type="button"
@@ -55,7 +55,7 @@ export function TesterBoardHeader({ taken, cap }: { taken: number; cap: number }
             onClick={() => toggle('link')}
             className={SOLID}
           >
-            Make a link
+            Make a Link
           </button>
         </div>
       </div>
@@ -72,7 +72,7 @@ export function TesterBoardHeader({ taken, cap }: { taken: number; cap: number }
                 id="tester-add-heading"
                 className="font-subhead text-sm font-bold uppercase tracking-wide text-ink"
               >
-                {open === 'invite' ? 'Invite by listing' : 'Make a one-tap link'}
+                {open === 'invite' ? 'Invite by Listing' : 'Make a One-Tap Link'}
               </h2>
               {open === 'link' && (
                 <p className="mt-1 font-body text-xs text-[#55545a]">

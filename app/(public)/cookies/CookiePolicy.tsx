@@ -57,7 +57,7 @@ export function CookiePolicy({ version, notice }: CookiePolicyProps) {
             <div className="space-y-6">
               <div>
                 <h3 className="font-subhead font-semibold text-brand-black mb-2">
-                  Essential cookies (required)
+                  Essential Cookies (Required)
                 </h3>
                 <p>
                   These cookies are strictly necessary for the platform to function. They manage
@@ -82,7 +82,7 @@ export function CookiePolicy({ version, notice }: CookiePolicyProps) {
 
               <div>
                 <h3 className="font-subhead font-semibold text-brand-black mb-2">
-                  Analytics (privacy-preserving, no personal tracking)
+                  Analytics (Privacy-Preserving, No Personal Tracking)
                 </h3>
                 <p>
                   We use Vercel Analytics and Vercel Speed Insights to understand how visitors
@@ -100,7 +100,7 @@ export function CookiePolicy({ version, notice }: CookiePolicyProps) {
 
               <div>
                 <h3 className="font-subhead font-semibold text-brand-black mb-2">
-                  Error tracking (Sentry)
+                  Error Tracking (Sentry)
                 </h3>
                 <p>
                   We use Sentry to detect and diagnose technical errors on the platform. Sentry
@@ -113,7 +113,7 @@ export function CookiePolicy({ version, notice }: CookiePolicyProps) {
               {isNext && (
                 <div>
                   <h3 className="font-subhead font-semibold text-brand-black mb-2">
-                    Bot protection (Cloudflare Turnstile)
+                    Bot Protection (Cloudflare Turnstile)
                   </h3>
                   {/* [VERIFY BEFORE POSTING] Whether Turnstile sets any cookie or local
                       storage item on our domains. If it does, name it here. */}
@@ -211,10 +211,10 @@ export function CookiePolicy({ version, notice }: CookiePolicyProps) {
 
           <div className="mt-16 pt-8 border-t border-gray-200 flex flex-col gap-3 sm:flex-row sm:gap-8">
             <Link href="/privacy" className="text-amber font-bold text-lg hover:underline">
-              Read our Privacy Policy →
+              Read Our Privacy Policy →
             </Link>
             <Link href="/terms" className="text-amber font-bold text-lg hover:underline">
-              Read our Terms of Service →
+              Read Our Terms of Service →
             </Link>
           </div>
         </div>

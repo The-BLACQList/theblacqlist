@@ -109,7 +109,7 @@ export function TrustBadgeExplainer({ label, meaning, children }: Props) {
             href="/about/trust"
             className="mt-2 inline-flex min-h-11 items-center font-subhead text-sm font-semibold text-brand-black underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-black/40"
           >
-            How trust works
+            How Trust Works
           </Link>
         </div>
       )}

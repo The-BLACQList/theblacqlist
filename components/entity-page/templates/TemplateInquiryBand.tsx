@@ -51,20 +51,20 @@ export function TemplateInquiryBand({ entity }: Props) {
               id="inquire-heading"
               className="font-headline text-[23px] md:text-[32px] text-white max-w-[24ch] text-balance"
             >
-              Claim your official BLACQList page
+              Claim Your Official BLACQList Page
             </h2>
             <div className="flex items-center gap-3 flex-wrap mt-6">
               <Link
                 href={`/claim/${entity.id}`}
                 className="inline-flex items-center justify-center h-12 px-7 rounded-full bg-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
               >
-                Claim this page
+                Claim This Page
               </Link>
               <Link
                 href={`/corrections?listing=${entity.id}`}
                 className="inline-flex items-center justify-center h-12 px-7 rounded-full border border-off-white/40 bg-off-white/10 hover:bg-off-white/20 text-white font-subhead font-bold text-sm transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
               >
-                Suggest a correction
+                Suggest a Correction
               </Link>
             </div>
           </>
@@ -77,7 +77,7 @@ export function TemplateInquiryBand({ entity }: Props) {
               id="inquire-heading"
               className="font-headline text-[23px] md:text-[32px] text-white max-w-[24ch] text-balance"
             >
-              Have a project in mind?
+              Have a Project in Mind?
             </h2>
             <div className="flex items-center gap-3 flex-wrap mt-6">
               {ctaHref && (

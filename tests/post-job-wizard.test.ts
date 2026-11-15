@@ -45,7 +45,7 @@ describe('post-a-job wizard pieces', () => {
       createElement(StepPayPlace, { values: { ...values, employmentType: 'volunteer' }, errors: {}, set, business: biz })
     )
     expect(vol).toContain('Shown as Unpaid')
-    expect(vol).not.toContain('Lowest pay')
+    expect(vol).not.toMatch(/Lowest pay/i)
   })
 
   it('hides the place for remote roles', () => {
@@ -91,6 +91,6 @@ describe('post-a-job wizard pieces', () => {
 
   it('preview falls back to a placeholder title', () => {
     const out = html(createElement(JobPreview, { values: EMPTY_POST_JOB, business: null }))
-    expect(out).toContain('Your job title')
+    expect(out).toContain('Your Job Title')
   })
 })

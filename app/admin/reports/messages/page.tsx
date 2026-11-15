@@ -11,7 +11,7 @@ import { formatMessageTime } from '@/lib/messaging/format'
 import { isUuid } from '@/lib/messaging/rules'
 import { cn } from '@/lib/utils'
 
-export const metadata: Metadata = { title: 'Message reports' }
+export const metadata: Metadata = { title: 'Message Reports' }
 
 const PATH = '/admin/reports/messages'
 const PAGE_SIZE = 25
@@ -148,9 +148,9 @@ export default async function AdminMessageReportsPage({ searchParams }: PageProp
     <div className="space-y-6">
       <div>
         <Link href="/admin/reports" className="font-subhead text-xs font-semibold text-charcoal-soft hover:text-brand-black">
-          ← Reports &amp; corrections
+          ← Reports &amp; Corrections
         </Link>
-        <h1 className="font-headline text-2xl text-brand-black mt-1">Message reports</h1>
+        <h1 className="font-headline text-2xl text-brand-black mt-1">Message Reports</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Reports from customers and business owners about in-app messages.
         </p>

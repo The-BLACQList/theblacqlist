@@ -212,7 +212,7 @@ export function BannerCropDialog({
     <Dialog open={source !== null} onOpenChange={(open) => !open && !saving && onClose()}>
       <DialogContent className="max-h-[92dvh] max-w-2xl overflow-y-auto p-5 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="font-headline text-lg text-brand-black">Crop your banner</DialogTitle>
+          <DialogTitle className="font-headline text-lg text-brand-black">Crop Your Banner</DialogTitle>
           <DialogDescription className="font-body text-sm text-charcoal-soft">
             Drag to move, zoom to fill. Keep the main subject in the middle: phones show the part between the
             dashed lines.
@@ -365,7 +365,7 @@ export function BannerCropDialog({
               className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-brand-black px-4 font-subhead text-sm font-semibold text-white hover:bg-charcoal disabled:opacity-50"
             >
               {saving && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-              Use as banner
+              Use as Banner
             </button>
           </div>
         </div>
@@ -425,7 +425,7 @@ export function BannerPanel({
           className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-brand-black px-3 font-subhead text-xs font-semibold text-white hover:bg-charcoal"
         >
           <ImagePlus className="size-3.5" aria-hidden="true" />
-          {bannerUrl ? 'Upload a new banner' : 'Upload a banner'}
+          {bannerUrl ? 'Upload a New Banner' : 'Upload a Banner'}
         </button>
         {bannerUrl && (
           <>

@@ -129,7 +129,7 @@ export default async function PageEventsPage({ params }: Props) {
             className="inline-flex items-center gap-1.5 h-10 min-h-[44px] px-4 rounded-full bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold transition-colors"
           >
             <Plus className="size-4" aria-hidden="true" />
-            New event
+            New Event
           </Link>
         )}
       </div>
@@ -148,7 +148,7 @@ export default async function PageEventsPage({ params }: Props) {
                 href="/dashboard/upgrade"
                 className="inline-flex items-center mt-2 font-subhead font-bold text-sm text-brand-black underline underline-offset-4 decoration-amber-gold hover:decoration-brand-black"
               >
-                See the Growth plan
+                See the Growth Plan
               </Link>
             )}
           </div>
@@ -173,19 +173,19 @@ export default async function PageEventsPage({ params }: Props) {
           role="alert"
           className="rounded-xl border border-charcoal/10 bg-white px-6 py-10 text-center"
         >
-          <h2 className="font-headline text-lg text-brand-black">Couldn&apos;t load your events</h2>
+          <h2 className="font-headline text-lg text-brand-black">Couldn&apos;t Load Your Events</h2>
           <p className="font-body text-sm text-charcoal-soft mt-2">Something went wrong.</p>
           <Link
             href={`/dashboard/pages/${listing.id}/events`}
             className="inline-flex items-center h-10 min-h-[44px] px-5 mt-4 rounded-full bg-brand-black text-white font-subhead font-bold text-sm hover:bg-charcoal transition-colors"
           >
-            Try again
+            Try Again
           </Link>
         </div>
       ) : rows.length === 0 ? (
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-10 text-center">
           <CalendarDays className="size-10 text-charcoal/20 mx-auto mb-3" aria-hidden="true" />
-          <h2 className="font-headline text-lg text-brand-black">No events yet</h2>
+          <h2 className="font-headline text-lg text-brand-black">No Events Yet</h2>
           <p className="font-body text-sm text-charcoal-soft mt-2 max-w-sm mx-auto">
             Events you start here show on this page once they are live, and leave the site on their
             own after they end.
@@ -207,7 +207,7 @@ export default async function PageEventsPage({ params }: Props) {
           {past.length > 0 && (
             <details className="rounded-xl border border-charcoal/10 bg-white">
               <summary className="cursor-pointer px-5 py-3 min-h-[44px] font-subhead text-sm font-semibold text-brand-black">
-                Past events ({past.length})
+                Past Events ({past.length})
               </summary>
               <div className="px-3 pb-3">
                 <EventList rows={past} past />

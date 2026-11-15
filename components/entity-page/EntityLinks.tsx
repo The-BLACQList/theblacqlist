@@ -16,9 +16,9 @@ const OTHER_META = { label: 'Link', Icon: Link2 as LucideIcon }
 // already lists socials in At-a-Glance) while action links get specific icons.
 const TYPE_META: Record<string, { label: string; Icon: LucideIcon }> = {
   website: { label: 'Website', Icon: Globe },
-  booking: { label: 'Book now', Icon: CalendarCheck },
-  menu: { label: 'View menu', Icon: BookOpen },
-  order: { label: 'Order online', Icon: ShoppingBag },
+  booking: { label: 'Book Now', Icon: CalendarCheck },
+  menu: { label: 'View Menu', Icon: BookOpen },
+  order: { label: 'Order Online', Icon: ShoppingBag },
   instagram: { label: 'Instagram', Icon: Share2 },
   facebook: { label: 'Facebook', Icon: Share2 },
   tiktok: { label: 'TikTok', Icon: Share2 },

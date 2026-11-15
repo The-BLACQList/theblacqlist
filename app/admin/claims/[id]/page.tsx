@@ -87,7 +87,7 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
         href="/admin/claims"
         className="inline-flex items-center gap-1 font-subhead text-xs text-charcoal-soft hover:text-charcoal"
       >
-        ← Back to claims
+        ← Back to Claims
       </Link>
 
       {/* Header */}
@@ -127,7 +127,7 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
                 }
               />
               <Row
-                label="Role claimed"
+                label="Role Claimed"
                 value={
                   claim.role_at_business ? (
                     <span className="capitalize">
@@ -136,8 +136,8 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
                   ) : null
                 }
               />
-              <Row label="Verification email" value={claim.verification_email} />
-              <Row label="Verification phone" value={claim.verification_phone} />
+              <Row label="Verification Email" value={claim.verification_email} />
+              <Row label="Verification Phone" value={claim.verification_phone} />
               <Row
                 label="Notes"
                 value={
@@ -153,7 +153,7 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
           {/* Listing info */}
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
             <h2 className="font-headline text-base text-brand-black mb-3">
-              Business being claimed
+              Business Being Claimed
             </h2>
             {listing ? (
               <dl>
@@ -165,16 +165,16 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
                   }
                 />
                 <Row label="Category" value={category?.name} />
-                <Row label="Listing status" value={<AdminStatusBadge status={listing.status} />} />
-                <Row label="Trust tier" value={<AdminStatusBadge status={listing.trust_tier} />} />
+                <Row label="Listing Status" value={<AdminStatusBadge status={listing.status} />} />
+                <Row label="Trust Tier" value={<AdminStatusBadge status={listing.trust_tier} />} />
                 <Row
-                  label="View listing"
+                  label="View Listing"
                   value={
                     <Link
                       href={`/admin/entities/${listing.id}`}
                       className="font-subhead text-xs font-semibold text-amber hover:text-light-gold"
                     >
-                      Open entity page →
+                      Open Entity Page →
                     </Link>
                   }
                 />
@@ -187,19 +187,19 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
           {/* Review info (shown if already decided) */}
           {!isReviewable && (
             <div className="rounded-xl border border-charcoal/10 bg-white p-5">
-              <h2 className="font-headline text-base text-brand-black mb-3">Review decision</h2>
+              <h2 className="font-headline text-base text-brand-black mb-3">Review Decision</h2>
               <dl>
                 <Row
-                  label="Reviewed by"
+                  label="Reviewed By"
                   value={reviewerLabel ?? '—'}
                 />
                 <Row
-                  label="Reviewed at"
+                  label="Reviewed At"
                   value={claim.reviewed_at ? new Date(claim.reviewed_at).toLocaleString() : null}
                 />
                 {claim.rejection_reason && (
                   <Row
-                    label="Rejection reason"
+                    label="Rejection Reason"
                     value={
                       <p className="whitespace-pre-wrap leading-relaxed">
                         {claim.rejection_reason}
@@ -215,7 +215,7 @@ export default async function AdminClaimDetailPage({ params }: PageProps) {
         {/* Action panel */}
         <div className="space-y-4">
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
-            <h2 className="font-headline text-base text-brand-black mb-4">Admin actions</h2>
+            <h2 className="font-headline text-base text-brand-black mb-4">Admin Actions</h2>
             {isReviewable ? (
               <ClaimApprovalActions
                 claimId={claim.id}

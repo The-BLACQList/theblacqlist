@@ -98,7 +98,7 @@ export default async function DashboardServicesPage({ searchParams }: Props) {
           className="inline-flex items-center gap-2 h-10 px-5 rounded-full bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold transition-colors min-h-[44px]"
         >
           <Plus className="size-4 shrink-0" aria-hidden="true" />
-          Add service
+          Add Service
         </Link>
       </div>
 
@@ -114,7 +114,7 @@ export default async function DashboardServicesPage({ searchParams }: Props) {
             className="inline-flex items-center gap-2 h-10 px-5 mt-5 rounded-full bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold transition-colors min-h-[44px]"
           >
             <Plus className="size-4 shrink-0" aria-hidden="true" />
-            Add your first service
+            Add Your First Service
           </Link>
         </div>
       ) : (

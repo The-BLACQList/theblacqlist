@@ -41,10 +41,10 @@ export type SortKey = 'relevance' | 'rating' | 'reviews' | 'newest' | 'name' | '
  */
 export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
   { value: 'relevance', label: 'Relevance' },
-  { value: 'rating', label: 'Top rated' },
-  { value: 'reviews', label: 'Most reviewed' },
+  { value: 'rating', label: 'Top Rated' },
+  { value: 'reviews', label: 'Most Reviewed' },
   { value: 'newest', label: 'Newest' },
-  { value: 'saves', label: 'Most saved' },
+  { value: 'saves', label: 'Most Saved' },
   { value: 'name', label: 'Name (A–Z)' },
 ]
 

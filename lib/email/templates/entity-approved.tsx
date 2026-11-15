@@ -80,13 +80,13 @@ export function EntityApprovedEmail({
             </Text>
 
             <Button href={listingUrl ?? `${siteUrl}/dashboard`} style={button}>
-              {listingUrl ? 'View your listing' : 'Go to your dashboard'}
+              {listingUrl ? 'View Your Listing' : 'Go to Your Dashboard'}
             </Button>
             {showPostJob && (
               <>
                 {' '}
                 <Button href={`${siteUrl}/add-job`} style={secondaryButton}>
-                  Post a job
+                  Post a Job
                 </Button>
               </>
             )}

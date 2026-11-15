@@ -19,7 +19,7 @@ function SubmitButton() {
       className="w-full h-11 rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
     >
       {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-      {pending ? 'Sending…' : 'Send reset link'}
+      {pending ? 'Sending…' : 'Send Reset Link'}
     </button>
   )
 }
@@ -37,7 +37,7 @@ function ForgotPasswordContent() {
         <div className="w-14 h-14 rounded-full bg-amber-gold/10 flex items-center justify-center mx-auto mb-4">
           <Mail className="size-7 text-amber" aria-hidden="true" />
         </div>
-        <h1 className="font-headline text-[22px] text-brand-black mb-2">Check your inbox</h1>
+        <h1 className="font-headline text-[22px] text-brand-black mb-2">Check Your Inbox</h1>
         <p className="font-subhead text-sm text-charcoal leading-relaxed">
           If <span className="font-semibold text-brand-black">{state.email}</span> is registered, we
           sent a reset link. It expires in 1 hour.
@@ -50,7 +50,7 @@ function ForgotPasswordContent() {
             href="/sign-in"
             className="text-brand-black underline underline-offset-2 hover:text-charcoal"
           >
-            Back to sign in
+            Back to Sign In
           </Link>
         </p>
       </div>
@@ -59,7 +59,7 @@ function ForgotPasswordContent() {
 
   return (
     <>
-      <h1 className="font-headline text-[26px] text-brand-black mb-1">Forgot your password?</h1>
+      <h1 className="font-headline text-[26px] text-brand-black mb-1">Forgot Your Password?</h1>
       <p className="font-subhead text-sm text-charcoal mb-6">
         Enter your email and we&apos;ll send you a reset link.
       </p>
@@ -76,7 +76,7 @@ function ForgotPasswordContent() {
       <form action={action} noValidate className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">
           <label htmlFor="email" className="font-subhead text-sm font-semibold text-brand-black">
-            Email address
+            Email Address
           </label>
           <input
             id="email"
@@ -111,7 +111,7 @@ function ForgotPasswordContent() {
           href="/sign-in"
           className="inline-flex min-h-11 items-center font-semibold text-brand-black hover:underline underline-offset-2"
         >
-          Back to sign in
+          Back to Sign In
         </Link>
       </p>
     </>

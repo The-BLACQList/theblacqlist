@@ -122,7 +122,7 @@ export default async function MySpendingPage() {
       <div className="max-w-[720px] mx-auto space-y-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="font-headline text-2xl text-brand-black">My spending</h1>
+            <h1 className="font-headline text-2xl text-brand-black">My Spending</h1>
             <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
               Where your verified support has gone
             </p>
@@ -132,7 +132,7 @@ export default async function MySpendingPage() {
             className="inline-flex items-center gap-2 min-h-11 h-11 px-4 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors shrink-0"
           >
             <Plus className="size-4" aria-hidden="true" />
-            Add a receipt
+            Add a Receipt
           </Link>
         </div>
 
@@ -158,7 +158,7 @@ export default async function MySpendingPage() {
                   href="/account/receipts"
                   className="inline-flex items-center min-h-11 h-11 px-5 rounded-full border border-charcoal/20 hover:bg-pale-lavender text-brand-black font-subhead font-bold text-sm transition-colors"
                 >
-                  View my receipts
+                  View My Receipts
                 </Link>
               </>
             ) : (
@@ -175,7 +175,7 @@ export default async function MySpendingPage() {
                   className="inline-flex items-center gap-2 min-h-11 h-11 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors"
                 >
                   <Plus className="size-4" aria-hidden="true" />
-                  Add your first receipt
+                  Add Your First Receipt
                 </Link>
               </>
             )}
@@ -241,7 +241,7 @@ export default async function MySpendingPage() {
                 thing reads correctly with the bars ignored entirely. */}
             <section className="rounded-xl bg-white border border-charcoal/10 p-5">
               <div className="flex items-baseline justify-between gap-4 mb-4">
-                <h2 className="font-headline text-base text-brand-black">By month</h2>
+                <h2 className="font-headline text-base text-brand-black">By Month</h2>
                 <p className="font-subhead text-[11px] text-charcoal-faint">
                   Last {PERSONAL_SPEND_MONTHS} months
                 </p>
@@ -313,7 +313,7 @@ export default async function MySpendingPage() {
 
             {/* By category */}
             <section className="rounded-xl bg-white border border-charcoal/10 p-5">
-              <h2 className="font-headline text-base text-brand-black mb-4">By category</h2>
+              <h2 className="font-headline text-base text-brand-black mb-4">By Category</h2>
               <ul className="flex flex-col gap-3">
                 {categories.map((category) => {
                   const share =

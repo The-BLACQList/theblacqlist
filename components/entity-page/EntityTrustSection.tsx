@@ -51,7 +51,7 @@ export function EntityTrustSection({ entity }: Props) {
                   href={`/claim/${entity.id}`}
                   className="inline-flex items-center font-subhead text-sm font-semibold text-amber hover:text-light-gold underline underline-offset-2"
                 >
-                  Claim this listing
+                  Claim This Listing
                 </Link>
               </div>
             )}
@@ -61,7 +61,7 @@ export function EntityTrustSection({ entity }: Props) {
                 href="/about/trust"
                 className="hover:text-charcoal underline underline-offset-2"
               >
-                Learn how The BLACQList verifies businesses
+                Learn How The BLACQList Verifies Businesses
               </Link>
             </p>
           </div>

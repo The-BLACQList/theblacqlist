@@ -91,7 +91,7 @@ export function DistanceFromYou({ lat, lng }: Props) {
               className="inline-flex min-h-11 items-center gap-2 font-subhead text-sm text-charcoal underline underline-offset-2 hover:text-brand-black"
             >
               <Navigation className="size-4 text-amber" aria-hidden="true" />
-              {state.kind === 'idle' ? 'How far is it from me?' : 'Try again'}
+              {state.kind === 'idle' ? 'How Far Is It from Me?' : 'Try Again'}
             </button>
           )}
         </div>

@@ -53,6 +53,6 @@ test.describe('Business levels', () => {
     await page.goto('/discover?level=local')
     const cards = page.locator('article')
     await expect(cards.first()).toBeVisible()
-    await expect(cards.getByText('Local business', { exact: true })).toHaveCount(0)
+    await expect(cards.getByText('Local Business', { exact: true })).toHaveCount(0)
   })
 })

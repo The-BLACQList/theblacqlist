@@ -81,7 +81,7 @@ export function ExtraButtonsEditor({ listingId, initial, tier, upgradeTo, hasPho
   return (
     <div className="space-y-3">
       <div>
-        <h3 className="font-subhead text-sm font-bold text-brand-black">More buttons</h3>
+        <h3 className="font-subhead text-sm font-bold text-brand-black">More Buttons</h3>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           {limit === 0
             ? 'Paid plans add buttons beside your main one.'
@@ -205,7 +205,7 @@ export function ExtraButtonsEditor({ listingId, initial, tier, upgradeTo, hasPho
           {option?.requiresUrl && (
             <div>
               <label htmlFor="extra-button-value" className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1">
-                {isEmail ? 'Email address' : 'Link'}
+                {isEmail ? 'Email Address' : 'Link'}
               </label>
               <input
                 key={isEmail ? 'email' : 'url'}
@@ -236,7 +236,7 @@ export function ExtraButtonsEditor({ listingId, initial, tier, upgradeTo, hasPho
             ) : (
               <Plus className="size-4" aria-hidden="true" />
             )}
-            Add button
+            Add Button
           </button>
         </form>
       )}

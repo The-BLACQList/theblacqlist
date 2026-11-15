@@ -51,9 +51,9 @@ export default async function EditProductPage({ params }: Props) {
           className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-faint hover:text-charcoal mb-3"
         >
           <ArrowLeft className="size-3" aria-hidden="true" />
-          Back to products
+          Back to Products
         </Link>
-        <h1 className="font-headline text-2xl text-brand-black">Edit product</h1>
+        <h1 className="font-headline text-2xl text-brand-black">Edit Product</h1>
         <p className="font-body text-sm text-charcoal-soft mt-0.5">{product.name}</p>
       </div>
 
@@ -78,7 +78,7 @@ export default async function EditProductPage({ params }: Props) {
             external_purchase_url: product.external_purchase_url ?? '',
             status: product.status ?? 'draft',
           }}
-          submitLabel="Save changes"
+          submitLabel="Save Changes"
         />
       </div>
     </div>

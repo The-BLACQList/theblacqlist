@@ -26,7 +26,7 @@ export function StepPayPlace({ values, errors, set, business }: Props) {
             Roles with a pay range get more applicants.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Field id="salaryMin" label="Lowest pay" required error={errors.salaryMin}>
+            <Field id="salaryMin" label="Lowest Pay" required error={errors.salaryMin}>
               {({ describedBy, invalid }) => (
                 <input
                   id="salaryMin"
@@ -42,7 +42,7 @@ export function StepPayPlace({ values, errors, set, business }: Props) {
                 />
               )}
             </Field>
-            <Field id="salaryMax" label="Highest pay" required error={errors.salaryMax}>
+            <Field id="salaryMax" label="Highest Pay" required error={errors.salaryMax}>
               {({ describedBy, invalid }) => (
                 <input
                   id="salaryMax"
@@ -97,7 +97,7 @@ export function StepPayPlace({ values, errors, set, business }: Props) {
 
       <Field
         id="closesAt"
-        label="Applications close"
+        label="Applications Close"
         optionalNote="(optional)"
         hint={`Up to ${MAX_CLOSE_DAYS} days from today. If you leave this blank we close it 30 days after it goes live.`}
         error={errors.closesAt}

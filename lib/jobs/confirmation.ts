@@ -96,21 +96,21 @@ export function buildConfirmationModel(input: ConfirmationInput): ConfirmationMo
     case 'pending':
       return {
         kind: 'review',
-        heading: 'Your role is in review',
+        heading: 'Your Role Is in Review',
         costLine: costLine(input),
         timeline: buildTimeline(input, false),
       }
     case 'published':
       return {
         kind: 'live',
-        heading: 'Your role is live',
+        heading: 'Your Role Is Live',
         costLine: costLine(input),
         timeline: buildTimeline(input, true),
       }
     case 'rejected':
       return {
         kind: 'rejected',
-        heading: 'This role needs changes',
+        heading: 'This Role Needs Changes',
         reason: input.rejectionReason?.trim() || 'Our team left no note. Open the editor to review your role.',
       }
     case 'draft':
@@ -118,7 +118,7 @@ export function buildConfirmationModel(input: ConfirmationInput): ConfirmationMo
       // already on the ledger, is waiting on the webhook. Anyone else holds a
       // draft that was never submitted and belongs in the editor.
       if (input.returnedFromCheckout || input.ledger) {
-        return { kind: 'confirming', heading: "We're confirming your payment" }
+        return { kind: 'confirming', heading: "We're Confirming Your Payment" }
       }
       return { kind: 'redirect' }
     default:

@@ -168,7 +168,7 @@ export function CollectionAdminForm({
 
       <Field
         id="body"
-        label="Intro narrative"
+        label="Intro Narrative"
         hint="The story that opens the collection. Use ## for headings, ### for sub-headings, > for block quotes. Double line breaks create new paragraphs."
       >
         <textarea
@@ -183,7 +183,7 @@ export function CollectionAdminForm({
 
       <Field
         id="cover_image_path"
-        label="Cover image"
+        label="Cover Image"
         hint="Optional. A full image URL or Supabase Storage path for the hero banner."
       >
         <input
@@ -215,7 +215,7 @@ export function CollectionAdminForm({
           className="inline-flex items-center gap-2 h-10 px-6 rounded-full bg-amber-gold hover:bg-light-gold disabled:opacity-60 disabled:cursor-not-allowed text-brand-black font-subhead font-bold text-sm transition-colors"
         >
           {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-          {isPending ? 'Saving…' : 'Save collection'}
+          {isPending ? 'Saving…' : 'Save Collection'}
         </button>
       </div>
     </form>
@@ -347,7 +347,7 @@ export function ArticleAdminForm({ action, defaultValues, redirectOnSuccess }: A
 
       <Field
         id="meta_description"
-        label="Meta description"
+        label="Meta Description"
         hint="Used for SEO. Keep under 160 characters."
       >
         <textarea
@@ -369,7 +369,7 @@ export function ArticleAdminForm({ action, defaultValues, redirectOnSuccess }: A
           className="inline-flex items-center gap-2 h-10 px-5 rounded-full bg-charcoal/10 hover:bg-charcoal/20 disabled:opacity-60 disabled:cursor-not-allowed text-brand-black font-subhead font-bold text-sm transition-colors"
         >
           {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-          Save draft
+          Save Draft
         </button>
         {isPublished ? (
           <button
@@ -505,7 +505,7 @@ export function GuideAdminForm({ action, defaultValues, redirectOnSuccess }: Gui
 
       <Field
         id="meta_description"
-        label="Meta description"
+        label="Meta Description"
         hint="Used for SEO. Keep under 160 characters."
       >
         <textarea
@@ -526,7 +526,7 @@ export function GuideAdminForm({ action, defaultValues, redirectOnSuccess }: Gui
           disabled={isPending}
           className="inline-flex items-center gap-2 h-10 px-5 rounded-full bg-charcoal/10 hover:bg-charcoal/20 disabled:opacity-60 disabled:cursor-not-allowed text-brand-black font-subhead font-bold text-sm transition-colors"
         >
-          Save draft
+          Save Draft
         </button>
         {isPublished ? (
           <button

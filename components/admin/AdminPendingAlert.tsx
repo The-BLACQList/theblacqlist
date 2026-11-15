@@ -38,7 +38,7 @@ export function AdminPendingAlert({ count }: Props) {
         href="/admin/entities?status=pending"
         className="inline-flex items-center justify-center h-9 px-4 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold transition-colors shrink-0"
       >
-        Review submissions
+        Review Submissions
       </Link>
     </div>
   )

@@ -21,7 +21,7 @@ export default async function NewCollectionPage() {
           <ArrowLeft className="size-3.5" aria-hidden="true" />
           Collections
         </Link>
-        <h1 className="font-headline text-2xl text-brand-black">New collection</h1>
+        <h1 className="font-headline text-2xl text-brand-black">New Collection</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Create a curated list of listings for the public collections page.
         </p>

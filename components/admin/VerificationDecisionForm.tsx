@@ -30,7 +30,7 @@ export function VerificationDecisionForm({ listingId }: Props) {
           htmlFor="ver-notes"
           className="block font-subhead text-xs text-charcoal-soft uppercase tracking-wide mb-1.5"
         >
-          Admin notes (optional)
+          Admin Notes (Optional)
         </label>
         <textarea
           id="ver-notes"
@@ -55,7 +55,7 @@ export function VerificationDecisionForm({ listingId }: Props) {
           disabled={isPending}
           className="flex-1 rounded-lg bg-green-600 px-4 py-2.5 font-subhead text-sm font-semibold text-white hover:bg-green-700 disabled:opacity-50 transition-colors"
         >
-          {isPending ? 'Saving…' : 'Approve verification'}
+          {isPending ? 'Saving…' : 'Approve Verification'}
         </button>
         <button
           type="submit"

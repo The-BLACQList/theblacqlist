@@ -64,7 +64,7 @@ function MatchAction({ match: m }: { match: Match }) {
   if (m.ownership === 'open') {
     return (
       <Link href={`/claim/${m.id}`} className={ACTION_CLASS}>
-        This is mine, claim it
+        This Is Mine, Claim It
         <span className="sr-only">: {m.name}</span>
       </Link>
     )
@@ -74,7 +74,7 @@ function MatchAction({ match: m }: { match: Match }) {
       <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <span className={HINT_CLASS}>You manage this page</span>
         <Link href={`/dashboard/pages/${m.id}/edit`} className={ACTION_CLASS}>
-          Go to your page
+          Go to Your Page
           <span className="sr-only">: {m.name}</span>
         </Link>
       </span>
@@ -101,12 +101,12 @@ export function NameStep({ answers, onChange, problem, mode }: StepProps) {
 
   return (
     <>
-      <StepIntro title={creator ? 'What do people call you?' : "What's your business called?"}>
+      <StepIntro title={creator ? 'What Do People Call You?' : "What's Your Business Called?"}>
         {creator ? 'Your creator name, the one your followers know.' : null}
       </StepIntro>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={FIELD_IDS.name} className={LABEL_CLASS}>
-          {creator ? 'Creator name' : 'Business name'}
+          {creator ? 'Creator Name' : 'Business Name'}
         </label>
         <input
           id={FIELD_IDS.name}

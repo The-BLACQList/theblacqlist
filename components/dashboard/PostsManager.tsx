@@ -49,7 +49,7 @@ const LENGTHS = [
   { value: '7', label: '1 week' },
   { value: '14', label: '2 weeks' },
   { value: String(POST_MAX_DAYS), label: `${POST_MAX_DAYS} days` },
-  { value: 'custom', label: 'Pick an end date' },
+  { value: 'custom', label: 'Pick an End Date' },
 ] as const
 
 const STATE_BADGES: Record<PostState, { label: string; className: string }> = {
@@ -124,7 +124,7 @@ export function PostsManager({ listingId, initial, tier, upgradeTo, initialNow }
         <div className="px-5 py-4 border-b border-charcoal/8 flex items-start justify-between gap-3">
           <div>
             <h2 className="font-headline text-base text-brand-black">
-              {editing ? 'Edit post' : 'New post'}
+              {editing ? 'Edit Post' : 'New Post'}
             </h2>
             <p className="font-body text-xs text-charcoal-soft mt-0.5">
               A short note at the top of your page and in &ldquo;Happening now&rdquo; on your city
@@ -169,7 +169,7 @@ export function PostsManager({ listingId, initial, tier, upgradeTo, initialNow }
 
       <section className="rounded-xl border border-charcoal/10 bg-white">
         <div className="px-5 py-4 border-b border-charcoal/8">
-          <h2 className="font-headline text-base text-brand-black">Your posts</h2>
+          <h2 className="font-headline text-base text-brand-black">Your Posts</h2>
           <p className="font-body text-xs text-charcoal-soft mt-0.5">
             {limit === null
               ? 'Your plan has no limit on posts.'
@@ -420,7 +420,7 @@ function PostForm({
 
       <div>
         <label htmlFor="post-body" className={LABEL}>
-          One more line <span className="font-normal text-charcoal-faint">(optional)</span>
+          One More Line <span className="font-normal text-charcoal-faint">(optional)</span>
         </label>
         <input
           id="post-body"
@@ -437,7 +437,7 @@ function PostForm({
       <div className="flex flex-wrap gap-3">
         <div className="min-w-[11rem] flex-[2]">
           <label htmlFor="post-button-url" className={LABEL}>
-            Button link <span className="font-normal text-charcoal-faint">(optional)</span>
+            Button Link <span className="font-normal text-charcoal-faint">(optional)</span>
           </label>
           <input
             id="post-button-url"
@@ -450,7 +450,7 @@ function PostForm({
         </div>
         <div className="min-w-[9rem] flex-1">
           <label htmlFor="post-button-label" className={LABEL}>
-            Button words <span className="font-normal text-charcoal-faint">(optional)</span>
+            Button Words <span className="font-normal text-charcoal-faint">(optional)</span>
           </label>
           <input
             id="post-button-label"
@@ -484,7 +484,7 @@ function PostForm({
             ) : (
               <ImagePlus className="size-3.5" aria-hidden="true" />
             )}
-            {shownImage ? 'Change image' : 'Add an image'}
+            {shownImage ? 'Change Image' : 'Add an Image'}
             <input
               type="file"
               accept="image/jpeg,image/png,image/webp"
@@ -531,7 +531,7 @@ function PostForm({
         </div>
         <div className="min-w-[11rem] flex-1">
           <label htmlFor="post-length" className={LABEL}>
-            Runs for
+            Runs For
           </label>
           <select
             id="post-length"
@@ -577,7 +577,7 @@ function PostForm({
           className="inline-flex items-center gap-1.5 h-10 px-5 rounded-full bg-brand-black text-white font-subhead text-sm font-bold hover:bg-charcoal disabled:opacity-60"
         >
           {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-          {isOn ? 'Save changes' : startLocal ? 'Schedule post' : 'Post now'}
+          {isOn ? 'Save Changes' : startLocal ? 'Schedule Post' : 'Post Now'}
         </button>
         <button
           type="button"
@@ -585,7 +585,7 @@ function PostForm({
           onClick={() => submit(false)}
           className="h-10 px-4 rounded-full border border-charcoal/20 font-subhead text-sm font-semibold text-brand-black hover:bg-charcoal/5 disabled:opacity-60"
         >
-          {isOn ? 'Take down and keep as draft' : 'Save draft'}
+          {isOn ? 'Take Down and Keep as Draft' : 'Save Draft'}
         </button>
       </div>
     </form>

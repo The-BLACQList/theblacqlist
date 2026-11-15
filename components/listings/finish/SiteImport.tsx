@@ -105,7 +105,7 @@ export function SiteImport(props: Props) {
           setOpen(true)
         }}
       >
-        Import from my website
+        Import from My Website
       </button>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="right" className="flex w-full flex-col gap-0 overflow-y-auto p-0 sm:max-w-lg">
@@ -190,7 +190,7 @@ function ImportFlow({
     return (
       <>
         <SheetHeader className="border-b border-charcoal/8 px-6 py-5">
-          <SheetTitle className="font-headline text-xl text-brand-black">Import from my website</SheetTitle>
+          <SheetTitle className="font-headline text-xl text-brand-black">Import from My Website</SheetTitle>
           <SheetDescription className="font-body text-sm text-charcoal-soft">
             We read your public page once, when you ask. Nothing changes on your page until you pick what to keep.
           </SheetDescription>
@@ -198,7 +198,7 @@ function ImportFlow({
         <form onSubmit={read} className="flex flex-col gap-4 px-6 py-5">
           <div>
             <label htmlFor={`${ids}-url`} className="mb-1 block font-subhead text-sm font-semibold text-brand-black">
-              Your website
+              Your Website
             </label>
             <input
               id={`${ids}-url`}
@@ -220,7 +220,7 @@ function ImportFlow({
           <div>
             <button type="submit" className={PRIMARY} disabled={pending || !url.trim()}>
               {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-              {pending ? 'Reading your site…' : 'Read my site'}
+              {pending ? 'Reading your site…' : 'Read My Site'}
             </button>
           </div>
         </form>
@@ -233,7 +233,7 @@ function ImportFlow({
       <>
         <SheetHeader className="border-b border-charcoal/8 px-6 py-5">
           <SheetTitle className="font-headline text-xl text-brand-black">
-            {phase.saved.length > 0 ? 'Brought in' : 'Nothing came in'}
+            {phase.saved.length > 0 ? 'Brought In' : 'Nothing Came In'}
           </SheetTitle>
           <SheetDescription className="font-body text-sm text-charcoal-soft">
             {phase.saved.length > 0
@@ -488,7 +488,7 @@ function ImportFlow({
 
         {choices.length > 0 && (
           <fieldset className="min-w-0">
-            <legend className="font-subhead text-sm font-bold text-brand-black">Photos from your site</legend>
+            <legend className="font-subhead text-sm font-bold text-brand-black">Photos from Your Site</legend>
             <p id={`${ids}-photo-hint`} className="mt-1 font-body text-xs text-charcoal-soft">
               {photoRoom === 0
                 ? 'Your plan’s photos are full.'
@@ -635,7 +635,7 @@ function ImportFlow({
                 disabled={pending}
                 onClick={() => void save.saveAll({ focus: false })}
               >
-                Save my changes
+                Save My Changes
               </button>
             </div>
           </div>
@@ -646,7 +646,7 @@ function ImportFlow({
         <div className="flex flex-wrap items-center gap-2">
           <button type="button" className={PRIMARY} disabled={pending || nothingToSave} onClick={apply}>
             {pending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {pending ? 'Bringing in…' : 'Bring these in'}
+            {pending ? 'Bringing in…' : 'Bring These In'}
           </button>
           <button
             type="button"
@@ -657,7 +657,7 @@ function ImportFlow({
               setPhase({ kind: 'enter' })
             }}
           >
-            Try another address
+            Try Another Address
           </button>
         </div>
         <p className="font-body text-xs text-charcoal-soft">
@@ -693,7 +693,7 @@ function NamePicker({
   const group = `${idBase}-name`
   return (
     <fieldset className="mt-1 min-w-0">
-      <legend className="font-body text-xs text-charcoal-soft">Which is your business name?</legend>
+      <legend className="font-body text-xs text-charcoal-soft">Which Is Your Business Name?</legend>
       <div className="mt-1 flex flex-col gap-1">
         {options.map((option, i) => (
           <label key={option} htmlFor={`${group}-${i}`} className="flex cursor-pointer items-start gap-2 font-body text-sm text-brand-black">
@@ -810,8 +810,8 @@ function AboutWriter({
           {draft.kind === 'loading'
             ? 'Writing…'
             : draft.kind === 'ready'
-              ? 'Write another'
-              : 'Write one from my site'}
+              ? 'Write Another'
+              : 'Write One from My Site'}
         </button>
       </div>
       <p className="font-body text-xs text-charcoal-soft" aria-live="polite">

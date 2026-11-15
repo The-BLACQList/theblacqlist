@@ -147,7 +147,7 @@ export function EntityQueueControls({ query, entityType, locationType, status }:
 
       <div className="flex flex-col gap-1">
         <label htmlFor="admin-entity-location" className="font-subhead text-xs text-charcoal-soft">
-          Location type
+          Location Type
         </label>
         <select
           id="admin-entity-location"
@@ -176,7 +176,7 @@ export function EntityQueueControls({ query, entityType, locationType, status }:
           className="mb-1 inline-flex items-center gap-1 font-body text-xs text-charcoal-soft underline underline-offset-2 transition-colors hover:text-brand-black"
         >
           <X className="size-3" aria-hidden="true" />
-          Clear filters
+          Clear Filters
         </button>
       )}
     </div>

@@ -67,7 +67,7 @@ export function ReportDialog({
       </DialogTrigger>
       <DialogContent>
         <DialogHeader className="px-5 py-4 pr-12 border-b border-charcoal/10">
-          <DialogTitle>{messageId ? 'Report this message' : `Report ${counterpartName}`}</DialogTitle>
+          <DialogTitle>{messageId ? 'Report This Message' : `Report ${counterpartName}`}</DialogTitle>
           <DialogDescription className="font-body text-sm text-charcoal-soft">
             Our team reads every report. {counterpartName} won&apos;t be told who reported them.
           </DialogDescription>
@@ -119,7 +119,7 @@ function ReportForm({
       {messageId && <input type="hidden" name="message_id" value={messageId} />}
 
       <fieldset>
-        <legend className="font-subhead text-xs font-semibold text-charcoal-soft mb-2">What&apos;s wrong?</legend>
+        <legend className="font-subhead text-xs font-semibold text-charcoal-soft mb-2">What&apos;s Wrong?</legend>
         <ul className="space-y-2">
           {REPORT_REASONS.map((r) => (
             <li key={r}>
@@ -147,7 +147,7 @@ function ReportForm({
 
       <div>
         <label htmlFor="report-note" className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1">
-          Anything else? (optional)
+          Anything Else? (Optional)
         </label>
         <textarea
           id="report-note"
@@ -188,7 +188,7 @@ function ReportForm({
           className="inline-flex items-center gap-2 h-11 px-6 rounded-full bg-brand-black text-white font-subhead font-bold text-sm hover:bg-charcoal transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-          Send report
+          Send Report
         </button>
       </div>
     </form>

@@ -9,7 +9,7 @@ import {
   type CategoryOption,
 } from '@/components/admin/CategoryRequestActions'
 
-export const metadata: Metadata = { title: 'Category requests' }
+export const metadata: Metadata = { title: 'Category Requests' }
 
 // Where "suggest a new category" on /add-business lands (ticket 126). The page
 // already sits in the closest group; the team adds the category, moves the page
@@ -87,7 +87,7 @@ export default async function AdminCategoryRequestsPage({ searchParams }: PagePr
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-headline text-2xl text-brand-black">Category requests</h1>
+        <h1 className="font-headline text-2xl text-brand-black">Category Requests</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           New categories owners asked for when nothing fit. Oldest first. Every decision emails the
           owner.

@@ -59,7 +59,7 @@ export function LaunchWaitlist({
   options,
   id,
   legend = 'What are you waiting on?',
-  submitLabel = 'Join the waitlist',
+  submitLabel = 'Join the Waitlist',
   successMessage = "You're on the list. We'll email you the day it opens.",
   className,
 }: Props) {

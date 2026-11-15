@@ -60,7 +60,7 @@ export function ListPicker({ listingId, listingName, lists, memberOf }: ListPick
       <DialogContent>
         <div className="p-6">
           <DialogHeader>
-            <DialogTitle>Add to a list</DialogTitle>
+            <DialogTitle>Add to a List</DialogTitle>
             <DialogDescription>{listingName}</DialogDescription>
           </DialogHeader>
 
@@ -182,7 +182,7 @@ function NewListForm({ listingId, hasLists }: { listingId: string; hasLists: boo
         htmlFor={`new-list-${listingId}`}
         className="block font-subhead text-sm font-semibold text-brand-black"
       >
-        New list
+        New List
       </label>
       <div className="flex gap-2">
         <input

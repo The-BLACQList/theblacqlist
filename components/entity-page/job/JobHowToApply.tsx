@@ -17,7 +17,7 @@ export function JobHowToApply({ applyUrl, applyEmail }: Props) {
   return (
     <section aria-labelledby="job-apply-heading" className="scroll-mt-32">
       <h2 id="job-apply-heading" className="font-headline text-xl text-brand-black mb-3">
-        How to apply
+        How to Apply
       </h2>
       {!applyUrl && !applyEmail ? (
         <p className="font-body text-sm text-charcoal">Contact details missing</p>

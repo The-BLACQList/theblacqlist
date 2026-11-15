@@ -401,7 +401,7 @@ export async function listInbox(
         const asPage = c.customer_listing_id ? pageNames.get(c.customer_listing_id) : null
         return {
           ...base,
-          title: to?.name ?? 'A business',
+          title: to?.name ?? 'A Business',
           subtitle: asPage ? `You wrote as ${asPage}` : null,
           imageUrl: resolveMediaPath(to?.logo_path),
         }
@@ -416,7 +416,7 @@ export async function listInbox(
         const from = otherPages.get(c.customer_listing_id)
         return {
           ...base,
-          title: from?.name ?? 'A business',
+          title: from?.name ?? 'A Business',
           subtitle: toMine ? `To ${toMine}` : null,
           imageUrl: resolveMediaPath(from?.logo_path),
         }

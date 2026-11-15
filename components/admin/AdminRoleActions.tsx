@@ -37,7 +37,7 @@ export function AdminRoleActions({ userId, adminRoles, isSelf }: Props) {
             disabled={isPending}
             className="font-subhead text-xs font-semibold text-red-600 hover:text-red-800 disabled:opacity-50"
           >
-            Revoke admin
+            Revoke Admin
           </button>
         </form>
       ) : (
@@ -48,7 +48,7 @@ export function AdminRoleActions({ userId, adminRoles, isSelf }: Props) {
             disabled={isPending}
             className="font-subhead text-xs font-semibold text-amber hover:text-light-gold disabled:opacity-50"
           >
-            Make admin
+            Make Admin
           </button>
         </form>
       )}

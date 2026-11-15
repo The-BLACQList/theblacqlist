@@ -47,7 +47,7 @@ export default async function ClaimPage({ searchParams }: PageProps) {
         {/* Header */}
         <div className="mb-8">
           <h1 className="font-headline text-3xl md:text-4xl text-brand-black mb-2">
-            Claim a listing
+            Claim a Listing
           </h1>
           <p className="font-body text-base text-charcoal leading-relaxed">
             Find your business and submit a claim to manage your page on The BLACQList.

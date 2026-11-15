@@ -44,7 +44,7 @@ const NAV_ITEMS = [
   { href: '/admin/verification', label: 'Verification', icon: BadgeCheck, exact: false },
   { href: '/admin/reviews', label: 'Reviews', icon: MessageSquare, exact: false },
   { href: '/admin/reports', label: 'Reports', icon: Flag, exact: false },
-  { href: '/admin/category-requests', label: 'Category requests', icon: Tags, exact: false },
+  { href: '/admin/category-requests', label: 'Category Requests', icon: Tags, exact: false },
   { href: '/admin/analytics', label: 'Analytics', icon: BarChart3, exact: false },
   { href: '/admin/collections', label: 'Collections', icon: Layers, exact: false },
   { href: '/admin/guides', label: 'Guides', icon: BookOpen, exact: false },
@@ -56,7 +56,7 @@ const NAV_ITEMS = [
   { href: '/admin/users', label: 'Users', icon: Users, exact: false },
   { href: '/admin/testers', label: 'Testers', icon: Compass, exact: false },
   { href: '/admin/feedback', label: 'Feedback', icon: MessageSquareWarning, exact: false },
-  { href: '/admin/email-preview', label: 'Email preview', icon: Mail, exact: false },
+  { href: '/admin/email-preview', label: 'Email Preview', icon: Mail, exact: false },
 ]
 
 export function AdminSidebar({ role, counts }: Props) {

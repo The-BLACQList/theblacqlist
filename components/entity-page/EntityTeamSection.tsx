@@ -99,8 +99,8 @@ export function EntityTeamSection({ team, bare = false }: Props) {
       <div className={bare ? undefined : 'max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8'}>
         {bare ? (
           <TemplateSectionHeading
-            kicker="Who you'll work with"
-            heading="Meet the team"
+            kicker="Who You'll Work With"
+            heading="Meet the Team"
             headingId="team-heading"
           />
         ) : (
@@ -108,7 +108,7 @@ export function EntityTeamSection({ team, bare = false }: Props) {
             id="team-heading"
             className="font-headline text-[22px] md:text-[28px] text-brand-black mb-8"
           >
-            Meet the team
+            Meet the Team
           </h2>
         )}
         <ul

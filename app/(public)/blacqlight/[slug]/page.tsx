@@ -162,13 +162,13 @@ export default async function ArticleDetailPage({ params }: Props) {
               href="/blacqlight"
               className={`${pill} border border-brand-black text-brand-black hover:bg-brand-black hover:text-white`}
             >
-              More stories
+              More Stories
             </Link>
             <Link
               href="/discover"
               className={`${pill} bg-gold text-brand-black hover:bg-light-gold`}
             >
-              Explore businesses
+              Explore Businesses
             </Link>
           </div>
         </Container>
@@ -181,7 +181,7 @@ export default async function ArticleDetailPage({ params }: Props) {
               id="more-heading"
               className="font-headline font-medium text-[28px] md:text-[36px] leading-[1.1] text-ink"
             >
-              More stories
+              More Stories
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
               {others.map((a) => (
@@ -222,7 +222,7 @@ function FeaturedInStory({ listings }: { listings: LinkedListing[] }) {
         id="featured-heading"
         className="font-subhead text-xs font-bold uppercase tracking-[0.14em] text-amber"
       >
-        Featured in this story
+        Featured in This Story
       </h2>
       <ul className="flex flex-col gap-4 list-none m-0 p-0">
         {listings.map((l) => (
@@ -247,7 +247,7 @@ function FeaturedInStory({ listings }: { listings: LinkedListing[] }) {
               className={`${pill} shrink-0 bg-gold text-brand-black hover:bg-light-gold`}
               aria-label={`Visit ${l.name}'s page`}
             >
-              Visit their page
+              Visit Their Page
             </Link>
           </li>
         ))}

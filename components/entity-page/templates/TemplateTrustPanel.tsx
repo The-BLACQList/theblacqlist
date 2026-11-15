@@ -59,7 +59,7 @@ export function TemplateTrustPanel({ entity }: Props) {
               href={`/claim/${entity.id}`}
               className="font-subhead font-semibold text-amber hover:text-brand-black underline underline-offset-2 transition-colors duration-150"
             >
-              Claim this listing
+              Claim This Listing
             </Link>
           </p>
         )}
@@ -68,14 +68,14 @@ export function TemplateTrustPanel({ entity }: Props) {
             href={`/corrections?listing=${entity.id}`}
             className="hover:text-charcoal underline underline-offset-2 transition-colors duration-150"
           >
-            Suggest a correction
+            Suggest a Correction
           </Link>
           {' · '}
           <Link
             href="/about/trust"
             className="hover:text-charcoal underline underline-offset-2 transition-colors duration-150"
           >
-            How verification works
+            How Verification Works
           </Link>
         </p>
       </div>

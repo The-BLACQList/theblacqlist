@@ -107,7 +107,7 @@ test.describe('admin entities queue', () => {
     await expect(claimsPill).toHaveText(/^[1-9]\d*$/)
     await expect(claimsPill).toHaveAttribute('aria-label', /^\d+ pending$/)
 
-    const entitiesCard = page.getByRole('link', { name: /Pending entities/ })
+    const entitiesCard = page.getByRole('link', { name: /Pending Entities/ })
     const cardCount = Number(
       ((await entitiesCard.locator('p').nth(1).textContent()) ?? '0').replace(/,/g, '')
     )

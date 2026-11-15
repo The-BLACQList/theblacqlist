@@ -46,7 +46,7 @@ export function ServiceForm({
   listings,
   defaultListingId,
   defaultValues,
-  submitLabel = 'Save service',
+  submitLabel = 'Save Service',
 }: ServiceFormProps) {
   const router = useRouter()
   const [_state, formAction, isPending] = useActionState(
@@ -118,7 +118,7 @@ export function ServiceForm({
       {/* Name */}
       <div className="space-y-1">
         <label htmlFor="name" className="block font-subhead text-sm font-semibold text-brand-black">
-          Service name{' '}
+          Service Name{' '}
           <span aria-hidden="true" className="text-red-500">
             *
           </span>
@@ -167,7 +167,7 @@ export function ServiceForm({
             htmlFor="starting_price_cents"
             className="block font-subhead text-sm font-semibold text-brand-black"
           >
-            Starting price ($)
+            Starting Price ($)
           </label>
           <input
             id="starting_price_cents"
@@ -211,7 +211,7 @@ export function ServiceForm({
           htmlFor="price_display_text"
           className="block font-subhead text-sm font-semibold text-brand-black"
         >
-          Price display text{' '}
+          Price Display Text{' '}
           <span className="font-normal text-charcoal-faint">(optional override)</span>
         </label>
         <input
@@ -255,7 +255,7 @@ export function ServiceForm({
           htmlFor="cover_image_url"
           className="block font-subhead text-sm font-semibold text-brand-black"
         >
-          Cover image URL
+          Cover Image URL
         </label>
         <input
           id="cover_image_url"
@@ -279,7 +279,7 @@ export function ServiceForm({
           htmlFor="booking_url"
           className="block font-subhead text-sm font-semibold text-brand-black"
         >
-          Booking / request URL
+          Booking / Request URL
         </label>
         <input
           id="booking_url"

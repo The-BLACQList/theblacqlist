@@ -50,7 +50,7 @@ export function FlowMapNetwork({ nodes }: FlowMapNetworkProps) {
   return (
     <div className="rounded-xl bg-white border border-charcoal/10 overflow-hidden">
       <div className="px-5 py-4 border-b border-charcoal/5 flex items-center justify-between">
-        <h2 className="font-headline text-base text-brand-black">Network view</h2>
+        <h2 className="font-headline text-base text-brand-black">Network View</h2>
         <span className="font-subhead text-xs text-charcoal-faint border border-charcoal/10 rounded-full px-2 py-0.5">
           Beta: full graph coming
         </span>

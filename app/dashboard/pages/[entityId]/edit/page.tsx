@@ -374,7 +374,7 @@ export default async function EditPage({ params, searchParams }: Props) {
                     href="/add-job"
                     className="font-subhead font-semibold text-brand-black underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
                   >
-                    Post a job
+                    Post a Job
                   </Link>
                 </>
               )}

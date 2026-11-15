@@ -35,7 +35,7 @@ export function FreeMonthCard({ state, availability, primaryListingId }: Props) 
       className="mb-8 scroll-mt-24 rounded-xl border border-amber-gold/50 bg-amber-gold/5 p-5"
     >
       <h2 id="free-month-heading" className="font-headline text-lg text-brand-black">
-        Your free month
+        Your Free Month
       </h2>
       <Body state={state} availability={availability} primaryListingId={primaryListingId} />
     </section>
@@ -116,7 +116,7 @@ function Body({ state, availability, primaryListingId }: Props) {
               {open ? (
                 <ClaimTrialButton
                   plan={tier}
-                  label={state.openTier === tier ? 'Resume checkout' : `Use it on ${name}`}
+                  label={state.openTier === tier ? 'Resume Checkout' : `Use it on ${name}`}
                   pendingLabel={state.paying ? 'Starting your free month…' : undefined}
                   listingId={attachTo}
                 />

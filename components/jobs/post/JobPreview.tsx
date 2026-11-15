@@ -24,7 +24,7 @@ export function previewCardData(values: PostJobValues, business: HiringBusiness 
   return {
     id: 'preview',
     href: '#',
-    title: values.name.trim() || 'Your job title',
+    title: values.name.trim() || 'Your Job Title',
     businessName: business?.name ?? null,
     businessLogoUrl: business?.logoUrl ?? null,
     place: buildJobPlace(

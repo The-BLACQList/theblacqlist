@@ -110,11 +110,11 @@ test.describe('owner dashboard', () => {
     // 30d is the default and is expressed by the ABSENCE of ?period. exact:true
     // because the search-queries section heading reads "Top search queries,
     // last 30 days" and would otherwise match too.
-    await expect(page.getByRole('heading', { name: 'Last 30 days', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Last 30 Days', exact: true })).toBeVisible()
 
     await page.getByRole('button', { name: '7 days' }).click()
     await page.waitForURL(/[?&]period=7d/)
-    await expect(page.getByRole('heading', { name: 'Last 7 days', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Last 7 Days', exact: true })).toBeVisible()
 
     // Asserted on the rendered not-found UI, not the HTTP status. The guard
     // is the same .eq('owner_user_id', …) + notFound() the editor uses, but

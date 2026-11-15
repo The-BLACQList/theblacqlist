@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 
 export const metadata: Metadata = {
-  title: 'Page not found',
+  title: 'Page Not Found',
 }
 
 /**
@@ -40,7 +40,7 @@ export default function NotFound() {
             size="lg"
             className="focus-visible:ring-amber-gold focus-visible:ring-offset-ground"
           >
-            <Link href="/">Go home</Link>
+            <Link href="/">Go Home</Link>
           </Button>
           <Button
             asChild

@@ -48,7 +48,7 @@ export function BusinessInviteEmail({
             <Text style={paragraph}>{bodyLine}</Text>
 
             <Button href={`${siteUrl}${ADD_BUSINESS_PATH}`} style={button}>
-              Add your business
+              Add Your Business
             </Button>
 
             <Hr style={divider} />

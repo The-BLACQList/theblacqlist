@@ -38,7 +38,7 @@ export function FreshFinds({ entities }: Props) {
           id="fresh-finds-heading"
           className="font-headline text-[26px] md:text-[32px] text-brand-black"
         >
-          Just added to the index
+          Just Added to the Index
         </h2>
 
         <div className="mt-6">

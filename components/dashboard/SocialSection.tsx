@@ -85,7 +85,7 @@ export function SocialSection({
     formProps,
   } = useSectionSave({
     id: 'social',
-    label: 'Social links',
+    label: 'Social Links',
     action: updateListingContentAction,
   })
   const saveLabel = useSaveLabel()
@@ -108,7 +108,7 @@ export function SocialSection({
     return (
       <div className="rounded-xl border border-charcoal/10 bg-white">
         <div className="px-5 py-4 border-b border-charcoal/8">
-          <h2 className="font-headline text-base text-brand-black">Social links</h2>
+          <h2 className="font-headline text-base text-brand-black">Social Links</h2>
         </div>
         <div className="px-5 py-4">
           <PlanLimitNote upgradeTo={upgradeTo}>
@@ -124,7 +124,7 @@ export function SocialSection({
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
-        <h2 className="font-headline text-base text-brand-black">Social links</h2>
+        <h2 className="font-headline text-base text-brand-black">Social Links</h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           All URLs must start with https://
         </p>

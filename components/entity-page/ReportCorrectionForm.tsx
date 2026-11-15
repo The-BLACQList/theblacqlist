@@ -34,7 +34,7 @@ interface Props {
 export function ReportCorrectionForm({
   listingId,
   triggerClassName,
-  triggerLabel = 'Report an error',
+  triggerLabel = 'Report an Error',
 }: Props) {
   const [open, setOpen] = useState(false)
   const [state, formAction, isPending] = useActionState(submitCorrectionAction, null)
@@ -75,7 +75,7 @@ export function ReportCorrectionForm({
 
       <DialogContent>
         <DialogHeader className="px-5 py-4 pr-12 border-b border-charcoal/10">
-          <DialogTitle>Report an error on this listing</DialogTitle>
+          <DialogTitle>Report an Error on This Listing</DialogTitle>
           <DialogDescription className="sr-only">
             Select the issues you noticed with this listing and optionally describe the problem.
           </DialogDescription>
@@ -139,7 +139,7 @@ export function ReportCorrectionForm({
                   htmlFor="correction-notes"
                   className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
                 >
-                  Describe the issue{' '}
+                  Describe the Issue{' '}
                   <span className="font-normal text-charcoal-faint">(optional, max 500 chars)</span>
                 </label>
                 <textarea
@@ -175,7 +175,7 @@ export function ReportCorrectionForm({
                 className="inline-flex items-center gap-2 h-11 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-                {isPending ? 'Submitting…' : 'Submit report'}
+                {isPending ? 'Submitting…' : 'Submit Report'}
               </button>
             </div>
           </form>

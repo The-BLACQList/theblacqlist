@@ -105,11 +105,11 @@ export type LocationType = (typeof VALID_LOCATION_TYPES)[number]
  */
 export const LOCATION_TYPE_META: Record<LocationType, { label: string }> = {
   physical: { label: 'Storefront' },
-  virtual: { label: 'Online only' },
-  hybrid: { label: 'Storefront + online' },
-  service_area: { label: 'Comes to you' },
-  national: { label: 'Ships nationwide' },
-  traveling: { label: 'Mobile / pop-up' },
+  virtual: { label: 'Online Only' },
+  hybrid: { label: 'Storefront + Online' },
+  service_area: { label: 'Comes to You' },
+  national: { label: 'Ships Nationwide' },
+  traveling: { label: 'Mobile / Pop-Up' },
 }
 
 /**
@@ -172,8 +172,8 @@ export const JOB_EMPLOYMENT_TYPES = [
 export type JobEmploymentType = (typeof JOB_EMPLOYMENT_TYPES)[number]
 
 export const JOB_EMPLOYMENT_TYPE_META: Record<JobEmploymentType, { label: string }> = {
-  'full-time': { label: 'Full-time' },
-  'part-time': { label: 'Part-time' },
+  'full-time': { label: 'Full-Time' },
+  'part-time': { label: 'Part-Time' },
   contract: { label: 'Contract' },
   temporary: { label: 'Temporary' },
   internship: { label: 'Internship' },
@@ -185,7 +185,7 @@ export const JOB_WORKPLACE_TYPES = ['on-site', 'hybrid', 'remote'] as const
 export type JobWorkplaceType = (typeof JOB_WORKPLACE_TYPES)[number]
 
 export const JOB_WORKPLACE_TYPE_META: Record<JobWorkplaceType, { label: string }> = {
-  'on-site': { label: 'On-site' },
+  'on-site': { label: 'On-Site' },
   hybrid: { label: 'Hybrid' },
   remote: { label: 'Remote' },
 }
@@ -202,11 +202,11 @@ export const JOB_SALARY_PERIOD_META: Record<
   JobSalaryPeriod,
   { label: string; suffix: string; phrase: string }
 > = {
-  hour: { label: 'Per hour', suffix: '/hr', phrase: 'an hour' },
-  day: { label: 'Per day', suffix: '/day', phrase: 'a day' },
-  week: { label: 'Per week', suffix: '/wk', phrase: 'a week' },
-  month: { label: 'Per month', suffix: '/mo', phrase: 'a month' },
-  year: { label: 'Per year', suffix: '/yr', phrase: 'a year' },
+  hour: { label: 'Per Hour', suffix: '/hr', phrase: 'an hour' },
+  day: { label: 'Per Day', suffix: '/day', phrase: 'a day' },
+  week: { label: 'Per Week', suffix: '/wk', phrase: 'a week' },
+  month: { label: 'Per Month', suffix: '/mo', phrase: 'a month' },
+  year: { label: 'Per Year', suffix: '/yr', phrase: 'a year' },
 }
 
 // The four CTA types a job listing may use — a subset of VALID_CTA_TYPES, and

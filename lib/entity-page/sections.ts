@@ -107,7 +107,7 @@ const hasImages = (e: EntityPageData) => e.images.length > 0
 export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   {
     id: 'hero',
-    label: 'Cover & name',
+    label: 'Cover & Name',
     templates: ALL,
     gate: {},
     editor: { tool: 'Page basics', href: edit('basics') },
@@ -123,7 +123,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   },
   {
     id: 'facts',
-    label: 'Facts line',
+    label: 'Facts Line',
     templates: ALL,
     // Part of the basic page (founder 2026-11-13). Ticket 189 wires the live loader.
     gate: {},
@@ -132,7 +132,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   },
   {
     id: 'happening-now',
-    label: 'Happening now',
+    label: 'Happening Now',
     templates: ALL,
     // Main's posts (owner-experience round 2, part F). The site flag and the
     // per-plan active-post cap gate it, as lib/listings/entityPage.ts and
@@ -144,7 +144,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   },
   {
     id: 'info-rail',
-    label: 'Quick facts',
+    label: 'Quick Facts',
     templates: ALL,
     gate: {},
     editor: { tool: 'Contact & hours', href: edit('contact') },
@@ -154,7 +154,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     // Delivery-app buttons (owner-experience round 2, part D): every plan,
     // behind the orderWhereSold flag, edited on the Services tab.
     id: 'order-on',
-    label: 'Order on',
+    label: 'Order On',
     templates: ALL,
     gate: { flag: 'orderWhereSold' },
     editor: { tool: 'Order on', href: edit('order-on') },
@@ -164,7 +164,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     // The stores that carry the business's products (part D), edited on the
     // "Where to find us" tab.
     id: 'find-us',
-    label: 'Find us at',
+    label: 'Find Us At',
     templates: ALL,
     gate: { flag: 'orderWhereSold' },
     editor: { tool: 'Where to find us', href: edit('where-sold') },
@@ -193,7 +193,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     // carry lat/lng, so ticket 190 turns it on for them; until then it renders
     // in example mode only.
     id: 'map',
-    label: 'Location map',
+    label: 'Location Map',
     templates: ALL,
     gate: {},
     editor: { tool: 'Contact & hours', href: edit('contact') },
@@ -202,7 +202,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   {
     // Nested in At a Glance. Hours are basic at every tier (ticket 196).
     id: 'hours-overrides',
-    label: 'Special hours',
+    label: 'Special Hours',
     templates: ALL,
     gate: {},
     editor: { tool: 'Contact & hours', href: edit('hours') },
@@ -210,7 +210,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   },
   {
     id: 'locations',
-    label: 'Other locations',
+    label: 'Other Locations',
     templates: ALL,
     gate: { feature: 'multi_location', limit: 'locations' },
     editor: { tool: 'Locations', href: page('locations') },
@@ -303,7 +303,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   },
   {
     id: 'booking',
-    label: 'Booking requests',
+    label: 'Booking Requests',
     templates: ALL,
     gate: { feature: 'booking_requests' },
     editor: { tool: 'Bookings', href: page('bookings') },
@@ -311,7 +311,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   },
   {
     id: 'attributes',
-    label: 'What this business offers',
+    label: 'What This Business Offers',
     templates: ALL,
     gate: {},
     editor: { tool: 'Details', href: edit('details') },
@@ -327,7 +327,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   },
   {
     id: 'hiring',
-    label: 'Now hiring',
+    label: 'Now Hiring',
     templates: ALL,
     gate: { flag: 'jobsOpen', limit: 'jobs' },
     editor: { tool: 'Jobs', href: () => '/dashboard/jobs' },
@@ -335,7 +335,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   },
   {
     id: 'events',
-    label: 'Upcoming events',
+    label: 'Upcoming Events',
     templates: ALL,
     gate: { feature: 'events', limit: 'events' },
     editor: { tool: 'Events', href: page('events') },
@@ -354,7 +354,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     // are filed under two or more albums. Ticket 193 adds the column and the
     // Growth+ gate; the live loader sets no album until then.
     id: 'albums',
-    label: 'Photo albums',
+    label: 'Photo Albums',
     templates: ALL,
     gate: {},
     editor: { tool: 'Photos', href: page('media') },
@@ -370,7 +370,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   },
   {
     id: 'inquiry',
-    label: 'Get in touch',
+    label: 'Get in Touch',
     templates: ALL,
     gate: {},
     editor: { tool: 'Main button', href: edit('main-button') },
@@ -388,7 +388,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     // Licences, certifications, awards and press — the trust the business
     // brings with it. Ticket 192 decides the tier; free until then.
     id: 'credentials',
-    label: 'Credentials & press',
+    label: 'Credentials & Press',
     templates: ALL,
     gate: {},
     editor: { tool: 'Credentials', href: page('credentials') },
@@ -396,7 +396,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   },
   {
     id: 'trust',
-    label: 'Trust & verification',
+    label: 'Trust & Verification',
     templates: ['storefront'],
     gate: {},
     editor: { tool: 'Verification', href: page('verification') },
@@ -420,7 +420,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   },
   {
     id: 'related',
-    label: 'You might also like',
+    label: 'You Might Also Like',
     templates: ALL,
     gate: {},
     editor: { tool: 'Related', href: system },

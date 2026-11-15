@@ -143,7 +143,7 @@ function VideoItem({
             disabled={isPending}
             className="h-9 px-3 rounded-lg font-subhead text-sm font-semibold text-charcoal-soft hover:text-brand-black hover:bg-charcoal/5"
           >
-            Keep it
+            Keep It
           </button>
           <button
             type="button"
@@ -152,7 +152,7 @@ function VideoItem({
             className="inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-red-600 text-white font-subhead font-bold text-sm hover:bg-red-700 disabled:opacity-50"
           >
             {isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            Remove video
+            Remove Video
           </button>
         </div>
       ) : (
@@ -163,7 +163,7 @@ function VideoItem({
             disabled={isPending}
             className="h-9 px-3 rounded-lg font-subhead text-sm font-semibold text-red-700 hover:bg-red-50"
           >
-            Remove video
+            Remove Video
           </button>
         </div>
       )}
@@ -183,7 +183,7 @@ function VideoItem({
 function AddLinkForm({ listingId, hasVideos }: { listingId: string; hasVideos: boolean }) {
   const { state, pending, collective, formProps } = useSectionSave({
     id: 'video',
-    label: 'Video link',
+    label: 'Video Link',
     action: addListingVideoLinkAction,
   })
   const saveLabel = useSaveLabel()
@@ -197,7 +197,7 @@ function AddLinkForm({ listingId, hasVideos }: { listingId: string; hasVideos: b
           htmlFor="video-url"
           className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
         >
-          Or paste a YouTube or Vimeo link
+          Or Paste a YouTube or Vimeo Link
         </label>
         <input
           id="video-url"

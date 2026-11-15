@@ -119,9 +119,14 @@ export function canViewReceiptFile(args: {
   )
 }
 
-/** The owner email's subject and headline: "Jordan S. supported Mama's Kitchen". */
+/** The owner email's headline and preview: "Jordan S. supported Mama's Kitchen". */
 export function receiptToVerifyLine(buyer: string, businessName: string): string {
   return `${buyer} supported ${businessName}`
+}
+
+/** The owner email's subject, in Title Case: "Jordan S. Supported Mama's Kitchen". */
+export function receiptToVerifySubject(buyer: string, businessName: string): string {
+  return `${buyer} Supported ${businessName}`
 }
 
 /** Email the owner only when there is one, and it isn't the shopper. */

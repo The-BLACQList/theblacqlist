@@ -206,7 +206,7 @@ export async function createClaimAction(
   if (user.email) {
     void sendEmail({
       to: user.email,
-      subject: `Your claim for ${listing.name} is under review`,
+      subject: `Your Claim for ${listing.name} Is Under Review`,
       react: ClaimSubmittedEmail({ listingName: listing.name, claimId: claim.id, siteUrl }),
     })
   }
@@ -216,7 +216,7 @@ export async function createClaimAction(
   if (adminRecipients.length > 0 && user.email) {
     void sendEmail({
       to: adminRecipients,
-      subject: `New claim submitted: ${listing.name}`,
+      subject: `New Claim Submitted: ${listing.name}`,
       react: ClaimAdminNotificationEmail({
         listingName: listing.name,
         claimantEmail: user.email,

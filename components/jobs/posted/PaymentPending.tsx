@@ -32,7 +32,7 @@ export function PaymentPending() {
       )}
       <p className="mt-3">
         <button type="button" onClick={() => router.refresh()} className="inline-flex min-h-11 items-center font-semibold underline">
-          Refresh now
+          Refresh Now
         </button>
       </p>
     </div>

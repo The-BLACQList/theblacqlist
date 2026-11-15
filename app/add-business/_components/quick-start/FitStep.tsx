@@ -148,10 +148,10 @@ export function FitStep({ answers, onChange, problem, categories, onPicked }: Pr
                 className={PRIMARY_CLASS}
                 onClick={() => choose(options.best as GuideCategory)}
               >
-                Yes, list me here
+                Yes, List Me Here
               </button>
               <button type="button" className={QUIET_CLASS} onClick={notQuite}>
-                Not quite
+                Not Quite
               </button>
             </div>
           </div>
@@ -169,7 +169,7 @@ export function FitStep({ answers, onChange, problem, categories, onPicked }: Pr
               ))}
             </ul>
             <button type="button" className={cn(QUIET_CLASS, 'self-start')} onClick={notQuite}>
-              Not quite
+              Not Quite
             </button>
           </>
         )}
@@ -189,7 +189,7 @@ export function FitStep({ answers, onChange, problem, categories, onPicked }: Pr
               ))}
             </ul>
             <button type="button" className={cn(QUIET_CLASS, 'self-start')} onClick={notQuite}>
-              None of these fit
+              None of These Fit
             </button>
           </>
         )}
@@ -211,10 +211,10 @@ export function FitStep({ answers, onChange, problem, categories, onPicked }: Pr
             </ul>
             <div className="flex flex-wrap gap-2">
               <button type="button" className={QUIET_CLASS} onClick={() => setGroup(null)}>
-                Back to all groups
+                Back to All Groups
               </button>
               <button type="button" className={QUIET_CLASS} onClick={() => startSuggest(group.id)}>
-                Suggest a new category
+                Suggest a New Category
               </button>
             </div>
           </>

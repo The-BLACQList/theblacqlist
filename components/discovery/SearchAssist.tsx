@@ -52,7 +52,7 @@ export function SearchAssistPanel({ data }: { data: SearchAssistData }) {
     <section aria-labelledby="search-assist-heading" className="flex flex-col gap-10 py-6">
       <header className="flex flex-col gap-1">
         <h2 id="search-assist-heading" className="font-headline text-xl text-brand-black [overflow-wrap:anywhere]">
-          {exactTotal === 0 ? `No results for "${quoted(query)}"` : 'Looking for more?'}
+          {exactTotal === 0 ? `No results for "${quoted(query)}"` : 'Looking for More?'}
         </h2>
         <p className="font-subhead text-sm text-charcoal max-w-prose">
           {exactTotal === 0 ? 'Here is where to look instead.' : 'Only a few businesses matched. Here is where to look next.'}
@@ -76,7 +76,7 @@ export function SearchAssistPanel({ data }: { data: SearchAssistData }) {
 
       {chips.length > 0 && (
         <div>
-          <h3 className={subheadClass}>Related categories</h3>
+          <h3 className={subheadClass}>Related Categories</h3>
           <ul className="flex flex-wrap gap-2">
             {chips.map((chip) => {
               const count = chipCount(chip, scopeLabel)
@@ -130,7 +130,7 @@ export function SearchAssistPanel({ data }: { data: SearchAssistData }) {
         <div className="flex flex-col gap-6">
           {explore.categories.length > 0 && (
             <div>
-              <h3 className={subheadClass}>Popular categories</h3>
+              <h3 className={subheadClass}>Popular Categories</h3>
               <ul className="flex flex-wrap gap-2">
                 {explore.categories.map((c) => (
                   <li key={c.slug}>
@@ -145,7 +145,7 @@ export function SearchAssistPanel({ data }: { data: SearchAssistData }) {
           )}
           {explore.cities.length > 0 && (
             <div>
-              <h3 className={subheadClass}>Cities we cover</h3>
+              <h3 className={subheadClass}>Cities We Cover</h3>
               <ul className="flex flex-wrap gap-2">
                 {explore.cities.map((c) => (
                   <li key={c.slug}>
@@ -183,7 +183,7 @@ export async function SearchAssist(props: {
     return (
       <section aria-labelledby="search-assist-heading" className="py-6 flex flex-col gap-2">
         <h2 id="search-assist-heading" className="font-headline text-xl text-brand-black [overflow-wrap:anywhere]">
-          {props.exactTotal === 0 ? `No results for "${quoted(props.params.q ?? '')}"` : 'Looking for more?'}
+          {props.exactTotal === 0 ? `No results for "${quoted(props.params.q ?? '')}"` : 'Looking for More?'}
         </h2>
         <p className="font-subhead text-sm text-charcoal">
           We couldn&apos;t load suggestions just now.{' '}

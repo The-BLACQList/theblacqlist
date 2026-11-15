@@ -99,17 +99,17 @@ export default async function AdminAiToolsPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard label="Total suggestions" value={total.toLocaleString()} />
-        <StatCard label="Pending review" value={pending.toLocaleString()} />
+        <StatCard label="Total Suggestions" value={total.toLocaleString()} />
+        <StatCard label="Pending Review" value={pending.toLocaleString()} />
         <StatCard label="Approved" value={approved.toLocaleString()} />
-        <StatCard label="Applied to listings" value={applied.toLocaleString()} />
+        <StatCard label="Applied to Listings" value={applied.toLocaleString()} />
       </div>
 
       {/* Recent suggestions table */}
       <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
         <div className="px-5 py-4 border-b border-charcoal/10">
           <h2 className="font-subhead text-sm font-semibold text-brand-black">
-            Recent suggestions (last 50)
+            Recent Suggestions (Last 50)
           </h2>
         </div>
 
@@ -175,7 +175,7 @@ export default async function AdminAiToolsPage() {
       <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
         <div className="px-5 py-4 border-b border-charcoal/10">
           <h2 className="font-subhead text-sm font-semibold text-brand-black">
-            Prompt templates ({promptKeys.length})
+            Prompt Templates ({promptKeys.length})
           </h2>
           <p className="font-body text-xs text-charcoal-soft mt-0.5">
             Defined in <span className="font-mono">lib/ai/prompts.ts</span> — no API calls, string

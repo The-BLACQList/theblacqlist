@@ -135,7 +135,7 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
           {step === 1 && (
             <>
               <h1 className="font-headline text-[22px] text-brand-black mb-1">
-                Where are you based?
+                Where Are You Based?
               </h1>
               <p className="font-subhead text-sm text-charcoal mb-6">
                 We&apos;ll show you relevant businesses nearby. You can change this later.
@@ -147,7 +147,7 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
                     htmlFor="city"
                     className="font-subhead text-sm font-semibold text-brand-black"
                   >
-                    Your city
+                    Your City
                   </label>
                   <select
                     id="city"
@@ -170,7 +170,7 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
                     onClick={handleCitySkip}
                     className="inline-flex min-h-11 items-center font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2"
                   >
-                    Skip for now
+                    Skip for Now
                   </button>
                   <button
                     type="button"
@@ -189,7 +189,7 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
           {step === 2 && isOwner && (
             <>
               <h1 className="font-headline text-[22px] text-brand-black mb-1">
-                Ready to get listed?
+                Ready to Get Listed?
               </h1>
               <p className="font-subhead text-sm text-charcoal mb-6">
                 Search for an existing listing to claim it, or add your business from scratch.
@@ -237,7 +237,7 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
                   onClick={() => void handleFinalSubmit()}
                   className="min-h-11 font-subhead text-sm text-charcoal-soft hover:text-charcoal underline underline-offset-2 text-center mt-2"
                 >
-                  I&apos;ll do this later
+                  I&apos;ll Do This Later
                 </button>
               </div>
 
@@ -253,7 +253,7 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
           {step === 2 && !isOwner && (
             <>
               <h1 className="font-headline text-[22px] text-brand-black mb-1">
-                What are you looking for?
+                What Are You Looking For?
               </h1>
               <p className="font-subhead text-sm text-charcoal mb-4">
                 Select what interests you. We&apos;ll personalize your experience.
@@ -301,7 +301,7 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
                 >
                   Skip
                 </button>
-                <SubmitButton label="Get started" />
+                <SubmitButton label="Get Started" />
               </form>
 
               {roleState && 'error' in roleState && (

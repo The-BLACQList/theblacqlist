@@ -224,7 +224,7 @@ export default async function AdminTestersPage({
           aria-current={view === 'answers' ? 'page' : undefined}
           className={`${TAB_BASE} ${view === 'answers' ? TAB_ON : TAB_OFF}`}
         >
-          All answers
+          All Answers
           <span className="opacity-70">{allReflections.length}</span>
         </Link>
       </nav>
@@ -302,7 +302,7 @@ function LinksStrip({ links }: { links: TesterLinkRow[] }) {
         id="links-heading"
         className="font-subhead text-xs font-bold uppercase tracking-wide text-ink"
       >
-        Links that still work
+        Links That Still Work
       </h2>
       {live.length === 0 ? (
         <p className={`font-body text-sm ${MUTED}`}>
@@ -331,7 +331,7 @@ function LinksStrip({ links }: { links: TesterLinkRow[] }) {
       )}
       <details className="group">
         <summary className="inline-flex min-h-11 cursor-pointer items-center font-subhead text-sm font-semibold text-ink underline decoration-charcoal/30 underline-offset-2 hover:decoration-amber-gold">
-          See all links ({links.length})
+          See All Links ({links.length})
         </summary>
         <LinksTable links={links} />
       </details>

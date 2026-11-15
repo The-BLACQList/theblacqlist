@@ -132,7 +132,7 @@ export function PricingPlans({
                     href={waitlistHref}
                     className="block text-center font-subhead text-xs text-charcoal underline underline-offset-2 hover:text-brand-black"
                   >
-                    Tell us you want {plan.name}
+                    Tell Us You Want {plan.name}
                   </a>
                 </div>
               ) : (

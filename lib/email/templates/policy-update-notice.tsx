@@ -31,7 +31,7 @@ interface PolicyUpdateNoticeEmailProps {
 }
 
 export function policyUpdateNoticeSubject(): string {
-  return "We've updated our Privacy Policy and Terms"
+  return "We've Updated Our Privacy Policy and Terms"
 }
 
 export function PolicyUpdateNoticeEmail({
@@ -50,7 +50,7 @@ export function PolicyUpdateNoticeEmail({
           </Section>
 
           <Section style={content}>
-            <Text style={eyebrow}>Policy update</Text>
+            <Text style={eyebrow}>Policy Update</Text>
             <Text style={heading}>We&rsquo;ve updated our Privacy Policy and Terms</Text>
 
             <Text style={paragraph}>
@@ -82,7 +82,7 @@ export function PolicyUpdateNoticeEmail({
             </Text>
 
             <Button href={`${siteUrl}/privacy`} style={button}>
-              Read the updated Privacy Policy
+              Read the Updated Privacy Policy
             </Button>
 
             <Text style={paragraph}>

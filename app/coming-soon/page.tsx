@@ -7,7 +7,7 @@ import { ComingSoonForm } from './coming-soon-form'
 import { NodeNetworkBackground } from './node-network-background'
 
 export const metadata: Metadata = {
-  title: 'Launching soon',
+  title: 'Launching Soon',
   description: 'The BLACQList is launching soon. Find & Be Found. The directory for Black-owned businesses.',
 }
 

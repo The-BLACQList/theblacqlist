@@ -152,13 +152,13 @@ async function CategoryContent({
             href={`/discover/${city.slug}`}
             className="inline-block rounded-full bg-amber-gold px-5 py-2 font-subhead text-sm font-semibold text-brand-black hover:bg-light-gold transition-colors"
           >
-            Browse all in {city.name}
+            Browse All in {city.name}
           </Link>
           <Link
             href="/for-business#start"
             className="inline-block rounded-full border border-amber-gold px-5 py-2 font-subhead text-sm font-semibold text-amber hover:bg-amber-gold hover:text-brand-black transition-colors"
           >
-            Add your business
+            Add Your Business
           </Link>
         </div>
       </div>

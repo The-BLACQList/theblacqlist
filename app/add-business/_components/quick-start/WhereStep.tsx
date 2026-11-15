@@ -42,13 +42,13 @@ export function WhereStep({ answers, onChange, problem, cities, mode }: Props) {
       {creator ? (
         // Creators are always online pages. A city is optional and adds them
         // to that city's pages too.
-        <StepIntro title="Where are you based?">
+        <StepIntro title="Where Are You Based?">
           Optional. Pick a city to show up on that city&apos;s pages too. Leave it blank and your
           page is listed as Online.
         </StepIntro>
       ) : (
         <>
-          <StepIntro title="Where do customers get what you do?" />
+          <StepIntro title="Where Do Customers Get What You Do?" />
           <ChoiceCards
             name="where"
             legend="Where customers get what you do"
@@ -66,10 +66,10 @@ export function WhereStep({ answers, onChange, problem, cities, mode }: Props) {
           <div className="flex flex-col gap-1.5">
             <label htmlFor={FIELD_IDS.city} className={LABEL_CLASS}>
               {creator
-                ? 'City (optional)'
+                ? 'City (Optional)'
                 : answers.where === 'visit'
                   ? 'City'
-                  : 'Main city you serve'}
+                  : 'Main City You Serve'}
             </label>
             <select
               id={FIELD_IDS.city}

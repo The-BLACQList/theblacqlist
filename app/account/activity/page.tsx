@@ -72,7 +72,7 @@ export default async function RecentlyViewedPage() {
     <main>
       <div className="max-w-[960px] mx-auto">
 
-        <h1 className="font-headline text-3xl text-brand-black mb-2">Recently viewed</h1>
+        <h1 className="font-headline text-3xl text-brand-black mb-2">Recently Viewed</h1>
         <p className="font-subhead text-sm text-charcoal-soft mb-8">
           {listings.length === 0
             ? 'Businesses you visit will appear here.'
@@ -84,7 +84,7 @@ export default async function RecentlyViewedPage() {
             <div className="w-16 h-16 rounded-full bg-white border border-charcoal/10 flex items-center justify-center mb-4">
               <History className="size-7 text-charcoal-faint" aria-hidden="true" />
             </div>
-            <h2 className="font-headline text-xl text-brand-black mb-2">No visits yet</h2>
+            <h2 className="font-headline text-xl text-brand-black mb-2">No Visits Yet</h2>
             <p className="font-subhead text-sm text-charcoal-soft max-w-xs leading-relaxed">
               Businesses you explore will show up here.
             </p>
@@ -92,7 +92,7 @@ export default async function RecentlyViewedPage() {
               href="/discover"
               className="mt-6 inline-flex items-center justify-center h-11 px-6 rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors"
             >
-              Discover businesses
+              Discover Businesses
             </Link>
           </div>
         ) : (

@@ -59,7 +59,7 @@ export function TourDoneStepReview({
         <TourReflectionForm
           step={step}
           initialText={note ?? ''}
-          submitLabel="Save changes"
+          submitLabel="Save Changes"
           onCancel={onCancel}
           onSaved={onSaved}
         />
@@ -91,7 +91,7 @@ export function TourDoneStepReview({
             className="mt-2 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/25 px-4 py-1.5 font-subhead text-sm text-cream transition-colors hover:border-amber-gold hover:text-amber-gold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold"
           >
             <Pencil className="size-3.5" aria-hidden="true" />
-            Edit your note
+            Edit Your Note
           </button>
         </div>
       )}

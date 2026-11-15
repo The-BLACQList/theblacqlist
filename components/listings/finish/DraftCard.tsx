@@ -76,7 +76,7 @@ export function DraftCard({
         {onUse && (
           <button type="button" onClick={onUse} disabled={busy} className={BTN_PRIMARY}>
             {status.busy === 'saving' && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            {status.busy === 'saving' ? 'Saving…' : 'Use this'}
+            {status.busy === 'saving' ? 'Saving…' : 'Use This'}
           </button>
         )}
         {!capped && restyle && (
@@ -91,7 +91,7 @@ export function DraftCard({
         )}
         {!capped && (
           <button type="button" onClick={() => onAsk('fresh')} disabled={busy} className={BTN_QUIET}>
-            {status.busy === 'asking' ? 'Writing…' : 'Try again'}
+            {status.busy === 'asking' ? 'Writing…' : 'Try Again'}
           </button>
         )}
       </div>

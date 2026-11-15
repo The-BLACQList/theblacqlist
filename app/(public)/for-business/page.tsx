@@ -24,15 +24,15 @@ export const metadata: Metadata = {
 
 const STEPS = [
   {
-    title: 'Find your page',
+    title: 'Find Your Page',
     body: "Search for your business. If it isn't listed yet, add it in a few minutes.",
   },
   {
-    title: "Show it's yours",
+    title: "Show It's Yours",
     body: 'Send a claim. A real person checks it, so only the owner runs the page.',
   },
   {
-    title: 'Make it yours',
+    title: 'Make It Yours',
     body: 'Add photos, hours, and your story. Keep it current so customers trust what they see.',
   },
 ]
@@ -44,25 +44,25 @@ const STEPS = [
 // "links".
 const WHAT_YOU_GET = [
   {
-    title: 'Your story and photos',
+    title: 'Your Story and Photos',
     body: 'Tell people who you are, in your words. Add more photos, a video, and common questions on Starter.',
   },
   {
-    title: 'Hours, website, and contact',
+    title: 'Hours, Website, and Contact',
     body: 'Keep the basics right so customers never show up to a locked door.',
   },
   {
-    title: 'Reviews you can answer',
+    title: 'Reviews You Can Answer',
     body: "Reply in public so customers see you're listening.",
     starter: true,
   },
   {
-    title: 'See who finds you',
+    title: 'See Who Finds You',
     body: 'Views, saves, and taps on your page over the last 30 days.',
     starter: true,
   },
   {
-    title: 'A place in The Collective',
+    title: 'A Place in The Collective',
     body: 'Once customers log 5 or more receipts with you, your business can appear by name on our map of where the community spends.',
   },
 ]
@@ -73,25 +73,25 @@ const WHAT_YOU_GET = [
 // Edit content and analytics (ticket 138, FEATURE_AI_BETA, Starter and up,
 // counted against aiQuota). A line only shows while its flag is on.
 const AI_SIGNUP_ITEM = {
-  title: 'A first draft when you add your business',
+  title: 'A First Draft When You Add Your Business',
   body: 'Tell us a little about what you do. We suggest a category, a tagline, your about text, and the title and summary search engines show. Use what you like and change any word.',
 }
 
 const AI_PAID_ITEMS = [
   {
-    title: 'Your about text',
+    title: 'Your About Text',
     body: "Get a draft written from what's already on your page, in your voice.",
   },
   {
-    title: 'Your search title and summary',
+    title: 'Your Search Title and Summary',
     body: 'The short lines Google and other search engines show for your page.',
   },
   {
-    title: 'Instagram captions',
+    title: 'Instagram Captions',
     body: 'A caption about your business, ready to copy into a post.',
   },
   {
-    title: 'Explain my numbers',
+    title: 'Explain My Numbers',
     body: 'A plain read on your views, saves, and taps over the last 30 days.',
   },
 ]
@@ -127,7 +127,7 @@ function OwnerChoice() {
     >
       <div className="flex flex-col gap-1">
         <h2 className="font-headline font-medium text-[24px] leading-tight text-off-white text-balance">
-          Is your business already on the list?
+          Is Your Business Already on the List?
         </h2>
         <p className="font-body text-base leading-relaxed text-ink-soft">
           Search for it and claim it, or add it in a few minutes.
@@ -135,13 +135,13 @@ function OwnerChoice() {
       </div>
       <div className="flex flex-col sm:flex-row flex-wrap gap-3">
         <Link href="/claim" className={`${button} bg-gold text-brand-black hover:bg-light-gold`}>
-          Find my business
+          Find My Business
         </Link>
         <Link
           href="/add-business"
           className={`${button} border border-off-white/70 text-off-white hover:bg-off-white/10`}
         >
-          Add my business
+          Add My Business
         </Link>
       </div>
     </div>
@@ -361,7 +361,7 @@ export default async function ForBusinessPage() {
               href="/pricing"
               className="inline-flex min-h-[44px] items-center font-subhead text-[15px] font-semibold text-amber underline underline-offset-4 hover:text-brand-black"
             >
-              Compare every plan
+              Compare Every Plan
             </Link>
           </div>
         </Container>

@@ -98,7 +98,7 @@ describe('the counted page', () => {
 
   it('has the failure copy and a way back', () => {
     expect(src).toContain('We couldn&apos;t load this receipt.')
-    expect(src).toContain('Back to My receipts')
+    expect(src).toContain('Back to My Receipts')
   })
 
   it('animates the ring only when motion is allowed', () => {

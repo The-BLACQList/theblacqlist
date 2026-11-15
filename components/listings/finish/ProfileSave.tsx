@@ -345,7 +345,7 @@ export function ProfileSaveProvider({ live, rootRef, reveal, children }: Provide
           >
             <DialogHeader>
               <DialogTitle className="text-lg">
-                {leave?.cards ? 'Save your changes before you go?' : 'Leave this page?'}
+                {leave?.cards ? 'Save Your Changes Before You Go?' : 'Leave This Page?'}
               </DialogTitle>
               <DialogDescription>
                 {leave?.cards
@@ -377,7 +377,7 @@ export function ProfileSaveProvider({ live, rootRef, reveal, children }: Provide
                 disabled={leaving}
                 className="inline-flex h-11 items-center justify-center rounded-lg border border-charcoal/20 bg-white px-5 font-subhead text-sm font-semibold text-brand-black transition-colors hover:border-charcoal/40 disabled:opacity-50"
               >
-                Leave without saving
+                Leave Without Saving
               </button>
               <button
                 type="button"
@@ -385,7 +385,7 @@ export function ProfileSaveProvider({ live, rootRef, reveal, children }: Provide
                 disabled={leaving}
                 className="inline-flex h-11 items-center justify-center rounded-lg px-4 font-subhead text-sm font-semibold text-charcoal underline decoration-charcoal/30 underline-offset-4 hover:text-brand-black disabled:opacity-50 sm:mr-auto"
               >
-                Keep editing
+                Keep Editing
               </button>
             </div>
           </DialogContent>
@@ -437,7 +437,7 @@ export function SaveBar() {
           className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-lg bg-amber-gold px-5 font-subhead text-sm font-bold text-brand-black transition-colors hover:bg-light-gold disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-          {live ? 'Publish changes' : 'Save changes'}
+          {live ? 'Publish Changes' : 'Save Changes'}
         </button>
       </div>
     </div>

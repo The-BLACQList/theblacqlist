@@ -14,7 +14,7 @@ import { BusinessInviteForm } from './BusinessInviteForm'
 import { MarkStopButton } from './MarkStopButton'
 import { UnlistedLoadError } from './UnlistedLoadError'
 
-export const metadata: Metadata = { title: 'Not on the list · Admin' }
+export const metadata: Metadata = { title: 'Not on the List · Admin' }
 
 /**
  * The newest unmatched receipts read for grouping. Far above today's volume;
@@ -56,10 +56,10 @@ export default async function AdminUnlistedBusinessesPage() {
         href="/admin/receipts"
         className="inline-flex items-center min-h-11 font-subhead text-sm text-charcoal-soft hover:text-brand-black"
       >
-        Back to receipts
+        Back to Receipts
       </Link>
       <div>
-        <h1 className="font-headline text-2xl text-brand-black">Not on the list</h1>
+        <h1 className="font-headline text-2xl text-brand-black">Not on the List</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Businesses shoppers have added receipts from that aren&apos;t on The BLACQList yet.
         </p>
@@ -136,7 +136,7 @@ export default async function AdminUnlistedBusinessesPage() {
                     href={addListingHref(group.displayName)}
                     className="inline-flex shrink-0 items-center justify-center h-11 px-5 w-full sm:w-auto rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold/60"
                   >
-                    Add as a listing
+                    Add as a Listing
                     <span className="sr-only">: {group.displayName}</span>
                   </Link>
                 </div>

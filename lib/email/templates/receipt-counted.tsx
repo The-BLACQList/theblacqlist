@@ -51,12 +51,12 @@ export function ReceiptCountedEmail({
 
           {/* Content */}
           <Section style={content}>
-            <Text style={eyebrow}>Receipt counted</Text>
+            <Text style={eyebrow}>Receipt Counted</Text>
             <Text style={heading}>{line}</Text>
             <Text style={paragraph}>{mapLine}</Text>
 
             <Button href={`${siteUrl}${countedReceiptHref(receiptId)}`} style={button}>
-              {joinedMap ? 'See it on the map' : 'See your receipt'}
+              {joinedMap ? 'See It on the Map' : 'See Your Receipt'}
             </Button>
 
             {/* Ticket 183: the verified support post. No amount on it, ever. */}

@@ -96,7 +96,7 @@ export default async function AdminFeedbackPage({ searchParams }: PageProps) {
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Feedback</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
-          Problem reports sent from the Report a problem button. Newest first.
+          Problem reports sent from the Report a Problem button. Newest first.
         </p>
       </div>
 
@@ -121,7 +121,7 @@ export default async function AdminFeedbackPage({ searchParams }: PageProps) {
         <div className="rounded-xl border border-charcoal/10 bg-white px-6 py-12 text-center">
           <p className="font-subhead text-sm text-charcoal-soft">
             {status === 'new'
-              ? 'No new reports. Anything a signed-in user sends from the Report a problem button lands here.'
+              ? 'No new reports. Anything a signed-in user sends from the Report a Problem button lands here.'
               : `No ${status} reports.`}
           </p>
         </div>

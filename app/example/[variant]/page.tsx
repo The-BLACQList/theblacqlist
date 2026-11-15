@@ -24,10 +24,10 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { variant } = await params
   if (IS_PRODUCTION || !isExampleVariant(variant)) {
-    return { title: 'Page not found' }
+    return { title: 'Page Not Found' }
   }
   return {
-    title: `Sample page: ${EXAMPLE_NAME} (${EXAMPLE_VARIANT_LABEL[variant]})`,
+    title: `Sample Page: ${EXAMPLE_NAME} (${EXAMPLE_VARIANT_LABEL[variant]})`,
     description: `What a fully filled Premium ${EXAMPLE_VARIANT_LABEL[variant].toLowerCase()} page looks like on The BLACQList. A sample, not a real business.`,
   }
 }

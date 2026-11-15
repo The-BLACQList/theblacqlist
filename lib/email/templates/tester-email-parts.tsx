@@ -68,7 +68,7 @@ export function CollectiveFirstLook({ siteUrl }: { siteUrl: string }) {
   const href = `${siteUrl.replace(/\/+$/, '')}/flow-map`
   return (
     <Section style={styles.collective}>
-      <Text style={styles.collectiveEyebrow}>First look</Text>
+      <Text style={styles.collectiveEyebrow}>First Look</Text>
       <Text style={styles.collectiveTitle}>Explore The Collective</Text>
       <Text style={styles.collectiveBody}>
         The Collective is one live map of what our community spends with businesses on the list.
@@ -96,15 +96,15 @@ export function CollectiveFirstLook({ siteUrl }: { siteUrl: string }) {
 export function ReportProblemCallout({ forwarded = false }: { forwarded?: boolean } = {}) {
   return (
     <Section style={styles.callout}>
-      <Text style={styles.calloutTitle}>Something broken or confusing?</Text>
+      <Text style={styles.calloutTitle}>Something Broken or Confusing?</Text>
       {forwarded ? (
         <Text style={styles.calloutBody}>
-          Tap <strong>Report a problem</strong> on any page and tell us. Blunt is more useful to us
+          Tap <strong>Report a Problem</strong> on any page and tell us. Blunt is more useful to us
           than kind.
         </Text>
       ) : (
         <Text style={styles.calloutBody}>
-          Tap <strong>Report a problem</strong> on any page, or reply to this email and tell us.
+          Tap <strong>Report a Problem</strong> on any page, or reply to this email and tell us.
           Blunt is more useful to us than kind.
         </Text>
       )}

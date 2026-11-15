@@ -8,7 +8,7 @@ import { ReceiptSubmissionForm } from '@/components/spend/ReceiptSubmissionForm'
 import { isFeatureEnabled } from '@/lib/env'
 import { pendingReviewLine } from '@/lib/spend/owner-receipts'
 
-export const metadata: Metadata = { title: 'Edit your receipt' }
+export const metadata: Metadata = { title: 'Edit Your Receipt' }
 
 interface ListingJoin {
   id: string
@@ -74,10 +74,10 @@ export default async function EditReceiptPage({ params }: { params: Promise<{ id
             className="inline-flex items-center gap-1.5 font-subhead text-xs font-semibold text-charcoal-soft hover:text-amber mb-4 transition-colors"
           >
             <ArrowLeft className="size-3.5" aria-hidden="true" />
-            My receipts
+            My Receipts
           </Link>
           <h1 className="font-headline text-2xl text-brand-black">
-            {needsFix ? 'Fix and resend' : 'Edit your receipt'}
+            {needsFix ? 'Fix and Resend' : 'Edit Your Receipt'}
           </h1>
           <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
             {needsFix

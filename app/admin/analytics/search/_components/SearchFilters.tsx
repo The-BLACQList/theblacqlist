@@ -81,7 +81,7 @@ export function SearchFilters({ cities, period, city }: Props) {
           onClick={() => router.replace(pathname)}
           className="mt-5 font-body text-xs text-charcoal-soft hover:text-brand-black underline underline-offset-2 transition-colors"
         >
-          Clear filters
+          Clear Filters
         </button>
       )}
     </div>

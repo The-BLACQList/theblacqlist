@@ -46,7 +46,7 @@ export function StrengthMeter({ checklist, showSection }: Props) {
     >
       <div className="flex items-baseline justify-between gap-3">
         <h2 id="strength-heading" className="font-headline text-base text-brand-black">
-          Page strength
+          Page Strength
         </h2>
         <p className="font-subhead text-sm text-charcoal tabular-nums">
           <span className="font-bold text-brand-black">{checklist.percent}%</span> · {done} of{' '}

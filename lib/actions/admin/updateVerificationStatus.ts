@@ -110,7 +110,7 @@ export async function updateVerificationStatusAction(
         if (decision === 'verified') {
           await sendEmail({
             to: ownerEmail,
-            subject: `${listing.name} is now Verified on The BLACQList`,
+            subject: `${listing.name} Is Now Verified on The BLACQList`,
             react: VerificationApprovedEmail({
               listingName: listing.name,
               listingId,
@@ -120,7 +120,7 @@ export async function updateVerificationStatusAction(
         } else {
           await sendEmail({
             to: ownerEmail,
-            subject: `An update on your verification request for ${listing.name}`,
+            subject: `An Update on Your Verification Request for ${listing.name}`,
             react: VerificationRejectedEmail({
               listingName: listing.name,
               listingId,

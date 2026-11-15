@@ -233,7 +233,7 @@ export default async function VendorStorefrontPage({ params }: Props) {
           className="inline-flex items-center gap-1.5 font-subhead text-xs text-charcoal-faint hover:text-charcoal"
         >
           <ArrowLeft className="size-3" aria-hidden="true" />
-          Back to marketplace
+          Back to Marketplace
         </Link>
       </div>
     </div>

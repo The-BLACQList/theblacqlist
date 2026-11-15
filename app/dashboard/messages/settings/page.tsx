@@ -12,7 +12,7 @@ import { InboxSwitch } from '@/components/dashboard/InboxSwitch'
 import { BlockButton } from '@/components/messaging/BlockButton'
 import { SavedRepliesManager } from '@/components/messaging/SavedRepliesManager'
 
-export const metadata: Metadata = { title: 'Inbox settings | Dashboard' }
+export const metadata: Metadata = { title: 'Inbox Settings | Dashboard' }
 
 /**
  * Inbox settings (owner-experience round 2): one switch per page, job and
@@ -45,7 +45,7 @@ export default async function InboxSettingsPage() {
       </Link>
 
       <div>
-        <h1 className="font-headline text-2xl text-brand-black mb-1">Inbox settings</h1>
+        <h1 className="font-headline text-2xl text-brand-black mb-1">Inbox Settings</h1>
         <p className="font-body text-sm text-charcoal-soft">
           Choose which pages and postings take new messages, and keep replies you send often.
         </p>
@@ -53,7 +53,7 @@ export default async function InboxSettingsPage() {
 
       <section aria-labelledby="pages-heading" className="rounded-2xl bg-white border border-charcoal/10">
         <h2 id="pages-heading" className="px-4 pt-4 font-subhead text-sm font-bold text-brand-black">
-          Your pages
+          Your Pages
         </h2>
         {!settings ? (
           <p role="alert" className="px-4 py-3 font-body text-sm text-charcoal">
@@ -84,7 +84,7 @@ export default async function InboxSettingsPage() {
         <section aria-labelledby="postings-heading" className="rounded-2xl bg-white border border-charcoal/10">
           <div className="px-4 pt-4">
             <h2 id="postings-heading" className="font-subhead text-sm font-bold text-brand-black">
-              Job and event postings
+              Job and Event Postings
             </h2>
             <p className="font-body text-xs text-charcoal-soft mt-0.5">
               A posting linked to one of your pages takes messages when that page does. Jobs stop taking new messages
@@ -130,7 +130,7 @@ export default async function InboxSettingsPage() {
 
       <section aria-labelledby="saved-heading" className="rounded-2xl bg-white border border-charcoal/10 px-4 py-4">
         <h2 id="saved-heading" className="font-subhead text-sm font-bold text-brand-black">
-          Saved replies
+          Saved Replies
         </h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5 mb-3">
           Offered as quick replies when you answer a message. Picking one fills the reply box for you to edit; it

@@ -99,7 +99,7 @@ export default async function VerificationDetailPage({ params }: Props) {
             href="/admin/verification"
             className="font-subhead text-xs text-charcoal-soft hover:text-brand-black mb-2 inline-block"
           >
-            ← Back to verification queue
+            ← Back to Verification Queue
           </Link>
           <h1 className="font-headline text-2xl text-brand-black">{listing.name}</h1>
           <div className="flex items-center gap-2 mt-1">
@@ -113,26 +113,26 @@ export default async function VerificationDetailPage({ params }: Props) {
           href={`/admin/entities/${listing.id}`}
           className="shrink-0 font-subhead text-xs text-charcoal-soft hover:text-brand-black"
         >
-          Full entity →
+          Full Entity →
         </Link>
       </div>
 
       {/* Listing info */}
       <div className="rounded-xl border border-charcoal/10 bg-white p-6">
-        <h2 className="font-headline text-base text-brand-black mb-4">Listing details</h2>
+        <h2 className="font-headline text-base text-brand-black mb-4">Listing Details</h2>
         <dl>
           <Row label="Status" value={listing.status} />
-          <Row label="Trust tier" value={listing.trust_tier} />
+          <Row label="Trust Tier" value={listing.trust_tier} />
           <Row label="Verification" value={listing.verification_status ?? 'Not yet set'} />
           <Row label="Email" value={details?.email} />
           <Row label="Phone" value={details?.phone} />
           <Row label="Website" value={details?.website_url} />
           {listing.verification_notes && (
-            <Row label="Admin notes" value={listing.verification_notes} />
+            <Row label="Admin Notes" value={listing.verification_notes} />
           )}
           {listing.verified_at && (
             <Row
-              label="Verified at"
+              label="Verified At"
               value={new Date(listing.verified_at).toLocaleString('en-US', {
                 month: 'short',
                 day: 'numeric',
@@ -148,7 +148,7 @@ export default async function VerificationDetailPage({ params }: Props) {
       {/* Verification documents */}
       <div className="rounded-xl border border-charcoal/10 bg-white p-6">
         <h2 className="font-headline text-base text-brand-black mb-4">
-          Verification documents
+          Verification Documents
           {docPaths.length > 0 && (
             <span className="ml-2 font-subhead text-xs text-charcoal-soft font-normal">
               {docPaths.length} file{docPaths.length !== 1 ? 's' : ''}
@@ -203,7 +203,7 @@ export default async function VerificationDetailPage({ params }: Props) {
       {/* Decision form — only show if there's an open queue item */}
       {queueItem ? (
         <div className="rounded-xl border border-charcoal/10 bg-white p-6">
-          <h2 className="font-headline text-base text-brand-black mb-1">Verification decision</h2>
+          <h2 className="font-headline text-base text-brand-black mb-1">Verification Decision</h2>
           <p className="font-body text-xs text-charcoal-soft mb-4">
             Requested{' '}
             {new Date(queueItem.created_at).toLocaleDateString('en-US', {

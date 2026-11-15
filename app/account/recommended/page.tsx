@@ -74,7 +74,7 @@ export default async function RecommendedPage() {
     <main>
       <div className="max-w-[960px] mx-auto">
 
-        <h1 className="font-headline text-3xl text-brand-black mb-2">Recommended for you</h1>
+        <h1 className="font-headline text-3xl text-brand-black mb-2">Recommended for You</h1>
         <p className="font-subhead text-sm text-charcoal-soft mb-8">
           {!hasSaves
             ? 'Based on businesses you save.'
@@ -89,7 +89,7 @@ export default async function RecommendedPage() {
               <Sparkles className="size-7 text-charcoal-faint" aria-hidden="true" />
             </div>
             <h2 className="font-headline text-xl text-brand-black mb-2">
-              Save businesses to get recommendations
+              Save Businesses to Get Recommendations
             </h2>
             <p className="font-subhead text-sm text-charcoal-soft max-w-xs leading-relaxed">
               When you save businesses you love, we&apos;ll suggest similar ones you might enjoy.
@@ -98,7 +98,7 @@ export default async function RecommendedPage() {
               href="/discover"
               className="mt-6 inline-flex items-center justify-center h-11 px-6 rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors"
             >
-              Discover businesses
+              Discover Businesses
             </Link>
           </div>
         ) : recommendations.length === 0 ? (
@@ -107,7 +107,7 @@ export default async function RecommendedPage() {
               <Sparkles className="size-7 text-charcoal-faint" aria-hidden="true" />
             </div>
             <h2 className="font-headline text-xl text-brand-black mb-2">
-              No new recommendations yet
+              No New Recommendations Yet
             </h2>
             <p className="font-subhead text-sm text-charcoal-soft max-w-xs leading-relaxed">
               Save more businesses across different categories to broaden your recommendations.
@@ -116,7 +116,7 @@ export default async function RecommendedPage() {
               href="/discover"
               className="mt-6 inline-flex items-center justify-center h-11 px-6 rounded-full bg-brand-black text-white font-body font-bold text-sm hover:bg-charcoal transition-colors"
             >
-              Keep exploring
+              Keep Exploring
             </Link>
           </div>
         ) : (

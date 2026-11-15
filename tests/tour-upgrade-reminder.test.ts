@@ -155,7 +155,7 @@ describe('sendFreeMonthReminders', () => {
     ])
     const sent = h.sendEmail.mock.calls[0]![0]
     expect(sent.to).toBe('tester@example.com')
-    expect(sent.subject).toBe('Your free Growth month ends soon')
+    expect(sent.subject).toBe('Your Free Growth Month Ends Soon')
     const html = renderToStaticMarkup(sent.react)
     expect(html).toContain('Your free Growth month ends on November 18, 2026.')
     expect(html).toContain(
@@ -232,7 +232,7 @@ describe('FreeMonthEndingEmail', () => {
         endsOn: 'December 1, 2026',
       })
     )
-    expect(freeMonthEndingSubject('Premium')).toBe('Your free Premium month ends soon')
+    expect(freeMonthEndingSubject('Premium')).toBe('Your Free Premium Month Ends Soon')
     expect(html).toContain('Your free Premium month ends on December 1, 2026.')
     expect(html).toContain('back to Growth at $49/month')
     expect(html).toContain('before December 1, 2026. You won&#x27;t be charged.')

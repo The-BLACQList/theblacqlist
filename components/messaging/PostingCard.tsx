@@ -48,12 +48,12 @@ export function PostingCard({ posting }: { posting: PostingDetails }) {
             {posting.applyUrl && (
               <Fact label="Apply" icon={<ExternalLink className="size-3" aria-hidden="true" />}>
                 <a href={posting.applyUrl} className="underline underline-offset-2 hover:text-brand-black break-all">
-                  Application link
+                  Application Link
                 </a>
               </Fact>
             )}
             {posting.applyEmail && (
-              <Fact label="Apply by email" icon={<Mail className="size-3" aria-hidden="true" />}>
+              <Fact label="Apply by Email" icon={<Mail className="size-3" aria-hidden="true" />}>
                 <a href={`mailto:${posting.applyEmail}`} className="underline underline-offset-2 hover:text-brand-black break-all">
                   {posting.applyEmail}
                 </a>
@@ -68,7 +68,7 @@ export function PostingCard({ posting }: { posting: PostingDetails }) {
             {posting.ticketUrl && (
               <Fact label="Tickets" icon={<Ticket className="size-3" aria-hidden="true" />}>
                 <a href={posting.ticketUrl} className="underline underline-offset-2 hover:text-brand-black break-all">
-                  Ticket link
+                  Ticket Link
                 </a>
               </Fact>
             )}

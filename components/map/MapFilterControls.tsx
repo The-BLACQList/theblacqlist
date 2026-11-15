@@ -39,7 +39,7 @@ export function FilterChips({ filters, onFilters, entityTypes, onNearMe, onRadiu
         ) : (
           <MapPin className="size-4" aria-hidden="true" />
         )}
-        {locating ? 'Finding you…' : 'Near me'}
+        {locating ? 'Finding you…' : 'Near Me'}
       </button>
       {near && (
         <div role="group" aria-label="Distance" className="flex shrink-0 gap-2">
@@ -62,7 +62,7 @@ export function FilterChips({ filters, onFilters, entityTypes, onNearMe, onRadiu
         onClick={() => onFilters({ openNow: !filters.openNow })}
         className={chipClass(filters.openNow)}
       >
-        Open now
+        Open Now
       </button>
       <button
         type="button"
@@ -121,7 +121,7 @@ export function FilterExtras({ filters, onFilters, categories }: Omit<ChipProps,
           onClick={() => onFilters(NO_FILTERS)}
           className="min-h-11 rounded-xl px-2 text-[14px] font-semibold text-amber underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
         >
-          Clear all
+          Clear All
         </button>
       )}
     </div>

@@ -26,7 +26,7 @@ export function EntityOrderOn({ links, businessName }: Props) {
           id="order-on-heading"
           className="font-headline text-[22px] md:text-[28px] text-brand-black mb-4"
         >
-          Order on
+          Order On
         </h2>
         <ul className="flex flex-wrap gap-3">
           {links.map((link) => (

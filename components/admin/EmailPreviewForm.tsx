@@ -25,7 +25,7 @@ const EMAIL_OPTIONS: RadioOption<TesterEmailKind>[] = [
   },
   {
     value: 'update',
-    label: 'Tester update',
+    label: 'Tester Update',
     description: 'For someone already testing. Finish the guide, see The Collective.',
   },
 ]
@@ -33,7 +33,7 @@ const EMAIL_OPTIONS: RadioOption<TesterEmailKind>[] = [
 const AUDIENCE_OPTIONS: RadioOption<TesterInviteAudience>[] = [
   {
     value: 'owner',
-    label: 'Business owner',
+    label: 'Business Owner',
     description: 'Claim or make their page, then walk the guide',
   },
   {
@@ -43,7 +43,7 @@ const AUDIENCE_OPTIONS: RadioOption<TesterInviteAudience>[] = [
   },
   {
     value: 'shared',
-    label: 'Anyone (shared link)',
+    label: 'Anyone (Shared Link)',
     description: 'Can be forwarded. Each person picks owner or supporter.',
   },
 ]
@@ -189,7 +189,7 @@ export function EmailPreviewForm() {
             htmlFor="tester-link"
             className="block font-subhead text-sm font-semibold text-brand-black"
           >
-            Tester link
+            Tester Link
           </label>
           <p className="font-body text-xs text-charcoal-soft mt-0.5">
             The one-tap link that ends in <code>/t#…</code>. Make one on the Testers page: a Shared
@@ -229,7 +229,7 @@ export function EmailPreviewForm() {
             htmlFor="first-name"
             className="block font-subhead text-sm font-semibold text-brand-black"
           >
-            First name <span className="font-normal text-charcoal-soft">(optional)</span>
+            First Name <span className="font-normal text-charcoal-soft">(optional)</span>
           </label>
           <p className="font-body text-xs text-charcoal-soft mt-0.5">
             {emailKind === 'invite'
@@ -254,7 +254,7 @@ export function EmailPreviewForm() {
               htmlFor="opening-date"
               className="block font-subhead text-sm font-semibold text-brand-black"
             >
-              Opening date <span className="font-normal text-charcoal-soft">(optional)</span>
+              Opening Date <span className="font-normal text-charcoal-soft">(optional)</span>
             </label>
             <p className="font-body text-xs text-charcoal-soft mt-0.5">
               Written out, as it should read in the email. Leave it blank and it says &ldquo;We open
@@ -285,7 +285,7 @@ export function EmailPreviewForm() {
           disabled={pending}
           className="rounded-lg bg-brand-black px-4 py-2 font-subhead text-sm font-semibold text-white transition-colors hover:bg-charcoal disabled:opacity-50"
         >
-          {pending ? 'Rendering…' : 'Show the email'}
+          {pending ? 'Rendering…' : 'Show the Email'}
         </button>
       </form>
 
@@ -323,7 +323,7 @@ export function EmailPreviewForm() {
               markup straight to the frame, so nothing is fetched. */}
           <div className="rounded-xl border border-charcoal/10 bg-white overflow-hidden">
             <iframe
-              title="Tester email preview"
+              title="Tester Email Preview"
               srcDoc={rendered.html}
               sandbox=""
               className="w-full h-[1100px] border-0 bg-[#F5F5F0]"

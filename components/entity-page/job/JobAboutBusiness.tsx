@@ -12,7 +12,7 @@ export function JobAboutBusiness({ hiring }: Props) {
   return (
     <section aria-labelledby="job-business-heading">
       <h2 id="job-business-heading" className="font-headline text-xl text-brand-black mb-3">
-        About the business
+        About the Business
       </h2>
       <div className="flex items-start gap-4 rounded-xl border border-charcoal/10 p-4">
         {hiring.logoUrl && (
@@ -36,7 +36,7 @@ export function JobAboutBusiness({ hiring }: Props) {
             href={hiring.url as Route}
             className="inline-flex items-center min-h-11 font-subhead text-sm font-semibold text-brand-black underline decoration-amber-gold underline-offset-2 hover:decoration-2"
           >
-            View their page
+            View Their Page
             <span className="sr-only"> for {hiring.name}</span>
           </Link>
         </div>

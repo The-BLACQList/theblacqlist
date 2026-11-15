@@ -72,7 +72,7 @@ export function LocationSection({ listingId, initial }: Props) {
   return (
     <section className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
-        <h2 className="font-headline text-base text-brand-black">How customers find you</h2>
+        <h2 className="font-headline text-base text-brand-black">How Customers Find You</h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           Shown on your page, and used by the “Where” filter on Discover.
         </p>
@@ -86,7 +86,7 @@ export function LocationSection({ listingId, initial }: Props) {
       >
         <fieldset>
           <legend className="font-subhead text-xs font-semibold text-charcoal-soft mb-2">
-            How do you operate?
+            How Do You Operate?
           </legend>
           <div className="grid gap-2 sm:grid-cols-2">
             {VALID_LOCATION_TYPES.map((t) => {
@@ -125,7 +125,7 @@ export function LocationSection({ listingId, initial }: Props) {
             htmlFor={`service-area-${listingId}`}
             className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
-            Area you serve <span className="font-normal text-charcoal-faint">(optional)</span>
+            Area You Serve <span className="font-normal text-charcoal-faint">(optional)</span>
           </label>
           <input
             id={`service-area-${listingId}`}

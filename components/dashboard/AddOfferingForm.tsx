@@ -21,7 +21,7 @@ export function AddOfferingForm({ listingId }: Props) {
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
       <div className="px-5 py-4 border-b border-charcoal/8">
-        <h3 className="font-headline text-sm text-brand-black">Add a service or offering</h3>
+        <h3 className="font-headline text-sm text-brand-black">Add a Service or Offering</h3>
       </div>
       <form ref={formRef} action={formAction} className="px-5 py-4 space-y-3">
         <input type="hidden" name="listing_id" value={listingId} />
@@ -81,7 +81,7 @@ export function AddOfferingForm({ listingId }: Props) {
             htmlFor="svc-group"
             className="block font-subhead text-xs font-semibold text-charcoal-soft mb-1"
           >
-            Group / section <span className="font-normal text-charcoal-faint">(optional)</span>
+            Group / Section <span className="font-normal text-charcoal-faint">(optional)</span>
           </label>
           <input
             id="svc-group"
@@ -113,7 +113,7 @@ export function AddOfferingForm({ listingId }: Props) {
             ) : (
               <Plus className="size-4" aria-hidden="true" />
             )}
-            {isPending ? 'Adding…' : 'Add service'}
+            {isPending ? 'Adding…' : 'Add Service'}
           </button>
         </div>
       </form>

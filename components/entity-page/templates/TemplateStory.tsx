@@ -23,7 +23,7 @@ export function TemplateStory({ entity, imageSide = 'left' }: Props) {
 
   return (
     <section id="about" aria-labelledby="about-heading" className="scroll-mt-32">
-      <TemplateSectionHeading kicker="The story" heading={`About ${entity.name}`} headingId="about-heading" />
+      <TemplateSectionHeading kicker="The Story" heading={`About ${entity.name}`} headingId="about-heading" />
 
       <div
         className={`grid grid-cols-1 gap-6 items-start ${

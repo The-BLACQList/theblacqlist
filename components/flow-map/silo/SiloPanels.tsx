@@ -333,7 +333,7 @@ export function SiloCard({
         </p>
         {selected.href && (
           <p>
-            <a href={selected.href}>Open the listing</a>
+            <a href={selected.href}>Open the Listing</a>
           </p>
         )}
       </aside>
@@ -406,7 +406,7 @@ export function SiloCard({
     return (
       <aside className="ctx" aria-labelledby="silo-ctx-title">
         <p className="ctx-eyebrow">You</p>
-        <h3 id="silo-ctx-title">Your receipts are in here</h3>
+        <h3 id="silo-ctx-title">Your Receipts Are in Here</h3>
         <p>Find me shows the businesses where you have a counted receipt.</p>
         {legend}
       </aside>
@@ -421,7 +421,7 @@ export function SiloCard({
           Floor {liveFloor + 1} of {SILO_FLOORS.length}: {SILO_FLOORS[liveFloor]?.short}
         </span>
       </p>
-      <h3 id="silo-ctx-title">Where the money goes first</h3>
+      <h3 id="silo-ctx-title">Where the Money Goes First</h3>
       <p className="ctx-tip">
         Pick a floor or a dot to look closer. Pink squares are gaps to fill.
       </p>

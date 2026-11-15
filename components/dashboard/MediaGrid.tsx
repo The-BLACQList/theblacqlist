@@ -173,7 +173,7 @@ function MediaCard({
             className="w-full inline-flex items-center justify-center gap-1 h-7 rounded font-subhead text-xs font-semibold text-brand-black bg-pale-lavender hover:bg-amber-gold transition-colors"
           >
             <Star className="size-3" aria-hidden="true" />
-            Use as banner
+            Use as Banner
           </button>
         )}
 

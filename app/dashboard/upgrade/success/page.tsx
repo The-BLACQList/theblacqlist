@@ -18,7 +18,7 @@ export default async function UpgradeSuccessPage({ searchParams }: Props) {
     <div className="max-w-lg">
       <div className="rounded-xl border border-charcoal/10 bg-white px-8 py-12 text-center">
         <CheckCircle className="size-12 text-amber mx-auto mb-4" aria-hidden="true" />
-        <h1 className="font-headline text-2xl text-brand-black mb-2">You&apos;re upgraded!</h1>
+        <h1 className="font-headline text-2xl text-brand-black mb-2">You&apos;re Upgraded!</h1>
         <p
           className={`font-body text-sm text-charcoal-soft max-w-sm mx-auto ${renews ? 'mb-3' : 'mb-8'}`}
         >

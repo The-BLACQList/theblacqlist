@@ -52,26 +52,26 @@ export function buildQuickReplies(ctx: QuickReplyContext, now: Date = new Date()
   if (ctx.kind === 'job') {
     const { title } = ctx
     if (ctx.applyUrl) {
-      out.push({ id: 'job-apply', label: 'How to apply', text: `Thanks for your interest in the ${title} role! You can apply here: ${ctx.applyUrl}` })
+      out.push({ id: 'job-apply', label: 'How to Apply', text: `Thanks for your interest in the ${title} role! You can apply here: ${ctx.applyUrl}` })
     }
     if (ctx.applyEmail) {
       out.push({
         id: 'job-resume',
-        label: 'Send your resume',
+        label: 'Send Your Resume',
         text: `Thanks for reaching out about the ${title} role. Please send your resume to ${ctx.applyEmail} and we'll take a look.`,
       })
     }
     const closes = ctx.closesAt && !isRoleClosed(ctx.closesAt, now) ? formatCloseDate(ctx.closesAt, 'long') : null
     out.push({
       id: 'job-in-touch',
-      label: "We'll be in touch",
+      label: "We'll Be in Touch",
       text: closes
         ? `Thanks for applying for the ${title} role. We're taking applications until ${closes} and will be in touch after that.`
         : `Thanks for applying for the ${title} role. We're reviewing applications and will be in touch soon.`,
     })
     out.push({
       id: 'job-filled',
-      label: 'Role filled',
+      label: 'Role Filled',
       text: `Thanks for your interest in the ${title} role. It has been filled, but we appreciate you reaching out.`,
     })
     return out
@@ -85,21 +85,21 @@ export function buildQuickReplies(ctx: QuickReplyContext, now: Date = new Date()
     const when = formatEventWhen(ctx.startsAt, ctx.timezone)
     if (when) {
       const where = ctx.isOnline ? ' online' : ctx.venueName?.trim() ? ` at ${ctx.venueName.trim()}` : ''
-      out.push({ id: 'event-still-on', label: 'Still on', text: `Yes, ${title} is still on: ${when}${where}. See you there!` })
+      out.push({ id: 'event-still-on', label: 'Still On', text: `Yes, ${title} is still on: ${when}${where}. See you there!` })
     }
     out.push({
       id: 'event-sold-out',
-      label: 'Sold out',
+      label: 'Sold Out',
       text: `Thanks for your interest! ${title} is sold out right now. We'll let you know if spots open up.`,
     })
     if (ctx.pageUrl) {
-      out.push({ id: 'event-details', label: 'Event details', text: `Here are all the details for ${title}: ${ctx.pageUrl}` })
+      out.push({ id: 'event-details', label: 'Event Details', text: `Here are all the details for ${title}: ${ctx.pageUrl}` })
     }
     return out
   }
 
   const hours = ctx.hours ? summarizeHours(ctx.hours) : null
-  if (hours) out.push({ id: 'customer-hours', label: 'Our hours', text: `Our hours are ${hours}.` })
+  if (hours) out.push({ id: 'customer-hours', label: 'Our Hours', text: `Our hours are ${hours}.` })
   if (ctx.mainButton) {
     out.push({ id: 'customer-main-button', label: ctx.mainButton.label, text: `${ctx.mainButton.label}: ${ctx.mainButton.value}` })
   }

@@ -391,7 +391,7 @@ INSERT INTO categories (id, name, slug, parent_id, display_order, is_active) VAL
   ('c0000002-0013-0000-0000-000000000003', 'Cybersecurity',                  'cybersecurity',                'c0000001-0000-0000-0000-000000000013', 3, true),
   ('c0000002-0013-0000-0000-000000000004', 'Data & Analytics',               'data-analytics',               'c0000001-0000-0000-0000-000000000013', 4, true),
   ('c0000002-0013-0000-0000-000000000005', 'Tech Consulting',                'tech-consulting',              'c0000001-0000-0000-0000-000000000013', 5, true),
-  ('c0000002-0013-0000-0000-000000000006', 'E-commerce Solutions',           'ecommerce-solutions',          'c0000001-0000-0000-0000-000000000013', 6, true),
+  ('c0000002-0013-0000-0000-000000000006', 'E-Commerce Solutions',           'ecommerce-solutions',          'c0000001-0000-0000-0000-000000000013', 6, true),
   ('c0000002-0013-0000-0000-000000000007', 'App & Mobile Development',       'app-mobile-development',       'c0000001-0000-0000-0000-000000000013', 7, true)
 ON CONFLICT (slug) DO NOTHING;
 
@@ -642,7 +642,7 @@ INSERT INTO attribute_groups (id, name, slug, description, input_type, applies_t
   ('a1000000-0000-0000-0000-000000000006', 'Dietary',              'dietary',            'Dietary options offered.',                    'checkbox', '{business,vendor}', 6, true, true),
   ('a1000000-0000-0000-0000-000000000007', 'Niche',                         'creator-niche',     'What this creator makes content about.',                       'checkbox', '{creator}', 7, true, true),
   ('a1000000-0000-0000-0000-000000000008', 'Platforms',                     'creator-platforms', 'Where this creator posts.',                                    'checkbox', '{creator}', 8, true, true),
-  ('a1000000-0000-0000-0000-000000000009', 'Audience size (self-reported)', 'audience-size',     'Total followers across platforms, as the creator reports it.', 'radio',    '{creator}', 9, true, true)
+  ('a1000000-0000-0000-0000-000000000009', 'Audience Size (Self-Reported)', 'audience-size',     'Total followers across platforms, as the creator reports it.', 'radio',    '{creator}', 9, true, true)
 ON CONFLICT (slug) DO NOTHING;
 
 

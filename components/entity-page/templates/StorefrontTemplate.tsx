@@ -69,7 +69,7 @@ export function StorefrontTemplate({
   const tabs: AnchorTab[] = [
     { id: 'overview', label: 'Overview' },
     { id: 'visit', label: 'Visit' },
-    ...(hasFindUs ? [{ id: 'find-us', label: 'Find us at' }] : []),
+    ...(hasFindUs ? [{ id: 'find-us', label: 'Find Us At' }] : []),
     ...(hasDeals ? [{ id: 'deals', label: 'Deals' }] : []),
     ...(hasStory ? [{ id: 'about', label: 'About' }] : []),
     ...(hasOfferings ? [{ id: 'offerings', label: 'Offerings' }] : []),
