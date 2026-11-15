@@ -16,10 +16,10 @@
  *
  * TARGET SAFETY: there is no dotenv and no --env flag here. The database is
  * chosen entirely by the exported SUPABASE_URL, so a mistyped host silently
- * seeds the wrong project. assertTargetConfirmed() prints the resolved project
- * ref and refuses any remote host without --yes. On top of that, this script
- * hard-refuses the production ref even with --yes — demo data must never be one
- * typo away from the live site.
+ * seeds the wrong project. assertTargetConfirmed() (scripts/lib/seed-guards.ts)
+ * prints the resolved project ref, refuses production outright, and allows a
+ * remote host only when it is the staging project and the run says --yes.
+ * Demo data must never be one typo away from the live site.
  *
  * SERVICE ROLE: writes go through the service key, matching what the app itself
  * does (lib/actions/marketplace/createProduct.ts uses createServiceClient for
@@ -31,7 +31,7 @@
  *   SUPABASE_URL=http://127.0.0.1:54321 SUPABASE_SERVICE_ROLE_KEY=… \
  *     npx tsx scripts/seed-marketplace-demo.ts --owner-email=you@example.com
  *
- *   SUPABASE_URL=https://<staging-ref>.supabase.co SUPABASE_SERVICE_ROLE_KEY=… \
+ *   SUPABASE_URL=https://fmbohsloskqbmlwbzpjm.supabase.co SUPABASE_SERVICE_ROLE_KEY=… \
  *     npx tsx scripts/seed-marketplace-demo.ts --owner-email=you@example.com --yes
  *
  *   …same, plus --purge   → removes the three demo listings and, by cascade,
@@ -43,6 +43,7 @@
  */
 
 import { createClient } from '@supabase/supabase-js'
+import { assertTargetConfirmed, flagValue, hasFlag } from './lib/seed-guards'
 
 const SUPABASE_URL = process.env['SUPABASE_URL']
 const SUPABASE_SERVICE_ROLE_KEY = process.env['SUPABASE_SERVICE_ROLE_KEY']
@@ -52,59 +53,12 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   process.exit(1)
 }
 
-/**
- * The production project ref. Named here so the refusal below can be absolute
- * rather than depending on an operator reading the printed ref carefully.
- */
-const PRODUCTION_REF = 'ytlrnczevdnsfdzjbeqg'
+// Target guard and flags: scripts/lib/seed-guards.ts (ticket 187). Production
+// is refused outright, local runs freely, and the only remote target is
+// staging, which also needs --yes.
 
-/**
- * Confirm the operator meant this database.
- *
- * Local hosts run unattended. Anything else — staging or production — is a
- * consequential write behind GATE-DATA, so it must be named out loud with
- * --yes. The project ref is printed either way; it is the only signal that
- * distinguishes staging from production at the command line.
- *
- * Departure from scripts/seed-launch-listings.ts: production is refused
- * outright and --yes does not override it. That script seeds real editorial
- * listings, which production legitimately wants. This one seeds fake shops,
- * which production never does.
- */
-function assertTargetConfirmed(url: string): void {
-  const host = new URL(url).hostname
-  const isLocal = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local')
-  const ref = host.endsWith('.supabase.co') ? host.split('.')[0] : host
-
-  console.log(`Target: ${isLocal ? 'LOCAL' : 'REMOTE'} — project ref "${ref}" (${host})`)
-
-  if (ref === PRODUCTION_REF) {
-    console.error(
-      `\nRefusing to seed the PRODUCTION project "${ref}".\n` +
-        `This script writes obviously-fake demo storefronts. There is no --yes for production.\n` +
-        `If you meant staging, re-export SUPABASE_URL with the staging ref and run again.`
-    )
-    process.exit(1)
-  }
-
-  if (isLocal || process.argv.includes('--yes')) return
-
-  console.error(
-    `\nRefusing to seed remote project "${ref}" without confirmation.\n` +
-      `Check the ref above against the project you intend to write to, then re-run with --yes.\n` +
-      `Remote seeds are a GATE-DATA action — confirm the gate before passing it.`
-  )
-  process.exit(1)
-}
-
-// ── Flags ────────────────────────────────────────────────────────────────────
-// Hand-parsed off process.argv, matching scripts/seed-launch-listings.ts. No
-// yargs: one dependency-free convention across every script in this folder.
-
-const PURGE = process.argv.includes('--purge')
-
-const ownerFlag = process.argv.find((a) => a.startsWith('--owner-email='))
-const OWNER_EMAIL = ownerFlag?.slice('--owner-email='.length).trim() ?? ''
+const PURGE = hasFlag(process.argv, '--purge')
+const OWNER_EMAIL = flagValue(process.argv, '--owner-email')
 
 if (!OWNER_EMAIL) {
   console.error(
