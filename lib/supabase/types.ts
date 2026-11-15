@@ -1367,6 +1367,53 @@ export type Database = {
           },
         ]
       }
+      listing_credentials: {
+        Row: {
+          created_at: string
+          id: string
+          issuer: string | null
+          kind: string
+          listing_id: string
+          sort_order: number
+          title: string
+          updated_at: string
+          url: string | null
+          year: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          issuer?: string | null
+          kind: string
+          listing_id: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+          url?: string | null
+          year?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          issuer?: string | null
+          kind?: string
+          listing_id?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          url?: string | null
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_credentials_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_deals: {
         Row: {
           code: string | null

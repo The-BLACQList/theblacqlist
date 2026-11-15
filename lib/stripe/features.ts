@@ -39,6 +39,7 @@ export type GatedFeature =
   | 'faqs'
   | 'social_links'
   | 'hide_platform_badge'
+  | 'credentials'
   // ── Growth+ — "Get chosen": the merchandising tier
   | 'priority_placement'
   | 'review_criteria'
@@ -84,6 +85,7 @@ export const FEATURE_MIN_TIER: Record<GatedFeature, number> = {
   faqs: 1,
   social_links: 1,
   hide_platform_badge: 1,
+  credentials: 1,
   // Growth+ (2)
   priority_placement: 2,
   review_criteria: 2,

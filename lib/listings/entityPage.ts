@@ -17,6 +17,13 @@ import { entityLogo } from '@/lib/listings/logo'
 import { isPriceRange } from '@/lib/listings/facts'
 import { loadProfileShop } from '@/lib/marketplace/profileShop'
 import { TEAM_COLUMNS, toOwnerTeam, toPublicTeam, type OwnerTeamMember } from '@/lib/listings/team'
+import {
+  CREDENTIAL_COLUMNS,
+  credentialsShowOn,
+  toOwnerCredentials,
+  toPublicCredentials,
+  type OwnerCredential,
+} from '@/lib/listings/credentials'
 import { toBookingSettings } from '@/lib/listings/booking'
 import {
   LOCATION_LINK_COLUMNS,
@@ -239,6 +246,22 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
         () => []
       )
     : Promise.resolve([])
+  // Credentials, awards and press (ticket 192): Starter+ business pages.
+  // Fail-soft the same way: no table yet, or a read error, means no block.
+  const credentialsPromise: Promise<OwnerCredential[]> = credentialsShowOn(raw)
+    ? Promise.resolve(
+        sb
+          .from('listing_credentials')
+          .select(CREDENTIAL_COLUMNS)
+          .eq('listing_id', raw.id)
+          .order('sort_order', { ascending: true })
+          .order('created_at', { ascending: true })
+          .limit(50)
+      ).then(
+        ({ data, error }) => (error ? [] : toOwnerCredentials(data)),
+        () => []
+      )
+    : Promise.resolve([])
   // Booking requests (ticket 109): Premium business pages with an owner, the
   // flag on and the owner's form switched on. Fail-soft like the team read.
   const bookingPromise: Promise<BookingConfig | null> = bookingShowsOn(raw)
@@ -407,6 +430,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
   const shop = await shopPromise
   // The first ones the page's plan shows, in the owner's order.
   const team = toPublicTeam(await teamPromise, teamMemberLimit(raw.tier), resolveMediaPath)
+  const credentials = toPublicCredentials(await credentialsPromise)
   const booking = await bookingPromise
   const locations = await locationsPromise
 
@@ -942,6 +966,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     shop,
     // Left out when empty, so a page without a team keeps its old shape.
     ...(team.length > 0 ? { team } : {}),
+    ...(credentials.length > 0 ? { credentials } : {}),
     // Left out when the form is off, the same way.
     ...(booking ? { booking } : {}),
     ...(locations.length > 0 ? { locations } : {}),
