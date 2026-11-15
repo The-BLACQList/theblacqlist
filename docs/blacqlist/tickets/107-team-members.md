@@ -1,6 +1,6 @@
 # Ticket 107 — Team members block (Growth tier)
 
-**Phase:** V1.5 · **Priority:** P3 · **Status:** Draft
+**Phase:** V1.5 · **Priority:** P3 · **Status:** In PR — stacked on 186 (#338). Migration `20261120000000_listing_team_members.sql` not applied anywhere yet: staging needs the founder's OK, production is GATE-DATA. Until it is applied the page read is fail-soft (no team block) and the dashboard Team page says it couldn't load. Scope notes: members are hard-deleted (no other owner-edited child table soft-deletes; a removed person shouldn't linger), so there is no `deleted_at`. One founder a page, enforced by a unique partial index; marking a new founder clears the old one. Reorder is native drag plus Move Up/Down buttons (no drag library in the codebase). The plan limit is checked on add only; edit, reorder and remove work on every plan, and the page shows the first ones the plan allows. A Free or Starter owner is offered Growth (not Starter) when Growth is open. Photos upload with `media_role=team` and never count toward the plan's photos.
 **Depends on:** 105 (limit enforcement)
 **Gates:** `canAccess(tier, 'team_members')` — Growth+ · limit `teamMemberLimit(tier)` (Growth 5, Premium unlimited)
 

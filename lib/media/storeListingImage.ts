@@ -21,8 +21,12 @@ import type { PreparedImage } from '@/lib/media/prepareImage'
 //     as an orphan nothing points at.
 // =============================================================================
 
-/** 'post' is a Happening now image (part F): stored like a cover, no media row. */
-export type ListingImageRole = 'logo' | 'cover' | 'gallery' | 'post'
+/**
+ * 'post' is a Happening now image (part F) and 'team' a team member's photo
+ * (ticket 107): both stored like a cover, with no media row, so neither
+ * counts toward the plan's photos.
+ */
+export type ListingImageRole = 'logo' | 'cover' | 'gallery' | 'post' | 'team'
 
 export type StoreListingImageResult =
   | { ok: true; path: string; mediaId: string | null }

@@ -1916,6 +1916,50 @@ export type Database = {
           },
         ]
       }
+      listing_team_members: {
+        Row: {
+          bio: string | null
+          created_at: string
+          id: string
+          is_founder: boolean
+          listing_id: string
+          name: string
+          photo_path: string | null
+          role: string | null
+          sort_order: number
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          id?: string
+          is_founder?: boolean
+          listing_id: string
+          name: string
+          photo_path?: string | null
+          role?: string | null
+          sort_order?: number
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          id?: string
+          is_founder?: boolean
+          listing_id?: string
+          name?: string
+          photo_path?: string | null
+          role?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_team_members_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_tags: {
         Row: {
           created_at: string

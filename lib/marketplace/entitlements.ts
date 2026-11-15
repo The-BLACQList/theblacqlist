@@ -173,3 +173,20 @@ export async function premiumIsOpen(): Promise<boolean> {
 export async function offerPremiumTo(tier: string | null): Promise<boolean> {
   return tier === 'growth' && (await premiumIsOpen())
 }
+
+/**
+ * The plans a team members note may offer (ticket 107). Team members start at
+ * Growth, so a Free page is offered Growth as well as a Starter one (unlike
+ * `offerGrowthTo`, which offers Starter to Free); a Growth page is offered
+ * Premium. Only the read a page needs is made.
+ */
+export async function teamOffers(
+  tier: string | null
+): Promise<{ growthOpen: boolean; premiumOpen: boolean }> {
+  const below = !canAccess(tier, 'team_members')
+  const [growthOpen, premiumOpen] = await Promise.all([
+    below ? growthIsOpen() : Promise.resolve(false),
+    offerPremiumTo(tier),
+  ])
+  return { growthOpen, premiumOpen }
+}
