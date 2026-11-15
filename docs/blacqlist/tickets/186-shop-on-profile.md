@@ -1,6 +1,6 @@
 # 186: The business's marketplace items on its own page ("Shop")
 
-**Status:** Planned — from the 184 plan, founder 2026-11-13. Not started. Own branch and draft PR off `origin/main` once 184 has merged; **no merge before Wed 18 Nov 2026** (launch merge freeze).
+**Status:** In PR — stacked on 190 (#337) → 189 (#336) → 185 (#335). No migration. Merge needs the founder's OK. Scope notes: there was no shared price-label helper, so `lib/marketplace/priceLabel.ts` now serves the Shop and both marketplace cards (same wording as before). The loader uses `sellsPublicly` (Growth+) and `marketplaceOpen`; `growthIsOpen()` is not needed, because only a page already on Growth or Premium can show a Shop. The listing route renders per request, so new items show without a revalidate. The 2026-11-13 freeze line is stale.
 **Follows:** 184 (`EntityShopSection`, `entity.shop`), marketplace (`/vendors/[slug]`)
 **Area:** business pages, marketplace
 **Gates:** none for the code. The section is behind `canAccess(tier, 'storefront')` and the `marketplaceOpen` flag (plus `growthIsOpen()` from `lib/marketplace/entitlements.ts` if that still applies), so it shows nowhere until the flag is on.

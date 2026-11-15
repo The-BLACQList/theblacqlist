@@ -25,6 +25,10 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
  * Growth and Premium pages. The seller fixture is on Growth for that reason, and
  * a Starter seller's product is hidden, so its page is not a storefront (404).
  *
+ * Ticket 186: the seller's own page shows the same product in its Shop
+ * section, with Shop All pointing at the vendor page; the Starter seller's
+ * page shows no Shop. playwright.config.ts turns FEATURE_MARKETPLACE_OPEN on.
+ *
  * Hermetic by design, matching e2e/analytics-emission.spec.ts: creates and
  * deletes its own listings (the product row cascades on listing delete), so it
  * does not assume a particular database's contents.
@@ -238,5 +242,28 @@ test.describe('vendor storefront', () => {
       response!.status(),
       'products on a page below Growth are hidden from the public, so it is not a storefront'
     ).toBe(404)
+  })
+
+  test('the seller’s own page shows its Shop, linked to the vendor page (186)', async ({
+    page,
+  }) => {
+    // The listing route resolves by slug alone; `online` stands in for the city.
+    const response = await page.goto(`/online/business/${SELLER_SLUG}`)
+    expect(response?.status(), 'the seller page must render').toBe(200)
+
+    const shop = page.locator('section[aria-labelledby="shop-heading"]')
+    await expect(shop).toBeVisible()
+    await expect(shop.getByText(`E2E Fixture Product ${RUN_ID}`)).toBeVisible()
+    await expect(shop.getByRole('link', { name: /Shop All/ })).toHaveAttribute(
+      'href',
+      `/vendors/${SELLER_SLUG}`
+    )
+  })
+
+  test('a Starter page shows no Shop, though it has a product (186)', async ({ page }) => {
+    const response = await page.goto(`/online/business/${STARTER_SELLER_SLUG}`)
+    expect(response?.status(), 'the Starter page must render').toBe(200)
+    await expect(page.getByRole('heading', { name: STARTER_SELLER_NAME })).toBeVisible()
+    await expect(page.locator('section[aria-labelledby="shop-heading"]')).toHaveCount(0)
   })
 })

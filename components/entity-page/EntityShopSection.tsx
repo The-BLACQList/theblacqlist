@@ -57,9 +57,9 @@ function ShopCard({ item }: { item: EntityShopItem }) {
 }
 
 /**
- * Marketplace items on the profile (ticket 186; display here, the loader in
- * Phase 3). Growth+ with the marketplace flag on. Hidden until a loader
- * provides `shop`. Compact cards, not ProductCard — that one needs absolute
+ * Marketplace items on the profile (ticket 186; the loader is
+ * lib/marketplace/profileShop.ts). Growth+ with the marketplace flag on.
+ * Hidden when the loader provides no `shop`. Compact cards, not ProductCard — that one needs absolute
  * URLs and its own grid.
  */
 export function EntityShopSection({ shop, bare = false }: Props) {

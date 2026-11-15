@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { Briefcase, Globe, MapPin, Plane } from 'lucide-react'
 import { CTAButton } from './CTAButton'
 import { resolveRemoteImage } from '@/lib/listings/coverImage'
+import { servicePriceLabel } from '@/lib/marketplace/priceLabel'
 
 interface ServiceCardProps {
   service: {
@@ -23,14 +24,6 @@ interface ServiceCardProps {
   showVendor?: boolean
 }
 
-function formatPrice(cents: number): string {
-  return (cents / 100).toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  })
-}
-
 const DELIVERY_ICONS: Record<string, React.ElementType> = {
   virtual: Globe,
   in_person: MapPin,
@@ -46,11 +39,7 @@ const DELIVERY_LABELS: Record<string, string> = {
 }
 
 export function ServiceCard({ service, showVendor = false }: ServiceCardProps) {
-  const priceLabel =
-    service.price_display_text ??
-    (service.starting_price_cents != null
-      ? `Starting at ${formatPrice(service.starting_price_cents)}`
-      : 'Contact for pricing')
+  const priceLabel = servicePriceLabel(service) ?? 'Contact for pricing'
 
   const ctaType = service.booking_url ? 'book-now' : 'request-quote'
   const ctaLabel = service.booking_url ? 'Book Now' : 'Request Quote'
