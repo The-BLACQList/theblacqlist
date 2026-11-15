@@ -233,12 +233,12 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     isFilled: (e) => Boolean(e.details.description?.trim()),
   },
   {
-    // "Why choose us" bullets or "How it works" steps. Ticket 195 decides the
-    // tier and builds the editor; free and page('highlights') until then.
+    // "Why choose us" bullets or "How it works" steps (ticket 195): Starter 4,
+    // Growth and Premium 6; the page shows the first ones in the owner's order.
     id: 'highlights',
     label: 'Highlights',
     templates: ALL,
-    gate: {},
+    gate: { feature: 'highlights', limit: 'highlights' },
     editor: { tool: 'Highlights', href: page('highlights') },
     isFilled: (e) => (e.highlights?.length ?? 0) > 0,
   },
@@ -619,6 +619,7 @@ export function applyTierGates(
     booking: allowed('booking') ? entity.booking : undefined,
     credentials: allowed('credentials') ? entity.credentials : undefined,
     documents: allowed('documents') ? sliceTo(entity.documents, limits.documents) : undefined,
+    highlights: allowed('highlights') ? sliceTo(entity.highlights, limits.highlights) : undefined,
     locations: allowed('locations')
       ? sliceTo(entity.locations, limits.locations === null ? null : limits.locations - 1)
       : undefined,

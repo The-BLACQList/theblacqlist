@@ -41,6 +41,7 @@ export type GatedFeature =
   | 'hide_platform_badge'
   | 'credentials'
   | 'documents'
+  | 'highlights'
   // ── Growth+ — "Get chosen": the merchandising tier
   | 'priority_placement'
   | 'review_criteria'
@@ -89,6 +90,7 @@ export const FEATURE_MIN_TIER: Record<GatedFeature, number> = {
   hide_platform_badge: 1,
   credentials: 1,
   documents: 1,
+  highlights: 1,
   // Growth+ (2)
   priority_placement: 2,
   review_criteria: 2,
@@ -179,6 +181,8 @@ export interface TierLimits {
   activePosts: number | null
   /** Downloadable PDFs: the menu, the rate card (ticket 194). */
   documents: number
+  /** "Why choose us" bullets or "How it works" steps a page shows (ticket 195). */
+  highlights: number
 }
 
 export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
@@ -198,6 +202,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     extraButtons: 0,
     activePosts: 0,
     documents: 0,
+    highlights: 0,
   },
   starter: {
     photos: 10,
@@ -215,6 +220,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     extraButtons: 1,
     activePosts: 1,
     documents: 1,
+    highlights: 4,
   },
   growth: {
     photos: 25,
@@ -232,6 +238,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     extraButtons: 2,
     activePosts: 3,
     documents: 3,
+    highlights: 6,
   },
   premium: {
     photos: 50,
@@ -253,6 +260,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     extraButtons: 3,
     activePosts: 5,
     documents: 10,
+    highlights: 6,
   },
 }
 
@@ -317,6 +325,11 @@ export function teamMemberLimit(tier: string | null): number | null {
 /** PDFs a page offers to download (ticket 194). 0 on Free. */
 export function documentLimit(tier: string | null): number {
   return limitsFor(tier).documents
+}
+
+/** Highlights or process steps a page shows (ticket 195). 0 on Free. */
+export function highlightLimit(tier: string | null): number {
+  return limitsFor(tier).highlights
 }
 
 /** Buttons beyond the main one. Never null: every plan has a fixed number. */

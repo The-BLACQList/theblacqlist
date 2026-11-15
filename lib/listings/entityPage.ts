@@ -34,6 +34,13 @@ import {
   type OwnerDocument,
 } from '@/lib/listings/documents'
 import {
+  HIGHLIGHT_COLUMNS,
+  highlightsShowOn,
+  toOwnerHighlights,
+  toPublicHighlights,
+  type OwnerHighlight,
+} from '@/lib/listings/highlights'
+import {
   LOCATION_LINK_COLUMNS,
   coversLocations,
   toLocationLinkRows,
@@ -286,6 +293,21 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
         () => []
       )
     : Promise.resolve([])
+  // Highlights (ticket 195): Starter+ business pages. Fail-soft, as documents.
+  const highlightsPromise: Promise<OwnerHighlight[]> = highlightsShowOn(raw)
+    ? Promise.resolve(
+        sb
+          .from('listing_highlights')
+          .select(HIGHLIGHT_COLUMNS)
+          .eq('listing_id', raw.id)
+          .order('sort_order', { ascending: true })
+          .order('created_at', { ascending: true })
+          .limit(20)
+      ).then(
+        ({ data, error }) => (error ? [] : toOwnerHighlights(data)),
+        () => []
+      )
+    : Promise.resolve([])
   // Photo albums (ticket 193): Growth+ pages. A separate read so a database
   // without the column yet still shows the photos, just ungrouped.
   const albumsPromise: Promise<Record<string, string>> = albumsAllowed(raw.tier)
@@ -476,6 +498,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     await documentsPromise,
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   )
+  const highlights = toPublicHighlights(await highlightsPromise)
   const booking = await bookingPromise
   const locations = await locationsPromise
 
@@ -1016,6 +1039,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     ...(team.length > 0 ? { team } : {}),
     ...(credentials.length > 0 ? { credentials } : {}),
     ...(documents.length > 0 ? { documents } : {}),
+    ...(highlights.length > 0 ? { highlights } : {}),
     // Left out when the form is off, the same way.
     ...(booking ? { booking } : {}),
     ...(locations.length > 0 ? { locations } : {}),

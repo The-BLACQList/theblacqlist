@@ -1502,6 +1502,50 @@ export type Database = {
           },
         ]
       }
+      listing_highlights: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          kind: string
+          listing_id: string
+          sort_order: number
+          text: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          kind: string
+          listing_id: string
+          sort_order?: number
+          text?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          kind?: string
+          listing_id?: string
+          sort_order?: number
+          text?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_highlights_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_location_links: {
         Row: {
           created_at: string
