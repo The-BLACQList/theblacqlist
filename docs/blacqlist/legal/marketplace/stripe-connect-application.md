@@ -2,8 +2,8 @@
 
 > **Disclaimer:** This output is informational and does not constitute legal advice. Consult a licensed attorney and CPA before relying on it.
 
-**Status:** Draft answers for the founder to paste. Nothing has been submitted.
-**Last updated:** 2026-11-14
+**Status:** Connect set up by the founder on 2026-11-15 (live account; industry "E-commerce products"; Stripe-hosted onboarding; Connect branding set). Stripe's sign-up asked only those questions, with no volume, timeline or restricted-category screens and no application review. Sections 2 to 7 stay as the reference answers for when Stripe asks: platform profile, a risk review once live accounts exist, or Support. Per-account settings (Express dashboard, `fees_collector`/`losses_collector` = application, Stripe-collected requirements) are set in code by ticket 224 when each seller account is created, not in this form.
+**Last updated:** 2026-11-15
 **Who submits:** the founder, in the Stripe Dashboard, on the live platform account (GATE-SPEND: it starts Connect pricing once accounts are active).
 **Source of the answers:** the 2026-11-13 Shop decisions, `fees-and-payouts.md`, `seller-agreement.md`, `prohibited-and-restricted-items.md`, `inform-act-compliance.md`, `returns-refunds-buyer-protection.md`.
 **Checked against Stripe docs on 2026-11-14:** Build a marketplace, Marketplace essential tasks, Separate charges and transfers (Checkout), Pay out to connected accounts. Stripe's own form may word questions differently. Answer in the form's words, using the substance below.
