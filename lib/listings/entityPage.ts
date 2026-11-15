@@ -41,6 +41,11 @@ import {
   type OwnerHighlight,
 } from '@/lib/listings/highlights'
 import {
+  HOURS_OVERRIDE_COLUMNS,
+  hoursOverrideWindow,
+  toHoursOverrides,
+} from '@/lib/listings/hoursOverrides'
+import {
   LOCATION_LINK_COLUMNS,
   coversLocations,
   toLocationLinkRows,
@@ -61,6 +66,7 @@ import type {
   OrganizerEvent,
   BusinessDetails,
   WeeklyHours,
+  HoursOverride,
   SocialLinks,
   CTAType,
   GalleryImage,
@@ -308,6 +314,26 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
         () => []
       )
     : Promise.resolve([])
+  // Holiday and special hours (ticket 196): every plan, business pages only.
+  // The next 30 days with a day's slack either side; the page narrows the
+  // window in the viewer's time zone. Fail-soft, as highlights.
+  const hoursWindow = hoursOverrideWindow(new Date())
+  const hoursOverridesPromise: Promise<HoursOverride[]> =
+    raw.entity_type === 'job' || raw.entity_type === 'event'
+      ? Promise.resolve([])
+      : Promise.resolve(
+          sb
+            .from('listing_hours_overrides')
+            .select(HOURS_OVERRIDE_COLUMNS)
+            .eq('listing_id', raw.id)
+            .gte('date', hoursWindow.from)
+            .lte('date', hoursWindow.to)
+            .order('date', { ascending: true })
+            .limit(40)
+        ).then(
+          ({ data, error }) => (error ? [] : toHoursOverrides(data)),
+          () => []
+        )
   // Photo albums (ticket 193): Growth+ pages. A separate read so a database
   // without the column yet still shows the photos, just ungrouped.
   const albumsPromise: Promise<Record<string, string>> = albumsAllowed(raw.tier)
@@ -499,6 +525,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
   )
   const highlights = toPublicHighlights(await highlightsPromise)
+  const hoursOverrides = await hoursOverridesPromise
   const booking = await bookingPromise
   const locations = await locationsPromise
 
@@ -1040,6 +1067,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     ...(credentials.length > 0 ? { credentials } : {}),
     ...(documents.length > 0 ? { documents } : {}),
     ...(highlights.length > 0 ? { highlights } : {}),
+    ...(hoursOverrides.length > 0 ? { hoursOverrides } : {}),
     // Left out when the form is off, the same way.
     ...(booking ? { booking } : {}),
     ...(locations.length > 0 ? { locations } : {}),

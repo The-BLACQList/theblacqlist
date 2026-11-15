@@ -6,6 +6,7 @@ import {
   closeExpiredJobs,
   expireStaleSuggestions,
   unpublishExpiredJobPostings,
+  purgePastHoursOverrides,
   unpublishPastEvents,
 } from '@/lib/services/expiry/sweeps'
 import { stripe } from '@/lib/stripe/client'
@@ -14,7 +15,7 @@ import { sendFreeMonthReminders } from '@/lib/tour/upgradeReminder'
 
 /**
  * =============================================================================
- * Daily expiry cron — the scheduled half of five time-based rules
+ * Daily expiry cron — the scheduled half of six time-based rules
  * =============================================================================
  *
  * The rules themselves live in `lib/services/expiry/sweeps.ts` and, for the
@@ -91,6 +92,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     failures.push('pastEvents')
     results.pastEvents = { error: err instanceof Error ? err.message : 'unknown error' }
     console.error('[cron/expiry] past event sweep failed:', err)
+  }
+
+  // Holiday and special hours that have passed (ticket 196).
+  try {
+    results.pastHoursOverrides = await purgePastHoursOverrides(supabase, now)
+  } catch (err) {
+    failures.push('pastHoursOverrides')
+    results.pastHoursOverrides = { error: err instanceof Error ? err.message : 'unknown error' }
+    console.error('[cron/expiry] past special hours purge failed:', err)
   }
 
   // Not flag-gated: the free month outlives the tour (founder, 2026-10-10).

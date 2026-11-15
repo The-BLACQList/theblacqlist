@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useSaveLabel } from './SaveLabel'
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react'
 import { updateListingContentAction } from '@/lib/actions/dashboard/updateListingContent'
@@ -59,6 +60,15 @@ export function HoursSection({ listingId, hours: initialHours }: Props) {
         <h2 className="font-headline text-base text-brand-black">Hours</h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
           Set your weekly hours. These appear on your public page.
+        </p>
+        <p className="font-body text-xs text-charcoal-soft mt-1">
+          Closed for a holiday or open late one day?{' '}
+          <Link
+            href={`/dashboard/pages/${listingId}/special-hours`}
+            className="font-semibold text-brand-black underline underline-offset-2"
+          >
+            Set Special Hours
+          </Link>
         </p>
       </div>
 

@@ -33,6 +33,7 @@ function bare(): EntityPageData {
     cover_image_path: null,
     avg_rating: null,
     organizerEvents: [],
+    hoursOverrides: undefined,
     details: {
       ...entity.details,
       description: '',
@@ -140,6 +141,13 @@ describe('buildJsonLd', () => {
       },
     ])
     expect(openingHoursSpecification(null)).toEqual([])
+  })
+
+  it('adds the special hours the page shows (ticket 196)', () => {
+    const entity = full()
+    const ld = buildJsonLd(entity, entity.entity_type, BASE)!
+    expect(entity.hoursOverrides?.length).toBeGreaterThan(0)
+    expect(ld.specialOpeningHoursSpecification).toHaveLength(entity.hoursOverrides!.length)
   })
 
   it('lists priced services in an offer catalog, with a number only for a plain price', () => {

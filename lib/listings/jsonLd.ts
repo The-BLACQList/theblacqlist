@@ -2,7 +2,7 @@ import { resolveMediaPath } from '@/lib/listings/coverImage'
 import { directionsUrl } from '@/lib/listings/directions'
 import { isExampleAssetPath } from '@/lib/listings/exampleAssets'
 import { buildEntityUrl } from '@/lib/listings/url'
-import type { EntityPageData, WeeklyHours } from '@/types'
+import type { EntityPageData, HoursOverride, WeeklyHours } from '@/types'
 
 // The LocalBusiness structured data for a listing page. Lifted out of
 // app/[citySlug]/[entityType]/[listingSlug]/page.tsx in ticket 184 so it can be
@@ -152,6 +152,35 @@ export function openingHoursSpecification(
   }))
 }
 
+/**
+ * Holiday and one-off hours (ticket 196), one entry per date. Google reads a
+ * day closed all day as opens and closes both "00:00". Bad rows are left out.
+ */
+export function specialOpeningHoursSpecification(
+  overrides: readonly HoursOverride[] | null | undefined
+): Record<string, unknown>[] {
+  if (!overrides?.length) return []
+  return [...overrides]
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .flatMap((o) => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(o.date)) return []
+      const times = o.closed
+        ? { opens: '00:00', closes: '00:00' }
+        : o.open && o.close && TIME.test(o.open) && TIME.test(o.close)
+          ? { opens: o.open, closes: o.close }
+          : null
+      if (!times) return []
+      return [
+        {
+          '@type': 'OpeningHoursSpecification',
+          validFrom: o.date,
+          validThrough: o.date,
+          ...times,
+        },
+      ]
+    })
+}
+
 /** "$45" or "$4.50" as a number; anything with words ("From $350") is not a price. */
 function plainPrice(text: string | null): string | null {
   const m = text?.trim().match(/^\$\s?(\d{1,6}(?:\.\d{2})?)$/)
@@ -226,6 +255,8 @@ export function buildJsonLd(
 
   const hours = openingHoursSpecification(details.hours)
   if (hours.length > 0) jsonLd.openingHoursSpecification = hours
+  const special = specialOpeningHoursSpecification(entity.hoursOverrides)
+  if (special.length > 0) jsonLd.specialOpeningHoursSpecification = special
 
   if (details.price_range) jsonLd.priceRange = details.price_range
   if (details.founded_year != null) jsonLd.foundingDate = String(details.founded_year)
