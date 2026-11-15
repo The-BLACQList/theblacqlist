@@ -68,6 +68,7 @@ export type FeatureFlag =
   | 'aiBeta'
   | 'aiGuide'
   | 'aiOnboarding'
+  | 'bookingRequests'
   | 'collectiveOpen'
   | 'coupons'
   | 'earnedFeatured'
@@ -94,6 +95,13 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // (see CLOSED_BY_DEFAULT), because it sends visitor words to a model.
   aiAssistant: 'FEATURE_AI_ASSISTANT',
   aiBeta: 'FEATURE_AI_BETA',
+  // Gates booking requests (ticket 109): the Send Request form on Premium
+  // pages, the submit action, the owner's Bookings inbox and its emails. Off,
+  // the form shows its inert note, the action refuses, and the owner page says
+  // bookings aren't open yet. Closed by default on EVERY deployment (see
+  // CLOSED_BY_DEFAULT), because it emails real owners and visitors from words a
+  // stranger typed (GATE-COMMS).
+  bookingRequests: 'FEATURE_BOOKING_REQUESTS',
   // Gates the visitor guide on the home page hero (ticket 146): "Tell me what
   // you need" turns a visitor's words into our own filters and shows real
   // listings. Off, the hero is exactly what it was before and the server action
@@ -223,6 +231,7 @@ const CLOSED_BY_DEFAULT: ReadonlySet<FeatureFlag> = new Set<FeatureFlag>([
   'aiAssistant',
   'aiGuide',
   'aiOnboarding',
+  'bookingRequests',
   'collectiveOpen',
   'jobsOpen',
   'marketplaceOpen',

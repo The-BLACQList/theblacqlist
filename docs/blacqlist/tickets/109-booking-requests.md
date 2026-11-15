@@ -1,6 +1,6 @@
 # Ticket 109 — Booking & appointment requests (Premium tier)
 
-**Phase:** V1.5 · **Priority:** P2 · **Status:** Draft
+**Phase:** V1.5 · **Priority:** P2 · **Status:** In PR — stacked on 107 (#339). Migration `20261121000000_booking_requests.sql` not applied anywhere yet: staging needs the founder's OK, production is GATE-DATA. Behind the `bookingRequests` flag (`FEATURE_BOOKING_REQUESTS`), closed on every deployment by default because it emails real people (GATE-COMMS); the founder turns it on. Scope notes: two tables, `listing_booking_settings` (form on/off, the line above it, ask date / party size) and `booking_requests` (no INSERT or DELETE policy; the visitor's request is inserted by the server with the service client; the owner can update only status, reply and timestamps through a column GRANT). Abuse posture: honeypot (silent success), Turnstile, 5 requests an hour per IP and 3 a day per email address (so the form can't flood a stranger's inbox). The owner is emailed with Reply-To the visitor; the visitor's confirmation and the owner's answer go from noreply with no Reply-To (the owner's sign-in email may be personal). Answers: Accept, Decline, Suggest Another Time (needs a note); answering again is refused, and the status-guarded update stops two tabs both emailing. Turning the form on needs Premium; turning it off and answering requests already in work on every plan. No payment, no calendar.
 **Depends on:** 105 (limit enforcement)
 **Gates:** `canAccess(tier, 'booking_requests')` — Premium only
 

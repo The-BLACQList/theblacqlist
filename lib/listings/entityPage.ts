@@ -17,7 +17,9 @@ import { entityLogo } from '@/lib/listings/logo'
 import { isPriceRange } from '@/lib/listings/facts'
 import { loadProfileShop } from '@/lib/marketplace/profileShop'
 import { TEAM_COLUMNS, toOwnerTeam, toPublicTeam, type OwnerTeamMember } from '@/lib/listings/team'
+import { toBookingSettings } from '@/lib/listings/booking'
 import type {
+  BookingConfig,
   EntityPageData,
   EntityAttributeGroup,
   EntityLink,
@@ -229,6 +231,29 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
         () => []
       )
     : Promise.resolve([])
+  // Booking requests (ticket 109): Premium business pages with an owner, the
+  // flag on and the owner's form switched on. Fail-soft like the team read.
+  const bookingPromise: Promise<BookingConfig | null> = bookingShowsOn(raw)
+    ? Promise.resolve(
+        sb
+          .from('listing_booking_settings')
+          .select('enabled, prompt, ask_date, ask_party_size')
+          .eq('listing_id', raw.id)
+          .maybeSingle()
+      ).then(
+        ({ data, error }) => {
+          const settings = error ? null : toBookingSettings(data)
+          return settings?.enabled
+            ? {
+                prompt: settings.prompt,
+                askDate: settings.ask_date,
+                askPartySize: settings.ask_party_size,
+              }
+            : null
+        },
+        () => null
+      )
+    : Promise.resolve(null)
 
   const nowIso = new Date().toISOString()
   const [
@@ -367,6 +392,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
   const shop = await shopPromise
   // The first ones the page's plan shows, in the owner's order.
   const team = toPublicTeam(await teamPromise, teamMemberLimit(raw.tier), resolveMediaPath)
+  const booking = await bookingPromise
 
   // After a move to a lower plan, content over the new plan's limits is hidden
   // here and only here: nothing is deleted, and an upgrade shows it all again
@@ -900,6 +926,8 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     shop,
     // Left out when empty, so a page without a team keeps its old shape.
     ...(team.length > 0 ? { team } : {}),
+    // Left out when the form is off, the same way.
+    ...(booking ? { booking } : {}),
     service_area_description: raw.service_area_description?.trim() || null,
     related,
     images,
@@ -913,6 +941,17 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
 function teamShowsOn(listing: { tier: string | null; entity_type: string }): boolean {
   if (listing.entity_type === 'job' || listing.entity_type === 'event') return false
   return canAccess(listing.tier, 'team_members')
+}
+
+/** The booking form shows on Premium business pages with an owner, with the flag on (ticket 109). */
+function bookingShowsOn(listing: {
+  tier: string | null
+  entity_type: string
+  owner_user_id: string | null
+}): boolean {
+  if (listing.entity_type === 'job' || listing.entity_type === 'event') return false
+  if (!listing.owner_user_id) return false
+  return isFeatureEnabled('bookingRequests') && canAccess(listing.tier, 'booking_requests')
 }
 
 /** Happening now posts show on business pages, with the flag on. Jobs and events are dated already. */
