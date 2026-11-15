@@ -44,6 +44,7 @@ export type GatedFeature =
   | 'priority_placement'
   | 'review_criteria'
   | 'storefront'
+  | 'photo_albums'
   | 'service_menu_pricing'
   | 'events'
   | 'team_members'
@@ -90,6 +91,7 @@ export const FEATURE_MIN_TIER: Record<GatedFeature, number> = {
   priority_placement: 2,
   review_criteria: 2,
   storefront: 2,
+  photo_albums: 2,
   service_menu_pricing: 2,
   events: 2,
   team_members: 2,

@@ -25,6 +25,7 @@ import {
   type OwnerCredential,
 } from '@/lib/listings/credentials'
 import { toBookingSettings } from '@/lib/listings/booking'
+import { albumsAllowed, toAlbumMap, withAlbums } from '@/lib/listings/photoAlbums'
 import {
   LOCATION_LINK_COLUMNS,
   coversLocations,
@@ -262,6 +263,22 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
         () => []
       )
     : Promise.resolve([])
+  // Photo albums (ticket 193): Growth+ pages. A separate read so a database
+  // without the column yet still shows the photos, just ungrouped.
+  const albumsPromise: Promise<Record<string, string>> = albumsAllowed(raw.tier)
+    ? Promise.resolve(
+        sb
+          .from('media_attachments')
+          .select('id, album')
+          .eq('entity_type', 'listing')
+          .eq('entity_id', raw.id)
+          .not('album', 'is', null)
+          .limit(200)
+      ).then(
+        ({ data, error }) => (error ? {} : toAlbumMap(data)),
+        () => ({})
+      )
+    : Promise.resolve({})
   // Booking requests (ticket 109): Premium business pages with an owner, the
   // flag on and the owner's form switched on. Fail-soft like the team read.
   const bookingPromise: Promise<BookingConfig | null> = bookingShowsOn(raw)
@@ -431,6 +448,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
   // The first ones the page's plan shows, in the owner's order.
   const team = toPublicTeam(await teamPromise, teamMemberLimit(raw.tier), resolveMediaPath)
   const credentials = toPublicCredentials(await credentialsPromise)
+  const albumById = await albumsPromise
   const booking = await bookingPromise
   const locations = await locationsPromise
 
@@ -569,11 +587,14 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
   ).map((c) => ({ id: c.id, name: c.name }))
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
-  const images: GalleryImage[] = capList(mediaData ?? [], caps.photos).shown.map((m) => ({
-    id: m.id,
-    src: `${supabaseUrl}/storage/v1/object/public/listing-media/${m.file_path}`,
-    alt: m.alt_text ?? '',
-  }))
+  const images: GalleryImage[] = withAlbums(
+    capList(mediaData ?? [], caps.photos).shown.map((m) => ({
+      id: m.id,
+      src: `${supabaseUrl}/storage/v1/object/public/listing-media/${m.file_path}`,
+      alt: m.alt_text ?? '',
+    })),
+    albumById
+  )
 
   const reviews: ReviewItem[] = (reviewsData ?? []).map((r) => ({
     id: r.id,

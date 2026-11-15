@@ -13,8 +13,10 @@ interface Props {
   images?: GalleryImage[]
   /**
    * Captions are the owner's photo descriptions (the alt text), on hover and in
-   * the lightbox, on live and sample pages alike (ticket 189). Album chips need
-   * no gate: the live loader sets no `album`, so they never appear there.
+   * the lightbox, on live and sample pages alike (ticket 189). Album chips
+   * show when the photos sit under two or more albums. The gate is upstream:
+   * the loader reads albums only for Growth+ pages and applyTierGates drops
+   * them below Growth (ticket 193), so a lower plan shows no chips.
    */
   mode?: EntityRenderMode
 }

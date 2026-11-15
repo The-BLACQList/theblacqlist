@@ -8,6 +8,7 @@ import { levelsForCategory, isBusinessLevel, type BusinessLevel } from '@/lib/li
 import { buildEntityUrl } from '@/lib/listings/url'
 import { socialLinksShowOnPage } from '@/lib/stripe/features'
 import { toExtraButtons, type ExtraButton } from '@/lib/listings/pageButtons'
+import { toAlbumMap } from '@/lib/listings/photoAlbums'
 
 // Everything the finish view needs for one business page (tickets 126 and 129).
 // Both mounts call this: /add-business/finish/[listingId] (new mode) and the
@@ -90,6 +91,11 @@ export interface FinishData {
   publicUrl: string
   details: FinishDetails | null
   media: FinishMedia[]
+  /**
+   * Photo id → album (ticket 193). Null when the column isn't there yet, so
+   * the editor shows no album controls on a database before the migration.
+   */
+  albums: Record<string, string> | null
   services: FinishService[]
   hoursCount: number
   attributeGroups: FacetGroupData[]
@@ -173,6 +179,7 @@ export async function loadFinishData(
     { data: groupRows },
     { data: levelRow, error: levelError },
     { data: partnerRow },
+    { data: albumRows, error: albumError },
   ] = await Promise.all([
     loadAttributeGroups(supabase, row.entity_type),
     supabase.from('listing_attributes').select('value_id').eq('listing_id', row.id),
@@ -221,6 +228,13 @@ export async function loadFinishData(
     // '*' so a database without open_to_partnerships (ticket 131),
     // peak_tier (ticket 105) or collective_name_opt_in (ticket 183) still loads.
     supabase.from('listings').select('*').eq('id', row.id).maybeSingle(),
+    // Its own read so a database without the album column (ticket 193) still loads.
+    (supabase as unknown as SupabaseClient)
+      .from('media_attachments')
+      .select('id, album')
+      .eq('entity_id', row.id)
+      .eq('entity_type', 'listing')
+      .not('album', 'is', null),
   ])
 
   // One-to-one embeds come back as an object; guard the array shape too.
@@ -290,6 +304,7 @@ export async function loadFinishData(
     publicUrl: buildEntityUrl(row.entity_type, city?.slug, row.slug),
     details,
     media: (mediaRows as FinishMedia[] | null) ?? [],
+    albums: albumError ? null : toAlbumMap(albumRows),
     services,
     hoursCount: countOpenDays(details?.hours ?? null),
     attributeGroups,
