@@ -84,6 +84,7 @@ Out:
 
 ## Checks
 
+- **PCI scope stays SAQ A (2026-11-15):** card details are only ever entered on Stripe's hosted Checkout page (redirect to `session.url`, as Plans and Job Posting do today). No `ui_mode: 'embedded'`, no Stripe Elements or Stripe.js card fields, and no card numbers sent through our servers or the API. Any change here moves the PCI questionnaire (SAQ A-EP or D) and needs the founder's OK first.
 - **`splitOrder` unit tests:**
   - 1 shop;
   - 3 shops;
