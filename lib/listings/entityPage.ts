@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { attachLevels } from '@/lib/listings/levelRows'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { resolveMediaPath } from '@/lib/listings/coverImage'
-import { socialLinksShowOnPage } from '@/lib/stripe/features'
+import { canAccess, socialLinksShowOnPage, teamMemberLimit } from '@/lib/stripe/features'
 import { capDescription, capList, shownLimits } from '@/lib/stripe/downgrade'
 import { isCreatorGroup } from '@/lib/listings/creatorAttributes'
 import { mergeRelated, RELATED_LIMIT } from '@/lib/listings/related'
@@ -16,6 +16,7 @@ import { STOCKIST_SELECT, toOrderLinks, toStockists } from '@/lib/listings/where
 import { entityLogo } from '@/lib/listings/logo'
 import { isPriceRange } from '@/lib/listings/facts'
 import { loadProfileShop } from '@/lib/marketplace/profileShop'
+import { TEAM_COLUMNS, toOwnerTeam, toPublicTeam, type OwnerTeamMember } from '@/lib/listings/team'
 import type {
   EntityPageData,
   EntityAttributeGroup,
@@ -212,6 +213,22 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
   // The Shop section (ticket 186): Growth+ with the marketplace open. Started
   // now so it runs beside the reads below; it never fails the page.
   const shopPromise = loadProfileShop(raw)
+  // Team members (ticket 107): Growth+ business pages. Fail-soft: the table
+  // may not be migrated yet, and a read error just means no team block.
+  const teamPromise: Promise<OwnerTeamMember[]> = teamShowsOn(raw)
+    ? Promise.resolve(
+        sb
+          .from('listing_team_members')
+          .select(TEAM_COLUMNS)
+          .eq('listing_id', raw.id)
+          .order('sort_order', { ascending: true })
+          .order('created_at', { ascending: true })
+          .limit(100)
+      ).then(
+        ({ data, error }) => (error ? [] : toOwnerTeam(data)),
+        () => []
+      )
+    : Promise.resolve([])
 
   const nowIso = new Date().toISOString()
   const [
@@ -348,6 +365,8 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
   ])
 
   const shop = await shopPromise
+  // The first ones the page's plan shows, in the owner's order.
+  const team = toPublicTeam(await teamPromise, teamMemberLimit(raw.tier), resolveMediaPath)
 
   // After a move to a lower plan, content over the new plan's limits is hidden
   // here and only here: nothing is deleted, and an upgrade shows it all again
@@ -879,6 +898,8 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     orderLinks: toOrderLinks(orderLinkData),
     findUsAt: toStockists(stockistData),
     shop,
+    // Left out when empty, so a page without a team keeps its old shape.
+    ...(team.length > 0 ? { team } : {}),
     service_area_description: raw.service_area_description?.trim() || null,
     related,
     images,
@@ -886,6 +907,12 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     reviewCriteria,
     reviewCriteriaAverages,
   }
+}
+
+/** Team members show on Growth and Premium business pages (ticket 107). */
+function teamShowsOn(listing: { tier: string | null; entity_type: string }): boolean {
+  if (listing.entity_type === 'job' || listing.entity_type === 'event') return false
+  return canAccess(listing.tier, 'team_members')
 }
 
 /** Happening now posts show on business pages, with the flag on. Jobs and events are dated already. */

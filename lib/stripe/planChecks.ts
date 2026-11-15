@@ -6,6 +6,7 @@ import {
   extraButtonLimit,
   faqLimit,
   photoLimit,
+  teamMemberLimit,
   TIER_RANK,
   videoLimit,
 } from '@/lib/stripe/features'
@@ -188,6 +189,39 @@ export function checkPhotoAdd(
   const limit = photoLimit(tier)
   if (limit === null || existingCount < limit) return null
   return `Your plan includes ${limit} photo${limit === 1 ? '' : 's'}. ${makeRoom(tier, 'Upgrade to add more.', growthOpen)}`
+}
+
+/** The plan a team members note links to: Growth below it, Premium on Growth, when open. */
+export function teamUpgradeTarget(
+  tier: string | null,
+  growthOpen: boolean,
+  premiumOpen = false
+): UpgradeTarget {
+  if (!canAccess(tier, 'team_members')) return growthOpen ? 'Growth' : null
+  if (tier === 'growth' && premiumOpen) return 'Premium'
+  return null
+}
+
+/**
+ * Adding one team member (ticket 107). Growth 5, Premium unlimited, nothing
+ * below Growth. `existingCount` is every member the page has saved: after a
+ * move down a plan the extras stay saved and hidden, and still count here.
+ * Editing, reordering and removing a member are always allowed.
+ */
+export function checkTeamAdd(
+  tier: string | null,
+  existingCount: number,
+  growthOpen = false,
+  premiumOpen = false
+): string | null {
+  if (!canAccess(tier, 'team_members')) {
+    return growthOpen
+      ? 'Team members are part of Growth. Upgrade to add your team to your page.'
+      : 'Team members come with Growth, which isn’t open yet.'
+  }
+  const limit = teamMemberLimit(tier)
+  if (limit === null || existingCount < limit) return null
+  return `Your plan includes ${limit} team members. ${makeRoom(tier, 'Upgrade to add more.', growthOpen, premiumOpen)}`
 }
 
 /**

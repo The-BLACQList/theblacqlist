@@ -165,6 +165,7 @@ export function DashboardSidebar({
                 ...(showPosts
                   ? [{ href: `/dashboard/pages/${entityId}/posts`, label: 'Happening Now' }]
                   : []),
+                { href: `/dashboard/pages/${entityId}/team`, label: 'Team' },
                 { href: `/dashboard/pages/${entityId}/offerings`, label: 'Offerings' },
                 { href: `/dashboard/pages/${entityId}/events`, label: 'Events' },
                 { href: `/dashboard/pages/${entityId}/media`, label: 'Media' },

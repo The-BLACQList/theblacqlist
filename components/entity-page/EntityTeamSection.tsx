@@ -26,7 +26,9 @@ function Avatar({ member, large = false }: { member: TeamMember; large?: boolean
       >
         <Image
           src={member.photo.src}
-          alt={member.photo.alt || member.name}
+          // The name is printed beside the photo, so live pages pass an empty
+          // alt (lib/listings/team.ts toPublicTeam) and the photo is decorative.
+          alt={member.photo.alt}
           fill
           sizes="80px"
           className="object-cover"
