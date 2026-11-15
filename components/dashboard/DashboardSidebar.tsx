@@ -29,6 +29,8 @@ interface Props {
   messagesUnread?: number
   /** happeningNow is on: "Happening now" shows under This page (part F). */
   showPosts?: boolean
+  /** bookingRequests is on: "Bookings" shows under This page (ticket 109). */
+  showBookings?: boolean
 }
 
 const NAV_ITEMS = [
@@ -79,6 +81,7 @@ export function DashboardSidebar({
   showReceipts = false,
   messagesUnread,
   showPosts = false,
+  showBookings = false,
 }: Props) {
   const pathname = usePathname()
   const allItems =
@@ -166,6 +169,9 @@ export function DashboardSidebar({
                   ? [{ href: `/dashboard/pages/${entityId}/posts`, label: 'Happening Now' }]
                   : []),
                 { href: `/dashboard/pages/${entityId}/team`, label: 'Team' },
+                ...(showBookings
+                  ? [{ href: `/dashboard/pages/${entityId}/bookings`, label: 'Bookings' }]
+                  : []),
                 { href: `/dashboard/pages/${entityId}/offerings`, label: 'Offerings' },
                 { href: `/dashboard/pages/${entityId}/events`, label: 'Events' },
                 { href: `/dashboard/pages/${entityId}/media`, label: 'Media' },

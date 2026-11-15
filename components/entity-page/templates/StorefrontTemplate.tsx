@@ -191,6 +191,8 @@ export function StorefrontTemplate({
         <EntityBookingSection
           booking={entity.booking}
           name={entity.name}
+          listingId={entity.id}
+          services={entity.details.services}
           inertNote={mode === 'example' ? EXAMPLE_BOOKING_NOTE : undefined}
         />
       </SectionMark>

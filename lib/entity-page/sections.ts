@@ -305,7 +305,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     id: 'booking',
     label: 'Booking Requests',
     templates: ALL,
-    gate: { feature: 'booking_requests' },
+    gate: { feature: 'booking_requests', flag: 'bookingRequests', requiresClaimed: true },
     editor: { tool: 'Bookings', href: page('bookings') },
     isFilled: (e) => Boolean(e.booking),
   },

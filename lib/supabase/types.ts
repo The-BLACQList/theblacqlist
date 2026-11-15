@@ -339,6 +339,78 @@ export type Database = {
           },
         ]
       }
+      booking_requests: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string
+          note: string | null
+          owner_reply: string | null
+          party_size: number | null
+          requested_date: string | null
+          requester_email: string
+          requester_name: string
+          requester_phone: string | null
+          requester_user_id: string | null
+          responded_at: string | null
+          service_id: string | null
+          status: string
+          time_window: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id: string
+          note?: string | null
+          owner_reply?: string | null
+          party_size?: number | null
+          requested_date?: string | null
+          requester_email: string
+          requester_name: string
+          requester_phone?: string | null
+          requester_user_id?: string | null
+          responded_at?: string | null
+          service_id?: string | null
+          status?: string
+          time_window?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string
+          note?: string | null
+          owner_reply?: string | null
+          party_size?: number | null
+          requested_date?: string | null
+          requester_email?: string
+          requester_name?: string
+          requester_phone?: string | null
+          requester_user_id?: string | null
+          responded_at?: string | null
+          service_id?: string | null
+          status?: string
+          time_window?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_requests_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_requests_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_invite_sends: {
         Row: {
           business_name: string
@@ -1698,6 +1770,41 @@ export type Database = {
           },
           {
             foreignKeyName: "listing_details_job_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_booking_settings: {
+        Row: {
+          ask_date: boolean
+          ask_party_size: boolean
+          enabled: boolean
+          listing_id: string
+          prompt: string | null
+          updated_at: string
+        }
+        Insert: {
+          ask_date?: boolean
+          ask_party_size?: boolean
+          enabled?: boolean
+          listing_id: string
+          prompt?: string | null
+          updated_at?: string
+        }
+        Update: {
+          ask_date?: boolean
+          ask_party_size?: boolean
+          enabled?: boolean
+          listing_id?: string
+          prompt?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_booking_settings_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: true
             referencedRelation: "listings"

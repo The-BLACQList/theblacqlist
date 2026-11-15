@@ -44,6 +44,7 @@ export type RateLimitBucket =
   | 'message_start'
   | 'message_send'
   | 'message_report'
+  | 'booking_request'
 
 const DEFAULT_WINDOW_SECONDS = 60
 
