@@ -16,7 +16,7 @@ Stripe Connect, separate charges and transfers:
 1. The shopper pays one charge to BLACQList's Stripe account for the whole cart, many shops included. BLACQList accepts it as each seller's limited payment collection agent (Seller Agreement 4.3).
 2. Stripe takes its processing fee from that charge.
 3. For each seller's order, BLACQList sends a transfer to the seller's Stripe Express connected account when the order qualifies (section 4).
-4. Stripe pays the seller's bank on the seller's payout schedule.
+4. Stripe pays the seller's bank once a week (founder, 2026-11-15). BLACQList sets the schedule on each connected account (ticket 224).
 5. BLACQList keeps its 8% fee and holds the sales tax to pay to the states where it is registered.
 
 Stripe does identity and business checks (KYC) and holds bank details. BLACQList never holds bank details. `[Needs professional review]` Whether Stripe or BLACQList is the 1099-K filer of record under this model.
@@ -32,7 +32,7 @@ Stripe does identity and business checks (KYC) and holds bank details. BLACQList
 | Stripe Connect active account | $2 per month for each seller paid out that month (Stripe pricing, checked 2026-11-15) | Per active seller per month | BLACQList |
 | Stripe Connect payout | 0.25% plus 25 cents per payout (checked 2026-11-15) | Per payout to a seller's bank | BLACQList |
 | Stripe Connect funds routing | 0.25% of payout volume (checked 2026-11-15) | Money paid out to sellers | BLACQList |
-| Stripe Tax | 0.5% per transaction where registered, Checkout pricing (checked 2026-11-15) | The whole charge | BLACQList at launch `[Assumption: studio recommendation 2026-11-15, founder to confirm]` |
+| Stripe Tax | 0.5% per transaction where registered, Checkout pricing (checked 2026-11-15) | The whole charge | BLACQList at launch (founder, 2026-11-15). Revisit after 30 days of real sales |
 | 1099 filing | $2.99 per federal e-file, $1.49 per state e-file, $2.99 per mailed form (checked 2026-11-15) | Per seller per year | BLACQList |
 | Plan subscription | Per Terms §13 | Monthly or yearly | Seller, billed separately |
 
@@ -184,15 +184,16 @@ The other way: an actual fee of 101 cents with exact shares of 33.50, 33.50 and 
 - The $2 per active seller each month is covered many times over by the required Growth plan ($49 a month).
 - Payouts are charged per payout, not per order. A daily payout bundles that day's sales, so one payout per order is the worst case.
 - The 8% only goes negative below roughly a $3.50 to $4 order, because of the fixed 25¢ per payout.
-- Daily payouts can cost up to about $7.50 per seller a month; weekly about $1.25.
+- Daily payouts can cost up to about $7.50 per seller a month; weekly about $1.25. Weekly was chosen (below).
 
 **Bigger risk: losses, not fees.** With `losses_collector = application`, BLACQList carries chargebacks and negative seller balances it can't recover. One lost $50 chargeback costs about the margin on 20 orders of $50. Sections 2 and 7 put the dispute fee and the refunded order on the seller first; BLACQList pays only what it can't recover.
 
-**Open for the founder** (studio recommendations 2026-11-15, not decided):
+**Founder decisions, 2026-11-15** (on the venture studio's recommendations):
 
-1. Keep 8% with no fixed per-order fee for now. Revisit after the vendor re-test (D-019, next-actions #19). Optional: a $5 minimum price for digital items.
-2. Payouts weekly, or daily with a 7-day delay, instead of Stripe's default daily. Mainly a buffer for refunds and disputes; lower payout fees are a side benefit. Set it before the Seller Agreement's timing wording is final. `[Needs professional review]`
-3. BLACQList absorbs Stripe Tax's 0.5% at launch, since it collects and remits the tax as the marketplace. Revisit after 30 days of real data.
-4. Confirm the fee credit back on refunds (section 7).
+1. **Keep 8%, no fixed per-order fee.** Revisit after the vendor re-test (D-019, next-actions #19). The optional $5 minimum price for digital items was not adopted.
+2. **Weekly payouts** instead of Stripe's default daily. Mainly a buffer for refunds and disputes while BLACQList carries losses; lower payout fees are a side benefit. Seller Agreement 6.3 now says weekly. `[Needs professional review]` Counsel reviews the timing wording. `[Assumption]` The weekday is not chosen yet; Monday by default.
+3. **BLACQList pays Stripe Tax's 0.5% at launch**, since it collects and remits the tax as the marketplace. Revisit after 30 days of real sales.
+
+Still open: the fee credit back on refunds (section 7).
 
 `[Needs professional review]` For the attorney: whether holding funds before transfer raises any money-transmission concern under this setup.

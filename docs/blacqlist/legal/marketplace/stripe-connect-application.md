@@ -82,7 +82,7 @@
 | Digital | 3 days after purchase |
 | Open buyer case or chargeback | Frozen until resolved |
 
-Payouts then go from the seller's Stripe balance to their bank on Stripe's default daily rolling schedule.
+Payouts then go from the seller's Stripe balance to their bank once a week (founder, 2026-11-15), set per account by ticket 224.
 
 `[Needs professional review]` If Stripe asks how long funds can stay in the platform balance before transfer, say "normally under 30 days, from purchase to ship plus any hold". Confirm the number with Stripe if the form gives a limit.
 
@@ -103,7 +103,7 @@ Payouts then go from the seller's Stripe balance to their bank on Stripe's defau
 - Radar on all charges.
 - Transfers are tied to the charge (`source_transaction`), so funds go to a seller only after the charge settles.
 
-`[Needs professional review]` Stripe only lets a transfer be reversed while the seller's available balance covers it, unless connected reserves are on. Because sellers are paid out daily, recovery will often fall to offset or invoice. Ask Stripe at review whether **connected reserves** can be enabled for the platform.
+`[Needs professional review]` Stripe only lets a transfer be reversed while the seller's available balance covers it, unless connected reserves are on. Weekly payouts leave a few days in which a transfer can still be reversed, but after the weekly payout recovery falls to offset or invoice. Ask Stripe at review whether **connected reserves** can be enabled for the platform.
 
 ## 5. Compliance
 
