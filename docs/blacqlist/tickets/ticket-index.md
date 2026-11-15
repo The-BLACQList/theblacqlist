@@ -222,3 +222,4 @@
 | [227](227-seller-fulfilment-transfers.md) | Seller orders, shipping, Mail Order Rule clock and transfers | V1.5 | P1 | 224, 226 | Ready | Vendors ship; transfers on ship with tracking |
 | [228](228-buyer-orders-refunds-disputes-downloads.md) | Buyer orders, digital downloads, refunds, cases and disputes | V1.5 | P1 | 226, 227 | Ready | BLACQList refunds first, recovers from the shop |
 | [229](229-marketplace-staging-rehearsal-go-live.md) | Staging rehearsal and the marketplace go-live gate | V1.5 | P1 | 210 to 228 | Blocked | No real money until CPA + attorney sign off |
+| [230](230-onboarding-city-typeahead.md) | Type any US city in onboarding | V1.5 | P2 | — | In review | Founder 2026-11-15; our own Census list, Use My Location; migration at GATE-DATA |

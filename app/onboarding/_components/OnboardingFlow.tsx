@@ -5,7 +5,9 @@ import { useFormStatus } from 'react-dom'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2, ChevronRight, Store, Search } from 'lucide-react'
 
+import { CityCombobox } from '@/components/onboarding/CityCombobox'
 import { setOnboardingRoleAction } from '@/lib/actions/account/setOnboardingRole'
+import type { PlaceSuggestion } from '@/lib/geo/placeQueries'
 import type { OnboardingRole } from '@/lib/auth/onboardingRole'
 import { ONBOARDING_INTERESTS } from '@/lib/onboarding/interests'
 import { cn } from '@/lib/utils'
@@ -25,13 +27,7 @@ function SubmitButton({ label }: { label: string }) {
   )
 }
 
-interface CityOption {
-  slug: string
-  name: string
-}
-
 interface OnboardingFlowProps {
-  cities: CityOption[]
   /**
    * The role the user picked at sign-up, normalized by the page. Used only when
    * the URL carries no ?role= — auth-callback lands here with a bare path, so
@@ -40,7 +36,7 @@ interface OnboardingFlowProps {
   savedRole?: OnboardingRole
 }
 
-export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
+export function OnboardingFlow({ savedRole }: OnboardingFlowProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -52,7 +48,7 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
   const isOwner = roleParam === 'owner'
 
   const [step, setStep] = useState(1)
-  const [selectedCity, setSelectedCity] = useState('')
+  const [selectedPlace, setSelectedPlace] = useState<PlaceSuggestion | null>(null)
   const [selectedCategories, setSelectedCategories] = useState<string[]>([])
 
   const dbRole: 'supporter' | 'owner' = isOwner ? 'owner' : 'supporter'
@@ -65,18 +61,19 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
     return '/account/saved'
   }
 
-  // Every exit builds its form data here, so the city is always saved.
+  // Every exit builds its form data here, so the place is always saved.
+  // `place` is a Census place GEOID from the US list (ticket 230).
   // Interests are added only by "Get started".
   function buildFormData(interests: string[] = []) {
     const formData = new FormData()
     formData.set('role', dbRole)
-    if (selectedCity) formData.set('city', selectedCity)
+    if (selectedPlace) formData.set('place', selectedPlace.geoid)
     for (const slug of interests) formData.append('interests', slug)
     return formData
   }
 
   function handleCitySkip() {
-    setSelectedCity('')
+    setSelectedPlace(null)
     setStep(2)
   }
 
@@ -149,19 +146,12 @@ export function OnboardingFlow({ cities, savedRole }: OnboardingFlowProps) {
                   >
                     Your City
                   </label>
-                  <select
+                  <CityCombobox
                     id="city"
-                    value={selectedCity}
-                    onChange={(e) => setSelectedCity(e.target.value)}
-                    className="h-11 rounded-lg border border-charcoal/30 bg-white font-subhead text-sm text-brand-black px-3 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black"
-                  >
-                    <option value="">All cities / National</option>
-                    {cities.map((city) => (
-                      <option key={city.slug} value={city.slug}>
-                        {city.name}
-                      </option>
-                    ))}
-                  </select>
+                    value={selectedPlace}
+                    onChange={setSelectedPlace}
+                    className="h-11 w-full rounded-lg border border-charcoal/30 bg-white font-subhead text-sm text-brand-black px-3 pr-9 focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black"
+                  />
                 </div>
 
                 <div className="flex items-center justify-between mt-4">

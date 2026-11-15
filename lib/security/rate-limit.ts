@@ -38,6 +38,8 @@ export type RateLimitBucket =
   | 'site_import'
   | 'place_lookup'
   | 'place_lookup_upstream'
+  | 'place_suggest'
+  | 'place_nearest'
   | 'ai_guide'
   | 'ai_assistant'
   | 'owner_cue'
