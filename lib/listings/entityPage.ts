@@ -27,6 +27,13 @@ import {
 import { toBookingSettings } from '@/lib/listings/booking'
 import { albumsAllowed, toAlbumMap, withAlbums } from '@/lib/listings/photoAlbums'
 import {
+  DOCUMENT_COLUMNS,
+  documentsShowOn,
+  toOwnerDocuments,
+  toPublicDocuments,
+  type OwnerDocument,
+} from '@/lib/listings/documents'
+import {
   LOCATION_LINK_COLUMNS,
   coversLocations,
   toLocationLinkRows,
@@ -263,6 +270,22 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
         () => []
       )
     : Promise.resolve([])
+  // Documents (ticket 194): Starter+ business pages. Fail-soft: no table yet,
+  // or a read error, means no downloads row.
+  const documentsPromise: Promise<OwnerDocument[]> = documentsShowOn(raw)
+    ? Promise.resolve(
+        sb
+          .from('listing_documents')
+          .select(DOCUMENT_COLUMNS)
+          .eq('listing_id', raw.id)
+          .order('sort_order', { ascending: true })
+          .order('created_at', { ascending: true })
+          .limit(20)
+      ).then(
+        ({ data, error }) => (error ? [] : toOwnerDocuments(data)),
+        () => []
+      )
+    : Promise.resolve([])
   // Photo albums (ticket 193): Growth+ pages. A separate read so a database
   // without the column yet still shows the photos, just ungrouped.
   const albumsPromise: Promise<Record<string, string>> = albumsAllowed(raw.tier)
@@ -449,6 +472,10 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
   const team = toPublicTeam(await teamPromise, teamMemberLimit(raw.tier), resolveMediaPath)
   const credentials = toPublicCredentials(await credentialsPromise)
   const albumById = await albumsPromise
+  const documents = toPublicDocuments(
+    await documentsPromise,
+    process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''
+  )
   const booking = await bookingPromise
   const locations = await locationsPromise
 
@@ -988,6 +1015,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     // Left out when empty, so a page without a team keeps its old shape.
     ...(team.length > 0 ? { team } : {}),
     ...(credentials.length > 0 ? { credentials } : {}),
+    ...(documents.length > 0 ? { documents } : {}),
     // Left out when the form is off, the same way.
     ...(booking ? { booking } : {}),
     ...(locations.length > 0 ? { locations } : {}),

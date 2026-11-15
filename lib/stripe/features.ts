@@ -40,6 +40,7 @@ export type GatedFeature =
   | 'social_links'
   | 'hide_platform_badge'
   | 'credentials'
+  | 'documents'
   // ── Growth+ — "Get chosen": the merchandising tier
   | 'priority_placement'
   | 'review_criteria'
@@ -87,6 +88,7 @@ export const FEATURE_MIN_TIER: Record<GatedFeature, number> = {
   social_links: 1,
   hide_platform_badge: 1,
   credentials: 1,
+  documents: 1,
   // Growth+ (2)
   priority_placement: 2,
   review_criteria: 2,
@@ -175,6 +177,8 @@ export interface TierLimits {
    * Drafts and ended posts don't count.
    */
   activePosts: number | null
+  /** Downloadable PDFs: the menu, the rate card (ticket 194). */
+  documents: number
 }
 
 export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
@@ -193,6 +197,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     analyticsHistoryDays: 0,
     extraButtons: 0,
     activePosts: 0,
+    documents: 0,
   },
   starter: {
     photos: 10,
@@ -209,6 +214,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     analyticsHistoryDays: 30,
     extraButtons: 1,
     activePosts: 1,
+    documents: 1,
   },
   growth: {
     photos: 25,
@@ -225,6 +231,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     analyticsHistoryDays: 365,
     extraButtons: 2,
     activePosts: 3,
+    documents: 3,
   },
   premium: {
     photos: 50,
@@ -245,6 +252,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     analyticsHistoryDays: 365,
     extraButtons: 3,
     activePosts: 5,
+    documents: 10,
   },
 }
 
@@ -304,6 +312,11 @@ export function jobLimit(tier: string | null): number | null {
 
 export function teamMemberLimit(tier: string | null): number | null {
   return limitsFor(tier).teamMembers
+}
+
+/** PDFs a page offers to download (ticket 194). 0 on Free. */
+export function documentLimit(tier: string | null): number {
+  return limitsFor(tier).documents
 }
 
 /** Buttons beyond the main one. Never null: every plan has a fixed number. */

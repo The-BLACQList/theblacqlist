@@ -1461,6 +1461,47 @@ export type Database = {
           },
         ]
       }
+      listing_documents: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          listing_id: string
+          path: string
+          size_bytes: number
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          listing_id: string
+          path: string
+          size_bytes: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          listing_id?: string
+          path?: string
+          size_bytes?: number
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_documents_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_location_links: {
         Row: {
           created_at: string

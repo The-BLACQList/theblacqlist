@@ -31,6 +31,7 @@ const ALL_FEATURES: GatedFeature[] = [
   'social_links',
   'hide_platform_badge',
   'credentials',
+  'documents',
   'priority_placement',
   'review_criteria',
   'storefront',
@@ -90,6 +91,7 @@ describe('canAccess — the tier ladder', () => {
       'social_links',
       'hide_platform_badge',
       'credentials',
+      'documents',
     ]
     for (const feature of starterFeatures) {
       expect(canAccess('free', feature)).toBe(false)
