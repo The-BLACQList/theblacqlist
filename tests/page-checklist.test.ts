@@ -9,6 +9,7 @@ type ChecklistListing = {
   meta_title: string | null
   meta_description: string | null
   cover_image_path: string | null
+  logo_path: string | null
   entity_type?: string | null
 }
 
@@ -17,6 +18,7 @@ const EMPTY_LISTING: ChecklistListing = {
   meta_title: null,
   meta_description: null,
   cover_image_path: null,
+  logo_path: null,
 }
 
 function coverItem(listing: Partial<ChecklistListing>, mediaCount = 0) {
@@ -85,6 +87,7 @@ const FULL_LISTING: ChecklistListing = {
   meta_title: 'Bakery in Atlanta',
   meta_description: 'Fresh bread daily in Atlanta.',
   cover_image_path: 'x/cover.jpg',
+  logo_path: 'x/logo.png',
 }
 
 describe('page checklist — plan aware', () => {
@@ -173,5 +176,26 @@ describe('page checklist — creator pages', () => {
     const items = computePageChecklist(EMPTY_LISTING, null, 0, 0, 0, undefined, facts).items
     expect(items.find((i) => i.id === 'description')?.label).toBe('About you (100+ characters)')
     expect(items.find((i) => i.id === 'logo')?.label).toBe('Profile photo uploaded')
+  })
+})
+
+// Ticket 185: the logo item passed on any gallery photo, so a page with one
+// photo and no logo was told it had a logo.
+describe('page checklist — logo', () => {
+  const logoItem = (listing: Partial<ChecklistListing>, mediaCount: number) =>
+    computePageChecklist({ ...EMPTY_LISTING, ...listing }, null, mediaCount, 0, 0).items.find(
+      (i) => i.id === 'logo'
+    )
+
+  it('does not pass on gallery photos alone', () => {
+    expect(logoItem({}, 5)?.passed).toBe(false)
+  })
+
+  it('passes only with a logo', () => {
+    expect(logoItem({ logo_path: 'listings/x/logo/a.png' }, 0)?.passed).toBe(true)
+  })
+
+  it('ignores a blank path', () => {
+    expect(logoItem({ logo_path: '  ' }, 0)?.passed).toBe(false)
   })
 })

@@ -5,6 +5,8 @@ import {
   FIXTURE_CLAIMABLE_ID,
   FIXTURE_OWNED_ID,
   FIXTURE_OWNED_NAME,
+  FIXTURE_OWNED_SLUG,
+  fixtureListingUrl,
 } from './helpers/fixtures'
 
 /**
@@ -89,6 +91,34 @@ test.describe('owner dashboard', () => {
     await page.locator('#c-website').fill('https://fixture.example.com')
     await saveBar(page).click()
     await expect(page.getByText(SAVED)).toBeVisible()
+  })
+
+  // Ticket 185: the owner uploads a logo under Photos and the public page shows
+  // it beside the name. The owned fixture is claimed, so the logo is allowed.
+  // Cleans up after itself so the fixture keeps no logo between runs.
+  test('ticket 185 — an uploaded logo shows in the page hero', async ({ page }) => {
+    // A 1 x 1 PNG: enough for the server to decode and re-encode.
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==',
+      'base64'
+    )
+    await page.goto(`/dashboard/pages/${FIXTURE_OWNED_ID}/edit?tab=media#photos`)
+    const panel = page.getByTestId('logo-panel')
+    await expect(panel).toBeVisible()
+    await panel
+      .getByLabel('Choose a logo')
+      .setInputFiles({ name: 'logo.png', mimeType: 'image/png', buffer: png })
+    await expect(panel.getByRole('button', { name: 'Upload a New Logo' })).toBeVisible()
+
+    await page.goto(fixtureListingUrl(FIXTURE_OWNED_SLUG))
+    await expect(page.getByRole('img', { name: `${FIXTURE_OWNED_NAME} logo` })).toBeVisible()
+
+    await page.goto(`/dashboard/pages/${FIXTURE_OWNED_ID}/edit?tab=media#photos`)
+    page.once('dialog', (d) => d.accept())
+    await page.getByTestId('logo-panel').getByRole('button', { name: 'Remove' }).click()
+    await expect(
+      page.getByTestId('logo-panel').getByRole('button', { name: 'Upload a Logo' })
+    ).toBeVisible()
   })
 
   test('TA-14 — services manager renders and guards unknown services', async ({ page }) => {

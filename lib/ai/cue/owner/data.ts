@@ -120,6 +120,7 @@ export async function loadPageFacts(
       meta_title: data.metaTitle,
       meta_description: data.metaDescription,
       cover_image_path: data.coverImagePath,
+      logo_path: data.logoPath,
       entity_type: data.entityType,
     },
     d,

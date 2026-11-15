@@ -274,6 +274,7 @@ export function PageFinishView({
       meta_title: draft.meta_title || null,
       meta_description: draft.meta_description || null,
       cover_image_path: data.coverImagePath,
+      logo_path: data.logoPath,
       entity_type: data.entityType,
     },
     d ? { ...d, description: draft.description || null } : null,
@@ -463,6 +464,11 @@ export function PageFinishView({
         listingId={data.id}
         coverImagePath={data.coverImagePath}
         hiddenIds={hidden.hiddenIds}
+        logo={{
+          url: data.logoUrl,
+          creator: data.entityType === 'creator',
+          claimed: data.trustTier !== 'unclaimed',
+        }}
       />
     ),
     'main-button': (

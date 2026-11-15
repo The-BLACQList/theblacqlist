@@ -1,6 +1,6 @@
 # 185: Logo on the page, a logo editor, cover upload, and the meter fixes
 
-**Status:** Planned — from the 184 plan, founder 2026-11-13. Not started. Own branch and draft PR off `origin/main` once 184 has merged; **no merge before Wed 18 Nov 2026** (launch merge freeze).
+**Status:** In PR (branch `feat/185-logo-cover`, 2026-11-15). Scope as built: the cover upload (`BannerEditor`, `setBanner`) and the hours meter fix (`countOpenDays(details.hours)`) were already on main, so this PR is the logo half: the logo in the live hero (claimed pages only), a logo panel at the top of Photos, the logo meter item passing on `logo_path` instead of any photo, and the "Logo or Profile Photo" label. One server action, `setLogoAction`, both sets and removes the logo (null removes). The freeze line is stale: the freeze was lifted 2026-11-15.
 **Follows:** 184 (sample pages: `EntityLogo`, `entity.logo`)
 **Area:** business pages, the owner editor (`PageFinishView#photos`, `MediaGrid`)
 **Gates:** none. No migration, no env change; `logo_path` already exists on `listings`.

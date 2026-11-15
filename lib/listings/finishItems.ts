@@ -6,7 +6,7 @@
 export const FINISH_ITEMS: Record<string, { label: string; anchor: string }> = {
   tagline: { label: 'One-Line Tagline', anchor: '#basics' },
   description: { label: 'About, 100+ Characters', anchor: '#about' },
-  logo: { label: 'A Photo', anchor: '#photos' },
+  logo: { label: 'Logo or Profile Photo', anchor: '#photos' },
   cover: { label: 'Cover Photo', anchor: '#photos' },
   gallery: { label: 'A Second Photo', anchor: '#photos' },
   cta: { label: 'Main Button', anchor: '#main-button' },
