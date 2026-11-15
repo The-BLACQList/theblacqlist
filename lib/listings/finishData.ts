@@ -33,6 +33,10 @@ export interface FinishDetails {
   cta_url: string | null
   cta_label_override: string | null
   hours: Record<string, { open: string; close: string; closed: boolean }> | null
+  /** The facts line (ticket 189). */
+  founded_year: number | null
+  price_range: string | null
+  accepts_reservations: boolean | null
 }
 
 export interface FinishMedia {
@@ -119,7 +123,7 @@ const DETAIL_COLUMNS = `
   social_instagram, social_facebook, social_linkedin,
   social_tiktok, social_youtube, social_twitter,
   cta_type, cta_url, cta_label_override,
-  hours
+  hours, founded_year, price_range, accepts_reservations
 `
 
 /** Days with hours set and not marked closed. */

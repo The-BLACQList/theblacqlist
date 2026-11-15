@@ -12,9 +12,9 @@ interface Props {
   entity: EntityPageData
   images?: GalleryImage[]
   /**
-   * Captions (the alt text, on hover and in the lightbox) show in example mode
-   * only until ticket 189 turns them on for live pages. Album chips need no
-   * gate: the live loader sets no `album`, so they never appear there.
+   * Captions are the owner's photo descriptions (the alt text), on hover and in
+   * the lightbox, on live and sample pages alike (ticket 189). Album chips need
+   * no gate: the live loader sets no `album`, so they never appear there.
    */
   mode?: EntityRenderMode
 }
@@ -47,14 +47,13 @@ function AlbumChip({
   )
 }
 
-export function EntityMediaGallery({ entity, images, mode = 'live' }: Props) {
+export function EntityMediaGallery({ entity, images }: Props) {
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const [activeAlbum, setActiveAlbum] = useState<string | null>(null)
 
   // Hidden entirely if no images — spec rule
   if (!images || images.length === 0) return null
 
-  const showCaptions = mode === 'example'
   const albums = galleryAlbums(images)
   const shown = filterByAlbum(images, activeAlbum)
   const selectAlbum = (album: string | null) => {
@@ -127,7 +126,7 @@ export function EntityMediaGallery({ entity, images, mode = 'live' }: Props) {
                 className="absolute inset-0 bg-brand-black/0 group-hover:bg-brand-black/20 transition-colors"
                 aria-hidden="true"
               />
-              {showCaptions && img.alt && (
+              {img.alt && (
                 <span
                   aria-hidden="true"
                   className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-brand-black/85 to-transparent px-3 pb-2.5 pt-8 text-left font-body text-xs leading-snug text-white opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100 line-clamp-2"
@@ -199,7 +198,7 @@ export function EntityMediaGallery({ entity, images, mode = 'live' }: Props) {
           </div>
 
           <div className="absolute bottom-4 left-0 right-0 px-6 text-center">
-            {showCaptions && currentImage.alt && (
+            {currentImage.alt && (
               <p className="mx-auto mb-1 max-w-2xl font-body text-sm text-white/90">
                 {currentImage.alt}
               </p>

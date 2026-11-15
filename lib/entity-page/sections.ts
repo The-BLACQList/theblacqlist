@@ -125,7 +125,7 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
     id: 'facts',
     label: 'Facts Line',
     templates: ALL,
-    // Part of the basic page (founder 2026-11-13). Ticket 189 wires the live loader.
+    // Part of the basic page (founder 2026-11-13). The live loader reads it since ticket 189.
     gate: {},
     editor: { tool: 'Details', href: edit('details') },
     isFilled: (e) => factsFor(e.details).length > 0,

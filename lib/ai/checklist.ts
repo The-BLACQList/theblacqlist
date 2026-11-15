@@ -57,6 +57,9 @@ interface DetailsFields {
   social_twitter: string | null
   social_linkedin: string | null
   cta_type: string | null
+  /** The facts line (ticket 189): the year founded and the price band. */
+  founded_year: number | null
+  price_range: string | null
 }
 
 /**
@@ -71,7 +74,7 @@ export interface CreatorChecklistFacts {
   hasSample: boolean
 }
 
-const CREATOR_DROPS = new Set(['contact', 'hours'])
+const CREATOR_DROPS = new Set(['contact', 'hours', 'founded_year', 'price_range'])
 
 export function computePageChecklist(
   listing: ListingFields,
@@ -162,6 +165,22 @@ export function computePageChecklist(
       category: 'recommended',
       weight: 8,
       passed: hoursCount > 0,
+    },
+    {
+      id: 'founded_year',
+      label: 'Year founded added',
+      hint: 'Add the year you started. "Est. 2014" under your name tells people you have been around.',
+      category: 'recommended',
+      weight: 4,
+      passed: details?.founded_year != null,
+    },
+    {
+      id: 'price_range',
+      label: 'Price range set',
+      hint: 'Pick a price range from $ to $$$$ so people know what to expect before they visit.',
+      category: 'recommended',
+      weight: 4,
+      passed: !!details?.price_range,
     },
     {
       id: 'social',

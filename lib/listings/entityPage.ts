@@ -14,6 +14,7 @@ import { shownPosts, toOwnerPosts, toPublicPost } from '@/lib/listings/happening
 import { shownDeals, toOwnerDeals, toPublicDeal } from '@/lib/listings/deals'
 import { STOCKIST_SELECT, toOrderLinks, toStockists } from '@/lib/listings/whereSold'
 import { entityLogo } from '@/lib/listings/logo'
+import { isPriceRange } from '@/lib/listings/facts'
 import type {
   EntityPageData,
   EntityAttributeGroup,
@@ -109,6 +110,9 @@ type RawRow = {
     ships_nationwide: boolean
     lat: number | null
     lng: number | null
+    founded_year: number | null
+    price_range: string | null
+    accepts_reservations: boolean | null
   } | null
 }
 
@@ -129,7 +133,8 @@ const LISTING_SELECT = `
     state, zip, phone, email, website_url,
     social_instagram, social_facebook, social_linkedin,
     social_tiktok, social_youtube, social_twitter,
-    cta_type, cta_url, cta_label_override, hours, ships_nationwide, lat, lng
+    cta_type, cta_url, cta_label_override, hours, ships_nationwide, lat, lng,
+    founded_year, price_range, accepts_reservations
   )
 `
 
@@ -552,6 +557,12 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     // Only a real pin counts. The map route applies the same number check.
     lat: typeof det?.lat === 'number' ? det.lat : null,
     lng: typeof det?.lng === 'number' ? det.lng : null,
+    // The facts line (ticket 189). The columns' CHECKs hold the same rules;
+    // anything else reads as left blank.
+    founded_year: typeof det?.founded_year === 'number' ? det.founded_year : null,
+    price_range: isPriceRange(det?.price_range) ? det.price_range : null,
+    accepts_reservations:
+      typeof det?.accepts_reservations === 'boolean' ? det.accepts_reservations : null,
     services: (servicesData ?? []).map((s) => ({
       id: s.id,
       name: s.name,

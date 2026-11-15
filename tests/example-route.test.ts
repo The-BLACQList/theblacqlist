@@ -118,7 +118,10 @@ describe('off production', () => {
       expect(html?.__html, variant).toBeTruthy()
       const data = JSON.parse(html!.__html) as Record<string, unknown>
       expect(data['@context']).toBe('https://schema.org')
-      expect(data['@type']).toBe('LocalBusiness')
+      // A category-mapped LocalBusiness subtype (ticket 189); the cafe is a CafeOrCoffeeShop.
+      expect(data['@type'], variant).toBe(
+        variant === 'storefront' ? 'CafeOrCoffeeShop' : 'LocalBusiness'
+      )
       expect(data.name).toBe('Test Business 123')
       expect(data.aggregateRating).toBeTruthy()
       expect(data.address).toBeTruthy()

@@ -20,6 +20,25 @@ export const PRICE_RANGE_TITLE: Record<PriceRange, string> = {
   $$$$: 'Premium prices',
 }
 
+export const PRICE_RANGES: readonly PriceRange[] = ['$', '$$', '$$$', '$$$$']
+
+export function isPriceRange(value: unknown): value is PriceRange {
+  return typeof value === 'string' && (PRICE_RANGES as readonly string[]).includes(value)
+}
+
+/** The earliest founding year the column allows (its CHECK is 1800–2100). */
+export const FOUNDED_YEAR_MIN = 1800
+
+/** A founding year an owner may save: a whole number from 1800 to this year. */
+export function isFoundedYear(value: unknown, now: Date = new Date()): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= FOUNDED_YEAR_MIN &&
+    value <= now.getFullYear()
+  )
+}
+
 type FactSource = Pick<BusinessDetails, 'founded_year' | 'price_range' | 'accepts_reservations'>
 
 export function factsFor(details: FactSource): FactItem[] {

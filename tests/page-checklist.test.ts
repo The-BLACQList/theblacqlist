@@ -80,6 +80,8 @@ const FULL_DETAILS = {
   social_twitter: null,
   social_linkedin: null,
   cta_type: 'call',
+  founded_year: 2014,
+  price_range: '$$',
 }
 
 const FULL_LISTING: ChecklistListing = {
@@ -197,5 +199,35 @@ describe('page checklist — logo', () => {
 
   it('ignores a blank path', () => {
     expect(logoItem({ logo_path: '  ' }, 0)?.passed).toBe(false)
+  })
+})
+
+describe('page checklist — facts line (ticket 189)', () => {
+  it('scores the year founded and the price range on business pages', () => {
+    const full = computePageChecklist(FULL_LISTING, FULL_DETAILS, 1, 1, 1, 'free')
+    expect(full.items.find((i) => i.id === 'founded_year')?.passed).toBe(true)
+    expect(full.items.find((i) => i.id === 'price_range')?.passed).toBe(true)
+
+    const blank = computePageChecklist(
+      FULL_LISTING,
+      { ...FULL_DETAILS, founded_year: null, price_range: null },
+      1,
+      1,
+      1,
+      'free'
+    )
+    expect(blank.items.find((i) => i.id === 'founded_year')?.passed).toBe(false)
+    expect(blank.items.find((i) => i.id === 'price_range')?.passed).toBe(false)
+    expect(blank.percent).toBeLessThan(100)
+  })
+
+  it('leaves both out of a creator page', () => {
+    const result = computePageChecklist(FULL_LISTING, FULL_DETAILS, 1, 1, 1, 'free', {
+      nicheCount: 1,
+      hasSample: true,
+    })
+    const ids = result.items.map((i) => i.id)
+    expect(ids).not.toContain('founded_year')
+    expect(ids).not.toContain('price_range')
   })
 })

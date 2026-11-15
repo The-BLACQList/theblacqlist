@@ -12,6 +12,8 @@ export const FINISH_ITEMS: Record<string, { label: string; anchor: string }> = {
   cta: { label: 'Main Button', anchor: '#main-button' },
   contact: { label: 'Phone or Website', anchor: '#contact' },
   hours: { label: 'Hours', anchor: '#hours' },
+  founded_year: { label: 'Year Founded', anchor: '#facts' },
+  price_range: { label: 'Price Range', anchor: '#facts' },
   social: { label: 'A Social Link', anchor: '#social' },
   service: { label: 'A Service', anchor: '#services' },
   meta_title: { label: 'Search Title', anchor: '#google' },

@@ -9,6 +9,7 @@ import { checkDescription, checkSocialLinks, SOCIAL_FIELDS } from '@/lib/stripe/
 import { revalidateOwnerEditors } from '@/lib/dashboard/revalidateEditors'
 import { parseWeeklyHours } from '@/lib/listings/hours'
 import { markSuggestionUsed } from '@/lib/ai/markUsed'
+import { isFoundedYear, isPriceRange } from '@/lib/listings/facts'
 import type { WeeklyHours } from '@/types'
 
 export type UpdateListingContentState =
@@ -174,6 +175,40 @@ export async function updateListingContentAction(
       if (!parsed) return { error: 'Check the times for each open day, then save again.' }
       detailsUpdate.hours = parsed
     }
+  }
+
+  // The facts line (ticket 189): year founded, price range, reservations.
+  // Business pages only; creators, events and jobs have no facts line.
+  const foundedRaw = formData.get('founded_year')?.toString().trim()
+  const priceRaw = formData.get('price_range')?.toString().trim()
+  const reservationsRaw = formData.get('accepts_reservations')?.toString().trim()
+  if (foundedRaw !== undefined || priceRaw !== undefined || reservationsRaw !== undefined) {
+    if (['creator', 'event', 'job'].includes(listing.entity_type)) {
+      return { error: 'This kind of page does not have a facts line.' }
+    }
+  }
+  if (foundedRaw !== undefined) {
+    if (!foundedRaw) {
+      detailsUpdate.founded_year = null
+    } else {
+      const year = /^\d{4}$/.test(foundedRaw) ? Number(foundedRaw) : NaN
+      if (!isFoundedYear(year)) {
+        return {
+          error: `Year founded must be a year from 1800 to ${new Date().getFullYear()}.`,
+        }
+      }
+      detailsUpdate.founded_year = year
+    }
+  }
+  if (priceRaw !== undefined) {
+    if (priceRaw && !isPriceRange(priceRaw)) return { error: 'Pick a price range from $ to $$$$.' }
+    detailsUpdate.price_range = priceRaw || null
+  }
+  if (reservationsRaw !== undefined) {
+    if (!['', 'true', 'false'].includes(reservationsRaw)) {
+      return { error: 'Pick whether you take reservations.' }
+    }
+    detailsUpdate.accepts_reservations = reservationsRaw === '' ? null : reservationsRaw === 'true'
   }
 
   for (const [key, val] of [
