@@ -1,6 +1,6 @@
 # 189: Facts line, gallery captions and richer JSON-LD on live pages
 
-**Status:** Planned — from the 184 plan, founder 2026-11-13. Not started. Own branch and draft PR off `origin/main` once 184 has merged; **no merge before Wed 18 Nov 2026** (launch merge freeze).
+**Status:** In PR (branch `feat/189-page-quick-wins`, stacked on 185, 2026-11-15). As built: a **Quick Facts** card in the Basics tab (`#facts`, business pages only; year 1800–this year, `$`–`$$$$` or Not Set, Takes Reservations / Walk-Ins Only / Not Set) saving through `updateListingContentAction`; the live loader reads the three columns; gallery captions show on live pages; JSON-LD gains every item below except `specialOpeningHoursSpecification` (waits for 196). A price like "From $350" is kept as offer text, not a number. Meter items "Year Founded" and "Price Range" weigh 4 each (creators exempt). The freeze line is stale: the freeze was lifted 2026-11-15.
 **Follows:** 184 (`EntityFactsLine`, `lib/listings/facts.ts`, gallery captions, `lib/listings/jsonLd.ts`)
 **Area:** business pages, the owner editor (`PageFinishView#details`), structured data
 **Gates:** none. No migration: `founded_year`, `price_range` and `accepts_reservations` already exist on `listing_details_business` and never reach the page.

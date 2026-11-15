@@ -229,9 +229,9 @@ export interface BusinessDetails {
   cta_label_override: string | null
   ships_nationwide: boolean
   /**
-   * The facts line (ticket 189): year founded, price band, reservations. The
-   * columns exist on listing_details_business; the live loader does not read
-   * them yet, so undefined means "not loaded" and null "left blank".
+   * The facts line (ticket 189): year founded, price band, reservations, from
+   * listing_details_business. Null means left blank; optional so older
+   * fixtures still type.
    */
   founded_year?: number | null
   price_range?: PriceRange | null

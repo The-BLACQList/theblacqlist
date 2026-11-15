@@ -13,6 +13,7 @@ import { LivePagePreview } from '@/components/listings/LivePagePreview'
 import { extraButtonLabel, shownExtraButtons } from '@/lib/listings/pageButtons'
 import { BasicInfoSection } from '@/components/dashboard/BasicInfoSection'
 import { AboutSection } from '@/components/dashboard/AboutSection'
+import { FactsSection } from '@/components/dashboard/FactsSection'
 import { MediaGrid } from '@/components/dashboard/MediaGrid'
 import { CtaSection } from '@/components/dashboard/CtaSection'
 import { ContactSection } from '@/components/dashboard/ContactSection'
@@ -440,6 +441,17 @@ export function PageFinishView({
         initialSuggestion={initial.listing_description}
       />
     ),
+    // The facts line (ticket 189). Business pages only: a creator has no
+    // founding year or price band.
+    facts:
+      data.entityType !== 'creator' ? (
+        <FactsSection
+          listingId={data.id}
+          foundedYear={d?.founded_year ?? null}
+          priceRange={d?.price_range ?? null}
+          acceptsReservations={d?.accepts_reservations ?? null}
+        />
+      ) : null,
     contact: (
       <ContactSection
         key={`contact-${mounts.contact}`}

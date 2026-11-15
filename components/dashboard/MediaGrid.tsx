@@ -406,8 +406,8 @@ export function MediaGrid({
       <div className="px-5 py-4 border-b border-charcoal/8">
         <h2 className="font-headline text-base text-brand-black">Photos</h2>
         <p className="font-body text-xs text-charcoal-soft mt-0.5">
-          Add photos to showcase your business. Use descriptive alt text to improve accessibility
-          and SEO. Upload at <strong className="font-semibold">1920px wide or larger</strong> for
+          Add photos to showcase your business. Each photo&rsquo;s alt text shows as its caption on
+          your page and helps people using screen readers and search. Upload at <strong className="font-semibold">1920px wide or larger</strong> for
           the sharpest photos.
         </p>
       </div>

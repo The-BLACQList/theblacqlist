@@ -26,7 +26,7 @@ export type EditTabId = (typeof EDIT_TABS)[number]['id']
  */
 export const TAB_SECTIONS: Record<EditTabId, readonly string[]> = {
   // 'happening-now' is the edit page only (part F); a new page has no posts.
-  basics: ['happening-now', 'basics', 'about', 'role', 'collective-name'],
+  basics: ['happening-now', 'basics', 'about', 'facts', 'role', 'collective-name'],
   contact: ['contact', 'hours', 'main-button'],
   media: ['photos', 'video'],
   // 'deals' is the edit page only (part G); 'order-on' too (part D).
@@ -42,6 +42,7 @@ export const SCROLL_ORDER: readonly string[] = [
   'happening-now',
   'basics',
   'about',
+  'facts',
   'contact',
   'hours',
   'photos',

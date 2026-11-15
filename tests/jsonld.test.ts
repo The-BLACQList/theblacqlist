@@ -1,13 +1,19 @@
 /**
- * Pins the LocalBusiness JSON-LD builder's output as it was the day it moved
- * out of the listing page (ticket 184, PR 1B). The move promised no change in
- * output; this is that promise as a test. Ticket 189 enriches the builder and
- * rewrites these expectations deliberately, quirks included.
+ * Pins the LocalBusiness JSON-LD builder's output. It moved out of the listing
+ * page in ticket 184 unchanged; ticket 189 enriched it (type, hours, geo,
+ * image, price range, founding year, socials, offers, events) and fixed the two
+ * quirks the move kept: address line 2 and a 0 average.
  */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { buildExampleEntity } from '@/lib/example/fixtures'
-import { DEFAULT_SITE_URL, buildJsonLd, siteBaseUrl } from '@/lib/listings/jsonLd'
+import {
+  DEFAULT_SITE_URL,
+  buildJsonLd,
+  openingHoursSpecification,
+  schemaTypeFor,
+  siteBaseUrl,
+} from '@/lib/listings/jsonLd'
 import { buildEntityUrl } from '@/lib/listings/url'
 import type { EntityPageData } from '@/types'
 
@@ -22,8 +28,11 @@ function bare(): EntityPageData {
   const entity = full()
   return {
     ...entity,
+    category: { name: 'Business', slug: 'business' },
     logo_path: null,
+    cover_image_path: null,
     avg_rating: null,
+    organizerEvents: [],
     details: {
       ...entity.details,
       description: '',
@@ -31,6 +40,16 @@ function bare(): EntityPageData {
       address_line2: null,
       phone: null,
       website_url: null,
+      social: Object.fromEntries(
+        Object.keys(entity.details.social).map((k) => [k, null])
+      ) as unknown as EntityPageData['details']['social'],
+      hours: null,
+      lat: null,
+      lng: null,
+      founded_year: null,
+      price_range: null,
+      accepts_reservations: null,
+      services: [],
     },
   }
 }
@@ -44,32 +63,121 @@ describe('buildJsonLd', () => {
     expect(buildJsonLd(null, 'business', BASE)).toBeNull()
   })
 
-  it('emits exactly the shape the listing page emitted before the move', () => {
+  it('emits the enriched LocalBusiness shape for a full storefront page', () => {
     const entity = full()
     expect(entity.details.address_line2).toBeTruthy()
-    expect(buildJsonLd(entity, entity.entity_type, BASE)).toEqual({
-      '@context': 'https://schema.org',
-      '@type': 'LocalBusiness',
-      name: entity.name,
-      description: entity.details.description,
-      url: `${BASE}${buildEntityUrl(entity.entity_type, entity.city?.slug, entity.slug)}`,
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: entity.avg_rating!.toFixed(1),
-        reviewCount: entity.review_count,
-      },
-      address: {
-        '@type': 'PostalAddress',
-        streetAddress: entity.details.address,
-        // address_line2 is dropped today: the city overwrites it. Ticket 189.
-        addressLocality: entity.details.city_name,
-        addressRegion: entity.details.state_abbr,
-        postalCode: entity.details.zip,
-        addressCountry: 'US',
-      },
-      telephone: entity.details.phone,
-      sameAs: entity.details.website_url,
+    const ld = buildJsonLd(entity, entity.entity_type, BASE)!
+    expect(ld['@type']).toBe('CafeOrCoffeeShop')
+    expect(ld.name).toBe(entity.name)
+    expect(ld.description).toBe(entity.details.description)
+    expect(ld.url).toBe(
+      `${BASE}${buildEntityUrl(entity.entity_type, entity.city?.slug, entity.slug)}`
+    )
+    expect(ld.image).toBe(`${BASE}${entity.cover_image_path}`)
+    expect(ld.aggregateRating).toEqual({
+      '@type': 'AggregateRating',
+      ratingValue: entity.avg_rating!.toFixed(1),
+      reviewCount: entity.review_count,
     })
+    expect(ld.address).toEqual({
+      '@type': 'PostalAddress',
+      // Line 2 now reaches the street line (the old quirk dropped it).
+      streetAddress: `${entity.details.address}, ${entity.details.address_line2}`,
+      addressLocality: entity.details.city_name,
+      addressRegion: entity.details.state_abbr,
+      postalCode: entity.details.zip,
+      addressCountry: 'US',
+    })
+    expect(ld.geo).toEqual({
+      '@type': 'GeoCoordinates',
+      latitude: entity.details.lat,
+      longitude: entity.details.lng,
+    })
+    expect(ld.hasMap).toMatch(/^https:\/\/www\.google\.com\/maps\/dir\/\?api=1&destination=/)
+    expect(ld.telephone).toBe(entity.details.phone)
+    expect(ld.priceRange).toBe(entity.details.price_range)
+    expect(ld.foundingDate).toBe(String(entity.details.founded_year))
+    expect(ld.acceptsReservations).toBe(true)
+    expect(ld.sameAs).toEqual(
+      expect.arrayContaining([entity.details.website_url, entity.details.social.instagram])
+    )
+  })
+
+  it('groups opening hours by shared times and leaves closed days out', () => {
+    expect(
+      openingHoursSpecification({
+        monday: { open: '09:00', close: '17:00', closed: false },
+        tuesday: { open: '09:00', close: '17:00', closed: false },
+        wednesday: { open: '09:00', close: '17:00', closed: false },
+        thursday: { open: '09:00', close: '17:00', closed: false },
+        friday: { open: '09:00', close: '20:00', closed: false },
+        saturday: { open: '10:00', close: '14:00', closed: false },
+        sunday: { open: '00:00', close: '00:00', closed: true },
+      })
+    ).toEqual([
+      {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: [
+          'https://schema.org/Monday',
+          'https://schema.org/Tuesday',
+          'https://schema.org/Wednesday',
+          'https://schema.org/Thursday',
+        ],
+        opens: '09:00',
+        closes: '17:00',
+      },
+      {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: 'https://schema.org/Friday',
+        opens: '09:00',
+        closes: '20:00',
+      },
+      {
+        '@type': 'OpeningHoursSpecification',
+        dayOfWeek: 'https://schema.org/Saturday',
+        opens: '10:00',
+        closes: '14:00',
+      },
+    ])
+    expect(openingHoursSpecification(null)).toEqual([])
+  })
+
+  it('lists priced services in an offer catalog, with a number only for a plain price', () => {
+    const entity = full()
+    const catalog = buildJsonLd(entity, entity.entity_type, BASE)?.hasOfferCatalog as {
+      itemListElement: Record<string, unknown>[]
+    }
+    const offers = catalog.itemListElement
+    const priced = entity.details.services.filter((s) => s.price)
+    expect(offers).toHaveLength(priced.length)
+    const plain = offers.find((o) => (o.itemOffered as { name: string }).name === priced[0]!.name)
+    expect(plain).toMatchObject({ price: '3.50', priceCurrency: 'USD' })
+    const from = offers.find((o) => o.description === 'From $350')
+    expect(from).toBeDefined()
+    expect(from).not.toHaveProperty('price')
+  })
+
+  it('adds the organizer’s upcoming events with absolute links', () => {
+    const entity = full()
+    const events = buildJsonLd(entity, entity.entity_type, BASE)?.event as Record<string, unknown>[]
+    expect(events).toHaveLength(entity.organizerEvents.length)
+    const first = entity.organizerEvents[0]!
+    expect(events[0]).toMatchObject({
+      '@type': 'Event',
+      name: first.name,
+      startDate: first.starts_at,
+      url: `${BASE}${first.url}`,
+      eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    })
+  })
+
+  it('maps category slugs to schema.org types, with LocalBusiness as the fallback', () => {
+    expect(schemaTypeFor('restaurants')).toBe('Restaurant')
+    expect(schemaTypeFor('law-legal-services')).toBe('LegalService')
+    expect(schemaTypeFor('accounting-tax-preparation')).toBe('AccountingService')
+    expect(schemaTypeFor('hair-salons')).toBe('HairSalon')
+    expect(schemaTypeFor('churches-places-of-worship')).toBe('LocalBusiness')
+    expect(schemaTypeFor(null)).toBe('LocalBusiness')
   })
 
   it('falls back to the tagline and omits every optional property on a bare listing', () => {
@@ -89,9 +197,13 @@ describe('buildJsonLd', () => {
     expect(rating).toEqual({ '@type': 'AggregateRating', ratingValue: '4.7', reviewCount: 7 })
   })
 
-  it('emits no aggregateRating for an average of exactly 0 (truthiness quirk, kept)', () => {
-    const entity = { ...full(), avg_rating: 0 }
-    expect(buildJsonLd(entity, entity.entity_type, BASE)).not.toHaveProperty('aggregateRating')
+  it('emits a rating for an average of exactly 0, and none without reviews', () => {
+    const zero = { ...full(), avg_rating: 0, review_count: 3 }
+    expect(buildJsonLd(zero, zero.entity_type, BASE)?.aggregateRating).toMatchObject({
+      ratingValue: '0.0',
+    })
+    const none = { ...full(), avg_rating: 4.5, review_count: 0 }
+    expect(buildJsonLd(none, none.entity_type, BASE)).not.toHaveProperty('aggregateRating')
   })
 
   it('passes an absolute logo URL through and resolves a storage key to the public bucket', () => {
