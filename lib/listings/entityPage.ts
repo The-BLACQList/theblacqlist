@@ -15,6 +15,7 @@ import { shownDeals, toOwnerDeals, toPublicDeal } from '@/lib/listings/deals'
 import { STOCKIST_SELECT, toOrderLinks, toStockists } from '@/lib/listings/whereSold'
 import { entityLogo } from '@/lib/listings/logo'
 import { isPriceRange } from '@/lib/listings/facts'
+import { loadProfileShop } from '@/lib/marketplace/profileShop'
 import type {
   EntityPageData,
   EntityAttributeGroup,
@@ -208,6 +209,10 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     ? relatedBase().eq('city_id', raw.city_id)
     : relatedBase().is('city_id', null)
 
+  // The Shop section (ticket 186): Growth+ with the marketplace open. Started
+  // now so it runs beside the reads below; it never fails the page.
+  const shopPromise = loadProfileShop(raw)
+
   const nowIso = new Date().toISOString()
   const [
     { data: servicesData },
@@ -341,6 +346,8 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
       ? sb.from('listing_stockists').select(STOCKIST_SELECT).eq('listing_id', raw.id).limit(50)
       : Promise.resolve({ data: null }),
   ])
+
+  const shop = await shopPromise
 
   // After a move to a lower plan, content over the new plan's limits is hidden
   // here and only here: nothing is deleted, and an upgrade shows it all again
@@ -871,6 +878,7 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     // Delivery-app links and stores (lib/listings/whereSold.ts). Every plan.
     orderLinks: toOrderLinks(orderLinkData),
     findUsAt: toStockists(stockistData),
+    shop,
     service_area_description: raw.service_area_description?.trim() || null,
     related,
     images,

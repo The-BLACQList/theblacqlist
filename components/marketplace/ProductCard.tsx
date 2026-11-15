@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { Package } from 'lucide-react'
 import { CTAButton } from './CTAButton'
 import { resolveRemoteImage } from '@/lib/listings/coverImage'
+import { formatPriceCents, productPriceLabel } from '@/lib/marketplace/priceLabel'
 
 interface ProductCardProps {
   product: {
@@ -23,21 +24,12 @@ interface ProductCardProps {
   showVendor?: boolean
 }
 
-function formatPrice(cents: number): string {
-  return (cents / 100).toLocaleString('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    maximumFractionDigits: 0,
-  })
-}
-
 export function ProductCard({ product, showVendor = false }: ProductCardProps) {
   const priceLabel =
-    product.price_display_text ??
-    (product.price_cents ? formatPrice(product.price_cents) : 'Contact for pricing')
+    productPriceLabel(product) ?? 'Contact for pricing'
 
   const compareLabel = product.compare_at_price_cents
-    ? formatPrice(product.compare_at_price_cents)
+    ? formatPriceCents(product.compare_at_price_cents)
     : null
 
   const ctaType = product.external_purchase_url ? 'shop-now' : 'visit-website'
