@@ -146,7 +146,7 @@ import {
   toLocationLinks,
   type LocationLinkRow,
 } from '@/lib/listings/locations'
-import { ownTier, syncLocationTiers } from '@/lib/services/billing/locationTiers'
+import { isMissingTable, ownTier, syncLocationTiers } from '@/lib/services/billing/locationTiers'
 import { linkLocationAction, unlinkLocationAction } from '@/lib/actions/dashboard/locations'
 
 function read(file: string): string {
@@ -310,6 +310,19 @@ describe('syncLocationTiers', () => {
     expect(await syncLocationTiers(service(), B, 'premium')).toEqual([])
     h.state.errors['listing_location_links:select'] = { message: 'missing', code: '42P01' }
     expect(await syncLocationTiers(service(), A, 'premium')).toEqual([])
+    h.state.errors['listing_location_links:select'] = {
+      message: "Could not find the table 'public.listing_location_links' in the schema cache",
+      code: 'PGRST205',
+    }
+    expect(await syncLocationTiers(service(), A, 'premium')).toEqual([])
+  })
+
+  it('isMissingTable knows both missing-table codes and nothing else', () => {
+    expect(isMissingTable({ code: '42P01' })).toBe(true)
+    expect(isMissingTable({ code: 'PGRST205' })).toBe(true)
+    expect(isMissingTable({ code: '42501' })).toBe(false)
+    expect(isMissingTable({})).toBe(false)
+    expect(isMissingTable(null)).toBe(false)
   })
 
   it('throws on a read or write error, so Stripe retries', async () => {
@@ -462,6 +475,8 @@ describe('wiring', () => {
     const src = read('app/api/stripe/create-checkout-session/route.ts')
     expect(src).toContain(".from('listing_location_links')")
     expect(src).toContain("code: 'COVERED_BY_LOCATION'")
+    // A missing table must not block every checkout before the migration lands.
+    expect(src).toContain('!isMissingTable(coveredError)')
   })
 
   it('the loader fills locations on covered business pages', () => {

@@ -5,6 +5,7 @@ import { stripe } from '@/lib/stripe/client'
 import type { BillingCycle } from '@/lib/stripe/plans'
 import { checkRateLimit } from '@/lib/security/rate-limit'
 import { checkoutTermsConsentOn, renewalLine } from '@/lib/stripe/renewal'
+import { isMissingTable } from '@/lib/services/billing/locationTiers'
 import { z } from 'zod'
 
 const checkoutBodySchema = z
@@ -90,7 +91,7 @@ export async function POST(request: Request) {
     .eq('location_listing_id', listingId)
     .maybeSingle()
 
-  if (coveredError && coveredError.code !== '42P01') {
+  if (coveredError && !isMissingTable(coveredError)) {
     console.error('[create-checkout-session] location link lookup failed:', coveredError.message)
     return NextResponse.json(
       { error: 'Could not check your current plan. Please try again.', code: 'SERVER_ERROR' },

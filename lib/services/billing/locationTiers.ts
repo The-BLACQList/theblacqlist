@@ -26,6 +26,15 @@ export interface LocationTierChange {
  * retries, the same posture as the primary's own tier write. A missing table
  * (the migration not applied yet) is treated as "no links".
  */
+/**
+ * True when a read failed only because the table is not there yet (the
+ * migration not applied). Postgres says 42P01; hosted Supabase's API says
+ * PGRST205 ("not in the schema cache"), so both count.
+ */
+export function isMissingTable(error: { code?: string | null } | null | undefined): boolean {
+  return error?.code === '42P01' || error?.code === 'PGRST205'
+}
+
 export async function syncLocationTiers(
   supabase: ServiceClient,
   primaryId: string,
@@ -36,7 +45,7 @@ export async function syncLocationTiers(
     .select(LOCATION_LINK_COLUMNS)
     .eq('primary_listing_id', primaryId)
   if (error) {
-    if (error.code === '42P01') return []
+    if (isMissingTable(error)) return []
     throw new Error(`location links read failed for ${primaryId}: ${error.message}`)
   }
   const links = toLocationLinkRows(data)
