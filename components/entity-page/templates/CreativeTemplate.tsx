@@ -90,7 +90,7 @@ export function CreativeTemplate({
           hours, phone or email. */}
       <SectionMark id="at-a-glance">
         <div id="visit" className="scroll-mt-32">
-          <EntityAtAGlance entity={entity} mode={mode} />
+          <EntityAtAGlance entity={entity} />
         </div>
       </SectionMark>
 

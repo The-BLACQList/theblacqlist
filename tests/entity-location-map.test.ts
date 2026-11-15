@@ -36,7 +36,7 @@ describe('locationPins', () => {
   })
 })
 
-describe('the Visit map stays out of the page bundle and off live pages', () => {
+describe('the Visit map stays out of the page bundle until it is near the screen', () => {
   it('loads MapLibre through next/dynamic with SSR off, and keeps Open in Maps server-rendered', () => {
     const src = source('components/entity-page/EntityLocationMap.tsx')
     expect(src).toContain("from 'next/dynamic'")
@@ -44,6 +44,14 @@ describe('the Visit map stays out of the page bundle and off live pages', () => 
     expect(src).not.toContain("from 'maplibre-gl'")
     expect(src).not.toContain('@/components/map/mapStyle')
     expect(src).toContain('Open in Maps')
+  })
+
+  it('mounts the canvas only once the map nears the viewport, with the sand placeholder before', () => {
+    const src = source('components/entity-page/EntityLocationMap.tsx')
+    expect(src).toContain('new IntersectionObserver(')
+    expect(src).toMatch(/rootMargin: NEAR_VIEWPORT/)
+    expect(src).toContain('observer.disconnect()')
+    expect(src).toMatch(/near \? <LocationMapCanvas pins=\{pins\} \/> : <MapPlaceholder \/>/)
   })
 
   it('the canvas reads the self-hosted tiles, never zooms on page scroll and hides its picture', () => {
@@ -55,9 +63,10 @@ describe('the Visit map stays out of the page bundle and off live pages', () => 
     expect(src).toContain('map.remove()')
   })
 
-  it('At a Glance builds pins in example mode only, until ticket 190 flips live pages on', () => {
+  it('At a Glance pins every location on live and example pages alike (ticket 190)', () => {
     const src = source('components/entity-page/EntityAtAGlance.tsx')
-    expect(src).toMatch(/mode === 'example' \? locationPins\(entity\) : \[\]/)
+    expect(src).toContain('const pins = locationPins(entity)')
+    expect(src).not.toContain("mode === 'example'")
     expect(src).toContain('<SectionMark id="map">')
     expect(src).toContain('<SectionMark id="hours-overrides">')
   })

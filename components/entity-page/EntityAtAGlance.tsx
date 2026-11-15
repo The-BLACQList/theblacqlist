@@ -12,7 +12,6 @@ import { upcomingOverrides } from '@/lib/listings/hoursOverrides'
 import { locationPins } from '@/lib/listings/locationPins'
 import { formatTime, isOpenNow } from '@/lib/listings/openStatus'
 import { LOCATION_TYPE_META } from '@/lib/constants/listing'
-import type { EntityRenderMode } from '@/lib/entity-page/template'
 import type { EntityPageData, HoursOverride, WeeklyHours } from '@/types'
 import { ReportCorrectionForm } from '@/components/entity-page/ReportCorrectionForm'
 import { DistanceFromYou } from '@/components/entity-page/DistanceFromYou'
@@ -79,11 +78,9 @@ function OpenStatusIndicator({
 
 interface Props {
   entity: EntityPageData
-  /** Example pages show the mini map now; live pages get it in ticket 190. */
-  mode?: EntityRenderMode
 }
 
-export function EntityAtAGlance({ entity, mode = 'live' }: Props) {
+export function EntityAtAGlance({ entity }: Props) {
   const { details } = entity
   const hasAddress = details.address && details.city_name && details.state_abbr
   // "Serving …" is added here, so an owner who wrote "Serving metro Atlanta"
@@ -113,9 +110,9 @@ export function EntityAtAGlance({ entity, mode = 'live' }: Props) {
 
   const hasSocial = Object.values(details.social).some(Boolean)
 
-  // Live listings already carry lat/lng, so the map is example-only until
-  // ticket 190 measures it on a real page and flips it on.
-  const pins = mode === 'example' ? locationPins(entity) : []
+  // Every location with coordinates (ticket 190). Owner and admin address
+  // saves geocode, so lat/lng follow the address; none means no map.
+  const pins = locationPins(entity)
   // Only the window moves with the clock, and the fixtures keep every date
   // well inside it, so server and client render the same rows.
   const upcoming = upcomingOverrides(entity.hoursOverrides, new Date())
