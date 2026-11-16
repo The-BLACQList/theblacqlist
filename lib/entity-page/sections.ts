@@ -386,11 +386,11 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   },
   {
     // Licences, certifications, awards and press — the trust the business
-    // brings with it. Ticket 192 decides the tier; free until then.
+    // brings with it. Starter and up (ticket 192).
     id: 'credentials',
     label: 'Credentials & Press',
     templates: ALL,
-    gate: {},
+    gate: { feature: 'credentials' },
     editor: { tool: 'Credentials', href: page('credentials') },
     isFilled: (e) => (e.credentials?.length ?? 0) > 0,
   },
@@ -612,6 +612,7 @@ export function applyTierGates(
     findUsAt: allowed('find-us') ? entity.findUsAt : undefined,
     deals: allowed('deals') ? sliceTo(entity.deals, DEALS_ON_MAX) : undefined,
     booking: allowed('booking') ? entity.booking : undefined,
+    credentials: allowed('credentials') ? entity.credentials : undefined,
     locations: allowed('locations')
       ? sliceTo(entity.locations, limits.locations === null ? null : limits.locations - 1)
       : undefined,

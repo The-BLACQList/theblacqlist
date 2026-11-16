@@ -12,7 +12,7 @@ interface Props {
   credentials: CredentialItem[] | undefined
   /** In the trust aside: a compact card instead of a full-width band. */
   bare?: boolean
-  /** Overrides the heading ("Awards & press" in a band, "Credentials" in the aside). */
+  /** Overrides the heading ("Awards & Press" in a band, "Credentials" in the aside). */
   title?: string
 }
 
@@ -33,8 +33,8 @@ const KIND_ICON: Record<Kind, LucideIcon> = {
 }
 
 /**
- * Licenses, certifications, awards and press (ticket 192; display here, data
- * in Phase 8): the trust a business brings with it, as distinct from the
+ * Licenses, certifications, awards and press (ticket 192; the owner adds them
+ * under Dashboard → Credentials): the trust a business brings with it, as distinct from the
  * platform's own trust panel. Grouped by kind; press items are text links
  * (no publication logos — licensing).
  */
@@ -44,7 +44,7 @@ export function EntityCredentialsSection({ credentials, bare = false, title }: P
     kind,
     items: credentials.filter((c) => c.kind === kind),
   })).filter((g) => g.items.length > 0)
-  const heading = title ?? (bare ? 'Credentials' : 'Awards & press')
+  const heading = title ?? (bare ? 'Credentials' : 'Awards & Press')
 
   const list = (items: CredentialItem[], kind: Kind) => {
     const Icon = KIND_ICON[kind]
