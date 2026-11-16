@@ -39,13 +39,15 @@ describe('listings', () => {
     }
   })
 
-  it('marks every location and job as demo, and files jobs as jobs', () => {
+  it('marks every location and job as demo, and files jobs under their page', () => {
     for (const p of plans) {
       for (const l of p.locations) expect(l.listing.name.startsWith('Demo — ')).toBe(true)
       expect(p.jobs.length).toBeGreaterThan(0)
       for (const j of p.jobs) {
         expect(j.listing.name.startsWith('Demo — ')).toBe(true)
         expect(j.listing.entity_type).toBe('job')
+        // Filed under the hiring page's category: staging has no 'jobs' one.
+        expect(j.listing.category_slug).toBe(p.listing.category_slug)
         expect([
           'full-time',
           'part-time',
@@ -257,10 +259,17 @@ describe('the seed script', () => {
       )
   })
 
-  it('never prints a password', () => {
-    const lines = src.split('\n').filter((l) => /password/i.test(l) && !/^\s*(\/\*\*|\*)/.test(l))
-    expect(lines).toHaveLength(1)
-    expect(lines[0]).toMatch(/password: randomBytes/)
+  it('never prints a password, and makes each one random', () => {
+    const lines = src
+      .split('\n')
+      .filter((l) => /password/i.test(l) && !/^\s*(\/\*\*|\*)/.test(l))
+      .map((l) => l.trim())
+    expect(lines.sort()).toEqual([
+      'function reviewerPassword(): string {',
+      'password: reviewerPassword(),',
+    ])
+    for (const l of src.split('\n')) if (/console\./.test(l)) expect(l).not.toMatch(/password/i)
+    expect(src).toMatch(/return `\$\{randomBytes\(24\)\.toString\('base64url'\)\}aA1!`/)
   })
 
   it('checks the target before creating a client', () => {
