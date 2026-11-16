@@ -34,6 +34,7 @@ export type RateLimitBucket =
   | 'listing_submit'
   | 'upload'
   | 'video_upload'
+  | 'document_upload'
   | 'join'
   | 'site_import'
   | 'place_lookup'

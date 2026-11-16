@@ -276,13 +276,13 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   },
   {
     // Nested in the Offerings / Services / Capabilities heading: the menu,
-    // rate card or commission guide PDF. Ticket 194 decides the tier and the
-    // upload role; free until then.
+    // rate card or commission guide PDF (ticket 194). Starter 1, Growth 3,
+    // Premium 10; the first ones in the owner's order show.
     id: 'documents',
     label: 'Documents',
     templates: ALL,
-    gate: {},
-    editor: { tool: 'Media', href: page('media') },
+    gate: { feature: 'documents', limit: 'documents' },
+    editor: { tool: 'Documents', href: page('documents') },
     isFilled: (e) => (e.documents?.length ?? 0) > 0,
   },
   {
@@ -618,6 +618,7 @@ export function applyTierGates(
     deals: allowed('deals') ? sliceTo(entity.deals, DEALS_ON_MAX) : undefined,
     booking: allowed('booking') ? entity.booking : undefined,
     credentials: allowed('credentials') ? entity.credentials : undefined,
+    documents: allowed('documents') ? sliceTo(entity.documents, limits.documents) : undefined,
     locations: allowed('locations')
       ? sliceTo(entity.locations, limits.locations === null ? null : limits.locations - 1)
       : undefined,
