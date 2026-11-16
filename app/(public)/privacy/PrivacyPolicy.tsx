@@ -81,8 +81,8 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
             <ul className="list-disc list-inside space-y-1 pl-2">
               <li>Account registration information (name, email address, password)</li>
               <li>Business listing information (business name, description, address, photos, hours, contact details) when you create or claim a listing</li>
-              {/* Ticket 230. [Founder call at merge] whether this moves the "Last updated" date
-                  (lib/legal/policyUpdate.ts) and whether a notice email goes out. */}
+              {/* Ticket 230. Founder, 2026-11-16: this line moved the "Last updated" date
+                  (PRIVACY_PROVIDERS_UPDATE); the notice email is held (GATE-COMMS). */}
               <li>Your home city or town, if you choose one when you join. The list of US places we suggest from is our own, so what you type goes only to us. If you tap Use My Location, your browser rounds your location to about a kilometer before sending it, and we use it only to find the nearest town. We don&apos;t save your location</li>
               <li>Receipt and spend data when you submit receipts through the community spend feature</li>
               <li>Reviews and community content you submit</li>
