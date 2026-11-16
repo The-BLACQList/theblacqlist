@@ -4,6 +4,39 @@ import { createClient } from '@/lib/supabase/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { ONBOARDING_COMPLETED_KEY, hasCompletedOnboarding } from '@/lib/services/auth/onboarding'
 import { INTERESTS_METADATA_KEY, parseInterests } from '@/lib/onboarding/interests'
+import { PLACE_GEOID_PATTERN } from '@/lib/geo/usPlaces'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+/**
+ * Saves the picked place and, when it is one of our active cities, the city
+ * too. An unknown GEOID writes nothing. us_places is newer than the generated
+ * types, hence the untyped client.
+ */
+async function saveHomePlace(
+  supabase: SupabaseClient,
+  userId: string,
+  geoid: string
+): Promise<void> {
+  const { data: place } = await supabase
+    .from('us_places')
+    .select('geoid, name, state_code')
+    .eq('geoid', geoid)
+    .maybeSingle()
+  if (!place) return
+
+  const update: { home_place_geoid: string; city_id?: string } = { home_place_geoid: place.geoid }
+  const { data: city } = await supabase
+    .from('cities')
+    .select('id, states!cities_state_id_fkey!inner(code)')
+    .eq('is_active', true)
+    .ilike('name', place.name)
+    .eq('states.code', place.state_code)
+    .limit(1)
+    .maybeSingle()
+  if (city) update.city_id = city.id
+
+  await supabase.from('profiles').update(update).eq('id', userId)
+}
 
 type OnboardingRole = 'supporter' | 'owner'
 
@@ -58,11 +91,21 @@ export async function setOnboardingRoleAction(
       await supabase.auth.updateUser({ data: metadata })
     }
 
-    // City: the form sends a slug. Resolve it to an id here and write it to the
-    // user's own profile row. RLS allows owners to update their own profile
-    // ("profiles: authenticated update own"), so the session client is enough.
+    // Home place (ticket 230): the form sends a Census place GEOID picked from
+    // the US list. It is saved to profiles.home_place_geoid. When the place is
+    // one of our active cities, profiles.city_id is set too, as before.
+    //
+    // RLS allows people to update their own profile ("profiles: authenticated
+    // update own"), so the session client is enough.
+    const placeGeoid = formData.get('place')?.toString().trim()
+    if (placeGeoid && PLACE_GEOID_PATTERN.test(placeGeoid)) {
+      await saveHomePlace(supabase as unknown as SupabaseClient, user.id, placeGeoid)
+    }
+
+    // City: the older form sent a slug from our own city list. Kept so a tab
+    // opened before this release still saves.
     const citySlug = formData.get('city')?.toString().trim()
-    if (citySlug && /^[a-z0-9-]{1,100}$/.test(citySlug)) {
+    if (!placeGeoid && citySlug && /^[a-z0-9-]{1,100}$/.test(citySlug)) {
       const { data: city } = await supabase
         .from('cities')
         .select('id')
