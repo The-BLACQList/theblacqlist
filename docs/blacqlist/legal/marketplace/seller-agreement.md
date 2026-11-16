@@ -91,12 +91,12 @@
 
 6.2 **When transfers are made.**
 
-- **Physical orders:** when you mark the order shipped with a valid tracking number. If you are a new seller, we hold the transfer a further 7 days. `[Assumption]` "New seller" means your first 90 days of selling or your first 10 shipped orders, whichever ends later.
+- **Physical orders:** when you mark the order shipped with a valid tracking number. If you are a new seller, we hold the transfer a further 7 days. "New seller" means your first 90 days of selling or your first 10 shipped orders, whichever ends later (founder, 2026-11-16).
 - **Digital orders:** 3 days after the purchase.
 
 6.3 **Payout to your bank.** Once a transfer reaches your connected account, Stripe pays your available balance out to your bank once a week, on Mondays. We show the next payout date on your dashboard. Bank processing times and Stripe's own payout rules apply. `[Needs professional review]` Weekly schedule chosen by the founder on 2026-11-15, mainly as a buffer for refunds and disputes. `[Assumption]` Sellers cannot change the schedule in the Express Dashboard; confirm in test mode (ticket 224).
 
-6.4 **Freezes.** While a shopper has an open buyer case, or a chargeback is open, on any of your orders, we freeze your pending transfers until it is resolved. `[Assumption]` The founder's rule freezes every pending transfer of that seller. A narrower rule, freezing only the amount in dispute plus a margin, would be fairer and easier to defend. Founder and counsel to choose.
+6.4 **Freezes.** While a shopper has an open buyer case, or a chargeback is open, on one of your orders, we hold back from your pending transfers the amount of that order plus the Stripe dispute fee (section 5.5) until it is resolved. If you have 2 or more buyer cases or chargebacks open at the same time, or we see signs of fraud, we freeze all your pending transfers until they are resolved. (founder, 2026-11-16) `[Needs professional review]` Counsel to confirm the wording and that it sits well with 6.5 reserves and 8.4–8.5 recovery.
 
 6.5 **Reserves.** We may hold back part of your pending transfers for a set time if we see a high rate of buyer cases, chargebacks, late shipments or strikes, or if we suspend you. We will tell you why, how much, and for how long. `[Needs professional review]`
 
@@ -239,7 +239,7 @@ We will tell you promptly about a claim, let you control the defence with counse
 
 19.2 If a product is recalled, or you learn it may be unsafe, you must stop selling it at once, tell us within 2 business days, and handle the recall. Recalled goods are prohibited.
 
-19.3 **Insurance.** We expect you to carry general liability insurance that covers products, of at least $1,000,000 per occurrence `[Assumption]`. For restricted items, it is required, and we may ask for a certificate. We may later require BLACQList to be named as an additional insured once you pass a sales level we set. `[Needs professional review]` Limits and triggers for counsel and a broker.
+19.3 **Insurance.** We recommend that you carry general liability insurance that covers products, of at least $1,000,000 per occurrence. It is not required to sell in Shop, except for restricted items (see `prohibited-and-restricted-items.md`), where it is required and we may ask for a certificate (founder, 2026-11-16). We may later require BLACQList to be named as an additional insured once you pass a sales level we set. `[Needs professional review]` Limits and triggers for counsel and a broker.
 
 ### 20. Shopper data
 
@@ -255,7 +255,7 @@ We will tell you promptly about a claim, let you control the defence with counse
 
 ### 21. Strikes, suspension and termination
 
-21.1 **Strikes.** We give a strike when we uphold a report or finding that you broke a Shop policy, such as the photo rule, a prohibited item, repeated overselling or late shipping, or misuse of shopper data. Three strikes in any 12 months `[Assumption]` suspend your selling.
+21.1 **Strikes.** We give a strike when we uphold a report or finding that you broke a Shop policy, such as the photo rule, a prohibited item, repeated overselling or late shipping, or misuse of shopper data. Three strikes in any 6 months suspend your selling. Each strike drops off 6 months after it was given (founder, 2026-11-16).
 
 21.2 **Immediate suspension.** We may suspend your selling at once, without strikes, for fraud, counterfeit or stolen goods, unsafe or recalled products, a serious legal risk, an INFORM failure, or a request from Stripe or a regulator.
 
@@ -311,10 +311,10 @@ We may change this agreement or the Shop policies. We will email you at least 14
 |---|---|---|---|
 | S1 | Agent-of-payee appointment and state money transmitter exposure under separate charges and transfers, where funds sit in BLACQList's Stripe balance for days or weeks | 4.3, 6 | High. Consult attorney |
 | S2 | BLACQList is merchant of record on the card statement while the vendor is seller of record. Separate charges and transfers cannot use `on_behalf_of` for a multi-seller charge | 4.4 | High. Consult attorney |
-| S3 | Freeze scope: every pending transfer or only the disputed amount | 6.4 | Medium. Founder decision |
+| S3 | Freeze scope. Decided 2026-11-16: hold the disputed order plus the dispute fee; freeze everything at 2+ open cases or fraud signs | 6.4 | Medium. Counsel checks wording |
 | S4 | Express negative balance liability falls on BLACQList. Recovery terms must be enforceable | 8.4, 8.5 | High. Consult attorney |
 | S5 | Who must collect tax in states where BLACQList is not yet registered | 9.2 | High. CPA |
 | S6 | Seller liability cap differs from Terms §11 | 22.3 | Medium. Consult attorney |
 | S7 | Dispute clause mirrors Terms §14. No arbitration exists today | 23 | Medium. Consult attorney |
-| S8 | Assumed numbers: new-seller definition, invoice terms, insurance limit, strike window, appeal window, hold period, breach notice, fee-change notice | throughout | Founder decision |
+| S8 | Assumed numbers: invoice terms, appeal window, hold period, breach notice, fee-change notice. Decided 2026-11-16: new-seller definition (kept), insurance (recommended; required for restricted items), strike window (3 in 6 months) | throughout | Founder decision (remaining) |
 | S9 | CCPA role of sellers receiving shopper data | 20.5 | Medium. Consult attorney |

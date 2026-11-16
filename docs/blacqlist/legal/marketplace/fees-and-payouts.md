@@ -58,7 +58,7 @@ Stripe does identity and business checks (KYC) and holds bank details. BLACQList
 | Order type | Transfer made |
 |---|---|
 | Physical | When the seller marks it shipped with a valid tracking number |
-| Physical, new seller | 7 days after it is marked shipped. `[Assumption]` New seller means first 90 days or first 10 shipped orders, whichever ends later |
+| Physical, new seller | 7 days after it is marked shipped. New seller means first 90 days or first 10 shipped orders, whichever ends later (founder, 2026-11-16) |
 | Digital | 3 days after purchase |
 | Any, with an open buyer case or chargeback for that seller | Frozen until resolved (Seller Agreement 6.4) |
 

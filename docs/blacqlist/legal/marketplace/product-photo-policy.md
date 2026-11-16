@@ -65,10 +65,10 @@ We record the confirmation, the time and the account that made it.
 | Held at upload | The photo is held for review. Nothing else happens. If it breaks the rule, it is removed with a note telling you why. No strike for a held photo you did not publish |
 | First upheld breach on a live product | The product is hidden until you replace the photo. One strike |
 | Second upheld breach | The product is hidden. One strike. Your next 3 products go back to founder review |
-| Third upheld breach within 12 months `[Assumption]` | Third strike. Selling is suspended (Seller Agreement 21.1) |
+| Third upheld breach within 6 months (founder, 2026-11-16) | Third strike. Selling is suspended (Seller Agreement 21.1) |
 | Clear deception | Using images of a different item to sell something else, or a pattern of AI images, can lead to immediate suspension (Seller Agreement 21.2) and refunds to affected shoppers |
 
-**Strikes.** A strike counts when we uphold a report or our own finding. Strikes from all Shop policies add up together. `[Assumption]` Strikes drop off 12 months after they were given.
+**Strikes.** A strike counts when we uphold a report or our own finding. Strikes from all Shop policies add up together. Strikes drop off 6 months after they were given (founder, 2026-11-16).
 
 **Appeals.** Reply to the notice within 14 days `[Assumption]` with an original photo file or other proof. If we reverse a decision, the strike is removed.
 
@@ -85,4 +85,4 @@ You must own the photos or have permission to use them (Seller Agreement 17.1). 
 | PH1 | The rule is stricter than the law requires. The risk it reduces is FTC Act §5 deception and "not as described" disputes. Counsel to confirm the wording, and that no shopper-facing copy implies a guarantee | Medium |
 | PH2 | Reading C2PA, IPTC and EXIF metadata is processing of data in seller files. Photo metadata can include GPS location. Strip location data before photos are published, and mention it in the privacy addendum | Medium |
 | PH3 | Whether a physical product whose printed design is AI-generated art, such as a print or T-shirt, needs a disclosure like digital products. Not covered by the founder's decisions | Founder, counsel |
-| PH4 | Assumed numbers: strike window and expiry, appeal window | Founder decision |
+| PH4 | Assumed numbers: appeal window. Strike window and expiry decided 2026-11-16: 6 months | Founder decision (appeal window) |

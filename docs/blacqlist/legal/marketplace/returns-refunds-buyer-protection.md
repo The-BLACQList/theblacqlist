@@ -41,7 +41,7 @@ Buyer protection covers Shop purchases only. It does not cover services, or anyt
 4. If you and the seller agree, we close the case.
 5. If the seller does not respond in 3 business days, or you don't agree, we decide. We look at the listing, photos, tracking and messages.
 
-While a case is open, the seller's pending transfers are frozen (Seller Agreement 6.4).
+While a case is open, we hold back that order's amount plus the dispute fee from the seller's pending transfers; with 2 or more open cases or chargebacks, or signs of fraud, all pending transfers are frozen (Seller Agreement 6.4).
 
 ## 4. Returning the item
 

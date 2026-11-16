@@ -38,11 +38,11 @@ No attorney or CPA is engaged yet.
 - Sellers are businesses on Growth or higher. The seller is the seller of record and ships or supplies the file.
 - One cart, one payment. Stripe Connect separate charges and transfers. BLACQList is the sellers' limited payment collection agent. Stripe does KYC and 1099-Ks. BLACQList never holds bank details.
 - Fee: 8% of items plus shipping, before tax. Stripe fees deducted from sellers' shares pro rata.
-- Transfers: physical on ship with tracking, plus 7 days for new sellers; digital 3 days after purchase; open cases and chargebacks freeze pending transfers.
+- Transfers: physical on ship with tracking, plus 7 days for new sellers; digital 3 days after purchase; an open case or chargeback holds that order's amount plus the dispute fee; 2 or more open, or fraud signs, freeze all pending transfers.
 - BLACQList handles refunds and disputes up front and recovers from the seller.
 - BLACQList is marketplace facilitator. Stripe Tax calculates. Registrations are the CPA's call.
 - Checkout on BLACQList only. No link-out for products.
-- Real photos only for physical products, with per-photo confirmation, metadata checks, first 3 products reviewed, 3 strikes suspend.
+- Real photos only for physical products, with per-photo confirmation, metadata checks, first 3 products reviewed, 3 strikes in 6 months suspend.
 - Sold-out items hide on their own.
 - Shipping to the 50 states and DC. Mail Order Rule timing, corrected on 2026-11-13: seller reminder 1 business day before ship-by, delay notice no later than ship-by, auto-cancel at ship-by plus 7 days.
 - Buyer protection minimum: defective, damaged, wrong, not received, not as described.
@@ -65,7 +65,7 @@ No attorney or CPA is engaged yet.
 
 **For the CPA:** fee base; marketplace facilitator registration timing and thresholds; digital goods taxability; who bears processing on tax; 1099-K filer.
 
-**For the founder:** every `[Assumption]` in the set. The main ones: new-seller definition; freeze scope; strike window and expiry; appeal window; insurance limit; 3-day pre-download refund; one 30-day window for physical problems; $250 signature threshold; retention periods.
+**For the founder:** every `[Assumption]` in the set. Decided 2026-11-16: new-seller definition (kept), freeze scope, strike window and expiry (6 months), insurance (recommended; required for restricted items); the 8% fee on refunds was decided 2026-11-15. Still open: appeal window; 3-day pre-download refund; one 30-day window for physical problems; $250 signature threshold; retention periods.
 
 **Before launch, outside these docs:**
 
