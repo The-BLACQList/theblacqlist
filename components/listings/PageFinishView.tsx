@@ -15,6 +15,7 @@ import { BasicInfoSection } from '@/components/dashboard/BasicInfoSection'
 import { AboutSection } from '@/components/dashboard/AboutSection'
 import { FactsSection } from '@/components/dashboard/FactsSection'
 import { MediaGrid } from '@/components/dashboard/MediaGrid'
+import { albumsAllowed } from '@/lib/listings/photoAlbums'
 import { CtaSection } from '@/components/dashboard/CtaSection'
 import { ContactSection } from '@/components/dashboard/ContactSection'
 import { HoursSection } from '@/components/dashboard/HoursSection'
@@ -481,6 +482,9 @@ export function PageFinishView({
           creator: data.entityType === 'creator',
           claimed: data.trustTier !== 'unclaimed',
         }}
+        albums={
+          data.albums ? { byId: data.albums, canFile: albumsAllowed(data.tier) } : undefined
+        }
       />
     ),
     'main-button': (

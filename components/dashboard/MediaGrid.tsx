@@ -19,6 +19,11 @@ import { deleteMediaAction } from '@/lib/actions/dashboard/deleteMedia'
 import { updateMediaAltTextAction } from '@/lib/actions/dashboard/updateMediaAltText'
 import { BannerCropDialog, BannerPanel, type BannerSource } from '@/components/dashboard/BannerEditor'
 import { LogoPanel } from '@/components/dashboard/LogoPanel'
+import {
+  PhotoAlbumField,
+  PhotoAlbumsPanel,
+  type AlbumsProp,
+} from '@/components/dashboard/PhotoAlbumControls'
 
 interface MediaItem {
   id: string
@@ -41,6 +46,11 @@ interface Props {
    * jobs, which show no logo, leave it out.
    */
   logo?: { url: string | null; creator: boolean; claimed: boolean }
+  /**
+   * Photo albums (ticket 193). Business-shaped pages pass it once the album
+   * column exists; left out, the grid shows no album controls.
+   */
+  albums?: AlbumsProp
 }
 
 function AltTextForm({ item }: { item: MediaItem }) {
@@ -114,12 +124,16 @@ function MediaCard({
   isCover,
   hidden,
   onUseAsBanner,
+  listingId,
+  albums,
 }: {
   item: MediaItem
   supabaseStorageUrl: string
   isCover: boolean
   hidden: boolean
   onUseAsBanner: (source: BannerSource) => void
+  listingId: string
+  albums?: AlbumsProp
 }) {
   const [deleteState, deleteAction, isDeleting] = useActionState(deleteMediaAction, null)
   const imageUrl = `${supabaseStorageUrl}/listing-media/${item.file_path}`
@@ -171,6 +185,15 @@ function MediaCard({
       </div>
       <div className="px-3 py-2 space-y-1.5">
         <AltTextForm item={item} />
+        {albums && (
+          <PhotoAlbumField
+            key={albums.byId[item.id] ?? ''}
+            listingId={listingId}
+            mediaId={item.id}
+            album={albums.byId[item.id] ?? null}
+            canFile={albums.canFile}
+          />
+        )}
 
         {!isCover && (
           <button
@@ -394,6 +417,7 @@ export function MediaGrid({
   coverImagePath,
   hiddenIds,
   logo,
+  albums,
 }: Props) {
   const [cropSource, setCropSource] = useState<BannerSource | null>(null)
   const closeCrop = () => {
@@ -425,6 +449,13 @@ export function MediaGrid({
           bannerUrl={coverImagePath ? bannerUrl(supabaseStorageUrl, coverImagePath) : null}
           onCrop={setCropSource}
         />
+        {albums && media.length > 0 && (
+          <PhotoAlbumsPanel
+            listingId={listingId}
+            mediaIds={media.map((m) => m.id)}
+            albums={albums}
+          />
+        )}
         {media.length > 0 && (
           <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {media.map((item) => (
@@ -435,6 +466,8 @@ export function MediaGrid({
                 isCover={item.file_path === coverImagePath}
                 hidden={hiddenIds?.has(item.id) ?? false}
                 onUseAsBanner={setCropSource}
+                listingId={listingId}
+                albums={albums}
               />
             ))}
           </ul>

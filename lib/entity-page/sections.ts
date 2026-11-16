@@ -25,7 +25,7 @@ import {
 import type { PlanSlug } from '@/lib/stripe/plans'
 import { factsFor } from '@/lib/listings/facts'
 import { galleryAlbums } from '@/lib/listings/galleryAlbums'
-import type { EntityPageData, EntityType } from '@/types'
+import type { EntityPageData, EntityType, GalleryImage } from '@/types'
 
 export type SectionId =
   | 'hero'
@@ -351,12 +351,12 @@ export const ENTITY_SECTIONS: readonly EntitySectionDef[] = [
   },
   {
     // Nested in the gallery: the chip row over the grid, shown when photos
-    // are filed under two or more albums. Ticket 193 adds the column and the
-    // Growth+ gate; the live loader sets no album until then.
+    // are filed under two or more albums (ticket 193). Growth and up: a lower
+    // plan shows the same photos, ungrouped, and keeps the albums for later.
     id: 'albums',
     label: 'Photo Albums',
     templates: ALL,
-    gate: {},
+    gate: { feature: 'photo_albums' },
     editor: { tool: 'Photos', href: page('media') },
     isFilled: (e) => galleryAlbums(e.images).length >= 2,
   },
@@ -587,6 +587,11 @@ function sliceTo<T>(rows: T[] | undefined, cap: number | null): T[] | undefined 
   return rows.slice(0, Math.max(0, cap))
 }
 
+/** The images with their albums dropped, when the plan doesn't show albums. */
+function withoutAlbums(images: GalleryImage[], strip: boolean): GalleryImage[] {
+  return strip ? images.map(({ album: _album, ...img }) => img) : images
+}
+
 /**
  * The page a plan is entitled to show: gated fields a lower plan cannot show
  * become undefined (section hidden, nothing deleted — ticket 105 policy) and
@@ -625,7 +630,7 @@ export function applyTierGates(
     organizerEvents: allowed('events')
       ? (sliceTo(entity.organizerEvents, limits.events) ?? [])
       : [],
-    images: sliceTo(entity.images, limits.photos) ?? [],
+    images: withoutAlbums(sliceTo(entity.images, limits.photos) ?? [], !allowed('albums')),
     details: {
       ...entity.details,
       videos: allowed('video') ? (sliceTo(entity.details.videos, limits.videos) ?? []) : [],

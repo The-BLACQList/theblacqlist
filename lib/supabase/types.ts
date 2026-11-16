@@ -2618,6 +2618,7 @@ export type Database = {
       }
       media_attachments: {
         Row: {
+          album: string | null
           alt_text: string | null
           created_at: string
           display_order: number
@@ -2634,6 +2635,7 @@ export type Database = {
           width: number | null
         }
         Insert: {
+          album?: string | null
           alt_text?: string | null
           created_at?: string
           display_order?: number
@@ -2650,6 +2652,7 @@ export type Database = {
           width?: number | null
         }
         Update: {
+          album?: string | null
           alt_text?: string | null
           created_at?: string
           display_order?: number
