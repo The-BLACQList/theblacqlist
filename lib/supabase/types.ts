@@ -1546,6 +1546,47 @@ export type Database = {
           },
         ]
       }
+      listing_hours_overrides: {
+        Row: {
+          close: string | null
+          closed: boolean
+          created_at: string
+          date: string
+          label: string | null
+          listing_id: string
+          open: string | null
+          updated_at: string
+        }
+        Insert: {
+          close?: string | null
+          closed?: boolean
+          created_at?: string
+          date: string
+          label?: string | null
+          listing_id: string
+          open?: string | null
+          updated_at?: string
+        }
+        Update: {
+          close?: string | null
+          closed?: boolean
+          created_at?: string
+          date?: string
+          label?: string | null
+          listing_id?: string
+          open?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_hours_overrides_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_location_links: {
         Row: {
           created_at: string

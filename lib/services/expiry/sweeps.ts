@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { writeSystemAuditLog } from '@/lib/audit/system'
 import { SUGGESTION_EXPIRY_DAYS } from '@/lib/ai/review'
 import { isEventOver } from '@/lib/events/eventOver'
+import { hoursOverridePurgeBefore } from '@/lib/listings/hoursOverrides'
 
 /**
  * =============================================================================
@@ -451,4 +452,31 @@ export async function unpublishPastEvents(
   }
 
   return { past: pastIds.length, unpublished: unpublishedIds.length }
+}
+
+export type HoursOverridePurgeResult = { purged: number } | { skipped: string }
+
+/**
+ * Deletes holiday and special hours whose date has passed (ticket 196). Keeps
+ * two days back so no time zone loses today's row. Until the
+ * listing_hours_overrides migration is applied the table is missing; that is
+ * reported as skipped rather than failing the run.
+ */
+export async function purgePastHoursOverrides(
+  supabase: AnyClient,
+  now: Date = new Date()
+): Promise<HoursOverridePurgeResult> {
+  const { data, error } = await supabase
+    .from('listing_hours_overrides')
+    .delete()
+    .lt('date', hoursOverridePurgeBefore(now))
+    .select('listing_id')
+
+  if (error) {
+    if (error.code === '42P01' || error.code === 'PGRST205') {
+      return { skipped: 'listing_hours_overrides is not migrated yet' }
+    }
+    throw new Error(`past special hours purge failed: ${error.message}`)
+  }
+  return { purged: (data ?? []).length }
 }
