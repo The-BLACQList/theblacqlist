@@ -280,7 +280,9 @@ function jobs(e: EntityPageData, variant: ExampleVariant): SeedJob[] {
     return {
       listing: core(e, `${seedSlug(variant)}-job-${slugify(role.name)}`, `Demo — ${role.name}`, {
         entity_type: 'job',
-        category_slug: role.category?.slug ?? 'jobs',
+        // A job is filed under its hiring page's category, the same as real
+        // job listings. The fixtures' 'jobs' category exists only in samples.
+        category_slug: e.category.slug,
         tagline: role.tagline ?? null,
         meta_description: null,
         location_type: role.location_type,

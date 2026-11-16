@@ -135,6 +135,15 @@ async function replaceRows(
 
 // ── Lookups ──────────────────────────────────────────────────────────────────
 
+/**
+ * A random password no one ever sees or needs. The fixed tail meets password
+ * rules that ask for a lower-case letter, a capital, a digit and a symbol;
+ * the 192 random bits before it are the secret.
+ */
+function reviewerPassword(): string {
+  return `${randomBytes(24).toString('base64url')}aA1!`
+}
+
 async function resolveOwner(supabase: Client, email: string): Promise<string> {
   const wanted = email.toLowerCase()
   for (let page = 1; page <= 25; page++) {
@@ -571,7 +580,7 @@ async function ensureReviewers(supabase: Client, n: number): Promise<string[]> {
     if (!id) {
       const { data, error } = await supabase.auth.admin.createUser({
         email,
-        password: randomBytes(24).toString('base64url'),
+        password: reviewerPassword(),
         email_confirm: true,
       })
       if (error || !data.user) {
