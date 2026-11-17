@@ -97,11 +97,25 @@ describe('off production', () => {
     })
   })
 
-  it('each variant renders its banner and the template in example mode', async () => {
+  it('each variant opens on the chapters layout (ticket 204)', async () => {
     const { page } = await loadRoutes(false)
     for (const variant of ['storefront', 'professional', 'creative']) {
       const tree = await page.default({ params: params(variant) })
       expect(findProp(tree, 'data-example-variant')).toBe(variant)
+      expect(findProp(tree, 'data-layout'), variant).toBe('chapters')
+      expect(findProp(tree, 'mode'), variant).toBeUndefined()
+    }
+  })
+
+  it('with ?layout=stack, each variant renders its banner and the template in example mode', async () => {
+    const { page } = await loadRoutes(false)
+    for (const variant of ['storefront', 'professional', 'creative']) {
+      const tree = await page.default({
+        params: params(variant),
+        searchParams: Promise.resolve({ layout: 'stack' }),
+      })
+      expect(findProp(tree, 'data-example-variant')).toBe(variant)
+      expect(findProp(tree, 'data-layout')).toBeUndefined()
       const outlet = findProp(tree, 'mode')
       expect(outlet, variant).toBe('example')
       expect(findProp(tree, 'userId')).toBeNull()

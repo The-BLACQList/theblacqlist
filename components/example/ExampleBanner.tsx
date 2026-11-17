@@ -11,7 +11,7 @@ import { EXAMPLE_PHOTO_CREDITS } from '@/lib/example/photoCredits'
 
 interface Props {
   variant: ExampleVariant
-  /** Query kept on the layout switcher's links, e.g. `?layout=chapters` (ticket 204). */
+  /** Query kept on the layout switcher's links, e.g. `?layout=stack` (ticket 204). */
   query?: string
 }
 

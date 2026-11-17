@@ -82,9 +82,12 @@ function chaptersView(
  * Main's Happening now band (part F) renders above the template from
  * `entity.happeningNow`, as the live listing route does.
  *
- * `?layout=chapters` shows the Round 3 chapters layout instead (ticket 204,
- * Creative's prototype v7) for all three types. It carries its own Happening Now strip inside the
- * Welcome chapter.
+ * The sample pages show the Round 3 chapters layout by default (ticket 204,
+ * Creative's prototype v7, approved by the founder 2026-11-17 for all three
+ * types). It carries its own Happening Now strip inside the Welcome chapter.
+ * `?layout=stack` shows the live listing template instead, which the
+ * template e2e checks section by section; `?layout=chapters` still works for
+ * links shared before the switch.
  */
 export default async function ExampleVariantPage({ params, searchParams }: PageProps) {
   if (IS_PRODUCTION) notFound()
@@ -94,8 +97,8 @@ export default async function ExampleVariantPage({ params, searchParams }: PageP
   const now = new Date()
   const entity = buildExampleEntity(variant, now)
   const jsonLd = buildJsonLd(entity, entity.entity_type)
-  const chapters = (await searchParams)?.layout === 'chapters'
-  const query = chapters ? '?layout=chapters' : ''
+  const chapters = (await searchParams)?.layout !== 'stack'
+  const query = chapters ? '' : '?layout=stack'
 
   if (chapters) {
     const view = chaptersView(variant, entity, now)

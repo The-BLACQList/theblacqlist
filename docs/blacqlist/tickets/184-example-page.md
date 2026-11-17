@@ -77,6 +77,6 @@ After 1A and 1B merge (one deploy, before the launch freeze or after the D0 watc
 ## Verification
 
 - `pnpm typecheck`, `pnpm lint`, `pnpm test:unit` green on the branch.
-- `pnpm dev`: `/example/storefront|professional|creative` render every section in registry order; `/example/nope` is a 404; the banner, noindex meta and link guard behave; no requests to `/api/saves`, `/api/analytics` or `/rest/v1` from the sample page.
+- `pnpm dev`: `/example/storefront|professional|creative?layout=stack` render every section in registry order (since ticket 204 the sample pages open on the chapters layout); `/example/nope` is a 404; the banner, noindex meta and link guard behave; no requests to `/api/saves`, `/api/analytics` or `/rest/v1` from the sample page.
 - Vercel Preview: founder walks the three variants on desktop and iPhone.
 - An existing live listing on Preview renders the same sections as before (legacy-shape test + manual spot check).
