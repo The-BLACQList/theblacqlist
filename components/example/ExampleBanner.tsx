@@ -11,6 +11,8 @@ import { EXAMPLE_PHOTO_CREDITS } from '@/lib/example/photoCredits'
 
 interface Props {
   variant: ExampleVariant
+  /** Query kept on the layout switcher's links, e.g. `?layout=stack` (ticket 204). */
+  query?: string
 }
 
 interface CreditLine {
@@ -45,7 +47,7 @@ function photoCreditLines(): CreditLine[] {
  * ExampleLinkGuard lets through by path; the credit links are let through by
  * the data attribute.
  */
-export function ExampleBanner({ variant }: Props) {
+export function ExampleBanner({ variant, query = '' }: Props) {
   const photos = photoCreditLines()
   const videoAuthors = [...new Set(DEMO_VIDEO_CREDITS.map((v) => v.author))]
 
@@ -106,7 +108,7 @@ export function ExampleBanner({ variant }: Props) {
               return (
                 <li key={v}>
                   <Link
-                    href={`/example/${v}`}
+                    href={`/example/${v}${query}`}
                     aria-current={current ? 'page' : undefined}
                     className={cn(
                       'inline-flex h-9 items-center rounded-full border px-4 font-subhead text-sm transition-colors',

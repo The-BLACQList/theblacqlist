@@ -1,4 +1,4 @@
-import type { EntityPageData } from '@/types'
+import type { EntityPageData, HoursOverride } from '@/types'
 import { futureDateKey } from '@/lib/listings/hoursOverrides'
 import {
   ATLANTA,
@@ -14,16 +14,20 @@ import {
   gallery,
   hiringRole,
   image,
+  isDayOfWeek,
+  isWeekday,
+  pickDay,
   relatedEntities,
   reviews,
   socials,
+  thanksgivingOffset,
   weeklyHours,
 } from './shared'
 
 const DESCRIPTION = [
   'Test Business 123 is a neighbourhood café and small-batch roastery in Atlanta’s Old Fourth Ward. We opened in 2014 with a two-group espresso machine, a borrowed pastry case and a simple idea: coffee should taste like where it came from, and the room it is served in should feel like somebody’s front porch.',
   'Our beans are sourced directly from family farms in Ethiopia, Colombia and Rwanda and roasted on site every Tuesday and Friday. The kitchen turns out a short brunch menu — shrimp and grits, sweet potato waffles, a very serious biscuit — and the pastry case changes with whatever the bakers felt like at five in the morning.',
-  'The back room seats twenty-four and hosts cuppings, open-mic nights and the occasional supper club. If you are looking for a place to work, the long table by the window has outlets and the Wi-Fi password is on the chalkboard. Bring your laptop; stay for lunch.',
+  'The back room hosts cuppings, open-mic nights and the occasional supper club, and on weekday afternoons the main room is the quietest in the neighbourhood. Bring your laptop; stay for lunch.',
 ].join('\n\n')
 
 const GALLERY = gallery('cafe', [
@@ -53,7 +57,38 @@ const GALLERY = gallery('cafe', [
   ['cafe-cold-brew.webp', 'Cold brew on tap, served over ice', 'Drinks'],
 ])
 
+/**
+ * The sample's dated items, as days after `now`. Each pick skips public
+ * holidays and the days already used, so the cupping is on a Saturday, the
+ * staff holiday and night market are weekdays, and the 7 pm open mic falls on
+ * the night-market late opening, inside opening hours (ticket 204).
+ */
+function sampleDays(now: Date) {
+  const tg = thanksgivingOffset(now)
+  const cupping = pickDay(now, 7, isDayOfWeek(6), [tg, tg + 1])
+  const staffHoliday = pickDay(now, 6, isWeekday, [tg, tg + 1, cupping])
+  const nightMarket = pickDay(now, 20, isWeekday, [tg, tg + 1, staffHoliday, cupping])
+  return { cupping, staffHoliday, nightMarket }
+}
+
+/** Thanksgiving closed and the day after short, when they fall in the next 30 days. */
+function thanksgivingOverrides(now: Date): HoursOverride[] {
+  const tg = thanksgivingOffset(now)
+  if (tg < 1 || tg + 1 > 30) return []
+  return [
+    { date: futureDateKey(now, tg), closed: true, open: null, close: null, label: 'Thanksgiving' },
+    {
+      date: futureDateKey(now, tg + 1),
+      closed: false,
+      open: '08:00',
+      close: '18:00',
+      label: 'Day after Thanksgiving',
+    },
+  ]
+}
+
 export function storefrontEntity(now: Date): EntityPageData {
+  const DAYS = sampleDays(now)
   return {
     id: 'example-storefront',
     entity_type: 'restaurant',
@@ -192,7 +227,7 @@ export function storefrontEntity(now: Date): EntityPageData {
         id: 'cafe-event-1',
         name: 'Saturday cupping: three Ethiopias',
         url: `/${ATLANTA.slug}/event/example-cupping-ethiopia`,
-        starts_at: futureIso(now, 9, 10),
+        starts_at: futureIso(now, DAYS.cupping, 10),
         is_online: false,
         venue_name: 'Test Business 123 back room',
         city_name: 'Atlanta',
@@ -201,7 +236,7 @@ export function storefrontEntity(now: Date): EntityPageData {
         id: 'cafe-event-2',
         name: 'Open-mic night',
         url: `/${ATLANTA.slug}/event/example-open-mic`,
-        starts_at: futureIso(now, 23, 19),
+        starts_at: futureIso(now, DAYS.nightMarket, 19),
         is_online: false,
         venue_name: 'Test Business 123',
         city_name: 'Atlanta',
@@ -309,7 +344,15 @@ export function storefrontEntity(now: Date): EntityPageData {
           ['Atmosphere', 5],
           ['Value', 4],
         ],
-        photos: [['cafe-pour-over.webp', 'Pour-over at the brew bar']],
+        photos: [
+          ['cafe-pour-over.webp', 'Single-origin pour-over at the brew bar'],
+          ['cafe-brunch.webp', 'Shrimp and grits from the weekend brunch menu'],
+          ['cafe-latte.webp', 'Oat-milk latte with a rosetta pour'],
+          [
+            'cafe-pastries.webp',
+            'Thursday’s pastry case: croissants, scones and sweet potato hand pies',
+          ],
+        ],
         ownerResponse:
           'Thank you, Jasmine! The Guji is back on the brew bar through the end of the month. See you Saturday.',
         verified: true,
@@ -339,7 +382,6 @@ export function storefrontEntity(now: Date): EntityPageData {
           ['Atmosphere', 4],
           ['Value', 4],
         ],
-        photos: [['cafe-brunch.webp', 'Shrimp and grits at brunch']],
         ownerResponse:
           'Thanks for the honest note, Dana. We added a second host on Sunday mornings and the back room now opens for brunch overflow.',
       },
@@ -410,8 +452,8 @@ export function storefrontEntity(now: Date): EntityPageData {
     findUsAt: [
       {
         id: 'cafe-stockist-1',
-        chainSlug: 'whole-foods',
-        name: 'Whole Foods',
+        chainSlug: null,
+        name: 'Sample Grocer',
         nationwide: false,
         position: 0,
         cities: ['Atlanta, GA', 'Decatur, GA'],
@@ -587,27 +629,21 @@ export function storefrontEntity(now: Date): EntityPageData {
     // Relative to `now`, so the sample never shows a stale holiday. Never today.
     hoursOverrides: [
       {
-        date: futureDateKey(now, 6),
+        date: futureDateKey(now, DAYS.staffHoliday),
         closed: true,
         open: null,
         close: null,
         label: 'Staff holiday',
       },
+      ...thanksgivingOverrides(now),
       {
-        date: futureDateKey(now, 13),
+        date: futureDateKey(now, DAYS.nightMarket),
         closed: false,
         open: '07:00',
         close: '21:00',
         label: 'Open late for the night market',
       },
-      {
-        date: futureDateKey(now, 20),
-        closed: false,
-        open: '09:00',
-        close: '14:00',
-        label: 'Holiday hours',
-      },
-    ],
+    ].sort((a, b) => a.date.localeCompare(b.date)),
     highlights: [
       {
         id: 'cafe-hl-1',
@@ -628,7 +664,7 @@ export function storefrontEntity(now: Date): EntityPageData {
         kind: 'highlight',
         icon: 'users',
         title: 'Room to work and to linger',
-        text: 'Twenty-four seats in the back room, a long table by the window and an outlet at every seat.',
+        text: 'Stay as long as you like. Drip refills are free before noon and the music stays low enough to think.',
       },
       {
         id: 'cafe-hl-4',

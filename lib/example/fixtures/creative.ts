@@ -18,6 +18,9 @@ import {
   reviews,
   socials,
   weeklyHours,
+  isWeekday,
+  pickDay,
+  thanksgivingOffset,
 } from './shared'
 
 const DESCRIPTION = [
@@ -32,9 +35,11 @@ const PORTFOLIO = gallery('studio', [
     'Identity system for a neighbourhood bakery: cards, bags and labels',
     'Identity',
   ],
-  ['studio-poster.webp', 'Limited-edition poster for a summer concert series', 'Print'],
+  // A film poster someone else designed, so it hangs on the wall as a favourite,
+  // not as the studio's work.
+  ['studio-poster.webp', 'A favourite type poster above the studio sofa', 'Studio'],
   ['studio-mural.webp', 'Thirty-foot mural for a restaurant patio in Summerhill', 'Murals'],
-  ['studio-packaging.webp', 'Packaging for a small-batch hot-sauce brand', 'Print'],
+  ['studio-packaging.webp', 'Packaging for a small-batch soap maker', 'Print'],
   ['studio-typography.webp', 'Hand-lettered wordmark in progress', 'Identity'],
   ['studio-print.webp', 'Screen prints drying after a Saturday press run', 'Print'],
   ['studio-screenprint.webp', 'Pulling a two-colour print on the studio press', 'Print'],
@@ -49,7 +54,24 @@ const PORTFOLIO = gallery('studio', [
   ['studio-desk.webp', 'A designer’s desk mid-project', 'Studio'],
 ])
 
+/**
+ * The sample's dated items, as days after `now`. Each pick skips public
+ * holidays and the days already used, so the open studio is on a first
+ * Saturday, and the mural closure, late opening and workshop are weekdays
+ * that never clash with it or each other (ticket 204).
+ */
+function sampleDays(now: Date) {
+  const tg = thanksgivingOffset(now)
+  const firstSaturday = (d: Date) => d.getDay() === 6 && d.getDate() <= 7
+  const openStudio = pickDay(now, 2, firstSaturday, [tg])
+  const muralClosed = pickDay(now, 6, isWeekday, [tg, tg + 1, openStudio])
+  const lateOpening = pickDay(now, 12, isWeekday, [tg, tg + 1, openStudio, muralClosed])
+  const workshop = pickDay(now, 18, isWeekday, [tg, tg + 1, openStudio, muralClosed, lateOpening])
+  return { openStudio, muralClosed, lateOpening, workshop }
+}
+
 export function creativeEntity(now: Date): EntityPageData {
+  const DAYS = sampleDays(now)
   return {
     id: 'example-creative',
     entity_type: 'creative',
@@ -160,7 +182,7 @@ export function creativeEntity(now: Date): EntityPageData {
         id: 'studio-event-1',
         name: 'First-Saturday open studio',
         url: `/${ATLANTA.slug}/event/example-open-studio`,
-        starts_at: futureIso(now, 8, 11),
+        starts_at: futureIso(now, DAYS.openStudio, 11),
         is_online: false,
         venue_name: 'Test Business 123 studio',
         city_name: 'Atlanta',
@@ -169,7 +191,7 @@ export function creativeEntity(now: Date): EntityPageData {
         id: 'studio-event-2',
         name: 'Screen-printing basics workshop',
         url: `/${ATLANTA.slug}/event/example-screenprint-workshop`,
-        starts_at: futureIso(now, 20, 13),
+        starts_at: futureIso(now, DAYS.workshop, 13),
         is_online: false,
         venue_name: 'Test Business 123 studio',
         city_name: 'Atlanta',
@@ -365,8 +387,8 @@ export function creativeEntity(now: Date): EntityPageData {
     findUsAt: [
       {
         id: 'studio-stockist-1',
-        chainSlug: 'target',
-        name: 'Target',
+        chainSlug: null,
+        name: 'Sample Home Goods',
         nationwide: true,
         position: 0,
         cities: [],
@@ -433,7 +455,7 @@ export function creativeEntity(now: Date): EntityPageData {
           kind: 'product',
           name: '“Summerhill” poster, edition of 50',
           priceLabel: '$45',
-          image: image('studio-poster.webp', 'A screen-printed poster'),
+          image: image('studio-screenprint.webp', 'The poster being pulled on the studio press'),
           href: '/marketplace/products/example-summerhill-poster',
         },
         {
@@ -504,8 +526,8 @@ export function creativeEntity(now: Date): EntityPageData {
       },
       {
         id: 'studio-post-3',
-        headline: 'New mural finished on the Westside',
-        body: 'Forty feet of wall for a neighbourhood bakery. Three weeks, two ladders, one very patient owner.',
+        headline: 'New mural finished in Summerhill',
+        body: 'Thirty feet of wall for a restaurant patio. Three weeks, two ladders, one very patient owner.',
         imageUrl: asset('studio-mural.webp'),
         buttonLabel: 'See the wall',
         endsAt: futureIso(now, 27),
@@ -514,18 +536,18 @@ export function creativeEntity(now: Date): EntityPageData {
     // Relative to `now`, so the sample never shows a stale holiday. Never today.
     hoursOverrides: [
       {
-        date: futureDateKey(now, 8),
+        date: futureDateKey(now, DAYS.muralClosed),
         closed: true,
         open: null,
         close: null,
         label: 'Installing a mural',
       },
       {
-        date: futureDateKey(now, 15),
+        date: futureDateKey(now, DAYS.lateOpening),
         closed: false,
         open: '10:00',
         close: '20:00',
-        label: 'Open house — press running',
+        label: 'Print release — open late',
       },
     ],
     highlights: [

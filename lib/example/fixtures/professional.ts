@@ -268,6 +268,10 @@ export function professionalEntity(now: Date): EntityPageData {
           ['Results', 5],
           ['Value', 5],
         ],
+        photos: [
+          ['pro-workshop.webp', 'A pricing workshop in progress, mapped out on sticky notes'],
+          ['pro-laptop.webp', 'The operating dashboard every client leaves with'],
+        ],
         ownerResponse:
           'Thank you, Priya. Your team did the hard part — the conversations with customers. We just kept the calendar honest.',
         verified: true,

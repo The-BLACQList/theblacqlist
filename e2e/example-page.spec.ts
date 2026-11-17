@@ -62,7 +62,7 @@ for (const { variant, template, cta } of VARIANTS) {
     test('renders every registered section in registry order, noindexed, behind the banner', async ({
       page,
     }) => {
-      const response = await page.goto(`/example/${variant}`)
+      const response = await page.goto(`/example/${variant}?layout=stack`)
       expect(response?.status()).toBe(200)
 
       await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/)
@@ -94,7 +94,7 @@ for (const { variant, template, cta } of VARIANTS) {
 
     test('holds every link that would leave the sample, and writes nothing', async ({ page }) => {
       const hits = watchWrites(page)
-      await page.goto(`/example/${variant}`)
+      await page.goto(`/example/${variant}?layout=stack`)
       const path = `/example/${variant}`
 
       // The hero CTA points at the fictional business's site.
@@ -145,7 +145,7 @@ for (const { variant, template, cta } of VARIANTS) {
       page,
     }) => {
       const hits = watchWrites(page)
-      await page.goto(`/example/${variant}`)
+      await page.goto(`/example/${variant}?layout=stack`)
 
       // "Est. 2014 · $$ · …" under the name; special hours and the map in Visit.
       await expect(page.getByTestId('facts-line')).toContainText(/Est\. \d{4}/)
@@ -161,7 +161,7 @@ for (const { variant, template, cta } of VARIANTS) {
       await expect(band).toBeVisible()
       await expect(band).toContainText(/Ends (in \d+ (days|hours)|tomorrow|within the hour)/)
       const more = band.locator('summary')
-      await expect(more).toHaveText(/\+\d+ more/)
+      await expect(more).toHaveText(/\+\d+ More/)
       await more.click()
       expect(await band.locator('details li').count()).toBeGreaterThanOrEqual(2)
 
@@ -191,19 +191,30 @@ for (const { variant, template, cta } of VARIANTS) {
 }
 
 test('the banner switches between the three layouts', async ({ page }) => {
-  await page.goto('/example/storefront')
+  await page.goto('/example/storefront?layout=stack')
   const nav = page.getByRole('navigation', { name: 'Sample page layouts' })
   await expect(nav.getByRole('link', { name: 'Storefront' })).toHaveAttribute(
     'aria-current',
     'page'
   )
   await nav.getByRole('link', { name: 'Professional' }).click()
-  await page.waitForURL('**/example/professional')
+  await page.waitForURL('**/example/professional?layout=stack')
   await expect(page.getByRole('heading', { level: 1 })).toHaveText(NAME)
   await expect(nav.getByRole('link', { name: 'Professional' })).toHaveAttribute(
     'aria-current',
     'page'
   )
+})
+
+test('the sample pages open on the chapters layout; ?layout=stack shows the live template', async ({
+  page,
+}) => {
+  await page.goto('/example/creative')
+  await expect(page.locator('[data-layout="chapters"]')).toHaveCount(1)
+  await expect(page.locator('[data-section]')).toHaveCount(0)
+  await page.goto('/example/creative?layout=stack')
+  await expect(page.locator('[data-layout="chapters"]')).toHaveCount(0)
+  await expect(page.locator('[data-section]').first()).toBeAttached()
 })
 
 test('/example lists the three sample pages', async ({ page }) => {
