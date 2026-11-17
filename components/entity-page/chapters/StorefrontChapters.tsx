@@ -1,8 +1,9 @@
-import type { ChapterData, MenuGroup, PersonView } from './model'
-import { initials, pad } from './model'
+import type { ChapterData, MenuGroup } from './model'
+import { pad } from './model'
 import type { StorefrontPreset } from './presets'
 import {
   Arr,
+  Avatar,
   BookPanel,
   ChapterHeading,
   Disc,
@@ -43,20 +44,6 @@ function MenuGroupBlock({ group }: { group: MenuGroup }) {
         ))}
       </div>
     </div>
-  )
-}
-
-function Avatar({ person }: { person: PersonView }) {
-  if (person.photo)
-    return (
-      <span className="avatar">
-        <Img src={person.photo.src} alt={person.photo.alt} />
-      </span>
-    )
-  return (
-    <span className="avatar" aria-hidden="true">
-      {initials(person.name)}
-    </span>
   )
 }
 

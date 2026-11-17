@@ -5,6 +5,7 @@ import type {
   EventRow,
   FindRow,
   GlidePhoto,
+  PersonView,
   Photo,
   ReviewView,
   StatusView,
@@ -119,6 +120,21 @@ export function Fig({
     <figure className={`figure ${className}`.trim()} style={style}>
       <Img src={photo.src} alt={photo.alt} />
     </figure>
+  )
+}
+
+/** A person's photo, or their initials when there is none. */
+export function Avatar({ person }: { person: PersonView }) {
+  if (person.photo)
+    return (
+      <span className="avatar">
+        <Img src={person.photo.src} alt={person.photo.alt} />
+      </span>
+    )
+  return (
+    <span className="avatar" aria-hidden="true">
+      {initials(person.name)}
+    </span>
   )
 }
 

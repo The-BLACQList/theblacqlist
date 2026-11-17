@@ -7,9 +7,10 @@ import { SectionMark } from '@/components/entity-page/SectionMark'
 import { EntityTemplateOutlet } from '@/components/entity-page/templates/EntityTemplateOutlet'
 import { ExampleBanner } from '@/components/example/ExampleBanner'
 import { ChaptersPage } from '@/components/entity-page/chapters/ChaptersPage'
+import { ProfessionalChapters } from '@/components/entity-page/chapters/ProfessionalChapters'
 import { StorefrontChapters } from '@/components/entity-page/chapters/StorefrontChapters'
 import { buildChapterData } from '@/components/entity-page/chapters/model'
-import { STOREFRONT_PRESET } from '@/components/entity-page/chapters/presets'
+import { PROFESSIONAL_PRESET, STOREFRONT_PRESET } from '@/components/entity-page/chapters/presets'
 import {
   EXAMPLE_NAME,
   EXAMPLE_VARIANT_LABEL,
@@ -53,8 +54,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * `entity.happeningNow`, as the live listing route does.
  *
  * `?layout=chapters` shows the Round 3 chapters layout instead (ticket 204,
- * Creative's prototype v7), built one type at a time: Storefront first. It
- * carries its own Happening Now strip inside the Welcome chapter.
+ * Creative's prototype v7), built one type at a time: Storefront and
+ * Professional so far. It carries its own Happening Now strip inside the
+ * Welcome chapter.
  */
 export default async function ExampleVariantPage({ params, searchParams }: PageProps) {
   if (IS_PRODUCTION) notFound()
@@ -67,8 +69,9 @@ export default async function ExampleVariantPage({ params, searchParams }: PageP
   const chapters = (await searchParams)?.layout === 'chapters'
   const query = chapters ? '?layout=chapters' : ''
 
-  if (chapters && variant === 'storefront') {
-    const data = buildChapterData(entity, STOREFRONT_PRESET, now)
+  if (chapters && (variant === 'storefront' || variant === 'professional')) {
+    const preset = variant === 'storefront' ? STOREFRONT_PRESET : PROFESSIONAL_PRESET
+    const data = buildChapterData(entity, preset, now)
     return (
       <div data-example-variant={variant} data-layout="chapters">
         {jsonLd && (
@@ -78,8 +81,12 @@ export default async function ExampleVariantPage({ params, searchParams }: PageP
           />
         )}
         <ExampleBanner variant={variant} query={query} />
-        <ChaptersPage data={data} type="storefront">
-          <StorefrontChapters data={data} preset={STOREFRONT_PRESET} />
+        <ChaptersPage data={data} type={variant}>
+          {variant === 'storefront' ? (
+            <StorefrontChapters data={data} preset={STOREFRONT_PRESET} />
+          ) : (
+            <ProfessionalChapters data={data} preset={PROFESSIONAL_PRESET} />
+          )}
         </ChaptersPage>
       </div>
     )

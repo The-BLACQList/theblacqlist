@@ -400,7 +400,11 @@ export function ChaptersBehaviour({ rootId }: { rootId: string }) {
       const p = doc > 0 ? Math.min(1, sy / doc) : 0
       $$('.prog span').forEach((s) => s.style.setProperty('--prog', String(p)))
       checkTop()
-      if (!motionOn) return
+      if (!motionOn) {
+        // Without motion the steps line stays full (the CSS default).
+        $$('.steps').forEach((st) => st.style.removeProperty('--fill'))
+        return
+      }
       if (hero) {
         const top = hero.getBoundingClientRect().top + sy
         const h = hero.offsetHeight
@@ -424,6 +428,12 @@ export function ChaptersBehaviour({ rootId }: { rootId: string }) {
         const stickTop = parseFloat(getComputedStyle(st).top) || 0
         const k = Math.max(0, Math.min(1, (stickTop - top) / Math.max(1, dist)))
         tr.style.setProperty('--gx', `${(-k * dist).toFixed(1)}px`)
+      })
+      // The How We Work line fills as its steps scroll through the view.
+      $$('.steps').forEach((st) => {
+        const r = st.getBoundingClientRect()
+        const k = Math.max(0, Math.min(1, (vh * 0.85 - r.top) / (r.height + vh * 0.35)))
+        st.style.setProperty('--fill', k.toFixed(3))
       })
     }
 

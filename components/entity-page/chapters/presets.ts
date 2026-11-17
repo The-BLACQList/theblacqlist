@@ -69,3 +69,88 @@ export const STOREFRONT_PRESET: StorefrontPreset = {
     'Visit another location, find us in local shops, order for delivery, or join an upcoming event.',
   map: { land: '#ebe4d8', block: '#f4efe6', road: '#fffdf8', park: '#d8dcc3', minor: '#f9f5ee' },
 }
+
+export interface ProfessionalPreset extends ChapterPreset {
+  /** The hero's numbers strip. The founding year comes from the listing itself. */
+  nums: { value: number; suffix?: string; label: string }[]
+  foundedLabel: string
+  welcomePhoto: Photo
+  interludes: [Photo, Photo, Photo]
+  offersLede: string
+  booking: { title: string; facts: string[] }
+  findTitle: string
+  findLede: string
+  gettingHere: { title: string; note: string }[]
+  map: { land: string; block: string; road: string; park: string; minor: string }
+}
+
+export const PROFESSIONAL_PRESET: ProfessionalPreset = {
+  chapters: [
+    { id: 'welcome', nav: 'Welcome', title: 'Welcome' },
+    { id: 'services', nav: 'Services', title: 'Services' },
+    { id: 'how', nav: 'How We Work', title: 'How We Work' },
+    { id: 'visit', nav: 'Visit', title: 'Office and Hours' },
+    { id: 'shop', nav: 'Shop', title: 'Shop' },
+    { id: 'reviews', nav: 'Reviews', title: 'Reviews' },
+    { id: 'more', nav: 'More', title: 'More' },
+  ],
+  aspect: {},
+  // F10: no "Est. 2016" here; the founding year is in the hero's numbers.
+  glance: ['In Person and Remote', 'Serves the Southeast'],
+  neighbourhood: 'Midtown, Atlanta',
+  cta: 'Book a Discovery Call',
+  coverAlt: 'A corner office with floor-to-ceiling windows over the city',
+  // F10: the rating is in the facts row, so the strip leaves it out.
+  nums: [
+    { value: 120, suffix: '+', label: 'Companies Advised' },
+    { value: 8, label: 'Clients at a Time' },
+  ],
+  foundedLabel: 'Founded in Midtown Atlanta',
+  // No pull quote (F09): Why People Come already quotes every review once.
+  why: [
+    {
+      title: 'Decisions, Not Slides',
+      text: 'A two-week diagnostic, then a ninety-day plan, with the dashboards, templates and meeting rhythm that keep it running after we leave.',
+      reviewId: 'pro-review-2',
+      sentence:
+        'This one came with the Monday meeting, the scorecard and the dashboard, and six months later we are still using all three.',
+    },
+    {
+      title: 'Straight Answers About the Numbers',
+      text: 'Interviews with the owner and the team, a read of the numbers and a written report, with a fixed price for the next step.',
+      reviewId: 'pro-review-3',
+      sentence:
+        'The diagnostic told us things we did not want to hear about our sales process, which is exactly what we paid for.',
+    },
+    {
+      title: 'Eight Clients at a Time',
+      text: 'We cap the roster so every client gets a partner’s time. It is why there is sometimes a wait.',
+      reviewId: 'pro-review-4',
+      sentence: 'Two days a week, but the operating rhythm they set up carried the other three.',
+    },
+    {
+      title: 'Built for Founder-Led Companies',
+      text: 'Five to fifty people, a product customers already pay for, and an owner who wants a plan the team can run without us.',
+      reviewId: 'pro-review-1',
+      sentence: 'Revenue is up and churn did not move.',
+    },
+  ],
+  welcomePhoto: photo('pro-coffee-meeting', 'Coffee and the first draft of a plan'),
+  interludes: [
+    photo('pro-office', 'The open-plan office in Midtown'),
+    photo('pro-skyline', 'The view from the office'),
+    photo('pro-meeting', 'The main meeting room'),
+  ],
+  offersLede: 'For BLACQList members and companies new to the firm.',
+  booking: {
+    title: 'Start with a Discovery Call',
+    facts: ['Thirty minutes with a partner', 'No pitch', 'Reply within one business day'],
+  },
+  findTitle: 'Other Offices and Events',
+  findLede: 'Our other offices, where else to find us, free events, and how to get here.',
+  gettingHere: [
+    { title: 'Free Parking', note: 'Appointment required' },
+    { title: 'Elevator Access', note: 'Wheelchair-accessible office' },
+  ],
+  map: { land: '#dedfe6', block: '#e9eaf0', road: '#ffffff', park: '#d2dacb', minor: '#f3f3f7' },
+}

@@ -226,6 +226,10 @@ html:has(.lp) {
   --btn-fg: #fff;
   --btn-h: var(--amber-dk);
 }
+/* Amber is 4.29:1 on the cool surface; the darker amber clears 4.5:1 (5.47). */
+:where(.lp) .s-cool {
+  --acc: var(--amber-dk);
+}
 :where(.lp) .s-ground,
 :where(.lp) .s-ember,
 :where(.lp) .s-ink,
@@ -2008,17 +2012,14 @@ html:has(.lp) {
 :where(.lp) .p-hero .facts {
   margin-top: 24px;
 }
+/* F10: three figures, one row. The rating stays in the facts row above it and
+   the founding year leaves the glance line, so neither shows twice. */
 :where(.lp) .p-nums {
   margin-top: auto;
   padding-top: 48px;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 0;
-}
-@media (min-width: 600px) and (max-width: 1023px) {
-  :where(.lp) .p-nums {
-    grid-template-columns: repeat(4, 1fr);
-  }
 }
 :where(.lp) .p-nums div {
   border-top: 1.5px solid var(--ink);
@@ -2036,11 +2037,6 @@ html:has(.lp) {
   font-size: 15px;
   color: var(--charcoal);
   line-height: 1.35;
-}
-@media (max-width: 599px), (min-width: 1024px) {
-  :where(.lp) .p-nums div:nth-child(n + 3) {
-    margin-top: 28px;
-  }
 }
 :where(.lp) .p-split {
   display: grid;
@@ -2275,20 +2271,22 @@ html:has(.lp) {
   position: absolute;
   background: var(--rule);
 }
-:where(.lp) .steps .fill {
+/* The fill is a pseudo-element, not a span: an <ol> may only hold <li>s. */
+:where(.lp) .steps::after {
+  content: '';
   position: absolute;
   background: var(--acc);
   transform-origin: 0 0;
 }
 @media (min-width: 900px) {
   :where(.lp) .steps::before,
-  :where(.lp) .steps .fill {
+  :where(.lp) .steps::after {
     left: 0;
     right: 0;
     top: 0;
     height: 2px;
   }
-  :where(.lp) .steps .fill {
+  :where(.lp) .steps::after {
     transform: scaleX(var(--fill, 1));
   }
   :where(.lp) .steps li {
@@ -2297,13 +2295,13 @@ html:has(.lp) {
 }
 @media (max-width: 899px) {
   :where(.lp) .steps::before,
-  :where(.lp) .steps .fill {
+  :where(.lp) .steps::after {
     left: 0;
     top: 0;
     bottom: 0;
     width: 2px;
   }
-  :where(.lp) .steps .fill {
+  :where(.lp) .steps::after {
     transform: scaleY(var(--fill, 1));
   }
   :where(.lp) .steps li {
@@ -2343,26 +2341,14 @@ html:has(.lp) {
     padding-right: 64px;
   }
 }
+/* The map fills the right side on its own (founder, 2026-11-17: no photo beside it). */
 :where(.lp) .p-visit .right {
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: 1fr;
   min-height: 480px;
 }
 :where(.lp) .p-visit .map {
   min-height: 380px;
-}
-:where(.lp) .p-visit .lobby {
-  display: none;
-}
-@media (min-width: 1280px) {
-  :where(.lp) .p-visit .right {
-    grid-template-columns: 2fr 1fr;
-    grid-template-rows: 1fr;
-  }
-  :where(.lp) .p-visit .lobby {
-    display: block;
-    height: 100%;
-  }
 }
 :where(.lp) .p-shop {
   display: grid;

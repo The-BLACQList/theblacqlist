@@ -288,6 +288,11 @@ export interface ChapterData {
   story: string[]
   happening: HappeningView[]
   highlights: { id: string; title: string; text: string }[]
+  /** The highlights the owner marked as steps: "how we work". */
+  steps: { id: string; title: string; text: string }[]
+  /** Reasons with a client's words lifted verbatim from a review (preset.why). */
+  why: { id: string; title: string; text: string; quote: string; who: string }[]
+  founded: number | null
   founder: PersonView | null
   team: PersonView[]
   hours: HoursRow[]
@@ -299,7 +304,10 @@ export interface ChapterData {
   deals: DealView[]
   menu: MenuGroup[]
   booking: string | null
-  shop: { total: number; items: (Photo & { id: string; name: string; price: string })[] } | null
+  shop: {
+    total: number
+    items: (Photo & { id: string; name: string; price: string; kind: string })[]
+  } | null
   gallery: GlidePhoto[]
   videos: { id: string; title: string; source: string }[]
   reviews: ReviewView[]
@@ -324,6 +332,8 @@ export interface ChapterPreset {
   coverAlt: string
   /** The pull quote: a review id and a sentence lifted verbatim from its body. */
   pull?: { reviewId: string; sentence: string }
+  /** Why People Come: each reason quotes a sentence lifted verbatim from a review. */
+  why?: { title: string; text: string; reviewId: string; sentence: string }[]
 }
 
 const file = (src: string) =>
@@ -397,11 +407,16 @@ export function buildChapterData(
     photos: r.photos.map((p) => ({ src: p.src, alt: p.alt })),
   }))
 
-  const pullReview = preset.pull && reviews.find((r) => r.id === preset.pull?.reviewId)
-  const pull =
-    pullReview && preset.pull && pullReview.body.includes(preset.pull.sentence)
-      ? { quote: preset.pull.sentence, who: pullReview.who }
-      : null
+  /** A sentence from a review, only while the review still says it word for word. */
+  const quoteFrom = (reviewId: string, sentence: string) => {
+    const r = reviews.find((x) => x.id === reviewId)
+    return r && r.body.includes(sentence) ? { quote: sentence, who: r.who } : null
+  }
+  const pull = preset.pull ? quoteFrom(preset.pull.reviewId, preset.pull.sentence) : null
+  const why = (preset.why ?? []).flatMap((w, i) => {
+    const q = quoteFrom(w.reviewId, w.sentence)
+    return q ? [{ id: `why-${i + 1}`, title: w.title, text: w.text, ...q }] : []
+  })
 
   const links: string[] = []
   const seen = new Set<string>()
@@ -445,11 +460,14 @@ export function buildChapterData(
       image: p.imageUrl ? { src: p.imageUrl, alt: '' } : null,
       button: p.buttonLabel ? toTitleCase(p.buttonLabel) : null,
     })),
-    highlights: (entity.highlights ?? []).map((h) => ({
-      id: h.id,
-      title: h.title,
-      text: h.text ?? '',
-    })),
+    highlights: (entity.highlights ?? [])
+      .filter((h) => h.kind !== 'step')
+      .map((h) => ({ id: h.id, title: h.title, text: h.text ?? '' })),
+    steps: (entity.highlights ?? [])
+      .filter((h) => h.kind === 'step')
+      .map((h) => ({ id: h.id, title: h.title, text: h.text ?? '' })),
+    why,
+    founded: d?.founded_year ?? null,
     founder: founder ? person(founder) : null,
     team: team.filter((t) => t !== founder).map(person),
     hours: week ? hoursRows(week, zoned) : [],
@@ -457,7 +475,8 @@ export function buildChapterData(
     locations: (entity.locations ?? []).map((l) => ({
       id: l.id,
       name: l.label,
-      where: `${l.addressLine}, ${l.cityName}`,
+      // A location shown by appointment may have no street address.
+      where: [l.addressLine, l.cityName].filter(Boolean).join(', '),
     })),
     findUs: (entity.findUsAt ?? []).map((s) => ({
       id: s.id,
@@ -496,6 +515,7 @@ export function buildChapterData(
             id: s.id,
             name: s.name,
             price: s.priceLabel ?? '',
+            kind: s.kind === 'service' ? 'Service' : 'Product',
             src: s.image?.src ?? '',
             alt: s.image?.alt ?? '',
           })),
