@@ -44,8 +44,8 @@ function photoCreditLines(): CreditLine[] {
  * The strip above every sample page (ticket 184). Always rendered: it is what
  * keeps a page full of illustrative figures inside the no-fabrication rule,
  * so it is not dismissible. The switcher is the one set of links the
- * ExampleLinkGuard lets through by path; the credit links are let through by
- * the data attribute.
+ * ExampleLinkGuard lets through by path; the credit links and Get a Page Like
+ * This are let through by the data attribute.
  */
 export function ExampleBanner({ variant, query = '' }: Props) {
   const photos = photoCreditLines()
@@ -63,7 +63,15 @@ export function ExampleBanner({ variant, query = '' }: Props) {
             Sample page
           </p>
           <p className="mt-1 text-sm leading-relaxed text-off-white/90 [text-wrap:pretty]">
-            {EXAMPLE_BANNER_TEXT}
+            {EXAMPLE_BANNER_TEXT}{' '}
+            {/* Ticket 206: the way back for an owner who came from For Business. */}
+            <Link
+              href="/for-business#start"
+              data-example-allow-links=""
+              className="whitespace-nowrap font-semibold text-gold underline underline-offset-4 hover:text-light-gold"
+            >
+              Get a Page Like This
+            </Link>
           </p>
           <details className="mt-1 text-xs text-ink-soft" data-example-allow-links="">
             <summary className="cursor-pointer select-none underline-offset-2 hover:underline">

@@ -1,12 +1,12 @@
 // =============================================================================
-// Ticket 184 — /example is Preview and staging only
+// Ticket 184 — /example sample pages; open on production since ticket 206
 // =============================================================================
-// The sample pages must never answer on production: the fixture carries a
-// fictional business, example.com links and illustrative reviews, which
-// docs/blacqlist/data/seed-data-plan.md §10 forbids on the live site. Three
-// layers say so — the page's own IS_PRODUCTION check, the layout's robots
-// metadata, and robots.ts — and each is pinned here so none can be relaxed
-// without a test noticing.
+// Ticket 184 kept the sample pages off production. Ticket 206 links them from
+// For Business, so production renders them too, as clearly labelled samples
+// (the banner) that are never indexed. Three layers keep them out of search —
+// the layout's robots metadata, robots.ts, and no LocalBusiness JSON-LD on
+// production — and each is pinned here so none can be relaxed without a test
+// noticing.
 //
 // IS_PRODUCTION is a module constant, so each case re-imports the page with
 // vi.doMock after vi.resetModules. The outlet and banner are stubbed: this
@@ -71,19 +71,35 @@ afterEach(() => {
   vi.doUnmock('@/lib/env')
 })
 
-describe('on production', () => {
-  it('every sample route is a 404, whatever the variant', async () => {
+describe('on production (ticket 206)', () => {
+  it('each sample page and the index render, so For Business never links to a 404', async () => {
     const { page, index } = await loadRoutes(true)
-    await expect(page.default({ params: params('storefront') })).rejects.toThrow(NOT_FOUND)
+    for (const variant of ['storefront', 'professional', 'creative']) {
+      const tree = await page.default({ params: params(variant) })
+      expect(findProp(tree, 'data-example-variant'), variant).toBe(variant)
+    }
+    expect(index.default()).toBeTruthy()
     await expect(page.default({ params: params('nope') })).rejects.toThrow(NOT_FOUND)
-    expect(() => index.default()).toThrow(NOT_FOUND)
   })
 
-  it('metadata is the not-found title, so nothing names the sample in a <title>', async () => {
+  it('leaves out the JSON-LD, so the live domain never describes a made-up business', async () => {
     const { page } = await loadRoutes(true)
-    await expect(page.generateMetadata({ params: params('storefront') })).resolves.toEqual({
-      title: 'Page Not Found',
-    })
+    for (const variant of ['storefront', 'professional', 'creative']) {
+      for (const layout of [undefined, 'stack']) {
+        const tree = await page.default({
+          params: params(variant),
+          searchParams: Promise.resolve({ layout }),
+        })
+        expect(findProp(tree, 'dangerouslySetInnerHTML'), `${variant} ${layout}`).toBeUndefined()
+      }
+    }
+  })
+
+  it('titles still say it is a sample', async () => {
+    const { page } = await loadRoutes(true)
+    const meta = await page.generateMetadata({ params: params('storefront') })
+    expect(meta.title).toBe('Sample Page: Test Business 123 (Storefront)')
+    expect(String(meta.description)).toMatch(/not a real business/i)
   })
 })
 
@@ -150,7 +166,7 @@ describe('off production', () => {
     expect(index.metadata.title).toBe('Sample Pages: Test Business 123')
   })
 
-  it('the route is dynamic, so the production check reads the live environment', async () => {
+  it('the route is dynamic, so the JSON-LD check reads the live environment', async () => {
     const { page, index } = await loadRoutes(false)
     expect(page.dynamic).toBe('force-dynamic')
     expect(index.dynamic).toBe('force-dynamic')

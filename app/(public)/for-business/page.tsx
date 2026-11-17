@@ -7,6 +7,7 @@ import { isFeatureEnabled } from '@/lib/env'
 import { createClient } from '@/lib/supabase/server'
 import { getPlanAvailability, isPlanPurchasable, isTierOpen } from '@/lib/stripe/availability'
 import { aiQuota } from '@/lib/stripe/features'
+import { EXAMPLE_VARIANT_LABEL, type ExampleVariant } from '@/lib/example/fixtures'
 import { PricingPlans } from '../pricing/PricingPlans'
 
 // Plan availability comes from the live `plans` table, same as /pricing. A
@@ -96,6 +97,28 @@ const AI_PAID_ITEMS = [
   },
 ]
 
+// Ticket 206: one sample page per layout, so an owner can see a page filled
+// in before claiming theirs. Each line names what its sample really shows
+// (lib/example/fixtures). The samples are labelled as made up on the page
+// itself, so this section only has to say so once.
+const SAMPLES: { variant: ExampleVariant; cover: string; body: string }[] = [
+  {
+    variant: 'storefront',
+    cover: '/images/example/cafe-cover.webp',
+    body: 'For places people visit, like cafés, restaurants, shops and salons. The sample is a café with a menu, a shop and table bookings.',
+  },
+  {
+    variant: 'professional',
+    cover: '/images/example/pro-cover.webp',
+    body: 'For services and advice, like consultants, accountants and agencies. The sample is a consultancy with prices, a team and discovery calls.',
+  },
+  {
+    variant: 'creative',
+    cover: '/images/example/studio-cover.webp',
+    body: 'For makers and artists, like designers, photographers and studios. The sample is a design studio with a portfolio, commissions and prints.',
+  },
+]
+
 // Must match .claude/rules/moderation-policy.md and lib/services/trust/certification.ts.
 const LADDER = [
   { tier: 'Unclaimed', line: 'Listed from public info. Nobody has claimed it yet.' },
@@ -157,11 +180,12 @@ export default async function ForBusinessPage() {
   const starterOpen = isPlanPurchasable(availability, 'starter', 'monthly')
   const growthOpen = isTierOpen(availability, 'growth')
   const premiumOpen = isTierOpen(availability, 'premium')
-  const openLine = !starterOpen || premiumOpen
-    ? null
-    : growthOpen
-      ? 'Starter and Growth are open now. Premium opens once everything in it works.'
-      : 'Starter is open now. Growth and Premium open once everything in them works.'
+  const openLine =
+    !starterOpen || premiumOpen
+      ? null
+      : growthOpen
+        ? 'Starter and Growth are open now. Premium opens once everything in it works.'
+        : 'Starter is open now. Growth and Premium open once everything in them works.'
   const aiSignupOn = isFeatureEnabled('aiOnboarding')
   const aiPaidOn = isFeatureEnabled('aiBeta')
   const aiOn = aiSignupOn || aiPaidOn
@@ -307,6 +331,60 @@ export default async function ForBusinessPage() {
               </li>
             ))}
           </ul>
+        </Container>
+      </section>
+
+      {/* 4b. Sample pages (ticket 206) */}
+      <section className="bg-off-white" aria-labelledby="samples-heading">
+        <Container className="py-16 md:py-24 flex flex-col gap-10">
+          <div className="flex flex-col gap-3 max-w-[60ch]">
+            <p className={eyebrowLight}>Sample pages</p>
+            <h2 id="samples-heading" className={`${h2} text-ink`}>
+              See what your page could look like.
+            </h2>
+            <p className="font-body text-lg leading-relaxed text-charcoal">
+              Three sample pages, one for each kind of business, with every feature filled in. Open
+              the one closest to yours.
+            </p>
+          </div>
+          <ul className="grid gap-6 md:grid-cols-3 list-none m-0 p-0">
+            {SAMPLES.map((sample) => {
+              const label = EXAMPLE_VARIANT_LABEL[sample.variant]
+              return (
+                <li key={sample.variant}>
+                  <Link
+                    href={`/example/${sample.variant}`}
+                    aria-label={`See the ${label} Sample`}
+                    className="group flex h-full flex-col overflow-hidden rounded-[3px] border border-hairline bg-white transition-colors duration-150 hover:border-amber focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+                  >
+                    <div className="relative aspect-[4/3] overflow-hidden">
+                      <Image
+                        src={sample.cover}
+                        alt=""
+                        fill
+                        sizes="(min-width: 768px) 33vw, 100vw"
+                        className="object-cover transition-transform duration-300 group-hover:scale-[1.03] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+                      />
+                    </div>
+                    <div className="flex flex-1 flex-col gap-3 p-5">
+                      <h3 className="font-headline font-medium text-[22px] text-ink">{label}</h3>
+                      <p className="font-body text-base leading-relaxed text-charcoal">
+                        {sample.body}
+                      </p>
+                      <span className="mt-auto inline-flex min-h-[44px] items-center gap-2 font-subhead text-[15px] font-semibold text-amber underline-offset-4 group-hover:underline">
+                        See the {label} Sample
+                        <span aria-hidden="true">→</span>
+                      </span>
+                    </div>
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+          <p className="font-body text-base leading-relaxed text-charcoal max-w-[60ch]">
+            The business on these pages is made up, and so are its reviews and numbers. Some
+            features need a paid plan.
+          </p>
         </Container>
       </section>
 

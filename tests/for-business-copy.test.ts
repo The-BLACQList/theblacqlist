@@ -62,6 +62,16 @@ describe('/for-business copy', () => {
     expect(page).toContain("export const dynamic = 'force-dynamic'")
   })
 
+  // Ticket 206: one card per sample page, each pointing at a route that exists.
+  it('links every sample page, and says the business is made up', async () => {
+    const { EXAMPLE_VARIANTS } = await import('@/lib/example/fixtures')
+    for (const variant of EXAMPLE_VARIANTS) {
+      expect(page).toContain(`variant: '${variant}'`)
+    }
+    expect(page).toContain('href={`/example/${sample.variant}`}')
+    expect(page).toContain('The business on these pages is made up')
+  })
+
   it('never types a price into the page', () => {
     expect(page).not.toMatch(/\$\d/)
   })

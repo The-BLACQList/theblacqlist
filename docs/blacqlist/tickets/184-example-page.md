@@ -21,7 +21,7 @@ Today the public page shows a section only when its data exists, and the only ti
 - **Photos:** free-licence stock (Unsplash/Pexels) downloaded into the repo with a licence record.
 - **Community spend panel:** owner dashboard only for now (112). No public spend section — out of scope here.
 - **Multi-location:** one Premium subscription covers up to 3 locations; extra locations inherit the primary's tier (110).
-- **`/example/*` is Preview/staging only;** 404 on production.
+- **`/example/*` is Preview/staging only;** 404 on production. (Superseded by ticket 206: open on production, linked from For Business, still noindex, no JSON-LD on production.)
 - **Value-adds for PR 1B** (from the menu in the plan): facts line, mini map, richer JSON-LD, gallery captions, photo albums, menu/rate-card PDF, credentials & press, founder spotlight, highlights & process, holiday hours. **Stubs only:** 197 menu-item photos/tags, 198 service-area list, 199 pinned review quote, 200 sticky desktop mini header, 201 custom subdomain, 202 brand accent (not selected; stubbed so it stays visible). The updates feed on the menu became main's Happening now posts (#326) while 1B was in flight; see the decision record.
 
 `[Decision — agent, 2026-11-13]` (recorded for review, change if wrong):
@@ -67,7 +67,7 @@ Display-only, from the fixtures. Every new field is optional on `EntityPageData`
 ## Out of scope (recorded)
 
 - A public spend-impact section (112 is dashboard-only by founder decision).
-- `/example` on production (new ticket if wanted: remove the 404, re-check licences, review seed-data-plan §10 naming).
+- `/example` on production (new ticket if wanted: remove the 404, re-check licences, review seed-data-plan §10 naming). Done as ticket 206.
 - Ticket 188, the click-to-fill editor (`mode='edit'`), which reuses `ENTITY_SECTIONS`, `SectionMark`, `isFilled`, `editor.href` and `minTierFor`.
 
 ## What comes after

@@ -26,7 +26,7 @@ import {
 } from '@/lib/example/fixtures'
 
 // Rendered per request: the fixture's dates are relative to the visit, and
-// the production check reads the deployment's environment.
+// the JSON-LD check reads the deployment's environment.
 export const dynamic = 'force-dynamic'
 
 interface PageProps {
@@ -36,7 +36,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { variant } = await params
-  if (IS_PRODUCTION || !isExampleVariant(variant)) {
+  if (!isExampleVariant(variant)) {
     return { title: 'Page Not Found' }
   }
   return {
@@ -70,14 +70,17 @@ function chaptersView(
 /**
  * "Test Business 123": one sample page per template with every Premium
  * feature filled, built from the fixtures in lib/example/fixtures (ticket
- * 184). Preview and staging only — production answers 404 — and nothing on it
+ * 184). Open on production too since ticket 206, which links them from For
+ * Business; noindex everywhere (layout, robots.txt). Nothing on it
  * writes anywhere: no page-view or post-view event, no tour witness, no quick-action bar,
  * no message composer, and the templates run in example mode, which holds
  * Save and Share and reads images from /images/example.
  *
- * The page carries the same LocalBusiness JSON-LD a live listing emits, so a
- * Preview URL can go straight into Google's Rich Results test. Its `url`
- * points at where the listing would live if it were real.
+ * Off production the page carries the same LocalBusiness JSON-LD a live
+ * listing emits, so a Preview URL can go straight into Google's Rich Results
+ * test. Its `url` points at where the listing would live if it were real. On
+ * production it is left out: the live domain never describes a made-up
+ * business to search engines.
  *
  * Main's Happening now band (part F) renders above the template from
  * `entity.happeningNow`, as the live listing route does.
@@ -90,13 +93,12 @@ function chaptersView(
  * links shared before the switch.
  */
 export default async function ExampleVariantPage({ params, searchParams }: PageProps) {
-  if (IS_PRODUCTION) notFound()
   const { variant } = await params
   if (!isExampleVariant(variant)) notFound()
 
   const now = new Date()
   const entity = buildExampleEntity(variant, now)
-  const jsonLd = buildJsonLd(entity, entity.entity_type)
+  const jsonLd = IS_PRODUCTION ? null : buildJsonLd(entity, entity.entity_type)
   const chapters = (await searchParams)?.layout !== 'stack'
   const query = chapters ? '' : '?layout=stack'
 
