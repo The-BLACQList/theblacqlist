@@ -1795,7 +1795,10 @@ html:has(.lp) {
   color: var(--ink-soft);
   font-size: 14px;
 }
-:where(.lp) .mgrp + .mgrp {
+/* The groups the Full Menu button reveals sit in a .disc wrapper, so the first
+   of them is not a .mgrp sibling; the wrapper carries the same gap. */
+:where(.lp) .mgrp + .mgrp,
+:where(.lp) .mgrp + .disc {
   margin-top: 48px;
 }
 :where(.lp) .mgrp h3 {
