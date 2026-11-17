@@ -300,3 +300,47 @@ export function attributeGroup(group: string, names: readonly string[]) {
 export function faqs(prefix: string, items: ReadonlyArray<readonly [string, string]>) {
   return items.map(([question, answer], i) => ({ id: `${prefix}-faq-${i + 1}`, question, answer }))
 }
+
+function dayAfter(now: Date, days: number): Date {
+  const d = new Date(now)
+  d.setDate(d.getDate() + days)
+  return d
+}
+
+/** US Thanksgiving (fourth Thursday of November) as days after `now`, in local time. */
+export function thanksgivingOffset(now: Date): number {
+  const d = new Date(now.getFullYear(), 10, 1)
+  d.setDate(1 + ((4 - d.getDay() + 7) % 7) + 21)
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  return Math.round((d.getTime() - start.getTime()) / 86_400_000)
+}
+
+/** Days no sample event or special hours may land on: Thanksgiving, Christmas Eve and Day, New Year's Eve and Day. */
+function isHoliday(now: Date, days: number): boolean {
+  const d = dayAfter(now, days)
+  const m = d.getMonth()
+  const x = d.getDate()
+  if ((m === 11 && (x === 24 || x === 25 || x === 31)) || (m === 0 && x === 1)) return true
+  return days === thanksgivingOffset(now)
+}
+
+export const isWeekday = (d: Date) => d.getDay() > 0 && d.getDay() < 6
+export const isDayOfWeek = (day: number) => (d: Date) => d.getDay() === day
+
+/**
+ * The first day at least `min` days after `now` that `ok` accepts, is not a
+ * holiday and is not in `taken`, as a day offset for {@link futureIso} and
+ * futureDateKey. Sample dates use it so special hours and events never
+ * contradict each other or a public holiday (ticket 204).
+ */
+export function pickDay(
+  now: Date,
+  min: number,
+  ok: (d: Date) => boolean,
+  taken: readonly number[] = []
+): number {
+  for (let n = min; n < min + 40; n++) {
+    if (ok(dayAfter(now, n)) && !isHoliday(now, n) && !taken.includes(n)) return n
+  }
+  return min
+}

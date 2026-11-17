@@ -6,6 +6,10 @@ import { HappeningNowBanner } from '@/components/entity-page/HappeningNowBanner'
 import { SectionMark } from '@/components/entity-page/SectionMark'
 import { EntityTemplateOutlet } from '@/components/entity-page/templates/EntityTemplateOutlet'
 import { ExampleBanner } from '@/components/example/ExampleBanner'
+import { ChaptersPage } from '@/components/entity-page/chapters/ChaptersPage'
+import { StorefrontChapters } from '@/components/entity-page/chapters/StorefrontChapters'
+import { buildChapterData } from '@/components/entity-page/chapters/model'
+import { STOREFRONT_PRESET } from '@/components/entity-page/chapters/presets'
 import {
   EXAMPLE_NAME,
   EXAMPLE_VARIANT_LABEL,
@@ -19,6 +23,7 @@ export const dynamic = 'force-dynamic'
 
 interface PageProps {
   params: Promise<{ variant: string }>
+  searchParams?: Promise<Record<string, string | string[] | undefined>>
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -46,8 +51,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  *
  * Main's Happening now band (part F) renders above the template from
  * `entity.happeningNow`, as the live listing route does.
+ *
+ * `?layout=chapters` shows the Round 3 chapters layout instead (ticket 204,
+ * Creative's prototype v7), built one type at a time: Storefront first. It
+ * carries its own Happening Now strip inside the Welcome chapter.
  */
-export default async function ExampleVariantPage({ params }: PageProps) {
+export default async function ExampleVariantPage({ params, searchParams }: PageProps) {
   if (IS_PRODUCTION) notFound()
   const { variant } = await params
   if (!isExampleVariant(variant)) notFound()
@@ -55,6 +64,26 @@ export default async function ExampleVariantPage({ params }: PageProps) {
   const now = new Date()
   const entity = buildExampleEntity(variant, now)
   const jsonLd = buildJsonLd(entity, entity.entity_type)
+  const chapters = (await searchParams)?.layout === 'chapters'
+  const query = chapters ? '?layout=chapters' : ''
+
+  if (chapters && variant === 'storefront') {
+    const data = buildChapterData(entity, STOREFRONT_PRESET, now)
+    return (
+      <div data-example-variant={variant} data-layout="chapters">
+        {jsonLd && (
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          />
+        )}
+        <ExampleBanner variant={variant} query={query} />
+        <ChaptersPage data={data} type="storefront">
+          <StorefrontChapters data={data} preset={STOREFRONT_PRESET} />
+        </ChaptersPage>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen" data-example-variant={variant}>
@@ -64,7 +93,7 @@ export default async function ExampleVariantPage({ params }: PageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      <ExampleBanner variant={variant} />
+      <ExampleBanner variant={variant} query={query} />
       {/* Registered but not ordered in the registry, like the nested marks:
           the route renders it, not the template. */}
       <SectionMark id="happening-now">

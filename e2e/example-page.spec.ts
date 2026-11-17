@@ -161,7 +161,7 @@ for (const { variant, template, cta } of VARIANTS) {
       await expect(band).toBeVisible()
       await expect(band).toContainText(/Ends (in \d+ (days|hours)|tomorrow|within the hour)/)
       const more = band.locator('summary')
-      await expect(more).toHaveText(/\+\d+ more/)
+      await expect(more).toHaveText(/\+\d+ More/)
       await more.click()
       expect(await band.locator('details li').count()).toBeGreaterThanOrEqual(2)
 

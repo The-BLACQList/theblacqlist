@@ -331,6 +331,42 @@ for (const variant of EXAMPLE_VARIANTS) {
   })
 }
 
+describe('storefront sample dates (ticket 204)', () => {
+  // Clocks across the year, including Thanksgiving week and the December holidays.
+  const CLOCKS = [
+    '2026-07-01T12:00:00Z',
+    '2026-11-13T12:00:00Z',
+    '2026-11-17T14:00:00Z',
+    '2026-12-10T12:00:00Z',
+  ]
+  const HOLIDAYS = ['12-24', '12-25', '12-31', '01-01', '2026-11-26']
+  const isHoliday = (key: string) => HOLIDAYS.some((h) => key.endsWith(h))
+
+  it.each(CLOCKS)('at %s: no special hours or events on a holiday except its own row', (iso) => {
+    const now = new Date(iso)
+    const e = buildExampleEntity('storefront', now)
+    for (const o of e.hoursOverrides ?? []) {
+      if (o.label === 'Thanksgiving') expect(o.date).toBe('2026-11-26')
+      else expect(isHoliday(o.date), `${o.label} ${o.date}`).toBe(false)
+    }
+    for (const ev of e.organizerEvents ?? [])
+      expect(isHoliday(localDateKey(new Date(ev.starts_at))), ev.name).toBe(false)
+    const cupping = e.organizerEvents?.find((ev) => /cupping/i.test(ev.name))
+    expect(new Date(cupping!.starts_at).getDay()).toBe(6)
+    // The 7 pm open mic is on the night-market late opening, so it is inside opening hours.
+    const mic = e.organizerEvents?.find((ev) => /open-mic/i.test(ev.name))
+    const late = e.hoursOverrides?.find((o) => /night market/i.test(o.label ?? ''))
+    expect(localDateKey(new Date(mic!.starts_at))).toBe(late?.date)
+  })
+
+  it('names no real grocer under Find Us At', () => {
+    for (const s of buildExampleEntity('storefront', NOW).findUsAt ?? []) {
+      expect(s.chainSlug).toBeNull()
+      expect(s.name).toMatch(/^Sample /)
+    }
+  })
+})
+
 describe('photo credits ↔ files', () => {
   const files = readdirSync(ASSET_DIR)
     .filter((f) => /\.(webp|jpe?g|png)$/.test(f))
