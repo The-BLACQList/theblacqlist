@@ -877,6 +877,11 @@ html:has(.lp) {
   justify-content: center;
   overflow: hidden;
 }
+/* Auto margins in a flex column shrink the head to its content and centre it;
+   full width keeps the heading on the page's one left edge. */
+:where(.lp) .glide.pinned .glide-head {
+  width: 100%;
+}
 :where(.lp) .glide.pinned .glide-track {
   overflow: visible;
   transform: translate3d(var(--gx, 0px), 0, 0);
@@ -2881,9 +2886,11 @@ html:has(.lp) {
   :where(.lp) .c-card {
     align-self: start;
     justify-self: start;
-    margin: clamp(48px, 6vw, 88px) 0 clamp(48px, 6vw, 88px) var(--bl);
-    width: min(560px, 44vw);
-    padding: 44px 44px 48px;
+    /* Flush to the screen's left and padded out to the gutter, so the
+       heading and hours share the page's one left edge. */
+    margin: clamp(48px, 6vw, 88px) 0;
+    width: calc(var(--bl) + min(516px, 40vw));
+    padding: 44px 44px 48px var(--bl);
   }
 }
 .lp {
@@ -4598,6 +4605,13 @@ html:has(.lp) {
   width: 100%;
   overflow: hidden;
   border-radius: var(--r);
+}
+:where(.lp) .c-team li.has-av {
+  /* No portrait yet: initials beside the name, on the photo row's grid. */
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
 }
 :where(.lp) .c-team .ct-ph img {
   width: 100%;

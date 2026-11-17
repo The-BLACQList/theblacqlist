@@ -18,7 +18,7 @@
 
 import { expect, test, type Page } from '@playwright/test'
 
-const PAGES = ['storefront', 'professional'] as const
+const PAGES = ['storefront', 'professional', 'creative'] as const
 const WIDTHS = [375, 1024, 1280] as const
 const url = (variant: string) => `/example/${variant}?layout=chapters`
 

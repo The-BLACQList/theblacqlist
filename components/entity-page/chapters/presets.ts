@@ -154,3 +154,69 @@ export const PROFESSIONAL_PRESET: ProfessionalPreset = {
   ],
   map: { land: '#dedfe6', block: '#e9eaf0', road: '#ffffff', park: '#d2dacb', minor: '#f3f3f7' },
 }
+
+export interface CreativePreset extends ChapterPreset {
+  welcomePhoto: Photo
+  interludes: [Photo, Photo, Photo]
+  /** Albums that count as work for Selected Work; studio photos stay out of it. */
+  workAlbums: string[]
+  booking: { title: string; facts: string[] }
+  shopNoun: string
+  findTitle: string
+  findLede: string
+  openStudio: { title: string; note: string }[]
+  map: { land: string; block: string; road: string; park: string; minor: string }
+}
+
+export const CREATIVE_PRESET: CreativePreset = {
+  chapters: [
+    { id: 'welcome', nav: 'Welcome', title: 'Welcome' },
+    { id: 'work', nav: 'Work', title: 'Selected Work' },
+    { id: 'commissions', nav: 'Commissions', title: 'Commissions' },
+    { id: 'shop', nav: 'Shop', title: 'Print Shop' },
+    { id: 'visit', nav: 'Visit', title: 'Studio and Hours' },
+    { id: 'reviews', nav: 'Reviews', title: 'Reviews' },
+    { id: 'more', nav: 'More', title: 'More' },
+  ],
+  aspect: {
+    'studio-branding': '16/9',
+    'studio-packaging': '4/3',
+    'studio-print': '2/3',
+    'studio-sketch': '4/3',
+  },
+  glance: ['Est. 2018', 'Ships Nationwide', 'Open Studio First Saturdays'],
+  neighbourhood: 'Castleberry Hill, Atlanta',
+  cta: 'Start a Commission',
+  coverAlt: 'The studio, with a chalk-drawn wall above the desks',
+  // F09: from the last review, so it never sits beside the same words in the
+  // carousel's first view.
+  pull: {
+    reviewId: 'studio-review-4',
+    sentence: 'Brought a sketch, left with forty two-colour prints and a new hobby.',
+  },
+  welcomePhoto: photo('studio-desk', 'A designer’s desk mid-project'),
+  // Studio photos, so Selected Work keeps to the work.
+  interludes: [
+    photo('studio-sketch', 'Logo sketches from the first week of an identity project'),
+    photo('studio-space', 'The studio floor on a first-Saturday open day'),
+    photo('studio-gallery-wall', 'The print wall, where every edition hangs before it ships'),
+  ],
+  workAlbums: ['Identity', 'Murals', 'Print'],
+  booking: {
+    title: 'Commission the Studio',
+    facts: [
+      'Reply within two business days',
+      'A fixed-price proposal after the call',
+      'A fifty per cent deposit books the start date',
+    ],
+  },
+  shopNoun: 'Prints',
+  findTitle: 'Where Else to Find Us',
+  findLede:
+    'Visit the gallery or the market pop-up, find the prints in shops, or come to an open studio.',
+  openStudio: [
+    { title: 'First Saturday of Every Month', note: '11 am – 4 pm, no appointment needed' },
+    { title: 'Other Days', note: 'By appointment' },
+  ],
+  map: { land: '#e4e2de', block: '#efeeeb', road: '#ffffff', park: '#d5d6cc', minor: '#f7f6f3' },
+}

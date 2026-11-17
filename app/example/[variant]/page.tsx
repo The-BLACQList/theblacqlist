@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { IS_PRODUCTION } from '@/lib/env'
@@ -7,15 +8,21 @@ import { SectionMark } from '@/components/entity-page/SectionMark'
 import { EntityTemplateOutlet } from '@/components/entity-page/templates/EntityTemplateOutlet'
 import { ExampleBanner } from '@/components/example/ExampleBanner'
 import { ChaptersPage } from '@/components/entity-page/chapters/ChaptersPage'
+import { CreativeChapters } from '@/components/entity-page/chapters/CreativeChapters'
 import { ProfessionalChapters } from '@/components/entity-page/chapters/ProfessionalChapters'
 import { StorefrontChapters } from '@/components/entity-page/chapters/StorefrontChapters'
-import { buildChapterData } from '@/components/entity-page/chapters/model'
-import { PROFESSIONAL_PRESET, STOREFRONT_PRESET } from '@/components/entity-page/chapters/presets'
+import { buildChapterData, type ChapterData } from '@/components/entity-page/chapters/model'
+import {
+  CREATIVE_PRESET,
+  PROFESSIONAL_PRESET,
+  STOREFRONT_PRESET,
+} from '@/components/entity-page/chapters/presets'
 import {
   EXAMPLE_NAME,
   EXAMPLE_VARIANT_LABEL,
   buildExampleEntity,
   isExampleVariant,
+  type ExampleVariant,
 } from '@/lib/example/fixtures'
 
 // Rendered per request: the fixture's dates are relative to the visit, and
@@ -38,6 +45,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 }
 
+/** The chapters layout's data and body for one type, each with its own preset. */
+function chaptersView(
+  variant: ExampleVariant,
+  entity: ReturnType<typeof buildExampleEntity>,
+  now: Date
+): { data: ChapterData; body: ReactNode } {
+  switch (variant) {
+    case 'storefront': {
+      const data = buildChapterData(entity, STOREFRONT_PRESET, now)
+      return { data, body: <StorefrontChapters data={data} preset={STOREFRONT_PRESET} /> }
+    }
+    case 'professional': {
+      const data = buildChapterData(entity, PROFESSIONAL_PRESET, now)
+      return { data, body: <ProfessionalChapters data={data} preset={PROFESSIONAL_PRESET} /> }
+    }
+    case 'creative': {
+      const data = buildChapterData(entity, CREATIVE_PRESET, now)
+      return { data, body: <CreativeChapters data={data} preset={CREATIVE_PRESET} /> }
+    }
+  }
+}
+
 /**
  * "Test Business 123": one sample page per template with every Premium
  * feature filled, built from the fixtures in lib/example/fixtures (ticket
@@ -54,8 +83,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
  * `entity.happeningNow`, as the live listing route does.
  *
  * `?layout=chapters` shows the Round 3 chapters layout instead (ticket 204,
- * Creative's prototype v7), built one type at a time: Storefront and
- * Professional so far. It carries its own Happening Now strip inside the
+ * Creative's prototype v7) for all three types. It carries its own Happening Now strip inside the
  * Welcome chapter.
  */
 export default async function ExampleVariantPage({ params, searchParams }: PageProps) {
@@ -69,9 +97,8 @@ export default async function ExampleVariantPage({ params, searchParams }: PageP
   const chapters = (await searchParams)?.layout === 'chapters'
   const query = chapters ? '?layout=chapters' : ''
 
-  if (chapters && (variant === 'storefront' || variant === 'professional')) {
-    const preset = variant === 'storefront' ? STOREFRONT_PRESET : PROFESSIONAL_PRESET
-    const data = buildChapterData(entity, preset, now)
+  if (chapters) {
+    const view = chaptersView(variant, entity, now)
     return (
       <div data-example-variant={variant} data-layout="chapters">
         {jsonLd && (
@@ -81,12 +108,8 @@ export default async function ExampleVariantPage({ params, searchParams }: PageP
           />
         )}
         <ExampleBanner variant={variant} query={query} />
-        <ChaptersPage data={data} type={variant}>
-          {variant === 'storefront' ? (
-            <StorefrontChapters data={data} preset={STOREFRONT_PRESET} />
-          ) : (
-            <ProfessionalChapters data={data} preset={PROFESSIONAL_PRESET} />
-          )}
+        <ChaptersPage data={view.data} type={variant}>
+          {view.body}
         </ChaptersPage>
       </div>
     )

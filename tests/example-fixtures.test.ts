@@ -359,12 +359,29 @@ describe('storefront sample dates (ticket 204)', () => {
     expect(localDateKey(new Date(mic!.starts_at))).toBe(late?.date)
   })
 
-  it('names no real grocer under Find Us At', () => {
-    for (const s of buildExampleEntity('storefront', NOW).findUsAt ?? []) {
-      expect(s.chainSlug).toBeNull()
-      expect(s.name).toMatch(/^Sample /)
-    }
+  it.each(CLOCKS)('at %s: creative open studio is a first Saturday, nothing clashes', (iso) => {
+    const now = new Date(iso)
+    const e = buildExampleEntity('creative', now)
+    const days = [
+      ...(e.hoursOverrides ?? []).map((o) => o.date),
+      ...(e.organizerEvents ?? []).map((ev) => localDateKey(new Date(ev.starts_at))),
+    ]
+    for (const d of days) expect(isHoliday(d), d).toBe(false)
+    expect(new Set(days).size, days.join(' ')).toBe(days.length)
+    const open = new Date(e.organizerEvents!.find((ev) => /open studio/i.test(ev.name))!.starts_at)
+    expect(open.getDay()).toBe(6)
+    expect(open.getDate()).toBeLessThanOrEqual(7)
   })
+
+  it.each(['storefront', 'professional', 'creative'] as const)(
+    '%s names no real shop under Find Us At',
+    (variant) => {
+      for (const s of buildExampleEntity(variant, NOW).findUsAt ?? []) {
+        expect(s.chainSlug).toBeNull()
+        expect(s.name).toMatch(/^Sample /)
+      }
+    }
+  )
 })
 
 describe('photo credits ↔ files', () => {
