@@ -11,7 +11,9 @@
 - **Author OS supports with a voice pass** on Marketing's deck, against the founder's profile.
 - **Software** (software-agent-bundle) wrote this brief. It relays the founder's picks and builds the chosen page.
 
-Nothing here is approved copy. Every line stays a `recommendation` until the founder picks it. Messaging approval is still Marketing's pending gate.
+Nothing here is approved copy. Every line stays a `recommendation` until the founder picks it. The messaging system itself was approved on 14 Nov 2026 (Marketing WF-024, all 13 defaults), so the deck builds on approved messaging.
+
+**Sessions:** Marketing `marketing-department-e0` (run WF-042 `run_20261118_a29160`; deck at `projects/theblacqlist/07_funnels/pages/for-business/COPY_DECK.md`), Author OS `author-os-03`, Creative `creative-studio-01`.
 
 **Merge gate:** GATE-DEPLOY. Merging needs the founder's OK.
 
