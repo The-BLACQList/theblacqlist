@@ -205,8 +205,9 @@ for (const variant of PAGES) {
 
 // The Creative hero leads with the photo, in the markup as well as on screen,
 // so screen readers meet it in the order it is seen. From 1024px the buttons
-// share the name's left edge. (Phones drop the hero buttons, F01.)
-for (const width of WIDTHS) {
+// share the name's left edge. (Phones drop the hero buttons, F01.) 768 is in
+// the list because a tall tablet screen once narrowed the photo.
+for (const width of [375, 768, 1024, 1280]) {
   test.describe(`creative hero at ${width}px`, () => {
     test.use({ viewport: { width, height: 900 }, contextOptions: { reducedMotion: 'reduce' } })
 
@@ -217,6 +218,8 @@ for (const width of WIDTHS) {
       const photo = await box('.c-a')
       const h1 = await box('h1')
       expect(photo.y, 'photo above the name').toBeLessThan(h1.y)
+      expect(Math.round(photo.x), 'photo starts at the left edge').toBe(0)
+      expect(Math.round(photo.width), 'photo is full width').toBe(width)
 
       const tree = await hero.ariaSnapshot()
       const img = tree.indexOf('- img')

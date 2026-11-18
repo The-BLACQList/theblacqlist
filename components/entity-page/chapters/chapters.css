@@ -4541,8 +4541,12 @@ html:has(.lp) {
 :where(.lp) .c-cap {
   padding-bottom: 4px;
 }
+/* Full width at every size: with only aspect-ratio and max-height, a tall
+   tablet screen (768) capped the height and the ratio then narrowed the photo,
+   leaving a white strip on the right. The width is pinned; the crop gives. */
 @media (max-width: 1023px) {
   :where(.lp) .c-a {
+    width: 100%;
     aspect-ratio: 4/5;
     max-height: 72svh;
   }
