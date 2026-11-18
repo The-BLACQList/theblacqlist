@@ -118,7 +118,23 @@ const LADDER = [
   },
 ] as const
 
-const Arrow = () => <span aria-hidden="true">→</span>
+// Drawn, not typed: the self-hosted Jost subset has no U+2192, so a typed →
+// fell back to another face (Creative QA-07). The head is Jost's x-height.
+const Arrow = () => (
+  <svg
+    className="arw"
+    viewBox="0 0 16 12"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={1.6}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    focusable="false"
+  >
+    <path d="M1.5 6h12.5M9.5 1.5 14 6l-4.5 4.5" />
+  </svg>
+)
 
 // [Decision, founder, 2026-10-15: one owner door. Every general owner link
 // lands on #start, on one question: is your business already listed? Find

@@ -50,7 +50,7 @@
 .fb :is(h1, h2, h3, p):where(:not(.fb-plans *)) {
   margin: 0;
 }
-.fb :is(h1, h2, h3):not(.fb-plans *) {
+.fb :is(h1, h2, h3):where(:not(.fb-plans *)) {
   font-family: inherit;
   letter-spacing: normal;
 }
@@ -293,7 +293,8 @@
 }
 .fb .ph img {
   object-fit: cover;
-  object-position: 30% 70%;
+  /* The approved view at every width (spec v2 §2, QA-04). */
+  object-position: 50% 60%;
 }
 @media (prefers-reduced-motion: no-preference) {
   .fb .ph img {
@@ -377,6 +378,8 @@
   min-height: 25px;
 }
 .fb .ct tbody th .fd > span {
+  /* The approved render's pitch (spec v2 §3, QA-08); body text keeps 1.6. */
+  line-height: 1.45;
   color: var(--charcoal);
   display: block;
 }
@@ -510,7 +513,21 @@
   text-align: center;
 }
 
+/* The drawn arrow: head = Jost's x-height (0.47em), centred on it. */
+.fb .arw {
+  display: inline-block;
+  width: 0.83em;
+  height: 0.62em;
+  vertical-align: -0.07em;
+  flex: none;
+}
+
 /* ---------- closing door ---------- */
+/* A short last step under Plans: 64px at every width, not the band's 88/112
+   (spec v2 §7a, QA-06). Three classes so it outranks the container rules. */
+.fb .band.close {
+  padding-block: 64px;
+}
 .fb .close .wrap {
   display: grid;
   gap: 22px;
