@@ -4767,5 +4767,6 @@ html:has(.lp) {
 @container (min-width: 600px) {
   .lp .v-cols .over-h {
     margin-top: 0;
+    margin-bottom: 10px;
   }
 }
