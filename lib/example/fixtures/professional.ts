@@ -21,7 +21,7 @@ import {
 } from './shared'
 
 const DESCRIPTION = [
-  'Test Business 123 is a growth consultancy for founder-led companies between their first hire and their fiftieth. We work with owners who have proven the product and now need the pricing, the pipeline and the operating rhythm to match.',
+  'Sample & Co. is a growth consultancy for founder-led companies between their first hire and their fiftieth. We work with owners who have proven the product and now need the pricing, the pipeline and the operating rhythm to match.',
   'Our engagements are short on slides and long on decisions. A typical project starts with a two-week diagnostic, ends with a ninety-day plan the team can actually run, and leaves behind the dashboards, templates and meeting cadence that keep it running after we leave.',
   'The firm was founded in 2016 in Midtown Atlanta and has since worked with more than a hundred and twenty companies across the Southeast, from a three-location bakery to a forty-person logistics software company. We take on eight clients at a time, which is why there is sometimes a wait.',
 ].join('\n\n')
@@ -54,9 +54,9 @@ export function professionalEntity(now: Date): EntityPageData {
     id: 'example-professional',
     entity_type: 'professional',
     name: EXAMPLE_NAME,
-    slug: 'test-business-123',
+    slug: 'sample-and-co',
     tagline: 'Growth strategy, pricing and operations for founder-led companies',
-    meta_title: 'Test Business 123 — Business Consulting in Atlanta, GA',
+    meta_title: 'Sample & Co. — Business Consulting in Atlanta, GA',
     meta_description:
       'Ninety-day growth plans, pricing strategy and operating rhythm for companies between their first hire and their fiftieth. Midtown Atlanta and remote.',
     noindex: true,
@@ -161,7 +161,7 @@ export function professionalEntity(now: Date): EntityPageData {
         url: `/${ATLANTA.slug}/event/example-pricing-lunch`,
         starts_at: futureIso(now, 12, 12),
         is_online: false,
-        venue_name: 'Test Business 123, 4th floor',
+        venue_name: 'Sample & Co., 4th floor',
         city_name: 'Atlanta',
       },
       {
@@ -402,14 +402,14 @@ export function professionalEntity(now: Date): EntityPageData {
         addressLine: '300 Sample Street, Suite 900',
         lat: 35.2271,
         lng: -80.8431,
-        href: '/charlotte-nc/professional/test-business-123-charlotte',
+        href: '/charlotte-nc/professional/sample-and-co-charlotte',
       },
       {
         id: 'pro-loc-2',
         label: 'Birmingham (by appointment)',
         cityName: 'Birmingham',
         addressLine: null,
-        href: '/birmingham-al/professional/test-business-123-birmingham',
+        href: '/birmingham-al/professional/sample-and-co-birmingham',
       },
     ],
     shop: {
@@ -448,7 +448,7 @@ export function professionalEntity(now: Date): EntityPageData {
         },
       ],
       total: 6,
-      shopAllHref: '/vendors/test-business-123',
+      shopAllHref: '/vendors/sample-and-co',
     },
     hiring: {
       roles: [
@@ -542,7 +542,7 @@ export function professionalEntity(now: Date): EntityPageData {
       {
         id: 'pro-doc-rate-card',
         label: 'Rate card (PDF)',
-        href: 'https://example.com/test-business-123/rate-card.pdf',
+        href: 'https://example.com/sample-and-co/rate-card.pdf',
         sizeLabel: '340 KB',
       },
     ],

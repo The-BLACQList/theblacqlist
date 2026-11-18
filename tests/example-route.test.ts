@@ -98,7 +98,7 @@ describe('on production (ticket 206)', () => {
   it('titles still say it is a sample', async () => {
     const { page } = await loadRoutes(true)
     const meta = await page.generateMetadata({ params: params('storefront') })
-    expect(meta.title).toBe('Sample Page: Test Business 123 (Storefront)')
+    expect(meta.title).toBe('Sample Page: Sample & Co. (Storefront)')
     expect(String(meta.description)).toMatch(/not a real business/i)
   })
 })
@@ -152,7 +152,7 @@ describe('off production', () => {
       expect(data['@type'], variant).toBe(
         variant === 'storefront' ? 'CafeOrCoffeeShop' : 'LocalBusiness'
       )
-      expect(data.name).toBe('Test Business 123')
+      expect(data.name).toBe('Sample & Co.')
       expect(data.aggregateRating).toBeTruthy()
       expect(data.address).toBeTruthy()
     }
@@ -161,9 +161,9 @@ describe('off production', () => {
   it('titles say it is a sample', async () => {
     const { page, index } = await loadRoutes(false)
     const meta = await page.generateMetadata({ params: params('professional') })
-    expect(meta.title).toBe('Sample Page: Test Business 123 (Professional)')
+    expect(meta.title).toBe('Sample Page: Sample & Co. (Professional)')
     expect(String(meta.description)).toMatch(/not a real business/i)
-    expect(index.metadata.title).toBe('Sample Pages: Test Business 123')
+    expect(index.metadata.title).toBe('Sample Pages: Sample & Co.')
   })
 
   it('the route is dynamic, so the JSON-LD check reads the live environment', async () => {

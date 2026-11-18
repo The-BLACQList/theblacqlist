@@ -1,5 +1,7 @@
 # 184: Test Business 123 — the fully filled Premium sample page, one per template
 
+> **Renamed 2026-11-18 (ticket 206):** the sample business is now "Sample & Co." (fixture slug `sample-and-co`). History below keeps the old name.
+
 **Status:** PR 1A #325 and PR 1B #329 (stacked), rebased on `origin/main` `9c8844c` (#328 deals). Merge as one deploy before the launch freeze (D-1 Mon 16 Nov to the end of the D0 watch Tue 17 Nov) or after it, never inside it; founder go 2026-11-13.
 **Follows:** 105 (tiered page features), 154 (Now hiring), 134 (partnerships badge), messaging (hero Message button, 2026-11-13)
 **Area:** business pages (`/example/*`), the section registry the click-to-fill editor (188) will reuse

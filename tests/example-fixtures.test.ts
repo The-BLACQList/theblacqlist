@@ -1,5 +1,5 @@
 // =============================================================================
-// Ticket 184 — the "Test Business 123" fixtures
+// Ticket 184 — the "Sample & Co." fixtures
 // =============================================================================
 // The three sample pages exist to show every Premium feature filled, one per
 // template. The checks below are the promise, written down:

@@ -25,7 +25,7 @@ import {
 } from './shared'
 
 const DESCRIPTION = [
-  'Test Business 123 is a neighbourhood café and small-batch roastery in Atlanta’s Old Fourth Ward. We opened in 2014 with a two-group espresso machine, a borrowed pastry case and a simple idea: coffee should taste like where it came from, and the room it is served in should feel like somebody’s front porch.',
+  'Sample & Co. is a neighbourhood café and small-batch roastery in Atlanta’s Old Fourth Ward. We opened in 2014 with a two-group espresso machine, a borrowed pastry case and a simple idea: coffee should taste like where it came from, and the room it is served in should feel like somebody’s front porch.',
   'Our beans are sourced directly from family farms in Ethiopia, Colombia and Rwanda and roasted on site every Tuesday and Friday. The kitchen turns out a short brunch menu — shrimp and grits, sweet potato waffles, a very serious biscuit — and the pastry case changes with whatever the bakers felt like at five in the morning.',
   'The back room hosts cuppings, open-mic nights and the occasional supper club, and on weekday afternoons the main room is the quietest in the neighbourhood. Bring your laptop; stay for lunch.',
 ].join('\n\n')
@@ -93,9 +93,9 @@ export function storefrontEntity(now: Date): EntityPageData {
     id: 'example-storefront',
     entity_type: 'restaurant',
     name: EXAMPLE_NAME,
-    slug: 'test-business-123',
+    slug: 'sample-and-co',
     tagline: 'Neighbourhood café, small-batch roastery and brunch spot in Old Fourth Ward',
-    meta_title: 'Test Business 123 — Café & Roastery in Atlanta, GA',
+    meta_title: 'Sample & Co. — Café & Roastery in Atlanta, GA',
     meta_description:
       'Single-origin coffee roasted on site, weekend brunch and a back room for events. Open daily from 7 am in Atlanta’s Old Fourth Ward.',
     noindex: true,
@@ -229,7 +229,7 @@ export function storefrontEntity(now: Date): EntityPageData {
         url: `/${ATLANTA.slug}/event/example-cupping-ethiopia`,
         starts_at: futureIso(now, DAYS.cupping, 10),
         is_online: false,
-        venue_name: 'Test Business 123 back room',
+        venue_name: 'Sample & Co. back room',
         city_name: 'Atlanta',
       },
       {
@@ -238,7 +238,7 @@ export function storefrontEntity(now: Date): EntityPageData {
         url: `/${ATLANTA.slug}/event/example-open-mic`,
         starts_at: futureIso(now, DAYS.nightMarket, 19),
         is_online: false,
-        venue_name: 'Test Business 123',
+        venue_name: 'Sample & Co.',
         city_name: 'Atlanta',
       },
     ],
@@ -500,7 +500,7 @@ export function storefrontEntity(now: Date): EntityPageData {
         addressLine: '456 Sample Avenue NW',
         lat: 33.7868,
         lng: -84.416,
-        href: `/${ATLANTA.slug}/restaurant/test-business-123-westside`,
+        href: `/${ATLANTA.slug}/restaurant/sample-and-co-westside`,
       },
       {
         id: 'cafe-loc-2',
@@ -509,7 +509,7 @@ export function storefrontEntity(now: Date): EntityPageData {
         addressLine: '78 Placeholder Street',
         lat: 33.7748,
         lng: -84.2963,
-        href: '/decatur-ga/restaurant/test-business-123-decatur',
+        href: '/decatur-ga/restaurant/sample-and-co-decatur',
       },
     ],
     shop: {
@@ -564,7 +564,7 @@ export function storefrontEntity(now: Date): EntityPageData {
         },
       ],
       total: 14,
-      shopAllHref: '/vendors/test-business-123',
+      shopAllHref: '/vendors/sample-and-co',
     },
     hiring: {
       roles: [
@@ -678,7 +678,7 @@ export function storefrontEntity(now: Date): EntityPageData {
       {
         id: 'cafe-doc-menu',
         label: 'Full menu (PDF)',
-        href: 'https://example.com/test-business-123/menu.pdf',
+        href: 'https://example.com/sample-and-co/menu.pdf',
         sizeLabel: '1.2 MB',
       },
     ],

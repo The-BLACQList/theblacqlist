@@ -68,7 +68,7 @@ function chaptersView(
 }
 
 /**
- * "Test Business 123": one sample page per template with every Premium
+ * "Sample & Co.": one sample page per template with every Premium
  * feature filled, built from the fixtures in lib/example/fixtures (ticket
  * 184). Open on production too since ticket 206, which links them from For
  * Business; noindex everywhere (layout, robots.txt). Nothing on it

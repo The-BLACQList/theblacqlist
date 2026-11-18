@@ -24,7 +24,7 @@ import {
 } from './shared'
 
 const DESCRIPTION = [
-  'Test Business 123 is a design studio in Castleberry Hill that makes brands, murals and prints for people who want their work to be recognised from across the street. We are three designers, one screen-printing press and a very patient studio dog.',
+  'Sample & Co. is a design studio in Castleberry Hill that makes brands, murals and prints for people who want their work to be recognised from across the street. We are three designers, one screen-printing press and a very patient studio dog.',
   'Most of our work is identity: the name on the door, the mark on the bag, the menu, the sign and the way it all holds together a year later. We also paint murals for restaurants and neighbourhood groups, and we run a small print shop where the posters we make for ourselves and for clients are sold as limited editions.',
   'The studio opened in 2018. We take on about two identity projects a month, book murals a season ahead, and open the doors to the public on the first Saturday of every month, when the press is running and the prints are cheaper.',
 ].join('\n\n')
@@ -76,9 +76,9 @@ export function creativeEntity(now: Date): EntityPageData {
     id: 'example-creative',
     entity_type: 'creative',
     name: EXAMPLE_NAME,
-    slug: 'test-business-123',
+    slug: 'sample-and-co',
     tagline: 'Brand identity, murals and limited-edition prints from Castleberry Hill',
-    meta_title: 'Test Business 123 — Design Studio in Atlanta, GA',
+    meta_title: 'Sample & Co. — Design Studio in Atlanta, GA',
     meta_description:
       'Brand identity, murals and screen-printed posters. Commissions open; studio open to the public on first Saturdays.',
     noindex: true,
@@ -184,7 +184,7 @@ export function creativeEntity(now: Date): EntityPageData {
         url: `/${ATLANTA.slug}/event/example-open-studio`,
         starts_at: futureIso(now, DAYS.openStudio, 11),
         is_online: false,
-        venue_name: 'Test Business 123 studio',
+        venue_name: 'Sample & Co. studio',
         city_name: 'Atlanta',
       },
       {
@@ -193,7 +193,7 @@ export function creativeEntity(now: Date): EntityPageData {
         url: `/${ATLANTA.slug}/event/example-screenprint-workshop`,
         starts_at: futureIso(now, DAYS.workshop, 13),
         is_online: false,
-        venue_name: 'Test Business 123 studio',
+        venue_name: 'Sample & Co. studio',
         city_name: 'Atlanta',
       },
     ],
@@ -436,7 +436,7 @@ export function creativeEntity(now: Date): EntityPageData {
         addressLine: '47 Example Walk SW',
         lat: 33.749,
         lng: -84.401,
-        href: `/${ATLANTA.slug}/creative/test-business-123-gallery`,
+        href: `/${ATLANTA.slug}/creative/sample-and-co-gallery`,
       },
       {
         id: 'studio-loc-2',
@@ -445,7 +445,7 @@ export function creativeEntity(now: Date): EntityPageData {
         addressLine: 'Weekends, Example Market Hall',
         lat: 33.7701,
         lng: -84.3659,
-        href: `/${ATLANTA.slug}/creative/test-business-123-popup`,
+        href: `/${ATLANTA.slug}/creative/sample-and-co-popup`,
       },
     ],
     shop: {
@@ -484,7 +484,7 @@ export function creativeEntity(now: Date): EntityPageData {
         },
       ],
       total: 11,
-      shopAllHref: '/vendors/test-business-123',
+      shopAllHref: '/vendors/sample-and-co',
     },
     hiring: {
       roles: [
@@ -584,7 +584,7 @@ export function creativeEntity(now: Date): EntityPageData {
       {
         id: 'studio-doc-guide',
         label: 'Commission guide (PDF)',
-        href: 'https://example.com/test-business-123/commission-guide.pdf',
+        href: 'https://example.com/sample-and-co/commission-guide.pdf',
         sizeLabel: '2.4 MB',
       },
     ],

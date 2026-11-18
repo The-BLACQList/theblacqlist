@@ -6,7 +6,7 @@
 
 /** The banner above every sample page. Keeps the figures inside the no-fabrication rule. */
 export const EXAMPLE_BANNER_TEXT =
-  'Test Business 123 is not a real business. Every name, review, number and photo is illustrative.'
+  'Sample & Co. is not a real business. Every name, review, number and photo is illustrative.'
 
 /** Shown by ExampleLinkGuard when a link that would leave the sample page is clicked. */
 export const EXAMPLE_LINK_NOTE = 'Links are off on the sample page.'

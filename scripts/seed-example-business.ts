@@ -1,5 +1,5 @@
 /**
- * Seed the three "Test Business 123" sample pages as real listings (ticket 187).
+ * Seed the three "Sample & Co." sample pages as real listings (ticket 187).
  *
  * /example/* renders the sample pages from fixtures on Preview. This script
  * writes the same fixtures into a database, so the live loaders, the
@@ -8,7 +8,7 @@
  * from lib/example/fixtures, so the seeded pages and the samples cannot drift.
  *
  * What it writes, per page (three pages: storefront, professional, creative):
- *   - one listing "Demo — Test Business 123 (…)", slug demo-test-business-123-…,
+ *   - one listing "Demo — Sample & Co. (…)", slug demo-test-business-123-…,
  *     noindex, published, Premium, verified, source 'admin', owned by
  *     --owner-email;
  *   - details, services, FAQs, links, attributes, videos, extra buttons, team,

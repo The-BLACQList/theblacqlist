@@ -27,7 +27,7 @@ describe('isAllowedExampleHref', () => {
       '/',
       '/discover',
       '/sign-in',
-      '/atlanta-ga/restaurant/test-business-123',
+      '/atlanta-ga/restaurant/sample-and-co',
       '/examples',
       '/example-page',
       'https://example.com',
@@ -44,7 +44,7 @@ describe('isAllowedExampleHref', () => {
 
 describe('copy', () => {
   it('names the business and says the figures are illustrative', () => {
-    expect(EXAMPLE_BANNER_TEXT).toContain('Test Business 123')
+    expect(EXAMPLE_BANNER_TEXT).toContain('Sample & Co.')
     expect(EXAMPLE_BANNER_TEXT).toMatch(/not a real business/)
     expect(EXAMPLE_LINK_NOTE.length).toBeGreaterThan(0)
   })

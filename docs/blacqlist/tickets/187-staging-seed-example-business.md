@@ -1,5 +1,7 @@
 # 187: Seed "Test Business 123" as real listings on staging
 
+> **Renamed 2026-11-18 (ticket 206):** the listings are now named "Demo — Sample & Co. (…)". The slug prefix stays `demo-test-business-123` so re-running the seed renames the existing staging listings in place and `--purge` still finds them.
+
 **Status:** In PR, 2026-11-15, stacked on 196 (`feat/187-staging-seed`). Not run against any database yet: every staging run waits for the founder's OK. Originally: from the 184 plan, founder 2026-11-13.
 **Follows:** 184 (reads the same fixture modules as `/example/*`, so the two cannot drift), 107–110 and 191–196 for the rows they add
 **Area:** `scripts/`, staging data
