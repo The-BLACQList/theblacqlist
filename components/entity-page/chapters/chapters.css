@@ -4687,3 +4687,51 @@ html:has(.lp) {
 .lp .badge.tier svg {
   flex: none;
 }
+
+/* ── Live listings (ticket 231) ── */
+/* The real map fills the drawn map's frame. */
+.lp .map-live [data-testid='location-map'] {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+.lp .map-live [data-testid='location-map'] > :first-child {
+  height: 100%;
+}
+/* No pins: the panel takes the whole row. */
+@media (min-width: 1024px) {
+  .lp .s-visit.no-map {
+    grid-template-columns: 1fr;
+  }
+}
+/* Save, Share, Message under the hero buttons; shown at every width. */
+.lp .hero-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  margin-top: 18px;
+}
+.lp .hero-acts .tlink[aria-pressed='true'] {
+  text-decoration-style: solid;
+  font-weight: 600;
+}
+.lp .hero-acts [data-failed] {
+  outline: 2px solid #b42318;
+  outline-offset: 4px;
+}
+.lp .v-dist {
+  margin-top: 16px;
+}
+.lp .rev-form,
+.lp .resp-form {
+  margin-top: 24px;
+}
+.lp .pf-acts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+}

@@ -74,6 +74,7 @@ export type FeatureFlag =
   | 'earnedFeatured'
   | 'happeningNow'
   | 'jobsOpen'
+  | 'listingChapters'
   | 'marketplaceOpen'
   | 'messaging'
   | 'ocrExtraction'
@@ -201,6 +202,13 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // live privacy policy says receipt details are visible only to the shopper.
   // Opens with the policy update that says otherwise (GATE-PUBLISH).
   ownerReceiptReview: 'FEATURE_OWNER_RECEIPT_REVIEW',
+  // Gates the chapters layout on real business pages (ticket 231). Closed by
+  // default on every deployment, so existing listing e2e keeps testing today's
+  // page. On a Preview or in local dev, `?layout=chapters` opts one request in
+  // without it (lib/entity-page/chapters-eligibility.ts); production needs
+  // FEATURE_LISTING_CHAPTERS=true (GATE-DEPLOY). Thin listings keep today's
+  // page either way.
+  listingChapters: 'FEATURE_LISTING_CHAPTERS',
   // Gates "Start from your website" on /add-business (ticket 127): step 0, the
   // read-site and import-photo actions. Off, there is no step 0 and nothing is
   // ever fetched. The default (on in preview, off in production) lets it be
@@ -234,6 +242,7 @@ const CLOSED_BY_DEFAULT: ReadonlySet<FeatureFlag> = new Set<FeatureFlag>([
   'bookingRequests',
   'collectiveOpen',
   'jobsOpen',
+  'listingChapters',
   'marketplaceOpen',
   'ownerCue',
   'ownerReceiptReview',

@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
+import { track } from '@/lib/analytics/client'
+import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
 
 /**
  * The chapters layout's client behaviour (ticket 204), ported from the
@@ -126,6 +128,16 @@ export function ChaptersBehaviour({ rootId }: { rootId: string }) {
       if (cp) {
         const code = cp.dataset.copy ?? ''
         navigator.clipboard?.writeText(code).catch(() => {})
+        // Live listings only (the root carries the listing id): the same event
+        // DealCodeButton sends on today's page, for the owner's deal counts.
+        const listingId = root.dataset.listing
+        if (listingId && cp.dataset.deal)
+          track({
+            event_name: ANALYTICS_EVENTS.DEAL_CODE_COPIED,
+            entity_id: listingId,
+            entity_type: 'listing',
+            properties: { deal_id: cp.dataset.deal },
+          })
         toast(`Code ${code} copied`)
         cp.textContent = 'Copied'
         const k = window.setTimeout(() => {

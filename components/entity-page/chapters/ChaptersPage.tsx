@@ -3,7 +3,8 @@ import './chapters.css'
 import { ChaptersBehaviour } from './ChaptersBehaviour'
 import type { ChapterData } from './model'
 import { pad } from './model'
-import { Arl, Arr, Chev, Img } from './parts'
+import { Arl, Arr, Chev, Img, ext } from './parts'
+import { ContactLink } from '@/components/entity-page/ContactLink'
 
 /**
  * The chapters page frame (ticket 204): the sticky chapter nav (a list on
@@ -21,6 +22,8 @@ export function ChaptersPage({
   children: ReactNode
 }) {
   const first = data.chapters[0]
+  const live = data.live
+  const hasVisit = data.chapters.some((c) => c.id === 'visit')
   const items = data.chapters.map((c, i) => (
     <li key={c.id}>
       <a href={`#${c.id}`} data-nav={c.id} data-example-allow-links>
@@ -30,7 +33,7 @@ export function ChaptersPage({
     </li>
   ))
   return (
-    <div className={`lp t-${type}`} id="lp-root">
+    <div className={`lp t-${type}`} id="lp-root" data-listing={live?.listingId}>
       <nav className="cnav" aria-label="Chapters">
         <div className="wrap">
           <a className="cnav-id" href="#top" data-example-allow-links>
@@ -38,9 +41,23 @@ export function ChaptersPage({
             <span>{data.name}</span>
           </a>
           <ol>{items}</ol>
-          <button className="btn btn-fill" type="button" data-off>
-            {data.cta}
-          </button>
+          {live ? (
+            live.cta && (
+              <ContactLink
+                className="btn btn-fill"
+                href={live.cta.href}
+                listingId={live.listingId}
+                source="hero"
+                {...ext(live.cta.href)}
+              >
+                {live.cta.label}
+              </ContactLink>
+            )
+          ) : (
+            <button className="btn btn-fill" type="button" data-off>
+              {data.cta}
+            </button>
+          )}
         </div>
         <div className="prog">
           <span />
@@ -61,14 +78,37 @@ export function ChaptersPage({
         </ol>
       </nav>
       <main>{children}</main>
-      <div className="quick" role="region" aria-label="Quick actions" data-quick-bar="shown">
-        <a className="btn btn-line" href="#visit" data-example-allow-links>
-          Hours and Directions
-        </a>
-        <button className="btn btn-fill" type="button" data-off>
-          {data.cta.replace('Book a Discovery Call', 'Book a Call')}
-        </button>
-      </div>
+      {live ? (
+        (hasVisit || live.cta) && (
+          <div className="quick" role="region" aria-label="Quick actions" data-quick-bar="shown">
+            {hasVisit && (
+              <a className="btn btn-line" href="#visit">
+                Hours and Directions
+              </a>
+            )}
+            {live.cta && (
+              <ContactLink
+                className="btn btn-fill"
+                href={live.cta.href}
+                listingId={live.listingId}
+                source="action_bar"
+                {...ext(live.cta.href)}
+              >
+                {live.cta.label}
+              </ContactLink>
+            )}
+          </div>
+        )
+      ) : (
+        <div className="quick" role="region" aria-label="Quick actions" data-quick-bar="shown">
+          <a className="btn btn-line" href="#visit" data-example-allow-links>
+            Hours and Directions
+          </a>
+          <button className="btn btn-fill" type="button" data-off>
+            {data.cta.replace('Book a Discovery Call', 'Book a Call')}
+          </button>
+        </div>
+      )}
       <div className="toast" role="status" aria-live="polite" data-toast />
       <dialog className="lb" aria-labelledby="lbCap" data-lb>
         <figure className="lb-in">

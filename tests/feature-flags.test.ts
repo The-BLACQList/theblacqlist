@@ -47,6 +47,7 @@ beforeEach(() => {
   delete process.env.FEATURE_RECEIPT_READ
   delete process.env.FEATURE_OWNER_RECEIPT_REVIEW
   delete process.env.FEATURE_MESSAGING
+  delete process.env.FEATURE_LISTING_CHAPTERS
 })
 
 afterEach(() => {
@@ -175,7 +176,9 @@ describe('isFeatureEnabled — flags are independent', () => {
 })
 
 describe('opening-soon covers', () => {
-  const COVERS = ['collectiveOpen', 'jobsOpen', 'marketplaceOpen'] as const
+  // listingChapters (ticket 231): the new listing layout reaches production
+  // only when someone sets FEATURE_LISTING_CHAPTERS=true.
+  const COVERS = ['collectiveOpen', 'jobsOpen', 'marketplaceOpen', 'listingChapters'] as const
 
   it.each(['production', 'preview', 'development'])('stay closed in a bare %s deployment', async (env) => {
     const { isFeatureEnabled } = await loadEnv({ VERCEL_ENV: env })

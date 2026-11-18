@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 
 import { createClient } from '@/lib/supabase/server'
-import { isFeatureEnabled } from '@/lib/env'
+import { IS_PRODUCTION, isFeatureEnabled } from '@/lib/env'
 import { getEntityPageFromDB } from '@/lib/listings/entityPage'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { listingMetaText } from '@/lib/listings/seo'
@@ -19,6 +19,11 @@ import { listSendAsPages, loadListingMessaging } from '@/lib/messaging/loaders'
 import { MessageComposer } from '@/components/messaging/MessageComposer'
 import { composerMounted } from '@/lib/messaging/rules'
 import { postingKind } from '@/lib/messaging/postings'
+import { chaptersEligible, chaptersRequested } from '@/lib/entity-page/chapters-eligibility'
+import { ChaptersPage } from '@/components/entity-page/chapters/ChaptersPage'
+import { StorefrontChapters } from '@/components/entity-page/chapters/StorefrontChapters'
+import { buildChapterData } from '@/components/entity-page/chapters/model'
+import { liveStorefrontPreset } from '@/components/entity-page/chapters/live'
 
 // No `revalidate` declared on purpose: PublicHeader reads cookies in the root
 // layout, so every route is already dynamic and a revalidate here is dead —
@@ -26,6 +31,7 @@ import { postingKind } from '@/lib/messaging/postings'
 
 interface PageProps {
   params: Promise<{ citySlug: string; entityType: string; listingSlug: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -120,8 +126,9 @@ function buildEventJsonLd(
   return jsonLd
 }
 
-export default async function EntityPage({ params }: PageProps) {
+export default async function EntityPage({ params, searchParams }: PageProps) {
   const { citySlug, entityType, listingSlug } = await params
+  const { layout } = await searchParams
   const entity = await getEntityPageFromDB(listingSlug)
 
   if (!entity) notFound()
@@ -218,6 +225,17 @@ export default async function EntityPage({ params }: PageProps) {
     showComposer && user ? await listSendAsPages(supabase, user.id, entity.id) : []
   const posting = postingKind(entity.entity_type)
 
+  // Ticket 231: the chapters layout for Storefront listings with enough to
+  // fill it. Off in production until FEATURE_LISTING_CHAPTERS is set; on a
+  // Preview or local dev, ?layout=chapters opts in. ?layout=stack forces
+  // today's page. See lib/entity-page/chapters-eligibility.ts.
+  const useChapters =
+    chaptersRequested({
+      flagOn: isFeatureEnabled('listingChapters'),
+      production: IS_PRODUCTION,
+      layout,
+    }) && chaptersEligible(entity)
+
   return (
     // `data-tour-listing` lets the Tester Tour remember this page so a step row
     // can offer "Back to {name}" instead of Discover (lib/tour/targets.ts).
@@ -233,23 +251,42 @@ export default async function EntityPage({ params }: PageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       )}
-      {/* QuickActionBar — Client, appears on scroll */}
-      {/* getEntityPageFromDB only returns published listings (and closed
+      {useChapters ? (
+        (() => {
+          const preset = liveStorefrontPreset(pageEntity)
+          const data = buildChapterData(pageEntity, preset, new Date(), {
+            initialSaved,
+            userId: user?.id ?? null,
+            isOwner,
+            hasReviewed,
+            path: buildEntityUrl(entityType, citySlug, listingSlug),
+          })
+          // Keyed by listing id for the same reason as the outlet below.
+          return (
+            <ChaptersPage key={entity.id} data={data} type="storefront">
+              <StorefrontChapters data={data} preset={preset} />
+            </ChaptersPage>
+          )
+        })()
+      ) : (
+        <>
+          {/* QuickActionBar — Client, appears on scroll */}
+          {/* getEntityPageFromDB only returns published listings (and closed
           jobs, which showShoppedHere refuses), so "published" holds here. */}
-      <EntityQuickActionBar
-        entity={pageEntity}
-        initialSaved={initialSaved}
-        showShoppedHere={showShoppedHere({
-          signedIn: Boolean(user),
-          entityType: entity.entity_type,
-          collectiveOpen: isFeatureEnabled('collectiveOpen'),
-        })}
-      />
+          <EntityQuickActionBar
+            entity={pageEntity}
+            initialSaved={initialSaved}
+            showShoppedHere={showShoppedHere({
+              signedIn: Boolean(user),
+              entityType: entity.entity_type,
+              collectiveOpen: isFeatureEnabled('collectiveOpen'),
+            })}
+          />
 
-      {/* Happening now posts (part F), above every template's hero. */}
-      {happeningNow.length > 0 && <HappeningNowBanner posts={happeningNow} now={new Date()} />}
+          {/* Happening now posts (part F), above every template's hero. */}
+          {happeningNow.length > 0 && <HappeningNowBanner posts={happeningNow} now={new Date()} />}
 
-      {/* Every listing type renders through its own template — the outlet
+          {/* Every listing type renders through its own template — the outlet
           picks it, and each template owns its full page including the
           immersive hero. Before PR 6 this was a four-way nested ternary with a
           separately-mounted shared hero above it.
@@ -261,14 +298,16 @@ export default async function EntityPage({ params }: PageProps) {
           listing in the URL, landed on the listing visited before it
           (2026-09-19). The client-side Back path did not reproduce it under
           Playwright; the key makes the invariant hold regardless of path. */}
-      <EntityTemplateOutlet
-        key={entity.id}
-        entity={pageEntity}
-        initialSaved={initialSaved}
-        userId={user?.id ?? null}
-        isOwner={isOwner}
-        hasReviewed={hasReviewed}
-      />
+          <EntityTemplateOutlet
+            key={entity.id}
+            entity={pageEntity}
+            initialSaved={initialSaved}
+            userId={user?.id ?? null}
+            isOwner={isOwner}
+            hasReviewed={hasReviewed}
+          />
+        </>
+      )}
 
       {/* One composer per page. It opens for every link to #send-message (the
           hero, the quick bar, the inquiry band, the services links). */}
