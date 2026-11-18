@@ -4758,3 +4758,14 @@ html:has(.lp) {
     order: 3;
   }
 }
+/* Holiday Hours: spaced under the hours table when stacked, level with
+   Opening Hours when the two sit side by side. */
+.lp .over-h {
+  margin-top: 28px;
+  margin-bottom: 6px;
+}
+@container (min-width: 600px) {
+  .lp .v-cols .over-h {
+    margin-top: 0;
+  }
+}

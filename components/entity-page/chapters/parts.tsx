@@ -70,10 +70,13 @@ export function Img(props: {
 
 const STAR_PATH = 'M10 1.8l2.5 5.2 5.7.8-4.1 4 1 5.7L10 14.8l-5.1 2.7 1-5.7-4.1-4 5.7-.8z'
 
-export function Stars({ rating }: { rating: number }) {
+export function Stars({ rating, decorative }: { rating: number; decorative?: boolean }) {
   const n = Math.round(rating)
+  const a11y = decorative
+    ? { 'aria-hidden': true as const }
+    : { role: 'img', 'aria-label': `${rating} out of 5` }
   return (
-    <span className="stars" role="img" aria-label={`${rating} out of 5`}>
+    <span className="stars" {...a11y}>
       {Array.from({ length: 5 }, (_, i) => (
         <svg key={i} viewBox="0 0 20 20" aria-hidden="true">
           <path className={i < n ? 'f' : 'e'} d={STAR_PATH} />
@@ -127,15 +130,18 @@ export function Fig({
   photo,
   className = '',
   style,
+  as: Tag = 'figure',
 }: {
   photo: Photo
   className?: string
   style?: CSSProperties
+  /** 'div' when the photo already sits in a figure with its own caption. */
+  as?: 'figure' | 'div'
 }) {
   return (
-    <figure className={`figure ${className}`.trim()} style={style}>
+    <Tag className={`figure ${className}`.trim()} style={style}>
       <Img src={photo.src} alt={photo.alt} />
-    </figure>
+    </Tag>
   )
 }
 
@@ -224,7 +230,8 @@ export function Facts({ data }: { data: ChapterData }) {
   return (
     <p className="facts">
       <span>
-        <Stars rating={data.rating} /> {data.rating.toFixed(1)}{' '}
+        <Stars rating={data.rating} decorative /> {data.rating.toFixed(1)}
+        <span className="vh"> out of 5</span>{' '}
         <span className="meta">({data.reviewCount} Reviews)</span>
       </span>
       {data.status && (
@@ -289,9 +296,7 @@ export function OverrideList({ data }: { data: ChapterData }) {
     )
   return (
     <>
-      <h3 className="h4" style={{ marginTop: 28, marginBottom: 6 }}>
-        Holiday Hours
-      </h3>
+      <h3 className="h4 over-h">Holiday Hours</h3>
       <ul className="over">
         {data.overrides.map((o) => (
           <li key={o.key}>
@@ -835,8 +840,8 @@ export function ReviewsBand({ data }: { data: ChapterData }) {
                   {data.rating.toFixed(1)}
                 </span>
                 <div className="of">
-                  <span className="vh">{data.rating} out of 5, </span>
-                  <Stars rating={data.rating} />
+                  <span className="vh">{data.rating.toFixed(1)} out of 5, </span>
+                  <Stars rating={data.rating} decorative />
                   <p className="meta" style={{ marginTop: 6 }}>
                     {data.reviewCount} Reviews
                   </p>
@@ -1214,13 +1219,18 @@ export function Glide({
             {items.map((g, i) => (
               <li key={g.src} className="glide-item">
                 <figure style={{ margin: 0 }}>
-                  <Fig photo={g} style={vars({ '--ar': g.ar })} />
+                  <Fig as="div" photo={g} style={vars({ '--ar': g.ar })} />
+                  {/* The caption repeats the alt text, so screen readers get the
+                      alt once (on the photo) and only the album from here. */}
                   <figcaption
                     className="cap"
                     style={{ maxWidth: g.ar === '2/3' || g.ar === '3/4' ? '32ch' : '48ch' }}
                   >
-                    <b>{pad(i + 1)}</b> {g.alt}
-                    {g.album ? ` · ${g.album}` : ''}
+                    <span aria-hidden="true">
+                      <b>{pad(i + 1)}</b> {g.alt}
+                      {g.album ? ' · ' : ''}
+                    </span>
+                    {g.album}
                   </figcaption>
                 </figure>
               </li>
