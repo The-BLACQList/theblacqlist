@@ -52,18 +52,15 @@ The founder wants three things:
 ## Privacy notes
 
 `[Needs professional review]`:
-- Owners seeing a buyer's first name and last initial and the receipt photo is a change to the "aggregates only" rule in ticket 112. The privacy page needs updating before C goes live.
+- Owners seeing a buyer's first name and last initial and the receipt photo is a change to the "aggregates only" rule in ticket 112. The privacy page was updated before C went live. Counsel has not reviewed it yet (founder decision, 2026-11-13, below).
 - The support photo stays on the shopper's device. We don't store it or publish it.
 
 ## Owner verification rollout (C)
 
-- **Behind a flag.** `FEATURE_OWNER_RECEIPT_REVIEW` (`ownerReceiptReview` in `lib/env.ts`) is closed everywhere by default. The live privacy policy says receipt data "is visible only to you", which owner review would break.
+- **Behind a flag.** `FEATURE_OWNER_RECEIPT_REVIEW` (`ownerReceiptReview` in `lib/env.ts`) is closed by default in code.
   - While it's closed, admins review every receipt, as before. The shopper copy is unchanged, `/dashboard/receipts` is a 404, no owner emails go out, and the signed-URL route serves only the shopper and admins.
-- **To open it:**
-  1. Apply the migrations (GATE-DATA).
-  2. Get counsel's review of the upcoming §4 wording at `/privacy/upcoming`.
-  3. Publish that policy (GATE-PUBLISH).
-  4. Set the flag to `true`, then deploy (GATE-DEPLOY).
+- **Open in production and preview since 2026-11-13.** The migrations were applied first (GATE-DATA). The flag was then set to `true` in Vercel and production redeployed (GATE-DEPLOY). The live privacy policy §4 (`#receipt-data`) already says the business sees the receipt, amount, date and first name and last initial.
+- `[Decision — founder, 2026-11-13]` Owner review opens without counsel's review. The founder accepts the risk. Counsel will review the `[Needs professional review]` wording once the company has counsel. That review is no longer a step before opening.
 - **Admin fallback.** The admin queue defaults to "Needs an admin": receipts for unclaimed businesses, and receipts an owner has left for 7 days or more (`ADMIN_FALLBACK_DAYS`). Unmatched receipts sit under "Waiting for the business" and can be rejected but not approved. Admins can still act on anything from "All pending".
 - **Race.** Owner and admin reviews share `lib/spend/applyReceiptReview.ts`. The status update only applies while the receipt is still `pending_review`, so a receipt is counted once.
 - **Owner rejections.** "Not ours" sends the shopper the existing needs-a-fix email with the owner's reason. Fixing and resending emails the owner again. There's no admin escalation. A shopper who disputes it can contact support.
