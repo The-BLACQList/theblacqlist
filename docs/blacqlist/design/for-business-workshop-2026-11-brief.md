@@ -109,3 +109,13 @@ Problems already visible (Software's read; the workshops may find more):
 - **Author OS → Marketing:** voice notes and line edits on the deck, checked against the founder profile. No new claims, no em dashes.
 - **Creative → founder:** a Round 1 prototype artifact (private), with 2–3 directions and the wording options alongside.
 - **Software:** relays the founder's picks, then builds the chosen page on `feat/206-for-business-samples` (PR #352 folds in), with tests, axe and brand checks, and a Preview link.
+
+## 8. Early notes for the build (Author OS, 2026-11-18)
+
+These come from Author OS's voice pass on the current wording. Nothing here is approved copy. The rewrite either takes care of each one or fixes it directly:
+
+- **Fact (§3):** the hero and meta description say claiming free lets you "see how people find you". Analytics is Starter and up, so the line overstates what Free gets. The new hero must not tie it to the free claim.
+- **Not in §3:** "in a few minutes" (×3) has no source. Keep it only if Marketing's proof audit backs it.
+- **Grammar:** the AI first-draft body should say "the title and summary _that_ search engines show".
+- **Style:** use Oxford commas in the sample-card bodies, and say "a consulting firm", not "consultancy" (American English).
+- **Title Case guard:** it scans headings, buttons, nav, tabs and labels. It doesn't scan eyebrow `<p>` text such as "For business owners". Those render in uppercase anyway, but the build should still put them in Title Case so the source matches the sitewide rule.
