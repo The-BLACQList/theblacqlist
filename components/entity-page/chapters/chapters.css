@@ -4741,3 +4741,9 @@ html:has(.lp) {
   padding-top: 0;
   border-top: 0;
 }
+/* Report an Error: keep the flag icon off its words. */
+.lp .pf-acts .ml {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
