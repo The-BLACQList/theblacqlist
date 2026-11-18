@@ -43,14 +43,18 @@
   line-height: 1.6;
   overflow: clip;
 }
-.fb :is(h1, h2, h3, p) {
+/* Every bare-element rule here skips .fb-plans: this file is unlayered, so a
+   rule that reached the shared cards would beat their Tailwind classes (an
+   inherited link colour once turned the Free card's white button text ink).
+   :where() keeps each at its old weight so the .btn rules still win. */
+.fb :is(h1, h2, h3, p):where(:not(.fb-plans *)) {
   margin: 0;
 }
 .fb :is(h1, h2, h3):not(.fb-plans *) {
   font-family: inherit;
   letter-spacing: normal;
 }
-.fb a {
+.fb a:where(:not(.fb-plans *)) {
   color: inherit;
 }
 .fb .on-dark :focus-visible,

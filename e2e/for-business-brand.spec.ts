@@ -9,8 +9,9 @@
 //     inside the first screen (spec §2: at most 520px down at 375).
 //   - Every chapter heading starts on the page's left gutter.
 //   - No horizontal scroll, and axe finds no serious or critical violation.
-// The shared plan cards (.fb-plans) are left out: they are unchanged in this
-// ticket, keep the site's own faces, and /pricing's scans cover them.
+// The shared plan cards (.fb-plans) are left out of the text audit: they are
+// unchanged in this ticket and keep the site's own faces and sizes. axe still
+// scans them, so a page rule that leaks into the cards fails here.
 // =============================================================================
 
 import AxeBuilder from '@axe-core/playwright'
@@ -167,8 +168,8 @@ for (const width of WIDTHS) {
     test('axe finds no serious or critical violation', async ({ page }) => {
       await open(page)
       const results = await new AxeBuilder({ page })
+        // The plan cards are scanned too: this page's CSS must not leak into them.
         .include('#fb-root')
-        .exclude('.fb-plans')
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
         .analyze()
       const bad = results.violations
