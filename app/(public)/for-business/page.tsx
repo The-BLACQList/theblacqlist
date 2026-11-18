@@ -6,6 +6,7 @@ import { isFeatureEnabled } from '@/lib/env'
 import { createClient } from '@/lib/supabase/server'
 import { getPlanAvailability, isPlanPurchasable, isTierOpen } from '@/lib/stripe/availability'
 import { EXAMPLE_VARIANT_LABEL, type ExampleVariant } from '@/lib/example/fixtures'
+import { TrustMark } from '@/components/brand/TrustMark'
 import { PricingPlans } from '../pricing/PricingPlans'
 import './for-business.css'
 
@@ -419,55 +420,5 @@ function Dash() {
       </svg>
       <span className="sr-only">Not included</span>
     </>
-  )
-}
-
-/**
- * The round trust marks (DR-004, build spec §4): open, then filled, then
- * sealed. Always shown beside the tier name, which carries the meaning.
- */
-function TrustMark({
-  tier,
-  dark,
-  size = 16,
-}: {
-  tier: 0 | 1 | 2 | 3
-  dark?: boolean
-  size?: number
-}) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden="true">
-      {tier === 0 && (
-        <circle
-          cx="8"
-          cy="8"
-          r="6"
-          fill="none"
-          stroke={dark ? '#8a8889' : '#595758'}
-          strokeWidth="1.5"
-          strokeDasharray="2.3 1.9"
-        />
-      )}
-      {tier === 1 && <circle cx="8" cy="8" r="6.2" fill="#2563EB" />}
-      {tier === 2 &&
-        (dark ? (
-          <circle cx="8" cy="8" r="6.2" fill="#ffd867" />
-        ) : (
-          <circle cx="8" cy="8" r="5.6" fill="#ffd867" stroke="#8f6600" strokeWidth="2" />
-        ))}
-      {tier === 3 && (
-        <>
-          <circle
-            cx="8"
-            cy="8"
-            r="7.1"
-            fill="none"
-            stroke={dark ? '#c4a065' : '#8f6600'}
-            strokeWidth="1.3"
-          />
-          <circle cx="8" cy="8" r="4.6" fill="#c4a065" />
-        </>
-      )}
-    </svg>
   )
 }
