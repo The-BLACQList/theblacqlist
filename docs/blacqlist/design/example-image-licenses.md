@@ -2,9 +2,9 @@
 
 **Status:** 44 of 44 shot-list photographs sourced, all from Unsplash under the [Unsplash License](https://unsplash.com/license); 0 from Pexels (the fallback source was not needed). Plus three first-party logos (`logo-cafe.png`, `logo-pro.png`, `logo-studio.png`) that carry no third-party licence. Manifest: `lib/example/photoCredits.ts`.
 
-**Last updated:** 2026-11-13
+**Last updated:** 2026-11-18
 
-Every file in `public/images/example/` is used **only** on the sample pages under `/example/*`, which show the fictional business "Test Business 123" in three variants (café with merch, business consultancy, graphic-design studio in Atlanta), and, since ticket 206, the three covers (`cafe-cover`, `pro-cover`, `studio-cover`) on the For Business page's sample cards that link to them. The sample pages are open on production since ticket 206, labelled as made up and never indexed. None of these files is used in any customer-facing listing. Both licences below permit that commercial use. Both the [Unsplash License](https://unsplash.com/license) and the [Pexels License](https://www.pexels.com/license/) permit commercial use without attribution; we record the photographer and photo page anyway, as `.claude/rules/3d-assets.md` requires a recorded source, author, licence name and commercial-use confirmation for every third-party asset.
+Every file in `public/images/example/` is used **only** on the sample pages under `/example/*`, which show the fictional business "Test Business 123" in three variants (café with merch, business consultancy, graphic-design studio in Atlanta), and, since ticket 206, on the For Business page in two ways: `cafe-interior.webp` is that page's hero photo, and the three sample cards show screenshots of the sample pages (`public/images/for-business/sample-{storefront,professional,creative}.webp`, 1280 × 800, taken from `/example/*` by Creative Studio for the For Business workshop). Those screenshots contain only photos from this pool and the first-party logos, so no new licence is involved. The sample pages are open on production since ticket 206, labelled as made up and never indexed. None of these files is used in any customer-facing listing. Both licences below permit that commercial use. Both the [Unsplash License](https://unsplash.com/license) and the [Pexels License](https://www.pexels.com/license/) permit commercial use without attribution; we record the photographer and photo page anyway, as `.claude/rules/3d-assets.md` requires a recorded source, author, licence name and commercial-use confirmation for every third-party asset.
 
 Team headshots were deliberately **not** sourced from stock: no stock photo of a person comes with a model release that would cover presenting them as a named employee of a (fictional) business, so the sample pages use initials avatars instead. Photos that include people show only hands, backs or distant figures; none has a recognisable face, so every `identifiablePeople` flag is `false`.
 
@@ -70,11 +70,11 @@ Width is the pixel width of the file on disk (covers 1600 px, everything else 12
 
 The three embeds in `details.videos` on every sample page are Blender Foundation open movies, released under [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/). They are streamed from YouTube and Vimeo, not stored in the repo; the manifest is `DEMO_VIDEO_CREDITS` in `lib/example/fixtures/shared.ts`, which the banner reads for the on-page credit.
 
-| Title                  | Author             | Page                                              | Licence   |
-| ---------------------- | ------------------ | ------------------------------------------------- | --------- |
-| Big Buck Bunny         | Blender Foundation | <https://www.youtube.com/watch?v=aqz-KE-bpKQ>   | CC BY 3.0 |
-| Big Buck Bunny (Vimeo) | Blender Foundation | <https://vimeo.com/1084537>                     | CC BY 3.0 |
-| Sintel                 | Blender Foundation | <https://www.youtube.com/watch?v=eRsGyueVLvQ>   | CC BY 3.0 |
+| Title                  | Author             | Page                                          | Licence   |
+| ---------------------- | ------------------ | --------------------------------------------- | --------- |
+| Big Buck Bunny         | Blender Foundation | <https://www.youtube.com/watch?v=aqz-KE-bpKQ> | CC BY 3.0 |
+| Big Buck Bunny (Vimeo) | Blender Foundation | <https://vimeo.com/1084537>                   | CC BY 3.0 |
+| Sintel                 | Blender Foundation | <https://www.youtube.com/watch?v=eRsGyueVLvQ> | CC BY 3.0 |
 
 CC BY requires attribution, which the sample-page banner gives ("Videos: Blender Foundation open movies, CC BY 3.0"). No video is cut, re-encoded or re-hosted.
 
