@@ -11,6 +11,7 @@ import type {
   StatusView,
 } from './model'
 import { initials, pad } from './model'
+import { TrustMark } from '@/components/brand/TrustMark'
 
 /**
  * Server-rendered pieces of the chapters layout (ticket 204), ported one for
@@ -219,11 +220,20 @@ export function Facts({ data }: { data: ChapterData }) {
       {data.facts.map((f) => (
         <span key={f}>{f}</span>
       ))}
-      {data.badges.map((b) => (
-        <span key={b} className="badge">
-          {b}
-        </span>
-      ))}
+      {/* Round means trust, square means a label (Creative DR-004): Verified
+          gets the round trust mark, Black-Owned keeps the square marker. */}
+      {data.badges.map((b) =>
+        b === 'Verified' ? (
+          <span key={b} className="badge tier">
+            <TrustMark tier={2} />
+            {b}
+          </span>
+        ) : (
+          <span key={b} className="badge">
+            {b}
+          </span>
+        )
+      )}
     </p>
   )
 }

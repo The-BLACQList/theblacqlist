@@ -201,6 +201,68 @@ for (const variant of PAGES) {
   })
 }
 
+// ── Ticket 206 follow-up (Creative DR-009 notes) ─────────────────────────────
+
+// The Creative hero leads with the photo, in the markup as well as on screen,
+// so screen readers meet it in the order it is seen. From 1024px the buttons
+// share the name's left edge. (Phones drop the hero buttons, F01.) 768 is in
+// the list because a tall tablet screen once narrowed the photo.
+for (const width of [375, 768, 1024, 1280]) {
+  test.describe(`creative hero at ${width}px`, () => {
+    test.use({ viewport: { width, height: 900 }, contextOptions: { reducedMotion: 'reduce' } })
+
+    test('photo first, read in the order it is seen, one left edge', async ({ page }) => {
+      await open(page, 'creative')
+      const hero = page.locator('header[data-hero]')
+      const box = async (sel: string) => (await hero.locator(sel).first().boundingBox())!
+      const photo = await box('.c-a')
+      const h1 = await box('h1')
+      expect(photo.y, 'photo above the name').toBeLessThan(h1.y)
+      expect(Math.round(photo.x), 'photo starts at the left edge').toBe(0)
+      expect(Math.round(photo.width), 'photo is full width').toBe(width)
+
+      const tree = await hero.ariaSnapshot()
+      const img = tree.indexOf('- img')
+      expect(img, 'the photo is in the reading order').toBeGreaterThanOrEqual(0)
+      expect(img, 'photo read before the name').toBeLessThan(tree.indexOf('- heading'))
+
+      if (width >= 1024) {
+        const row = await box('.btn-row')
+        expect(Math.round(row.x), 'buttons on the name’s left edge').toBe(Math.round(h1.x))
+        expect(row.y, 'buttons below the name').toBeGreaterThan(h1.y + h1.height)
+      }
+    })
+  })
+}
+
+// Round means trust, square means a label (Creative DR-004): Verified carries
+// the round trust mark, Black-Owned keeps its square.
+for (const variant of PAGES) {
+  test.describe(`${variant} hero badges`, () => {
+    test.use({ viewport: { width: 1280, height: 900 }, contextOptions: { reducedMotion: 'reduce' } })
+
+    test('Verified is round, Black-Owned is square', async ({ page }) => {
+      await open(page, variant)
+      const facts = page.locator('header[data-hero] .facts').first()
+      const verified = facts.locator('.badge', { hasText: 'Verified' })
+      const owned = facts.locator('.badge', { hasText: 'Black-Owned' })
+      await expect(verified.locator('svg circle').first()).toBeAttached()
+      const before = (l: typeof owned) =>
+        l.evaluate((el) => {
+          const cs = getComputedStyle(el, '::before')
+          return { content: cs.content, radius: cs.borderRadius }
+        })
+      expect((await before(verified)).content, 'no square marker on Verified').toBe('none')
+      const sq = await before(owned)
+      expect(sq.content, 'Black-Owned keeps its marker').not.toBe('none')
+      expect(sq.radius, 'and it is square').toBe('0px')
+      // Same colour as its neighbour: the mark changes, the word does not.
+      const ink = (l: typeof owned) => l.evaluate((el) => getComputedStyle(el).color)
+      expect(await ink(verified)).toBe(await ink(owned))
+    })
+  })
+}
+
 // ── The audits catch what they are meant to catch ────────────────────────────
 
 test.describe('reduced-motion self-check', () => {

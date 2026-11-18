@@ -52,7 +52,19 @@ export function CreativeChapters({ data, preset }: { data: ChapterData; preset: 
   const work = workItems(data, preset)
   return (
     <>
+      {/* Photo first (founder, 2026-11-18, ticket 206), in the markup too, so
+          screen readers meet the hero in the order it is seen: the photo's
+          description, then the name. The figure holds nothing focusable. */}
       <header className="c-hero" id="top" data-hero>
+        <figure className="c-a drift" style={vars({ '--k': '6%' })}>
+          {data.cover && (
+            <Img className="hero-img" src={data.cover.src} alt={preset.coverAlt} priority />
+          )}
+        </figure>
+        {/* The photo's alt text already says this; the caption is for sighted readers. */}
+        <p className="c-cap" aria-hidden="true">
+          {preset.coverAlt}
+        </p>
         <div className="c-title">
           <div className="c-meta">
             {data.logo && <Img src={data.logo.src} alt="" width={48} height={48} priority />}
@@ -74,15 +86,6 @@ export function CreativeChapters({ data, preset }: { data: ChapterData; preset: 
             )}
           </div>
         </div>
-        <figure className="c-a drift" style={vars({ '--k': '6%' })}>
-          {data.cover && (
-            <Img className="hero-img" src={data.cover.src} alt={preset.coverAlt} priority />
-          )}
-        </figure>
-        {/* The photo's alt text already says this; the caption is for sighted readers. */}
-        <p className="c-cap" aria-hidden="true">
-          {preset.coverAlt}
-        </p>
       </header>
 
       <section
