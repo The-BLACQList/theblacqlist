@@ -197,6 +197,14 @@ describe('liveStorefrontPreset', () => {
     expect(menu('business')?.nav).toBe('Offerings')
   })
 
+  it('names the chapter Offers when a listing has deals but no menu', () => {
+    const e = full()
+    const noMenu = { ...e, details: { ...e.details, services: [] } } as EntityPageData
+    const menu = liveStorefrontPreset(noMenu).chapters.find((c) => c.id === 'menu')
+    expect(menu).toMatchObject({ nav: 'Offers', title: 'Offers' })
+    expect(buildChapterData(noMenu, liveStorefrontPreset(noMenu), NOW, VISITOR).menu).toEqual([])
+  })
+
   it('takes photos from the gallery, skips the cover and never repeats one', () => {
     const e = full()
     const p = liveStorefrontPreset({

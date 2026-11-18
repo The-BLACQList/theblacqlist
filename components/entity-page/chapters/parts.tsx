@@ -564,16 +564,19 @@ export function OffersBlock({
   deals,
   className,
   lede,
+  solo = false,
 }: {
   deals: DealView[]
   className: string
   lede: string
+  /** The offers are the whole chapter, so its heading already says Offers. */
+  solo?: boolean
 }) {
   if (!deals.length) return null
   return (
-    <div className="offers">
+    <div className={solo ? 'offers offers-solo' : 'offers'}>
       <div className="offers-hd">
-        <h3 className="h3">Offers</h3>
+        {!solo && <h3 className="h3">Offers</h3>}
         <p className="offers-n">{deals.length} Current Offers</p>
         <p className="offers-lede">{lede}</p>
       </div>

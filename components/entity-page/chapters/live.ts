@@ -62,18 +62,22 @@ export function liveStorefrontPreset(entity: EntityPageData): StorefrontPreset {
     entity.findUsAt?.length ||
     entity.orderLinks?.length
   )
-  const hasMenu = Boolean(d.services?.length || entity.deals?.length)
+  const hasServices = Boolean(d.services?.length)
+  const hasDeals = Boolean(entity.deals?.length)
 
   const chapters: ChapterDef[] = [
     { id: 'welcome', nav: 'Welcome', title: 'Welcome' },
     ...(hasVisit ? [{ id: 'visit', nav: 'Visit', title: 'Hours and Location' }] : []),
-    ...(hasMenu
+    ...(hasServices
       ? [
           restaurant
             ? { id: 'menu', nav: 'Menu', title: 'The Menu' }
             : { id: 'menu', nav: 'Offerings', title: 'What We Offer' },
         ]
-      : []),
+      : hasDeals
+        ? // Deals but no menu: the chapter is just the offers, named for them.
+          [{ id: 'menu', nav: 'Offers', title: 'Offers' }]
+        : []),
     { id: 'gallery', nav: 'Gallery', title: 'Gallery' },
     { id: 'reviews', nav: 'Reviews', title: 'Reviews' },
     { id: 'more', nav: 'More', title: 'More' },

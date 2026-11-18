@@ -302,34 +302,43 @@ export function StorefrontChapters({
       {has('menu') && (
         <section className="band s-white" id="menu" data-ch="menu" aria-labelledby="h-menu">
           <div className="wrap">
-            <div className="s-menu">
-              <div>
-                <ChapterHeading data={data} id="menu" />
-                {data.menu.slice(0, 2).map((g) => (
-                  <MenuGroupBlock key={g.name} group={g} />
-                ))}
-                {moreMenu.length > 0 && (
-                  <Disc
-                    id="more-menu"
-                    buttonClassName="more-bar"
-                    label={
-                      <>
-                        <span className="mb-l">Show the Full Menu</span>
-                        <span className="mb-n">
-                          {moreItems} More Items · {moreMenu.map((g) => g.name).join(', ')}
-                        </span>
-                      </>
-                    }
-                  >
-                    {moreMenu.map((g) => (
-                      <MenuGroupBlock key={g.name} group={g} />
-                    ))}
-                  </Disc>
-                )}
+            {data.menu.length === 0 ? (
+              <ChapterHeading data={data} id="menu" />
+            ) : (
+              <div className="s-menu">
+                <div>
+                  <ChapterHeading data={data} id="menu" />
+                  {data.menu.slice(0, 2).map((g) => (
+                    <MenuGroupBlock key={g.name} group={g} />
+                  ))}
+                  {moreMenu.length > 0 && (
+                    <Disc
+                      id="more-menu"
+                      buttonClassName="more-bar"
+                      label={
+                        <>
+                          <span className="mb-l">Show the Full Menu</span>
+                          <span className="mb-n">
+                            {moreItems} More Items · {moreMenu.map((g) => g.name).join(', ')}
+                          </span>
+                        </>
+                      }
+                    >
+                      {moreMenu.map((g) => (
+                        <MenuGroupBlock key={g.name} group={g} />
+                      ))}
+                    </Disc>
+                  )}
+                </div>
+                {preset.menuPhoto && <Fig photo={preset.menuPhoto} className="stick drift" />}
               </div>
-              {preset.menuPhoto && <Fig photo={preset.menuPhoto} className="stick drift" />}
-            </div>
-            <OffersBlock deals={data.deals} className="deal" lede={preset.offersLede} />
+            )}
+            <OffersBlock
+              deals={data.deals}
+              className="deal"
+              lede={preset.offersLede}
+              solo={data.menu.length === 0}
+            />
             {data.booking && (
               <BookPanel
                 className="book"

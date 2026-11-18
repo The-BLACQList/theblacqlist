@@ -53,6 +53,7 @@ The chapters layout (ticket 204) only ran on the `/example` sample pages, from f
 
 - **Time zone.** Opening status and hours use America/New_York, as the sample pages do. `entity.city` carries no time zone field yet. A listing outside Eastern time shows Eastern "open now" until one is added.
 - **Hero buttons on phones.** F01 drops the hero buttons under 768px and the quick bar carries Hours and Directions plus the CTA. Save, Share and Message sit in their own text row under the hero buttons, shown at every width, so they stay reachable on phones.
+- **Deals with no menu.** Found on the Preview with the staging demo storefront: a listing with deals but no menu items showed "The Menu" over an empty column. The chapter is now called "Offers" in the nav and heading, and the menu column and photo drop out.
 - **Photo alt text.** The hero photo is decorative on live pages (`alt=""`); gallery photos keep the owner's alt text.
 
 ## Tests

@@ -4735,3 +4735,9 @@ html:has(.lp) {
   align-items: center;
   gap: 8px 24px;
 }
+/* Deals with no menu: the offers open the chapter, so no rule above them. */
+.lp .offers.offers-solo {
+  margin-top: clamp(28px, 3vw, 40px);
+  padding-top: 0;
+  border-top: 0;
+}
