@@ -4747,3 +4747,14 @@ html:has(.lp) {
   align-items: center;
   gap: 6px;
 }
+/* Distance from you: line its button up with the address, not indented. */
+.lp .v-dist > div {
+  margin-top: 0;
+  padding-left: 0;
+}
+/* Phone hero: Save and Share sit under the facts, not between the buttons and the facts. */
+@media (max-width: 767px) {
+  .lp .s-plate .hero-acts {
+    order: 3;
+  }
+}

@@ -258,6 +258,14 @@ export function ChaptersBehaviour({ rootId }: { rootId: string }) {
       }
       on(tr, 'scroll', upd, { passive: true })
       upd()
+      // The photos load after mount and change the track's width, so check again
+      // whenever the track or a photo resizes.
+      if (typeof ResizeObserver !== 'undefined') {
+        const ro = new ResizeObserver(upd)
+        ro.observe(tr)
+        Array.from(tr.children).forEach((c) => ro.observe(c))
+        cleanup.push(() => ro.disconnect())
+      }
       bs.forEach((b) =>
         on(b, 'click', () =>
           tr.scrollBy({
