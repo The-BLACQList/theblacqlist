@@ -92,7 +92,7 @@ export const EXAMPLE_PHOTO_CREDITS: readonly ExamplePhotoCredit[] = [
     pageUrl: 'https://unsplash.com/photos/rustic-cafe-interior-with-wooden-furniture-xhKG01FN2uk',
     author: 'Ruben Ramirez',
     license: 'Unsplash License',
-    downloadedOn: '2026-11-13',
+    downloadedOn: '2026-11-18',
     identifiablePeople: false,
   },
   {
@@ -442,7 +442,7 @@ export const EXAMPLE_PHOTO_CREDITS: readonly ExamplePhotoCredit[] = [
     pageUrl: null,
     author: null,
     license: 'First-party BLACQList artwork',
-    downloadedOn: '2026-11-13',
+    downloadedOn: '2026-11-18',
     identifiablePeople: false,
   },
   {
@@ -451,7 +451,7 @@ export const EXAMPLE_PHOTO_CREDITS: readonly ExamplePhotoCredit[] = [
     pageUrl: null,
     author: null,
     license: 'First-party BLACQList artwork',
-    downloadedOn: '2026-11-13',
+    downloadedOn: '2026-11-18',
     identifiablePeople: false,
   },
   {
@@ -460,7 +460,7 @@ export const EXAMPLE_PHOTO_CREDITS: readonly ExamplePhotoCredit[] = [
     pageUrl: null,
     author: null,
     license: 'First-party BLACQList artwork',
-    downloadedOn: '2026-11-13',
+    downloadedOn: '2026-11-18',
     identifiablePeople: false,
   },
 ]

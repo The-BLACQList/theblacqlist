@@ -3,7 +3,7 @@ import type { EntityPageData } from '@/types'
 /**
  * How a template is being rendered (ticket 184).
  *   live     a real listing on its public URL. The default; nothing changes.
- *   example  the "Test Business 123" sample pages under /example. Save, Share,
+ *   example  the "Sample & Co." sample pages under /example. Save, Share,
  *            Message and contact links look the same but do nothing; images
  *            may come from /images/example; sections that the live loader
  *            cannot fill yet render from the fixture.

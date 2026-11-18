@@ -1,5 +1,7 @@
 # 184: Test Business 123 — the fully filled Premium sample page, one per template
 
+> **Renamed 2026-11-18 (ticket 206):** the sample business is now "Sample & Co." (fixture slug `sample-and-co`). History below keeps the old name.
+
 **Status:** PR 1A #325 and PR 1B #329 (stacked), rebased on `origin/main` `9c8844c` (#328 deals). Merge as one deploy before the launch freeze (D-1 Mon 16 Nov to the end of the D0 watch Tue 17 Nov) or after it, never inside it; founder go 2026-11-13.
 **Follows:** 105 (tiered page features), 154 (Now hiring), 134 (partnerships badge), messaging (hero Message button, 2026-11-13)
 **Area:** business pages (`/example/*`), the section registry the click-to-fill editor (188) will reuse
@@ -21,7 +23,7 @@ Today the public page shows a section only when its data exists, and the only ti
 - **Photos:** free-licence stock (Unsplash/Pexels) downloaded into the repo with a licence record.
 - **Community spend panel:** owner dashboard only for now (112). No public spend section — out of scope here.
 - **Multi-location:** one Premium subscription covers up to 3 locations; extra locations inherit the primary's tier (110).
-- **`/example/*` is Preview/staging only;** 404 on production.
+- **`/example/*` is Preview/staging only;** 404 on production. (Superseded by ticket 206: open on production, linked from For Business, still noindex, no JSON-LD on production.)
 - **Value-adds for PR 1B** (from the menu in the plan): facts line, mini map, richer JSON-LD, gallery captions, photo albums, menu/rate-card PDF, credentials & press, founder spotlight, highlights & process, holiday hours. **Stubs only:** 197 menu-item photos/tags, 198 service-area list, 199 pinned review quote, 200 sticky desktop mini header, 201 custom subdomain, 202 brand accent (not selected; stubbed so it stays visible). The updates feed on the menu became main's Happening now posts (#326) while 1B was in flight; see the decision record.
 
 `[Decision — agent, 2026-11-13]` (recorded for review, change if wrong):
@@ -67,7 +69,7 @@ Display-only, from the fixtures. Every new field is optional on `EntityPageData`
 ## Out of scope (recorded)
 
 - A public spend-impact section (112 is dashboard-only by founder decision).
-- `/example` on production (new ticket if wanted: remove the 404, re-check licences, review seed-data-plan §10 naming).
+- `/example` on production (new ticket if wanted: remove the 404, re-check licences, review seed-data-plan §10 naming). Done as ticket 206.
 - Ticket 188, the click-to-fill editor (`mode='edit'`), which reuses `ENTITY_SECTIONS`, `SectionMark`, `isFilled`, `editor.href` and `minTierFor`.
 
 ## What comes after

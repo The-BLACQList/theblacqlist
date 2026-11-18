@@ -1,5 +1,5 @@
 /**
- * What the "Test Business 123" staging seed writes (ticket 187), as plain data.
+ * What the "Sample & Co." staging seed writes (ticket 187), as plain data.
  *
  * Built from the same fixtures that render /example/* (lib/example/fixtures),
  * so the seeded listings and the sample pages cannot drift. Pure: no client,
@@ -20,7 +20,12 @@ import {
 import { EXAMPLE_ASSET_DIR, EXAMPLE_NAME, EXAMPLE_SITE } from '@/lib/example/fixtures/shared'
 import type { EntityPageData } from '@/types'
 
-/** Every seeded slug starts with this, so a purge can never match a real page. */
+/**
+ * Every seeded slug starts with this, so a purge can never match a real page.
+ * It keeps the sample's first name (renamed "Sample & Co." in ticket 206) on
+ * purpose: the seed upserts by slug and --purge deletes by slug, so a new
+ * prefix would leave the listings already on staging behind.
+ */
 export const SEED_SLUG_PREFIX = 'demo-test-business-123'
 
 /** The public folder the sample photos live in, relative to the repo root. */

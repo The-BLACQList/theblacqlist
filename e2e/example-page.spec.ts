@@ -1,5 +1,5 @@
 // =============================================================================
-// Ticket 184 — the Test Business 123 sample pages
+// Ticket 184 — the Sample & Co. sample pages
 // =============================================================================
 // Three promises the fixtures and the registry make that only a browser can
 // check: every section the registry lists is on the page, in its order; the
@@ -22,7 +22,7 @@ import {
   type TemplateKey,
 } from '../lib/entity-page/sections'
 
-const NAME = 'Test Business 123'
+const NAME = 'Sample & Co.'
 
 const VARIANTS: { variant: string; template: TemplateKey; cta: string }[] = [
   { variant: 'storefront', template: 'storefront', cta: 'Order Now' },

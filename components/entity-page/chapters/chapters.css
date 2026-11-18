@@ -4533,38 +4533,73 @@ html:has(.lp) {
   font-size: 15px;
   color: var(--charcoal);
 }
+/* Photo first (founder, 2026-11-18, ticket 206): on a Creative page the bold
+   cover is the first thing a visitor sees, edge to edge, at every width;
+   the caption, then the title and everything else, come after. This replaces
+   prototype v7's split. Only the visual order changes: the h1 stays first in
+   the markup, so screen readers still meet the name first (the figure holds
+   nothing focusable, so the tab order is unchanged). */
+:where(.lp) .c-a {
+  grid-row: 1;
+}
+:where(.lp) .c-cap {
+  grid-row: 2;
+  padding-bottom: 4px;
+}
+:where(.lp) .c-title {
+  grid-row: 3;
+}
+@media (max-width: 1023px) {
+  :where(.lp) .c-a {
+    aspect-ratio: 4/5;
+    max-height: 72svh;
+  }
+}
+/* Desktop: the photo fills the first screen under the page nav, then one
+   full-width title row: name across the top, tagline and facts on the left,
+   buttons at the right of the same row so the band stays short. */
 @media (min-width: 1024px) {
   :where(.lp) .c-hero {
-    grid-template-columns: repeat(12, 1fr);
-    grid-template-rows: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto auto;
     gap: 0;
     height: auto;
-    min-height: max(720px, min(calc(100svh - var(--hdr) - var(--navh) - 44px), 1080px));
+    min-height: 0;
   }
   :where(.lp) .c-title {
-    grid-column: 1/7;
-    grid-row: 1;
-    align-self: center;
-    padding: 48px 48px 48px var(--bl);
+    grid-column: 1/-1;
+    grid-row: 3;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 48px;
+    align-items: end;
+    padding: 48px var(--gr) 44px var(--bl);
+  }
+  :where(.lp) .c-title > :is(.c-meta, .c-h1) {
+    grid-column: 1/-1;
+  }
+  :where(.lp) .c-title > :is(.c-tag, .facts) {
+    grid-column: 1;
+  }
+  :where(.lp) .c-title > .btn-row {
+    grid-column: 2;
+    grid-row: 3 / span 2;
+    align-self: end;
+    margin-top: 0;
+  }
+  :where(.lp) .c-h1 {
+    font-size: clamp(88px, 10.5vw, 200px);
   }
   :where(.lp) .c-a {
-    grid-column: 7/13;
+    grid-column: 1/-1;
     grid-row: 1;
     aspect-ratio: auto;
-    height: 100%;
+    height: max(480px, min(calc(100svh - var(--hdr) - var(--navh) - 44px), 900px));
   }
   :where(.lp) .c-cap {
-    grid-column: 7/13;
-    grid-row: 1;
-    align-self: end;
-    justify-self: start;
-    margin: 0 0 24px 24px;
-    padding: 10px 14px;
-    background: var(--ink);
-    color: #fff;
-    border-radius: var(--rb, 0);
-    position: relative;
-    z-index: 1;
+    grid-column: 1/-1;
+    grid-row: 2;
+    padding: 10px var(--gr) 4px var(--bl);
   }
 }
 :where(.lp) .c-team-w {

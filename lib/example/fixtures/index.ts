@@ -4,7 +4,7 @@ import { professionalEntity } from './professional'
 import { storefrontEntity } from './storefront'
 
 /**
- * The three "Test Business 123" sample pages (ticket 184): one per template,
+ * The three "Sample & Co." sample pages (ticket 184): one per template,
  * every Premium feature filled. Rendered by app/example/[variant] on Preview
  * and read by the staging seed (ticket 187) so the two never drift.
  *

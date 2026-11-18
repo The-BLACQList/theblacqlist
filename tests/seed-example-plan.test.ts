@@ -27,7 +27,7 @@ describe('listings', () => {
       `${SEED_SLUG_PREFIX}-professional`,
       `${SEED_SLUG_PREFIX}-creative`,
     ])
-    for (const p of plans) expect(p.listing.name).toMatch(/^Demo — Test Business 123 \(/)
+    for (const p of plans) expect(p.listing.name).toMatch(/^Demo — Sample & Co\. \(/)
   })
 
   it('gives every seeded listing a unique slug under the demo prefix', () => {

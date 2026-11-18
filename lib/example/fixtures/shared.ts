@@ -12,7 +12,7 @@ import type {
 } from '@/types'
 
 /**
- * Pieces shared by the three "Test Business 123" fixtures (ticket 184).
+ * Pieces shared by the three "Sample & Co." fixtures (ticket 184).
  *
  * Everything here is illustrative. The sample pages say so in a banner on
  * every visit, so a fictional address, 555 phone numbers and example.com
@@ -20,7 +20,7 @@ import type {
  * measurement of anything — see .claude/rules/no-fabrication.md.
  */
 
-export const EXAMPLE_NAME = 'Test Business 123'
+export const EXAMPLE_NAME = 'Sample & Co.'
 export const EXAMPLE_EMAIL = 'hello@example.com'
 export const EXAMPLE_SITE = 'https://example.com'
 export const EXAMPLE_OWNER_ID = 'example-owner'

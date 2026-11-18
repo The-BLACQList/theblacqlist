@@ -1,7 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
-import { IS_PRODUCTION } from '@/lib/env'
 import { EXAMPLE_BANNER_TEXT } from '@/lib/example/copy'
 import { EXAMPLE_NAME, EXAMPLE_VARIANTS, EXAMPLE_VARIANT_LABEL } from '@/lib/example/fixtures'
 
@@ -17,10 +15,8 @@ const BLURB: Record<(typeof EXAMPLE_VARIANTS)[number], string> = {
   creative: 'A design studio: portfolio, commissions, limited-edition prints.',
 }
 
-/** Index of the three sample pages. Same production rule as the pages themselves. */
+/** Index of the three sample pages. Open on production since ticket 206, like the pages. */
 export default function ExampleIndexPage() {
-  if (IS_PRODUCTION) notFound()
-
   return (
     <section className="mx-auto max-w-3xl px-4 py-12 md:px-6 md:py-16 lg:px-8">
       <p className="font-subhead text-xs font-semibold uppercase tracking-[0.2em] text-gold">
