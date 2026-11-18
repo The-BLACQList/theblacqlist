@@ -119,3 +119,8 @@ These come from Author OS's voice pass on the current wording. Nothing here is a
 - **Grammar:** the AI first-draft body should say "the title and summary _that_ search engines show".
 - **Style:** use Oxford commas in the sample-card bodies, and say "a consulting firm", not "consultancy" (American English).
 - **Title Case guard:** it scans headings, buttons, nav, tabs and labels. It doesn't scan eyebrow `<p>` text such as "For business owners". Those render in uppercase anyway, but the build should still put them in Title Case so the source matches the sitewide rule.
+
+Author OS, round 1 voice pass on `COPY_DECK.md`:
+
+- **One door question on the page.** If the closing band repeats the door question as its heading, "Is Your Business Already on the List?" appears twice, because the `OwnerChoice` box has its own h2. Show it once, and keep `#start` on the hero door.
+- **Explain My Numbers** isn't a draft, so name it separately in the AI list. It's still gated by `aiBeta`.
