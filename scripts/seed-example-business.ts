@@ -52,8 +52,7 @@ import {
   SEED_ASSET_ROOT,
   buildSeedPlans,
   placeholderPdf,
-  reviewerDisplayName,
-  reviewerEmail,
+  seedReviewers,
   seedSlugs,
   type ExampleSeedPlan,
   type SeedListingCore,
@@ -566,16 +565,22 @@ async function listAllUsers(supabase: Client) {
   return out
 }
 
-/** Finds or creates demo-reviewer-1…n. Passwords are random and never printed. */
-async function ensureReviewers(supabase: Client, n: number): Promise<string[]> {
+/**
+ * Finds or creates demo-reviewer-1…n, one per fixture review, and names each as
+ * the fixture names its reviewer. Passwords are random and never printed.
+ */
+async function ensureReviewers(
+  supabase: Client,
+  reviewers: { email: string; displayName: string }[]
+): Promise<(string | null)[]> {
   const existing = new Map(
     (await listAllUsers(supabase))
       .filter((u) => u.email && REVIEWER_EMAIL_RE.test(u.email))
       .map((u) => [u.email as string, u.id])
   )
-  const ids: string[] = []
-  for (let i = 1; i <= n; i++) {
-    const email = reviewerEmail(i)
+  // A failed account keeps its slot as null, so later accounts keep their names.
+  const ids: (string | null)[] = []
+  for (const [i, { email, displayName }] of reviewers.entries()) {
     let id = existing.get(email)
     if (!id) {
       const { data, error } = await supabase.auth.admin.createUser({
@@ -585,15 +590,16 @@ async function ensureReviewers(supabase: Client, n: number): Promise<string[]> {
       })
       if (error || !data.user) {
         fail(`reviewer ${email}`, error?.message ?? 'no user returned')
+        ids.push(null)
         continue
       }
       id = data.user.id
       tally.written++
     }
-    await step('profiles', `reviewer ${i} name`, () =>
+    await step('profiles', `reviewer ${i + 1} name`, () =>
       supabase
         .from('profiles')
-        .update({ display_name: reviewerDisplayName(i) })
+        .update({ display_name: displayName || null })
         .eq('id', id)
     )
     ids.push(id)
@@ -601,17 +607,28 @@ async function ensureReviewers(supabase: Client, n: number): Promise<string[]> {
   return ids
 }
 
+/** Every demo reviewer account, and the ones that write this plan's reviews. */
+interface SeedPlanReviewers {
+  all: string[]
+  mine: (string | null)[]
+}
+
 async function seedReviews(
   supabase: Client,
   plan: ExampleSeedPlan,
   listingId: string,
-  reviewerIds: string[]
+  reviewers: SeedPlanReviewers
 ) {
-  const rows = plan.reviews.slice(0, reviewerIds.length).map((r, i) => ({
-    ...r,
-    reviewer_user_id: reviewerIds[i],
-    status: 'published',
-  }))
+  // Clear by every demo reviewer, so reviews from the older shared accounts go too.
+  const reviewerIds = reviewers.all
+  const rows = plan.reviews
+    .slice(0, reviewers.mine.length)
+    .map(({ reviewer: _name, ...r }, i) => ({
+      ...r,
+      reviewer_user_id: reviewers.mine[i],
+      status: 'published',
+    }))
+    .filter((r) => r.reviewer_user_id !== null)
   const cleared = await step('reviews', `${plan.listing.slug} reviews clear`, () =>
     supabase
       .from('reviews')
@@ -632,7 +649,7 @@ async function seedPlan(
   plan: ExampleSeedPlan,
   ownerId: string,
   look: Lookups,
-  reviewerIds: string[]
+  reviewers: SeedPlanReviewers
 ): Promise<void> {
   console.log(`\n${plan.listing.name}`)
   const listingId = await upsertListing(supabase, plan.listing, ownerId, look, null)
@@ -689,7 +706,7 @@ async function seedPlan(
   await seedLocations(supabase, plan, listingId, ownerId, look, mainCityId)
   await seedShop(supabase, plan, listingId, ownerId)
   await seedJobs(supabase, plan, listingId, ownerId, look, mainCityId)
-  if (reviewerIds.length > 0) await seedReviews(supabase, plan, listingId, reviewerIds)
+  if (reviewers.mine.length > 0) await seedReviews(supabase, plan, listingId, reviewers)
 
   console.log(`  ✓ /${plan.listing.city_slug}/${plan.listing.entity_type}/${slug}`)
 }
@@ -698,10 +715,15 @@ async function seed(supabase: Client, plans: ExampleSeedPlan[]): Promise<void> {
   const ownerId = await resolveOwner(supabase, OWNER_EMAIL)
   console.log(`Owner resolved: user_id ${ownerId}`)
   const look = await lookups(supabase)
-  const reviewerIds = WITH_REVIEWS
-    ? await ensureReviewers(supabase, Math.max(...plans.map((p) => p.reviews.length)))
-    : []
-  for (const plan of plans) await seedPlan(supabase, plan, ownerId, look, reviewerIds)
+  const slots = WITH_REVIEWS ? await ensureReviewers(supabase, seedReviewers(plans)) : []
+  const all = slots.filter((id): id is string => id !== null)
+  // seedReviewers lists plans in order, so each plan's accounts are the next slice.
+  let offset = 0
+  for (const plan of plans) {
+    const mine = slots.slice(offset, offset + plan.reviews.length)
+    offset += plan.reviews.length
+    await seedPlan(supabase, plan, ownerId, look, { all, mine })
+  }
 }
 
 // ── Purge ────────────────────────────────────────────────────────────────────

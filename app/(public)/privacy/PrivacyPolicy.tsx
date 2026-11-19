@@ -455,6 +455,15 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                 submit are displayed publicly on the platform and may be indexed by search engines.
                 This is the intended purpose of a business listing.
               </li>
+              {/* Founder, 2026-11-19: review authors show as first name + last initial
+                  (review_author_names, 20261129000000). This line moved the "Last updated"
+                  date (PRIVACY_PROVIDERS_UPDATE). */}
+              <li>
+                <strong>Reviews you post:</strong> A published review shows your rating and what
+                you wrote, under your first name and last initial from your Display Name (for
+                example, &ldquo;Jasmine R.&rdquo;). If you haven&apos;t set a Display Name, it shows
+                &ldquo;A Customer&rdquo;. We never show your last name or email address on a review.
+              </li>
               <li>
                 <strong>Legal compliance:</strong> We may disclose information when required by law,
                 court order, or government request, or when we believe disclosure is necessary to

@@ -71,7 +71,8 @@ export const TERMS_PAID_PLANS = {
 export const PRIVACY_PROVIDERS_UPDATE = {
   // Moved to the receipt reading update (ticket 163, PR #291) and the Cue chat (ticket 169),
   // then to the owner Cue (ticket 203), then to the home city line (ticket 230, live
-  // 2026-11-16; founder chose to move the date, notice email held).
+  // 2026-11-16; founder chose to move the date, notice email held), then to the
+  // review author names line (founder 2026-11-19).
   // Change it if this text goes live on a later day.
-  postedOnLabel: 'November 16, 2026',
+  postedOnLabel: 'November 19, 2026',
 } as const

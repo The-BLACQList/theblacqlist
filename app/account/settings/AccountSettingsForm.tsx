@@ -44,7 +44,6 @@ export function AccountSettingsForm({ children }: Props) {
   return (
     <main>
       <div className="max-w-[640px] mx-auto">
-
         <h1 className="font-headline text-3xl text-brand-black mb-6">Account Settings</h1>
 
         {isSuccess && (
@@ -82,7 +81,10 @@ export function AccountSettingsForm({ children }: Props) {
                 type="text"
                 autoComplete="name"
                 maxLength={100}
-                aria-describedby={getFieldError('display_name') ? 'display_name-error' : undefined}
+                aria-describedby={cn(
+                  'display_name-hint',
+                  getFieldError('display_name') ? 'display_name-error' : undefined
+                )}
                 aria-invalid={!!getFieldError('display_name')}
                 className={cn(
                   'h-11 rounded-lg border bg-white font-subhead text-sm text-brand-black px-3 placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-brand-black/20 focus:border-brand-black',
@@ -90,6 +92,10 @@ export function AccountSettingsForm({ children }: Props) {
                 )}
                 placeholder="Your name"
               />
+              {/* Founder, 2026-11-19: reviews show first name + last initial. */}
+              <p id="display_name-hint" className="text-sm font-subhead text-charcoal-soft">
+                Your reviews show your first name and last initial, like &ldquo;Jasmine R.&rdquo;
+              </p>
               {getFieldError('display_name') && (
                 <p
                   id="display_name-error"
