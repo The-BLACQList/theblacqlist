@@ -1,6 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
+import { track } from '@/lib/analytics/client'
+import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
 
 /**
  * The chapters layout's client behaviour (ticket 204), ported from the
@@ -126,6 +128,16 @@ export function ChaptersBehaviour({ rootId }: { rootId: string }) {
       if (cp) {
         const code = cp.dataset.copy ?? ''
         navigator.clipboard?.writeText(code).catch(() => {})
+        // Live listings only (the root carries the listing id): the same event
+        // DealCodeButton sends on today's page, for the owner's deal counts.
+        const listingId = root.dataset.listing
+        if (listingId && cp.dataset.deal)
+          track({
+            event_name: ANALYTICS_EVENTS.DEAL_CODE_COPIED,
+            entity_id: listingId,
+            entity_type: 'listing',
+            properties: { deal_id: cp.dataset.deal },
+          })
         toast(`Code ${code} copied`)
         cp.textContent = 'Copied'
         const k = window.setTimeout(() => {
@@ -246,6 +258,14 @@ export function ChaptersBehaviour({ rootId }: { rootId: string }) {
       }
       on(tr, 'scroll', upd, { passive: true })
       upd()
+      // The photos load after mount and change the track's width, so check again
+      // whenever the track or a photo resizes.
+      if (typeof ResizeObserver !== 'undefined') {
+        const ro = new ResizeObserver(upd)
+        ro.observe(tr)
+        Array.from(tr.children).forEach((c) => ro.observe(c))
+        cleanup.push(() => ro.disconnect())
+      }
       bs.forEach((b) =>
         on(b, 'click', () =>
           tr.scrollBy({

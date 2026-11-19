@@ -20,6 +20,11 @@ interface Props {
   /** Sizes the icon so a caller can match its own button scale exactly. */
   iconClassName?: string
   tabIndex?: number
+  /**
+   * A visible word in place of the icon, with no colours of its own (the
+   * chapters layout, ticket 231). `className` then carries all the styling.
+   */
+  label?: string
 }
 
 /**
@@ -36,6 +41,7 @@ export function ShareButton({
   className,
   iconClassName,
   tabIndex,
+  label,
 }: Props) {
   const [open, setOpen] = useState(false)
   const [url, setUrl] = useState('')
@@ -55,19 +61,31 @@ export function ShareButton({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={handleOpen}
-        tabIndex={tabIndex}
-        aria-label="Share this business"
-        aria-haspopup="dialog"
-        className={cn(
-          'inline-flex items-center justify-center size-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors',
-          className
-        )}
-      >
-        <Share2 className={cn('size-4', iconClassName)} aria-hidden="true" />
-      </button>
+      {label ? (
+        <button
+          type="button"
+          onClick={handleOpen}
+          tabIndex={tabIndex}
+          aria-haspopup="dialog"
+          className={className}
+        >
+          {label}
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={handleOpen}
+          tabIndex={tabIndex}
+          aria-label="Share this business"
+          aria-haspopup="dialog"
+          className={cn(
+            'inline-flex items-center justify-center size-10 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors',
+            className
+          )}
+        >
+          <Share2 className={cn('size-4', iconClassName)} aria-hidden="true" />
+        </button>
+      )}
       {url && (
         <ShareSheet
           open={open}

@@ -5,6 +5,7 @@ import type {
   EventRow,
   FindRow,
   GlidePhoto,
+  LiveView,
   PersonView,
   Photo,
   ReviewView,
@@ -12,6 +13,12 @@ import type {
 } from './model'
 import { initials, pad } from './model'
 import { TrustMark } from '@/components/brand/TrustMark'
+import { ContactLink } from '@/components/entity-page/ContactLink'
+import { DistanceFromYou } from '@/components/entity-page/DistanceFromYou'
+import { EntityLocationMap } from '@/components/entity-page/EntityLocationMap'
+import { OwnerRespondForm } from '@/components/entity-page/OwnerRespondForm'
+import { ReportCorrectionForm } from '@/components/entity-page/ReportCorrectionForm'
+import { ReviewFormDisclosure } from '@/components/entity-page/ReviewFormDisclosure'
 
 /**
  * Server-rendered pieces of the chapters layout (ticket 204), ported one for
@@ -20,7 +27,15 @@ import { TrustMark } from '@/components/brand/TrustMark'
  * the review carousel, the photo viewer, Copy Code, the toast) are plain
  * buttons with data attributes; ChaptersBehaviour wires them on the client.
  * `data-off` marks an action the sample page holds ("Links are off").
+ *
+ * On a live listing (ticket 231, `data.live` set) the same pieces render real
+ * links and the site's existing action components instead. Actions that wait
+ * for pass 2 (booking, shop, jobs, events, related) are left out, not held.
  */
+
+/** New-tab attributes for links that leave the site. */
+export const ext = (href: string) =>
+  /^https?:\/\//i.test(href) ? { target: '_blank', rel: 'noopener noreferrer' } : {}
 
 /** Custom properties in inline styles. */
 export const vars = (v: Record<string, string | number>) => v as CSSProperties
@@ -55,10 +70,13 @@ export function Img(props: {
 
 const STAR_PATH = 'M10 1.8l2.5 5.2 5.7.8-4.1 4 1 5.7L10 14.8l-5.1 2.7 1-5.7-4.1-4 5.7-.8z'
 
-export function Stars({ rating }: { rating: number }) {
+export function Stars({ rating, decorative }: { rating: number; decorative?: boolean }) {
   const n = Math.round(rating)
+  const a11y = decorative
+    ? { 'aria-hidden': true as const }
+    : { role: 'img', 'aria-label': `${rating} out of 5` }
   return (
-    <span className="stars" role="img" aria-label={`${rating} out of 5`}>
+    <span className="stars" {...a11y}>
       {Array.from({ length: 5 }, (_, i) => (
         <svg key={i} viewBox="0 0 20 20" aria-hidden="true">
           <path className={i < n ? 'f' : 'e'} d={STAR_PATH} />
@@ -112,15 +130,18 @@ export function Fig({
   photo,
   className = '',
   style,
+  as: Tag = 'figure',
 }: {
   photo: Photo
   className?: string
   style?: CSSProperties
+  /** 'div' when the photo already sits in a figure with its own caption. */
+  as?: 'figure' | 'div'
 }) {
   return (
-    <figure className={`figure ${className}`.trim()} style={style}>
+    <Tag className={`figure ${className}`.trim()} style={style}>
       <Img src={photo.src} alt={photo.alt} />
-    </figure>
+    </Tag>
   )
 }
 
@@ -209,7 +230,8 @@ export function Facts({ data }: { data: ChapterData }) {
   return (
     <p className="facts">
       <span>
-        <Stars rating={data.rating} /> {data.rating.toFixed(1)}{' '}
+        <Stars rating={data.rating} decorative /> {data.rating.toFixed(1)}
+        <span className="vh"> out of 5</span>{' '}
         <span className="meta">({data.reviewCount} Reviews)</span>
       </span>
       {data.status && (
@@ -220,17 +242,17 @@ export function Facts({ data }: { data: ChapterData }) {
       {data.facts.map((f) => (
         <span key={f}>{f}</span>
       ))}
-      {/* Round means trust, square means a label (Creative DR-004): Verified
-          gets the round trust mark, Black-Owned keeps the square marker. */}
+      {/* Round means trust, square means a label (Creative DR-004): a trust
+          tier gets the round mark, Black-Owned keeps the square marker. */}
       {data.badges.map((b) =>
-        b === 'Verified' ? (
-          <span key={b} className="badge tier">
-            <TrustMark tier={2} />
-            {b}
+        b.tier !== null ? (
+          <span key={b.label} className="badge tier">
+            <TrustMark tier={b.tier} />
+            {b.label}
           </span>
         ) : (
-          <span key={b} className="badge">
-            {b}
+          <span key={b.label} className="badge">
+            {b.label}
           </span>
         )
       )}
@@ -274,9 +296,7 @@ export function OverrideList({ data }: { data: ChapterData }) {
     )
   return (
     <>
-      <h3 className="h4" style={{ marginTop: 28, marginBottom: 6 }}>
-        Holiday Hours
-      </h3>
+      <h3 className="h4 over-h">Holiday Hours</h3>
       <ul className="over">
         {data.overrides.map((o) => (
           <li key={o.key}>
@@ -306,14 +326,18 @@ export function VisitPanelInner({ data }: { data: ChapterData }) {
         ))}
       </address>
       {data.phone && <p className="v-phone">{data.phone}</p>}
-      <div className="btn-row" style={{ marginTop: 28 }}>
-        <button className="btn btn-fill" type="button" data-off>
-          Get Directions <Arr />
-        </button>
-        <button className="btn btn-line" type="button" data-off>
-          Message
-        </button>
-      </div>
+      {data.live ? (
+        <VisitActions live={data.live} />
+      ) : (
+        <div className="btn-row" style={{ marginTop: 28 }}>
+          <button className="btn btn-fill" type="button" data-off>
+            Get Directions <Arr />
+          </button>
+          <button className="btn btn-line" type="button" data-off>
+            Message
+          </button>
+        </div>
+      )}
       <div className="v-cols">
         <div>
           <h3 className="h4">Opening Hours</h3>
@@ -324,6 +348,48 @@ export function VisitPanelInner({ data }: { data: ChapterData }) {
         </div>
       </div>
     </>
+  )
+}
+
+function VisitActions({ live }: { live: LiveView }) {
+  return (
+    <>
+      {live.lat != null && live.lng != null && (
+        <div className="v-dist">
+          <DistanceFromYou lat={live.lat} lng={live.lng} />
+        </div>
+      )}
+      {(live.directionsHref || live.message) && (
+        <div className="btn-row" style={{ marginTop: 28 }}>
+          {live.directionsHref && (
+            <ContactLink
+              className="btn btn-fill"
+              href={live.directionsHref}
+              listingId={live.listingId}
+              source="at_a_glance"
+              {...ext(live.directionsHref)}
+            >
+              Get Directions <Arr />
+            </ContactLink>
+          )}
+          {live.message && (
+            <a className="btn btn-line" href={live.message.href}>
+              {live.message.label}
+            </a>
+          )}
+        </div>
+      )}
+    </>
+  )
+}
+
+/** The live map on a real listing. No pins, no map. */
+export function LiveMap({ live }: { live: LiveView }) {
+  if (!live.pins.length) return null
+  return (
+    <figure className="map map-live">
+      <EntityLocationMap pins={live.pins} directionsHref={live.directionsHref} />
+    </figure>
   )
 }
 
@@ -395,10 +461,13 @@ export function FindList({
   title,
   items,
   action,
+  live = false,
 }: {
   title: string
   items: FindRow[]
   action: string
+  /** Live pages link rows that have somewhere to go and drop the rest's button. */
+  live?: boolean
 }) {
   if (!items.length) return null
   return (
@@ -411,11 +480,21 @@ export function FindList({
               <strong>{x.name}</strong>
               <span>{x.where}</span>
             </div>
-            <button className="find-go" type="button" data-off>
-              {action}
-              <span className="vh">: {x.name}</span>
-              <Arr />
-            </button>
+            {live ? (
+              x.href && (
+                <a className="find-go" href={x.href} {...ext(x.href)}>
+                  {action}
+                  <span className="vh">: {x.name}</span>
+                  <Arr />
+                </a>
+              )
+            ) : (
+              <button className="find-go" type="button" data-off>
+                {action}
+                <span className="vh">: {x.name}</span>
+                <Arr />
+              </button>
+            )}
           </li>
         ))}
       </ul>
@@ -472,7 +551,7 @@ export function DealCard({
           {deal.code ? (
             <>
               <span className="code">{deal.code}</span>
-              <button className="cpn-copy" type="button" data-copy={deal.code}>
+              <button className="cpn-copy" type="button" data-copy={deal.code} data-deal={deal.id}>
                 Copy Code
               </button>
             </>
@@ -490,16 +569,19 @@ export function OffersBlock({
   deals,
   className,
   lede,
+  solo = false,
 }: {
   deals: DealView[]
   className: string
   lede: string
+  /** The offers are the whole chapter, so its heading already says Offers. */
+  solo?: boolean
 }) {
   if (!deals.length) return null
   return (
-    <div className="offers">
+    <div className={solo ? 'offers offers-solo' : 'offers'}>
       <div className="offers-hd">
-        <h3 className="h3">Offers</h3>
+        {!solo && <h3 className="h3">Offers</h3>}
         <p className="offers-n">{deals.length} Current Offers</p>
         <p className="offers-lede">{lede}</p>
       </div>
@@ -588,7 +670,18 @@ export function HappeningStrip({ data }: { data: ChapterData }) {
 
 // ─── Reviews ───────────────────────────────────────────────────────────────────
 
-function ReviewCard({ r, index, total }: { r: ReviewView; index: number; total: number }) {
+function ReviewCard({
+  r,
+  index,
+  total,
+  respondAs,
+}: {
+  r: ReviewView
+  index: number
+  total: number
+  /** The listing id, when the viewer owns it and may answer a review. */
+  respondAs?: string | null
+}) {
   const n = r.photos.length
   return (
     <div
@@ -642,11 +735,22 @@ function ReviewCard({ r, index, total }: { r: ReviewView; index: number; total: 
           {r.response}
         </div>
       )}
+      {respondAs && !r.response && (
+        <div className="resp-form">
+          <OwnerRespondForm reviewId={r.id} listingId={respondAs} />
+        </div>
+      )}
     </div>
   )
 }
 
-function ReviewCarousel({ reviews }: { reviews: ReviewView[] }) {
+function ReviewCarousel({
+  reviews,
+  respondAs,
+}: {
+  reviews: ReviewView[]
+  respondAs?: string | null
+}) {
   const n = reviews.length
   return (
     <div className="rc rv" role="region" aria-roledescription="carousel" aria-labelledby="h-rc">
@@ -675,7 +779,7 @@ function ReviewCarousel({ reviews }: { reviews: ReviewView[] }) {
         {/* Slides are divs, not list items: role="group" is not allowed inside a list. */}
         <div className="revs rc-track">
           {reviews.map((r, i) => (
-            <ReviewCard key={r.id} r={r} index={i} total={n} />
+            <ReviewCard key={r.id} r={r} index={i} total={n} respondAs={respondAs} />
           ))}
         </div>
       </div>
@@ -683,53 +787,90 @@ function ReviewCarousel({ reviews }: { reviews: ReviewView[] }) {
   )
 }
 
+function ReviewActions({ data }: { data: ChapterData }) {
+  const live = data.live
+  if (!live)
+    return (
+      <div className="btn-row rev-act">
+        <button className="btn btn-fill" type="button" data-off>
+          Read All {data.reviewCount} Reviews
+        </button>
+        <button className="tlink" type="button" data-off>
+          Write a Review
+        </button>
+      </div>
+    )
+  // The page shows the latest ten; there is no all-reviews page yet, so no Read All.
+  if (live.review === 'sign_in')
+    return (
+      <div className="btn-row rev-act">
+        <a className="tlink" href={live.signInHref}>
+          Sign In to Write a Review
+        </a>
+      </div>
+    )
+  if (live.review === 'write')
+    return (
+      <div className="rev-act rev-form">
+        <ReviewFormDisclosure
+          key={live.listingId}
+          listingId={live.listingId}
+          listingName={live.listingName}
+          criteria={live.reviewCriteria}
+          hasReviews={live.hasReviews}
+        />
+      </div>
+    )
+  return null
+}
+
 export function ReviewsBand({ data }: { data: ChapterData }) {
+  const hasReviews = data.reviews.length > 0
+  const respondAs = data.live?.isOwner ? data.live.listingId : null
   return (
     <section className="band s-ember" id="reviews" data-ch="reviews" aria-labelledby="h-reviews">
       <div className="wrap">
         <ChapterHeading data={data} id="reviews" />
-        <div className="rev-top">
-          <div className="rv">
-            <div className="score">
-              <span className="big" aria-hidden="true" data-count={data.rating} data-dec="1">
-                {data.rating.toFixed(1)}
-              </span>
-              <div className="of">
-                <span className="vh">{data.rating} out of 5, </span>
-                <Stars rating={data.rating} />
-                <p className="meta" style={{ marginTop: 6 }}>
-                  {data.reviewCount} Reviews
-                </p>
+        {!hasReviews && <p className="lede">No reviews yet.</p>}
+        {hasReviews && (
+          <div className="rev-top">
+            <div className="rv">
+              <div className="score">
+                <span className="big" aria-hidden="true" data-count={data.rating} data-dec="1">
+                  {data.rating.toFixed(1)}
+                </span>
+                <div className="of">
+                  <span className="vh">{data.rating.toFixed(1)} out of 5, </span>
+                  <Stars rating={data.rating} decorative />
+                  <p className="meta" style={{ marginTop: 6 }}>
+                    {data.reviewCount} Reviews
+                  </p>
+                </div>
               </div>
+              {data.criteria.length > 0 && (
+                <ul className="crit rv" aria-label="Ratings by category">
+                  {data.criteria.map((c) => (
+                    <li key={c.name}>
+                      <span>{c.name}</span>
+                      <span className="bar" aria-hidden="true">
+                        <span style={vars({ '--v': c.average / 5 })} />
+                      </span>
+                      <span className="v">{c.average.toFixed(1)}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
-            <ul className="crit rv" aria-label="Ratings by category">
-              {data.criteria.map((c) => (
-                <li key={c.name}>
-                  <span>{c.name}</span>
-                  <span className="bar" aria-hidden="true">
-                    <span style={vars({ '--v': c.average / 5 })} />
-                  </span>
-                  <span className="v">{c.average.toFixed(1)}</span>
-                </li>
-              ))}
-            </ul>
+            {data.pull && (
+              <figure className="rv" style={vars({ margin: 0, '--d': '120ms' })}>
+                <blockquote className="pull">“{data.pull.quote}”</blockquote>
+                <figcaption className="pull-by">{data.pull.who}, from a review below</figcaption>
+              </figure>
+            )}
           </div>
-          {data.pull && (
-            <figure className="rv" style={vars({ margin: 0, '--d': '120ms' })}>
-              <blockquote className="pull">“{data.pull.quote}”</blockquote>
-              <figcaption className="pull-by">{data.pull.who}, from a review below</figcaption>
-            </figure>
-          )}
-        </div>
-        <ReviewCarousel reviews={data.reviews} />
-        <div className="btn-row rev-act">
-          <button className="btn btn-fill" type="button" data-off>
-            Read All {data.reviewCount} Reviews
-          </button>
-          <button className="tlink" type="button" data-off>
-            Write a Review
-          </button>
-        </div>
+        )}
+        {hasReviews && <ReviewCarousel reviews={data.reviews} respondAs={respondAs} />}
+        <ReviewActions data={data} />
         {data.credentials.length > 0 && (
           <ul className="creds">
             {data.credentials.map((c) => (
@@ -744,10 +885,12 @@ export function ReviewsBand({ data }: { data: ChapterData }) {
             ))}
           </ul>
         )}
-        <p className="trust">
-          <Check />
-          Verified by The BLACQList: ownership and business details checked.
-        </p>
+        {data.trust && (
+          <p className="trust">
+            <Check />
+            {data.trust.line}
+          </p>
+        )}
       </div>
     </section>
   )
@@ -785,9 +928,23 @@ function ProfileFooter({ data }: { data: ChapterData }) {
               <p className="pf-cat">{data.category}</p>
             </div>
           </div>
-          <button className="btn btn-fill" type="button" data-off>
-            {data.cta}
-          </button>
+          {data.live ? (
+            data.live.cta && (
+              <ContactLink
+                className="btn btn-fill"
+                href={data.live.cta.href}
+                listingId={data.live.listingId}
+                source="at_a_glance"
+                {...ext(data.live.cta.href)}
+              >
+                {data.live.cta.label}
+              </ContactLink>
+            )
+          ) : (
+            <button className="btn btn-fill" type="button" data-off>
+              {data.cta}
+            </button>
+          )}
         </div>
         <div className="pf-cols">
           <div className="pf-col">
@@ -801,26 +958,50 @@ function ProfileFooter({ data }: { data: ChapterData }) {
               ))}
             </address>
             {data.phone && <p className="pf-tel">{data.phone}</p>}
-            <button className="ml" type="button" data-off>
-              Get Directions
-              <Arr />
-            </button>
+            {data.live ? (
+              data.live.directionsHref && (
+                <ContactLink
+                  className="ml"
+                  href={data.live.directionsHref}
+                  listingId={data.live.listingId}
+                  source="at_a_glance"
+                  {...ext(data.live.directionsHref)}
+                >
+                  Get Directions
+                  <Arr />
+                </ContactLink>
+              )
+            ) : (
+              <button className="ml" type="button" data-off>
+                Get Directions
+                <Arr />
+              </button>
+            )}
           </div>
-          <nav className="pf-col" aria-labelledby="h-links">
-            <h4 className="pf-h" id="h-links">
-              Links
-            </h4>
-            <ul className="pf-list">
-              {data.links.map((l) => (
-                <li key={l}>
-                  <button className="ml" type="button" data-off>
-                    {l}
-                    <Out />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          {data.links.length > 0 && (
+            <nav className="pf-col" aria-labelledby="h-links">
+              <h4 className="pf-h" id="h-links">
+                Links
+              </h4>
+              <ul className="pf-list">
+                {data.links.map((l) => (
+                  <li key={l.label}>
+                    {l.href ? (
+                      <a className="ml" href={l.href} {...ext(l.href)}>
+                        {l.label}
+                        <Out />
+                      </a>
+                    ) : (
+                      <button className="ml" type="button" data-off>
+                        {l.label}
+                        <Out />
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )}
           <nav className="pf-col pf-otp" aria-labelledby="h-otp">
             <h4 className="pf-h" id="h-otp">
               On This Page
@@ -837,10 +1018,22 @@ function ProfileFooter({ data }: { data: ChapterData }) {
           </nav>
         </div>
         <div className="pf-base">
-          <p className="pf-v">
-            <Check />
-            Verified by The BLACQList
-          </p>
+          {data.trust && (
+            <p className="pf-v">
+              <Check />
+              {data.trust.short}
+            </p>
+          )}
+          {data.live && (
+            <p className="pf-acts">
+              {data.live.claimHref && (
+                <a className="ml" href={data.live.claimHref}>
+                  Own This Business? Claim It
+                </a>
+              )}
+              <ReportCorrectionForm listingId={data.live.listingId} triggerClassName="ml" />
+            </p>
+          )}
           <a className="ml" href="#top" data-example-allow-links>
             Back to Top
           </a>
@@ -854,6 +1047,19 @@ export function MoreBand({ data, surface }: { data: ChapterData; surface: string
   const strip = surface === 's-stone' ? 's-white' : 's-stone'
   const nj = data.jobs.length
   const showAll = data.faq.length - 4 < 3
+  const hasAttrs = data.attributes.length > 0
+  const hasFaq = data.faq.length > 0
+  const lede = [
+    'The details',
+    hasFaq ? 'answers' : null,
+    nj > 0 ? 'open roles' : null,
+    data.links.length ? 'our links' : null,
+  ].filter(Boolean) as string[]
+  const ledeText =
+    (lede.length > 1 ? `${lede.slice(0, -1).join(', ')} and ${lede.at(-1)}` : lede[0]!) +
+    (data.related.length
+      ? `, and more places like this${data.place ? ` in ${data.place}` : ''}.`
+      : '.')
   return (
     <section
       className={`band ${surface} more-band`}
@@ -864,40 +1070,52 @@ export function MoreBand({ data, surface }: { data: ChapterData; surface: string
       <div className="wrap">
         <ChapterHeading data={data} id="more" />
         <p className="more-lede">
-          The details, answers and open roles, our links, and more places like this in Atlanta.
+          {data.live
+            ? ledeText
+            : `The details, answers and open roles, our links, and more places like this in ${data.place ?? 'Atlanta'}.`}
         </p>
-        <div className="more-t1">
-          <div>
-            <h3 className="more-h">Good to Know</h3>
-            <div className="attr-grid">
-              {data.attributes.map((a, i) => (
-                <div key={a.group} className="attr rv" style={vars({ '--d': `${i * 60}ms` })}>
-                  <h4>{a.group}</h4>
-                  <ul>
-                    {a.values.map((v) => (
-                      <li key={v}>{v}</li>
-                    ))}
-                  </ul>
+        {(hasAttrs || hasFaq) && (
+          <div className="more-t1">
+            {hasAttrs && (
+              <div>
+                <h3 className="more-h">Good to Know</h3>
+                <div className="attr-grid">
+                  {data.attributes.map((a, i) => (
+                    <div key={a.group} className="attr rv" style={vars({ '--d': `${i * 60}ms` })}>
+                      <h4>{a.group}</h4>
+                      <ul>
+                        {a.values.map((v) => (
+                          <li key={v}>{v}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="more-h">Questions and Answers</h3>
-            <div className="faq">
-              {(showAll ? data.faq : data.faq.slice(0, 4)).map((f, i) => (
-                <Faq key={f.id} q={f.q} a={f.a} open={i === 0} />
-              ))}
-            </div>
-            {!showAll && (
-              <Disc id="more-faq" label={`Show All ${data.faq.length} Questions`} className="faq">
-                {data.faq.slice(4).map((f) => (
-                  <Faq key={f.id} q={f.q} a={f.a} open={false} />
-                ))}
-              </Disc>
+              </div>
+            )}
+            {hasFaq && (
+              <div>
+                <h3 className="more-h">Questions and Answers</h3>
+                <div className="faq">
+                  {(showAll ? data.faq : data.faq.slice(0, 4)).map((f, i) => (
+                    <Faq key={f.id} q={f.q} a={f.a} open={i === 0} />
+                  ))}
+                </div>
+                {!showAll && (
+                  <Disc
+                    id="more-faq"
+                    label={`Show All ${data.faq.length} Questions`}
+                    className="faq"
+                  >
+                    {data.faq.slice(4).map((f) => (
+                      <Faq key={f.id} q={f.q} a={f.a} open={false} />
+                    ))}
+                  </Disc>
+                )}
+              </div>
             )}
           </div>
-        </div>
+        )}
         {nj > 0 && (
           <div className="more-t2">
             <div className="hire rv">
@@ -928,7 +1146,7 @@ export function MoreBand({ data, surface }: { data: ChapterData; surface: string
       {data.related.length > 0 && (
         <div className={`more-rel ${strip}`}>
           <div className="wrap">
-            <h3 className="more-h">More Like This in Atlanta</h3>
+            <h3 className="more-h">More Like This{data.place ? ` in ${data.place}` : ''}</h3>
             <ul className="related">
               {data.related.map((r) => (
                 <li key={r.id} className="rel rv">
@@ -1001,13 +1219,18 @@ export function Glide({
             {items.map((g, i) => (
               <li key={g.src} className="glide-item">
                 <figure style={{ margin: 0 }}>
-                  <Fig photo={g} style={vars({ '--ar': g.ar })} />
+                  <Fig as="div" photo={g} style={vars({ '--ar': g.ar })} />
+                  {/* The caption repeats the alt text, so screen readers get the
+                      alt once (on the photo) and only the album from here. */}
                   <figcaption
                     className="cap"
                     style={{ maxWidth: g.ar === '2/3' || g.ar === '3/4' ? '32ch' : '48ch' }}
                   >
-                    <b>{pad(i + 1)}</b> {g.alt}
-                    {g.album ? ` · ${g.album}` : ''}
+                    <span aria-hidden="true">
+                      <b>{pad(i + 1)}</b> {g.alt}
+                      {g.album ? ' · ' : ''}
+                    </span>
+                    {g.album}
                   </figcaption>
                 </figure>
               </li>
@@ -1029,25 +1252,36 @@ export function Videos({ videos }: { videos: ChapterData['videos'] }) {
         <p className="meta">{videos.length} Videos</p>
       </div>
       <div className="vids">
-        {videos.map((v) => (
-          <button key={v.id} className="vid" type="button" data-off>
-            <span className="vid-po">
-              <span className="vid-src" aria-hidden="true">
-                {v.source}
+        {videos.map((v) => {
+          const inner = (
+            <>
+              <span className="vid-po">
+                <span className="vid-src" aria-hidden="true">
+                  {v.source}
+                </span>
+                <span className="pl">
+                  <Play />
+                </span>
               </span>
-              <span className="pl">
-                <Play />
+              <span className="vid-tx">
+                <strong>
+                  <span className="vh">Play </span>
+                  {v.title}
+                </strong>
+                <span>{[v.source, v.note].filter(Boolean).join(' · ')}</span>
               </span>
-            </span>
-            <span className="vid-tx">
-              <strong>
-                <span className="vh">Play </span>
-                {v.title}
-              </strong>
-              <span>{v.source} · Stand-in for the business’s own video</span>
-            </span>
-          </button>
-        ))}
+            </>
+          )
+          return v.href ? (
+            <a key={v.id} className="vid" href={v.href} {...ext(v.href)}>
+              {inner}
+            </a>
+          ) : (
+            <button key={v.id} className="vid" type="button" data-off>
+              {inner}
+            </button>
+          )
+        })}
       </div>
     </>
   )

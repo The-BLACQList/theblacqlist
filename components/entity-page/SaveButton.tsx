@@ -50,7 +50,11 @@ interface Props {
   /** Sizing and position only — never a background. See {@link Surface}. */
   className?: string
   tabIndex?: number
-  variant?: 'icon' | 'pill'
+  /**
+   * `text` is a bare word for the chapters layout (ticket 231): no colours of
+   * its own, the layout's link style comes in through `className`.
+   */
+  variant?: 'icon' | 'pill' | 'text'
   /** Which ground this button sits on. Drives both saved and unsaved colours. */
   surface?: Surface
   /**
@@ -158,6 +162,27 @@ export function SaveButton({
 
   const colors = SURFACE[surface][saved ? 'saved' : 'unsaved']
 
+  if (variant === 'text') {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={toggle}
+          disabled={isPending}
+          // Product anchor — see the note on the pill variant below.
+          data-tour="save-listing"
+          aria-label={saved ? 'Remove from saved businesses' : 'Save this business'}
+          aria-pressed={saved}
+          className={className}
+          data-failed={failed || undefined}
+        >
+          {saved ? 'Saved' : 'Save'}
+        </button>
+        {liveRegion}
+      </>
+    )
+  }
+
   if (variant === 'pill') {
     return (
       <>
@@ -181,11 +206,7 @@ export function SaveButton({
             className
           )}
         >
-          <Bookmark
-            className="size-4"
-            fill={saved ? 'currentColor' : 'none'}
-            aria-hidden="true"
-          />
+          <Bookmark className="size-4" fill={saved ? 'currentColor' : 'none'} aria-hidden="true" />
           {/* The word is the whole point of this variant. An icon alone is what
               made the card and the page look like two different actions. */}
           {saved ? 'Saved' : 'Save'}

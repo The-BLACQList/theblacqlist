@@ -1,5 +1,24 @@
-import type { DayHours, EntityPageData, HoursOverride, WeeklyHours } from '@/types'
+import type {
+  DayHours,
+  EntityPageData,
+  HoursOverride,
+  ReviewCriterion,
+  TrustTier,
+  WeeklyHours,
+} from '@/types'
 import { toTitleCase } from '@/lib/text/title-case'
+import { TIER_MEANING } from '@/components/ui/status-badge'
+import {
+  getCtaHref,
+  getEntityCtaLabel,
+  getSecondaryMessageHref,
+  isMessagingUnavailable,
+} from '@/components/entity-page/templates/cta'
+import { messageButtonLabel, postingKind } from '@/lib/messaging/postings'
+import { directionsUrl } from '@/lib/listings/directions'
+import { locationPins, type LocationPin } from '@/lib/listings/locationPins'
+import { resolveEntityCover } from '@/lib/listings/exampleAssets'
+import { normalizeSocialUrl, SOCIAL_PLATFORMS } from '@/lib/listings/social'
 
 /**
  * The chapters layout's view model (ticket 204). Pure and server-side: the
@@ -10,7 +29,14 @@ import { toTitleCase } from '@/lib/text/title-case'
  * Opening status, today's row and the holiday list are worked out in the
  * listing's own time zone (Atlanta for the sample), not the server's, so a
  * render on a UTC server at 9 pm Atlanta time still says "Closed, opens 7 am
- * tomorrow".
+ * tomorrow". Listings carry no time zone yet, so live pages (ticket 231) use
+ * the same Eastern default as today's OpenStatus.
+ *
+ * Two modes. The sample pages pass no viewer, and every action stays a held
+ * `data-off` button. A live listing page (ticket 231) passes the viewer, and
+ * the model adds `live`: real hrefs and the viewer state the action
+ * components need. Sections that wait for pass 2 (booking, shop, jobs, events,
+ * related listings) are left empty in live mode, so they do not render.
  */
 
 export const LISTING_TIME_ZONE = 'America/New_York'
@@ -217,6 +243,8 @@ export interface FindRow {
   id: string
   name: string
   where: string
+  /** Live pages only: where the row's action goes. No href, no action. */
+  href?: string | null
 }
 
 export interface EventRow {
@@ -269,6 +297,53 @@ export interface HappeningView {
   button: string | null
 }
 
+/** A hero badge. `tier` set means a trust tier: a round TrustMark (DR-004). */
+export interface BadgeView {
+  label: string
+  tier: 0 | 1 | 2 | 3 | null
+}
+
+/** A footer link. Null href on the sample pages, where links are held. */
+export interface LinkView {
+  label: string
+  href: string | null
+}
+
+/** What a live page's actions need: real destinations and the viewer's state. */
+export interface LiveView {
+  listingId: string
+  listingSlug: string
+  listingName: string
+  cityName: string | null
+  categoryName: string
+  initialSaved: boolean
+  cta: { href: string; label: string } | null
+  message: { href: string; label: string } | null
+  /** "Message" is the main CTA and the inbox is closed. */
+  messagingClosed: boolean
+  directionsHref: string | null
+  pins: LocationPin[]
+  lat: number | null
+  lng: number | null
+  /** 'write' shows the review form; 'sign_in' links to sign-in; null hides it. */
+  review: 'write' | 'sign_in' | null
+  signInHref: string
+  reviewCriteria: ReviewCriterion[]
+  hasReviews: boolean
+  isOwner: boolean
+  claimHref: string | null
+}
+
+/** The viewer, for a live listing page. Absent on the sample pages. */
+export interface LiveInput {
+  initialSaved: boolean
+  userId: string | null
+  isOwner: boolean
+  hasReviewed: boolean
+  /** The page's own path, for the sign-in return. */
+  path: string
+}
+
 export interface ChapterData {
   name: string
   logo: Photo | null
@@ -278,7 +353,11 @@ export interface ChapterData {
   rating: number
   reviewCount: number
   facts: string[]
-  badges: string[]
+  badges: BadgeView[]
+  /** The city, for "More Like This in Atlanta"; null leaves the place out. */
+  place: string | null
+  /** The trust line under reviews and its short form in the footer; null hides both. */
+  trust: { line: string; short: string } | null
   glance: string[]
   status: StatusView | null
   address: string[]
@@ -309,16 +388,18 @@ export interface ChapterData {
     items: (Photo & { id: string; name: string; price: string; kind: string })[]
   } | null
   gallery: GlidePhoto[]
-  videos: { id: string; title: string; source: string }[]
+  videos: { id: string; title: string; source: string; note: string; href: string | null }[]
   reviews: ReviewView[]
   pull: { quote: string; who: string } | null
   criteria: { name: string; average: number }[]
   credentials: { id: string; kind: string; title: string; issuer: string; year: number | null }[]
   faq: { id: string; q: string; a: string }[]
   attributes: { group: string; values: string[] }[]
-  links: string[]
+  links: LinkView[]
   jobs: { id: string; title: string; type: string; pay: string; desc: string }[]
   related: { id: string; name: string; tagline: string; rating: number; reviews: number }[]
+  /** Set on a live listing page; null on the sample pages. */
+  live: LiveView | null
 }
 
 /** Per-layout choices the listing data does not carry (see presets.ts). */
@@ -330,6 +411,8 @@ export interface ChapterPreset {
   neighbourhood: string
   cta: string
   coverAlt: string
+  /** The city line under the name on the sample pages. Live pages use the listing's city. */
+  place?: string
   /** The pull quote: a review id and a sentence lifted verbatim from its body. */
   pull?: { reviewId: string; sentence: string }
   /** Why People Come: each reason quotes a sentence lifted verbatim from a review. */
@@ -365,11 +448,98 @@ function payLabel(min: number | null, max: number | null, period: string | null)
 const VIDEO_SOURCE = (url: string | null) =>
   !url ? 'Video' : /vimeo\.com/.test(url) ? 'Vimeo' : /youtu/.test(url) ? 'YouTube' : 'Video'
 
+/** Trust tier → the round mark's level and its name (status-badge labels). */
+const TIER_BADGE: Record<Exclude<TrustTier, 'unclaimed'>, BadgeView> = {
+  claimed: { label: 'Claimed', tier: 1 },
+  verified: { label: 'Verified', tier: 2 },
+  certified: { label: 'BLACQList Certified', tier: 3 },
+}
+
+/** The line under the reviews. Verified and Certified only: they are the checked tiers. */
+function trustFor(tier: TrustTier): ChapterData['trust'] {
+  if (tier === 'verified')
+    return {
+      line: `Verified by The BLACQList. ${TIER_MEANING.verified}`,
+      short: 'Verified by The BLACQList',
+    }
+  if (tier === 'certified')
+    return { line: `BLACQList Certified. ${TIER_MEANING.certified}`, short: 'BLACQList Certified' }
+  return null
+}
+
+/** Real destinations for the footer's Links column: links, extra buttons, documents, socials. */
+function liveLinks(entity: EntityPageData): LinkView[] {
+  const out: LinkView[] = []
+  const seen = new Set<string>()
+  const add = (label: string, href: string | null | undefined) => {
+    const t = toTitleCase(label)
+    if (!href || seen.has(t.toLowerCase())) return
+    seen.add(t.toLowerCase())
+    out.push({ label: t, href })
+  }
+  for (const l of entity.links ?? []) add(l.label?.trim() || LINK_LABEL[l.type] || 'Link', l.url)
+  for (const b of entity.buttons ?? []) add(b.label, b.href)
+  for (const doc of entity.documents ?? []) add(doc.label, doc.href)
+  const social = entity.details.social
+  for (const { key, label } of SOCIAL_PLATFORMS) {
+    const v = social?.[key]
+    if (v) add(label, normalizeSocialUrl(key, v))
+  }
+  return out
+}
+
+function liveView(entity: EntityPageData, viewer: LiveInput): LiveView {
+  const d = entity.details
+  const ctaHref = getCtaHref(entity)
+  const messageHref = getSecondaryMessageHref(entity)
+  const canReview = !viewer.isOwner && !viewer.hasReviewed
+  return {
+    listingId: entity.id,
+    listingSlug: entity.slug,
+    listingName: entity.name,
+    cityName: entity.city?.name ?? null,
+    categoryName: entity.category.name,
+    initialSaved: viewer.initialSaved,
+    cta: ctaHref ? { href: ctaHref, label: getEntityCtaLabel(entity) } : null,
+    message: messageHref
+      ? {
+          href: messageHref,
+          label: toTitleCase(
+            messageButtonLabel(entity.messaging?.mode, postingKind(entity.entity_type))
+          ),
+        }
+      : null,
+    messagingClosed: isMessagingUnavailable(entity),
+    directionsHref:
+      d.address && d.city_name && d.state_abbr
+        ? directionsUrl({
+            name: entity.name,
+            street: [d.address, d.address_line2].filter(Boolean).join(' '),
+            city: d.city_name,
+            state: d.state_abbr,
+            zip: d.zip,
+          })
+        : null,
+    pins: locationPins(entity),
+    lat: d.lat ?? null,
+    lng: d.lng ?? null,
+    review: !canReview ? null : viewer.userId ? 'write' : 'sign_in',
+    signInHref: `/sign-in?next=${encodeURIComponent(`${viewer.path}#reviews`)}`,
+    reviewCriteria: entity.reviewCriteria ?? [],
+    hasReviews: entity.reviews.length > 0,
+    isOwner: viewer.isOwner,
+    claimHref: entity.trust_tier === 'unclaimed' ? `/claim/${entity.id}` : null,
+  }
+}
+
 export function buildChapterData(
   entity: EntityPageData,
   preset: ChapterPreset,
-  now: Date
+  now: Date,
+  /** The viewer on a live listing page (ticket 231). Omitted on the sample pages. */
+  viewer?: LiveInput
 ): ChapterData {
+  const live = viewer ? liveView(entity, viewer) : null
   const zoned = zonedNow(now)
   const d = entity.details
   const week = d?.hours ?? null
@@ -418,31 +588,55 @@ export function buildChapterData(
     return q ? [{ id: `why-${i + 1}`, title: w.title, text: w.text, ...q }] : []
   })
 
-  const links: string[] = []
-  const seen = new Set<string>()
-  const addLink = (label: string) => {
-    const t = toTitleCase(label)
-    if (seen.has(t.toLowerCase())) return
-    seen.add(t.toLowerCase())
-    links.push(t)
+  // Sample pages: labels only, the links are held. Live pages: real hrefs.
+  const links: LinkView[] = []
+  if (live) links.push(...liveLinks(entity))
+  else {
+    const seen = new Set<string>()
+    const addLink = (label: string) => {
+      const t = toTitleCase(label)
+      if (seen.has(t.toLowerCase())) return
+      seen.add(t.toLowerCase())
+      links.push({ label: t, href: null })
+    }
+    for (const l of entity.links ?? []) addLink(l.label?.trim() || LINK_LABEL[l.type] || 'Link')
+    for (const b of entity.buttons ?? []) addLink(b.label)
+    for (const doc of entity.documents ?? []) addLink(doc.label)
   }
-  for (const l of entity.links ?? []) addLink(l.label?.trim() || LINK_LABEL[l.type] || 'Link')
-  for (const b of entity.buttons ?? []) addLink(b.label)
-  for (const doc of entity.documents ?? []) addLink(doc.label)
+
+  const cover = live
+    ? resolveEntityCover(entity.cover_image_path, entity.entity_type, entity.id, 'live').src
+    : entity.cover_image_path
+  const place = live ? (entity.city?.name ?? null) : (preset.place ?? 'Atlanta')
+
+  const badges: BadgeView[] = [
+    ...(entity.ownership_label === 'black_owned' ? [{ label: 'Black-Owned', tier: null }] : []),
+    ...(live
+      ? entity.trust_tier !== 'unclaimed'
+        ? [TIER_BADGE[entity.trust_tier]]
+        : []
+      : entity.trust_tier === 'verified'
+        ? [TIER_BADGE.verified]
+        : []),
+  ]
 
   return {
     name: entity.name,
     logo: entity.logo ? { src: entity.logo.src, alt: '' } : null,
-    cover: entity.cover_image_path ? { src: entity.cover_image_path, alt: preset.coverAlt } : null,
+    cover: cover ? { src: cover, alt: preset.coverAlt } : null,
     category: [entity.category?.name, preset.neighbourhood].filter(Boolean).join(' · '),
     tagline: entity.tagline ?? '',
     rating: entity.avg_rating ?? 0,
     reviewCount: entity.review_count ?? 0,
     facts: d?.price_range ? [d.price_range] : [],
-    badges: [
-      ...(entity.ownership_label === 'black_owned' ? ['Black-Owned'] : []),
-      ...(entity.trust_tier === 'verified' ? ['Verified'] : []),
-    ],
+    badges,
+    place,
+    trust: live
+      ? trustFor(entity.trust_tier)
+      : {
+          line: 'Verified by The BLACQList: ownership and business details checked.',
+          short: 'Verified by The BLACQList',
+        },
     glance: preset.glance,
     status: week ? statusFor(week, overrides, zoned) : null,
     address: [
@@ -450,7 +644,7 @@ export function buildChapterData(
       `${d?.city_name ?? ''}, ${d?.state_abbr ?? ''} ${d?.zip ?? ''}`.trim(),
     ].filter((x) => x && x !== ',' && x !== ', '),
     phone: d?.phone ?? null,
-    cta: preset.cta,
+    cta: live ? (live.cta?.label ?? '') : preset.cta,
     chapters: preset.chapters,
     story: (d?.description ?? '').split(/\n\s*\n/).filter(Boolean),
     happening: (entity.happeningNow ?? []).map((p) => ({
@@ -458,7 +652,8 @@ export function buildChapterData(
       title: p.headline,
       body: p.body ?? '',
       image: p.imageUrl ? { src: p.imageUrl, alt: '' } : null,
-      button: p.buttonLabel ? toTitleCase(p.buttonLabel) : null,
+      // A live post's button has no destination in the page read yet; it waits for pass 2.
+      button: !live && p.buttonLabel ? toTitleCase(p.buttonLabel) : null,
     })),
     highlights: (entity.highlights ?? [])
       .filter((h) => h.kind !== 'step')
@@ -477,28 +672,34 @@ export function buildChapterData(
       name: l.label,
       // A location shown by appointment may have no street address.
       where: [l.addressLine, l.cityName].filter(Boolean).join(', '),
+      href: live ? l.href : null,
     })),
     findUs: (entity.findUsAt ?? []).map((s) => ({
       id: s.id,
       name: s.name,
       where: s.nationwide ? 'Nationwide' : s.cities.join(' and '),
+      href: null,
     })),
     orderOn: (entity.orderLinks ?? []).map((o) => ({
       id: o.platform,
       name: o.label,
       where: 'Delivery',
+      href: live ? o.url : null,
     })),
-    events: (entity.organizerEvents ?? []).map((e) => {
-      const at = zonedNow(new Date(e.starts_at))
-      return {
-        id: e.id,
-        day: String(at.getDate()),
-        month: fmt(at, { month: 'short' }),
-        title: e.name,
-        when: `${dayLabel(at)}, ${t12(at.getHours() * 60 + at.getMinutes())}`,
-        where: e.is_online ? 'Online' : (e.venue_name ?? e.city_name ?? ''),
-      }
-    }),
+    // Pass 2 on live pages: events, booking, shop, jobs and related listings.
+    events: live
+      ? []
+      : (entity.organizerEvents ?? []).map((e) => {
+          const at = zonedNow(new Date(e.starts_at))
+          return {
+            id: e.id,
+            day: String(at.getDate()),
+            month: fmt(at, { month: 'short' }),
+            title: e.name,
+            when: `${dayLabel(at)}, ${t12(at.getHours() * 60 + at.getMinutes())}`,
+            where: e.is_online ? 'Online' : (e.venue_name ?? e.city_name ?? ''),
+          }
+        }),
     deals: (entity.deals ?? []).map((x) => ({
       id: x.id,
       title: x.title,
@@ -507,31 +708,49 @@ export function buildChapterData(
       terms: x.terms,
     })),
     menu: [...groups.values()],
-    booking: entity.booking?.prompt ?? null,
-    shop: entity.shop
-      ? {
-          total: entity.shop.total,
-          items: entity.shop.items.map((s) => ({
-            id: s.id,
-            name: s.name,
-            price: s.priceLabel ?? '',
-            kind: s.kind === 'service' ? 'Service' : 'Product',
-            src: s.image?.src ?? '',
-            alt: s.image?.alt ?? '',
-          })),
-        }
-      : null,
+    booking: live ? null : (entity.booking?.prompt ?? null),
+    shop:
+      !live && entity.shop
+        ? {
+            total: entity.shop.total,
+            items: entity.shop.items.map((s) => ({
+              id: s.id,
+              name: s.name,
+              price: s.priceLabel ?? '',
+              kind: s.kind === 'service' ? 'Service' : 'Product',
+              src: s.image?.src ?? '',
+              alt: s.image?.alt ?? '',
+            })),
+          }
+        : null,
     gallery: entity.images.map((g) => ({
       src: g.src,
       alt: g.alt,
       album: g.album ?? '',
       ar: preset.aspect[file(g.src)] ?? '3/2',
     })),
-    videos: (d?.videos ?? []).slice(0, 2).map((v, i) => ({
-      id: v.id,
-      title: `Sample Video ${i + 1}`,
-      source: VIDEO_SOURCE(v.embed_url),
-    })),
+    videos: live
+      ? (d?.videos ?? []).flatMap((v, i) => {
+          const href = v.embed_url ?? v.file_url
+          return href
+            ? [
+                {
+                  id: v.id,
+                  title: `Video ${i + 1}`,
+                  source: VIDEO_SOURCE(v.embed_url),
+                  note: '',
+                  href,
+                },
+              ]
+            : []
+        })
+      : (d?.videos ?? []).slice(0, 2).map((v, i) => ({
+          id: v.id,
+          title: `Sample Video ${i + 1}`,
+          source: VIDEO_SOURCE(v.embed_url),
+          note: 'Stand-in for the business’s own video',
+          href: null,
+        })),
     reviews,
     pull,
     criteria: entity.reviewCriteriaAverages.map((c) => ({ name: c.name, average: c.average })),
@@ -548,24 +767,32 @@ export function buildChapterData(
       values: a.values.map((v) => v.name),
     })),
     links,
-    jobs: (entity.hiring?.roles ?? []).map((r) => {
-      const j = r.job_details
-      return {
-        id: r.id,
-        title: r.name,
-        type: [j?.employmentType ? EMPLOYMENT[j.employmentType] : null, j?.workplaceType ?? null]
-          .filter(Boolean)
-          .join(', '),
-        pay: payLabel(j?.salaryMin ?? null, j?.salaryMax ?? null, j?.salaryPeriod ?? null),
-        desc: r.tagline ?? '',
-      }
-    }),
-    related: entity.related.map((r) => ({
-      id: r.id,
-      name: r.name,
-      tagline: r.tagline ?? '',
-      rating: r.avg_rating ?? 0,
-      reviews: r.review_count ?? 0,
-    })),
+    jobs: live
+      ? []
+      : (entity.hiring?.roles ?? []).map((r) => {
+          const j = r.job_details
+          return {
+            id: r.id,
+            title: r.name,
+            type: [
+              j?.employmentType ? EMPLOYMENT[j.employmentType] : null,
+              j?.workplaceType ?? null,
+            ]
+              .filter(Boolean)
+              .join(', '),
+            pay: payLabel(j?.salaryMin ?? null, j?.salaryMax ?? null, j?.salaryPeriod ?? null),
+            desc: r.tagline ?? '',
+          }
+        }),
+    related: live
+      ? []
+      : entity.related.map((r) => ({
+          id: r.id,
+          name: r.name,
+          tagline: r.tagline ?? '',
+          rating: r.avg_rating ?? 0,
+          reviews: r.review_count ?? 0,
+        })),
+    live,
   }
 }

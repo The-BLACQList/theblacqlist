@@ -10,6 +10,7 @@ import { trackContactTap } from '@/lib/analytics/contactTap'
 import { directionsUrl } from '@/lib/listings/directions'
 import { upcomingOverrides } from '@/lib/listings/hoursOverrides'
 import { locationPins } from '@/lib/listings/locationPins'
+import { normalizeSocialUrl } from '@/lib/listings/social'
 import { formatTime, isOpenNow } from '@/lib/listings/openStatus'
 import { LOCATION_TYPE_META } from '@/lib/constants/listing'
 import type { EntityPageData, HoursOverride, WeeklyHours } from '@/types'
@@ -29,25 +30,6 @@ const DAY_LABELS: Record<Day, string> = {
   friday: 'Fri',
   saturday: 'Sat',
   sunday: 'Sun',
-}
-
-// Social values are stored as bare handles OR full URLs. A bare handle dropped
-// straight into href becomes a broken RELATIVE link (e.g. /blackcoffeeatl), so
-// normalize to an absolute profile URL per platform.
-const SOCIAL_BASE: Record<string, string> = {
-  instagram: 'https://instagram.com/',
-  facebook: 'https://facebook.com/',
-  linkedin: 'https://www.linkedin.com/in/',
-  tiktok: 'https://tiktok.com/@',
-  youtube: 'https://youtube.com/@',
-  twitter: 'https://x.com/',
-}
-function normalizeSocialUrl(platform: string, raw: string): string {
-  const v = raw.trim()
-  if (/^https?:\/\//i.test(v)) return v // already an absolute URL
-  if (v.includes('/') && v.includes('.')) return `https://${v}` // looks like a domain path
-  const handle = v.replace(/^@+/, '')
-  return (SOCIAL_BASE[platform] ?? 'https://') + handle
 }
 
 function OpenStatusIndicator({

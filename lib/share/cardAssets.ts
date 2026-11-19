@@ -3,6 +3,8 @@ import 'server-only'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
+import sharp from 'sharp'
+
 // Server-side assets for the share-card renderer. Read once per server
 // instance. next.config.ts traces assets/fonts and the mark PNG into the
 // function bundle (outputFileTracingIncludes), since a readFile path built at
@@ -39,12 +41,45 @@ export function loadMarkDataUrl(): Promise<string> {
 
 const MAX_COVER_BYTES = 5 * 1024 * 1024
 
-/** JPEG starts FF D8 FF; PNG starts 89 50 4E 47. Satori draws nothing else. */
-function sniffImageType(bytes: Uint8Array): 'image/jpeg' | 'image/png' | null {
+/** The long edge a converted cover is scaled to. The story card is 1080 x 1920. */
+const COVER_MAX_EDGE = 1920
+
+/** Same guard as photo uploads: 50 megapixels is past any phone camera. */
+const MAX_INPUT_PIXELS = 50_000_000
+
+type CoverType = 'image/jpeg' | 'image/png' | 'image/webp'
+
+/** JPEG starts FF D8 FF; PNG starts 89 50 4E 47; WebP is RIFF....WEBP. */
+export function sniffCoverType(bytes: Uint8Array): CoverType | null {
   if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return 'image/jpeg'
   if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47)
     return 'image/png'
+  const ascii = (from: number, to: number) => String.fromCharCode(...bytes.subarray(from, to))
+  if (bytes.byteLength >= 12 && ascii(0, 4) === 'RIFF' && ascii(8, 12) === 'WEBP') return 'image/webp'
   return null
+}
+
+/**
+ * Turns cover bytes into a data: URL the renderer can draw. Satori only draws
+ * JPEG and PNG, so a WebP cover (owners' WebP uploads are stored as WebP) is
+ * re-encoded as a JPEG first. Returns null for anything else, or bytes that
+ * fail to decode.
+ */
+export async function coverBytesToDataUrl(buf: Uint8Array): Promise<string | null> {
+  const type = sniffCoverType(buf)
+  if (!type) return null
+  if (type !== 'image/webp') return `data:${type};base64,${Buffer.from(buf).toString('base64')}`
+  try {
+    const jpeg = await sharp(buf, { failOn: 'error', limitInputPixels: MAX_INPUT_PIXELS })
+      .rotate()
+      .resize({ width: COVER_MAX_EDGE, height: COVER_MAX_EDGE, fit: 'inside', withoutEnlargement: true })
+      .flatten({ background: '#0a0a0a' })
+      .jpeg({ quality: 82, mozjpeg: true })
+      .toBuffer()
+    return `data:image/jpeg;base64,${jpeg.toString('base64')}`
+  } catch {
+    return null
+  }
 }
 
 /**
@@ -53,7 +88,7 @@ function sniffImageType(bytes: Uint8Array): 'image/jpeg' | 'image/png' | null {
  * - the URL isn't on our own Supabase Storage host (no fetching arbitrary
  *   owner-pasted URLs from the server);
  * - the fetch fails or is too big;
- * - the image isn't JPEG or PNG (Satori can't decode WebP, measured 2026-11-13).
+ * - the image isn't JPEG, PNG or WebP, or doesn't decode.
  */
 export async function loadCoverDataUrl(coverUrl: string | null): Promise<string | null> {
   if (!coverUrl) return null
@@ -74,9 +109,7 @@ export async function loadCoverDataUrl(coverUrl: string | null): Promise<string 
     if (!res.ok) return null
     const buf = new Uint8Array(await res.arrayBuffer())
     if (buf.byteLength > MAX_COVER_BYTES) return null
-    const type = sniffImageType(buf)
-    if (!type) return null
-    return `data:${type};base64,${Buffer.from(buf).toString('base64')}`
+    return await coverBytesToDataUrl(buf)
   } catch {
     return null
   }

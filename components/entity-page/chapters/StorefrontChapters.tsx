@@ -17,14 +17,19 @@ import {
   HappeningStrip,
   Img,
   Interlude,
+  LiveMap,
   MapFig,
   MoreBand,
   OffersBlock,
   ReviewsBand,
   Videos,
   VisitPanelInner,
+  ext,
   vars,
 } from './parts'
+import { ContactLink } from '@/components/entity-page/ContactLink'
+import { SaveButton } from '@/components/entity-page/SaveButton'
+import { ShareButton } from '@/components/entity-page/ShareButton'
 
 /** The Storefront chapters (prototype v7): warm, photo-led, Visit straight after Welcome. */
 
@@ -64,6 +69,10 @@ export function StorefrontChapters({
   const moreMenu = data.menu.slice(2)
   const moreItems = moreMenu.reduce((n, g) => n + g.items.length, 0)
   const [il0, il1, il2] = preset.interludes
+  const live = data.live
+  const has = (id: string) => data.chapters.some((c) => c.id === id)
+  const findAny =
+    data.locations.length + data.findUs.length + data.orderOn.length + data.events.length > 0
   return (
     <>
       <header className="s-hero" id="top" data-hero>
@@ -83,22 +92,70 @@ export function StorefrontChapters({
             <h1 className="s-h1">{data.name}</h1>
             <p className="s-tag lede">{data.tagline}</p>
             <Facts data={data} />
-            <div className="btn-row">
-              <button
-                className="btn btn-fill"
-                type="button"
-                data-off
-                style={vars({ '--btn': 'var(--amber)', '--btn-fg': '#fff' })}
-              >
-                {data.cta} <Arr />
-              </button>
-              <a className="btn btn-line" href="#visit" data-example-allow-links>
-                Hours and Directions
-              </a>
-              <button className="tlink" type="button" data-off>
-                Save
-              </button>
-            </div>
+            {live ? (
+              <>
+                <div className="btn-row">
+                  {live.cta && (
+                    <ContactLink
+                      className="btn btn-fill"
+                      href={live.cta.href}
+                      listingId={live.listingId}
+                      source="hero"
+                      style={vars({ '--btn': 'var(--amber)', '--btn-fg': '#fff' })}
+                      {...ext(live.cta.href)}
+                    >
+                      {live.cta.label} <Arr />
+                    </ContactLink>
+                  )}
+                  {has('visit') && (
+                    <a className="btn btn-line" href="#visit">
+                      Hours and Directions
+                    </a>
+                  )}
+                </div>
+                {/* Save, Share and Message stay on phones too, where F01 drops the buttons above. */}
+                <p className="hero-acts">
+                  <SaveButton
+                    listingId={live.listingId}
+                    initialSaved={live.initialSaved}
+                    variant="text"
+                    className="tlink"
+                  />
+                  <ShareButton
+                    listingName={live.listingName}
+                    listingId={live.listingId}
+                    listingSlug={live.listingSlug}
+                    cityName={live.cityName}
+                    categoryName={live.categoryName}
+                    label="Share"
+                    className="tlink"
+                  />
+                  {live.message && (
+                    <a className="tlink" href={live.message.href}>
+                      {live.message.label}
+                    </a>
+                  )}
+                  {live.messagingClosed && <span className="meta">Not Accepting Messages</span>}
+                </p>
+              </>
+            ) : (
+              <div className="btn-row">
+                <button
+                  className="btn btn-fill"
+                  type="button"
+                  data-off
+                  style={vars({ '--btn': 'var(--amber)', '--btn-fg': '#fff' })}
+                >
+                  {data.cta} <Arr />
+                </button>
+                <a className="btn btn-line" href="#visit" data-example-allow-links>
+                  Hours and Directions
+                </a>
+                <button className="tlink" type="button" data-off>
+                  Save
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </header>
@@ -123,10 +180,18 @@ export function StorefrontChapters({
                 ))}
               </div>
             </div>
-            <div className="s-duo">
-              <Fig photo={preset.duo[0]} className="drift rv" />
-              <Fig photo={preset.duo[1]} className="drift rv" style={vars({ '--d': '150ms' })} />
-            </div>
+            {preset.duo.length > 0 && (
+              <div className="s-duo">
+                {preset.duo.map((p, i) => (
+                  <Fig
+                    key={p.src}
+                    photo={p}
+                    className="drift rv"
+                    style={i ? vars({ '--d': '150ms' }) : undefined}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <HappeningStrip data={data} />
@@ -193,74 +258,103 @@ export function StorefrontChapters({
           </div>
         </div>
       </section>
-      <Interlude photo={il0} />
+      {il0 && <Interlude photo={il0} />}
 
-      <section id="visit" data-ch="visit" aria-labelledby="h-visit">
-        <div className="s-visit s-ink">
-          <div className="panel">
-            <ChapterHeading data={data} id="visit" />
-            <VisitPanelInner data={data} />
-          </div>
-          <MapFig colours={preset.map} address={data.address[0] ?? data.name} />
-        </div>
-        <div className="s-stone find-band">
-          <div className="wrap">
-            <FindHead title="Where Else to Find Us" lede={preset.findLede} />
-            <div className="find">
-              <FindList title="Other Locations" items={data.locations} action="Directions" />
-              <FindList title="Find Us At" items={data.findUs} action="Find a Store" />
-              <FindList title="Order On" items={data.orderOn} action="Order" />
-              <EventsList events={data.events} />
+      {has('visit') && (
+        <section id="visit" data-ch="visit" aria-labelledby="h-visit">
+          <div className={`s-visit s-ink${live && !live.pins.length ? ' no-map' : ''}`}>
+            <div className="panel">
+              <ChapterHeading data={data} id="visit" />
+              <VisitPanelInner data={data} />
             </div>
+            {live ? (
+              <LiveMap live={live} />
+            ) : (
+              <MapFig colours={preset.map} address={data.address[0] ?? data.name} />
+            )}
           </div>
-        </div>
-      </section>
+          {(!live || findAny) && (
+            <div className="s-stone find-band">
+              <div className="wrap">
+                <FindHead title="Where Else to Find Us" lede={preset.findLede} />
+                <div className="find">
+                  <FindList
+                    title="Other Locations"
+                    items={data.locations}
+                    action="Directions"
+                    live={!!live}
+                  />
+                  <FindList
+                    title="Find Us At"
+                    items={data.findUs}
+                    action="Find a Store"
+                    live={!!live}
+                  />
+                  <FindList title="Order On" items={data.orderOn} action="Order" live={!!live} />
+                  <EventsList events={data.events} />
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
+      )}
 
-      <section className="band s-white" id="menu" data-ch="menu" aria-labelledby="h-menu">
-        <div className="wrap">
-          <div className="s-menu">
-            <div>
+      {has('menu') && (
+        <section className="band s-white" id="menu" data-ch="menu" aria-labelledby="h-menu">
+          <div className="wrap">
+            {data.menu.length === 0 ? (
               <ChapterHeading data={data} id="menu" />
-              {data.menu.slice(0, 2).map((g) => (
-                <MenuGroupBlock key={g.name} group={g} />
-              ))}
-              {moreMenu.length > 0 && (
-                <Disc
-                  id="more-menu"
-                  buttonClassName="more-bar"
-                  label={
-                    <>
-                      <span className="mb-l">Show the Full Menu</span>
-                      <span className="mb-n">
-                        {moreItems} More Items · {moreMenu.map((g) => g.name).join(', ')}
-                      </span>
-                    </>
-                  }
-                >
-                  {moreMenu.map((g) => (
+            ) : (
+              <div className="s-menu">
+                <div>
+                  <ChapterHeading data={data} id="menu" />
+                  {data.menu.slice(0, 2).map((g) => (
                     <MenuGroupBlock key={g.name} group={g} />
                   ))}
-                </Disc>
-              )}
-            </div>
-            <Fig photo={preset.menuPhoto} className="stick drift" />
+                  {moreMenu.length > 0 && (
+                    <Disc
+                      id="more-menu"
+                      buttonClassName="more-bar"
+                      label={
+                        <>
+                          <span className="mb-l">Show the Full Menu</span>
+                          <span className="mb-n">
+                            {moreItems} More Items · {moreMenu.map((g) => g.name).join(', ')}
+                          </span>
+                        </>
+                      }
+                    >
+                      {moreMenu.map((g) => (
+                        <MenuGroupBlock key={g.name} group={g} />
+                      ))}
+                    </Disc>
+                  )}
+                </div>
+                {preset.menuPhoto && <Fig photo={preset.menuPhoto} className="stick drift" />}
+              </div>
+            )}
+            <OffersBlock
+              deals={data.deals}
+              className="deal"
+              lede={preset.offersLede}
+              solo={data.menu.length === 0}
+            />
+            {data.booking && (
+              <BookPanel
+                className="book"
+                title={preset.booking.title}
+                lede={data.booking}
+                facts={preset.booking.facts}
+              >
+                <button className="btn btn-fill" type="button" data-off>
+                  {preset.booking.action}
+                </button>
+              </BookPanel>
+            )}
           </div>
-          <OffersBlock deals={data.deals} className="deal" lede={preset.offersLede} />
-          {data.booking && (
-            <BookPanel
-              className="book"
-              title={preset.booking.title}
-              lede={data.booking}
-              facts={preset.booking.facts}
-            >
-              <button className="btn btn-fill" type="button" data-off>
-                {preset.booking.action}
-              </button>
-            </BookPanel>
-          )}
-        </div>
-      </section>
-      <Interlude photo={il1} />
+        </section>
+      )}
+      {il1 && <Interlude photo={il1} />}
 
       {data.shop && (
         <section className="band s-stone" id="shop" data-ch="shop" aria-labelledby="h-shop">
@@ -294,7 +388,7 @@ export function StorefrontChapters({
       />
 
       <ReviewsBand data={data} />
-      <Interlude photo={il2} />
+      {il2 && <Interlude photo={il2} />}
       <MoreBand data={data} surface="s-stone" />
     </>
   )

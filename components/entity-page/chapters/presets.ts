@@ -10,9 +10,10 @@ import { asset } from '@/lib/example/fixtures/shared'
  */
 
 export interface StorefrontPreset extends ChapterPreset {
-  duo: [Photo, Photo]
-  interludes: [Photo, Photo, Photo]
-  menuPhoto: Photo
+  /** Live pages fill these from the listing's own gallery and leave out what runs short. */
+  duo: Photo[]
+  interludes: [Photo | null, Photo | null, Photo | null]
+  menuPhoto: Photo | null
   offersLede: string
   booking: { title: string; facts: string[]; action: string }
   findLede: string
