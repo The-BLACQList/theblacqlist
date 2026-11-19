@@ -108,6 +108,10 @@ describe('Starter copy matches the Starter gates and limits', () => {
     expect(starter).toContain('Up to 10 photos')
     expect(videoLimit('starter')).toBe(1)
     expect(starter).toContain('A video on your page, your own upload or a link')
+    // Ticket 233: priced menus on Starter; the Shop (storefront) stays Growth+.
+    expect(canAccess('starter', 'service_menu_pricing')).toBe(true)
+    expect(starter).toContain('Your menu or service list, with prices')
+    expect(canAccess('starter', 'storefront')).toBe(false)
     expect(descriptionCharLimit('starter')).toBeNull()
     expect(starter).toContain('Your full story, with no length limit')
     expect(attributeLimit('starter')).toBe(10)

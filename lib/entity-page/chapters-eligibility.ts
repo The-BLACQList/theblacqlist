@@ -14,6 +14,32 @@ const STOREFRONT_TYPES = new Set(['business', 'restaurant', 'vendor'])
 /** Gallery photos a page needs before the chapters fill without gaps. */
 export const CHAPTERS_MIN_PHOTOS = 4
 
+/** Whether this listing type can get the chapters layout at all. */
+export function chaptersLayoutType(entityType: string | null | undefined): boolean {
+  return STOREFRONT_TYPES.has(entityType ?? '')
+}
+
+/**
+ * What a Storefront listing still lacks for the chapters layout, in the
+ * owner's words (ticket 233), so the editor can say what turns the full page
+ * on. Empty when nothing is missing; null when the type never gets it.
+ * Mirrors `chaptersEligible`, so the two cannot drift.
+ */
+export function chaptersMissing(facts: {
+  entityType: string | null | undefined
+  hasCover: boolean
+  photoCount: number
+  hasStory: boolean
+}): string[] | null {
+  if (!chaptersLayoutType(facts.entityType)) return null
+  const out: string[] = []
+  if (!facts.hasCover) out.push('a banner photo')
+  const short = CHAPTERS_MIN_PHOTOS - facts.photoCount
+  if (short > 0) out.push(`${short} more gallery ${short === 1 ? 'photo' : 'photos'}`)
+  if (!facts.hasStory) out.push('a description')
+  return out
+}
+
 export function chaptersEligible(
   entity: Pick<EntityPageData, 'entity_type' | 'cover_image_path' | 'images' | 'details'>
 ): boolean {

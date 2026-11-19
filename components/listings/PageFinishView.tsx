@@ -8,6 +8,7 @@ import { computePageChecklist } from '@/lib/ai/checklist'
 import { creatorChecklistFacts } from '@/lib/listings/creatorAttributes'
 import { socialLinksAllowed, upgradeTarget, type UpgradeTarget } from '@/lib/stripe/planChecks'
 import { TIER_RANK, attributeLimit, descriptionCharLimit, faqLimit, photoLimit } from '@/lib/stripe/features'
+import { CHAPTERS_MIN_PHOTOS, chaptersMissing } from '@/lib/entity-page/chapters-eligibility'
 import { getCtaLabel, type CTAType } from '@/types'
 import { LivePagePreview } from '@/components/listings/LivePagePreview'
 import { extraButtonLabel, shownExtraButtons } from '@/lib/listings/pageButtons'
@@ -270,6 +271,21 @@ export function PageFinishView({
     buttons,
   })
 
+  // Ticket 233: tell owners what turns the full page on. Only for types that
+  // get it and plans that allow enough photos (Free allows 1).
+  const photoCap = photoLimit(tier)
+  const fullPageMissing =
+    photoCap === null || photoCap >= CHAPTERS_MIN_PHOTOS
+      ? (chaptersMissing({
+          entityType: data.entityType,
+          hasCover: Boolean(data.coverImagePath),
+          photoCount: data.media.filter(
+            (m) => m.is_approved === true && !hidden.hiddenIds.has(m.id)
+          ).length,
+          hasStory: Boolean(draft.description?.trim()),
+        }) ?? undefined)
+      : undefined
+
   const checklist = computePageChecklist(
     {
       tagline: draft.tagline || null,
@@ -485,6 +501,7 @@ export function PageFinishView({
         albums={
           data.albums ? { byId: data.albums, canFile: albumsAllowed(data.tier) } : undefined
         }
+        fullPageMissing={fullPageMissing}
       />
     ),
     'main-button': (

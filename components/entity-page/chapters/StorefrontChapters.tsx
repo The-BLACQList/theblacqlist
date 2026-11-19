@@ -1,6 +1,7 @@
 import type { ChapterData, MenuGroup } from './model'
 import { pad } from './model'
 import type { StorefrontPreset } from './presets'
+import { photoKey, storefrontPlacedSrcs } from './presets'
 import {
   Arr,
   Avatar,
@@ -53,9 +54,9 @@ function MenuGroupBlock({ group }: { group: MenuGroup }) {
 }
 
 /** "12 Photos · Interior, Drinks, Food", from the gallery itself so it never drifts. */
-function galleryLead(data: ChapterData): string {
-  const albums = [...new Set(data.gallery.map((g) => g.album).filter(Boolean))]
-  const n = data.gallery.length
+function galleryLead(items: ChapterData['gallery']): string {
+  const albums = [...new Set(items.map((g) => g.album).filter(Boolean))]
+  const n = items.length
   return `${n} Photo${n === 1 ? '' : 's'}${albums.length ? ` · ${albums.join(', ')}` : ''}`
 }
 
@@ -71,6 +72,9 @@ export function StorefrontChapters({
   const [il0, il1, il2] = preset.interludes
   const live = data.live
   const has = (id: string) => data.chapters.some((c) => c.id === id)
+  // Ticket 233: the gallery leaves out photos shown elsewhere on the page.
+  const placed = storefrontPlacedSrcs(preset, data.cover?.src, has('menu') && data.menu.length > 0)
+  const galleryItems = data.gallery.filter((g) => !placed.has(photoKey(g.src)))
   const findAny =
     data.locations.length + data.findUs.length + data.orderOn.length + data.events.length > 0
   return (
@@ -378,14 +382,32 @@ export function StorefrontChapters({
         </section>
       )}
 
-      <Glide
-        data={data}
-        id="gallery"
-        items={data.gallery}
-        surface="s-white"
-        lead={<p className="meta">{galleryLead(data)}</p>}
-        after={<Videos videos={data.videos} />}
-      />
+      {has('gallery') &&
+        (galleryItems.length > 0 ? (
+          <Glide
+            data={data}
+            id="gallery"
+            items={galleryItems}
+            surface="s-white"
+            lead={<p className="meta">{galleryLead(galleryItems)}</p>}
+            after={<Videos videos={data.videos} />}
+          />
+        ) : (
+          data.videos.length > 0 && (
+            // Every photo already shows elsewhere: the chapter is just the videos.
+            <section
+              className="band s-white"
+              id="gallery"
+              data-ch="gallery"
+              aria-labelledby="h-gallery"
+            >
+              <div className="wrap">
+                <ChapterHeading data={data} id="gallery" />
+                <Videos videos={data.videos} titled={false} />
+              </div>
+            </section>
+          )
+        ))}
 
       <ReviewsBand data={data} />
       {il2 && <Interlude photo={il2} />}

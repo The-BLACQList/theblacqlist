@@ -4,6 +4,7 @@
 // and (with a tier) by the add-business finish page meter (ticket 126).
 
 import { photoLimit } from '@/lib/stripe/features'
+import { CHAPTERS_MIN_PHOTOS, chaptersLayoutType } from '@/lib/entity-page/chapters-eligibility'
 import { socialLinksAllowed } from '@/lib/stripe/planChecks'
 
 export type ChecklistCategory = 'required' | 'recommended' | 'seo' | 'engagement'
@@ -84,7 +85,7 @@ export function computePageChecklist(
   hoursCount: number,
   /**
    * The listing's plan. When given, items the plan cannot reach are left out,
-   * so a Free page can hit 100%: the gallery needs 3 photos (Free allows 1) and
+   * so a Free page can hit 100%: the gallery needs 4 photos (Free allows 1) and
    * social links need Starter. Omit it to score every item, as before.
    */
   tier?: string | null,
@@ -136,11 +137,15 @@ export function computePageChecklist(
     },
     {
       id: 'gallery',
-      label: 'Gallery image added',
-      hint: 'Add at least one more image. Photos of your space, products, or work build trust.',
+      label: `${CHAPTERS_MIN_PHOTOS} gallery photos added`,
+      // Ticket 233: matches the full page's rule, so a complete meter never
+      // leaves a Storefront page on the old layout for want of a photo.
+      hint: chaptersLayoutType(listing.entity_type)
+        ? `Add at least ${CHAPTERS_MIN_PHOTOS} gallery photos. With a banner photo and a description, they turn on the full page layout.`
+        : `Add at least ${CHAPTERS_MIN_PHOTOS} gallery photos. Photos of your space, products, or work build trust.`,
       category: 'recommended',
       weight: 6,
-      passed: mediaCount >= 3,
+      passed: mediaCount >= CHAPTERS_MIN_PHOTOS,
     },
     {
       id: 'cta',
@@ -286,7 +291,7 @@ function creatorItems(base: ChecklistItem[], facts: CreatorChecklistFacts): Chec
 function isReachable(id: string, tier: string | null, entityType?: string | null): boolean {
   if (id === 'gallery') {
     const limit = photoLimit(tier)
-    return limit === null || limit >= 3
+    return limit === null || limit >= CHAPTERS_MIN_PHOTOS
   }
   if (id === 'social') return socialLinksAllowed(tier, entityType)
   return true
