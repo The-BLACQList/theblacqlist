@@ -345,12 +345,21 @@ export function storefrontEntity(now: Date): EntityPageData {
           ['Value', 4],
         ],
         photos: [
-          ['cafe-pour-over.webp', 'Single-origin pour-over at the brew bar'],
-          ['cafe-brunch.webp', 'Shrimp and grits from the weekend brunch menu'],
-          ['cafe-latte.webp', 'Oat-milk latte with a rosetta pour'],
           [
-            'cafe-pastries.webp',
-            'Thursday’s pastry case: croissants, scones and sweet potato hand pies',
+            'cafe-review-pour-over.webp',
+            'A steel pour-over dripper on a glass server of fresh coffee, beside a gooseneck kettle at the brew bar.',
+          ],
+          [
+            'cafe-review-shrimp-grits.webp',
+            'A bowl of shrimp and grits in a red sauce, topped with chives.',
+          ],
+          [
+            'cafe-review-latte.webp',
+            'A latte in a green-handled cup on a round wooden table, beside a black card reading "Thanks!".',
+          ],
+          [
+            'cafe-review-pastry-case.webp',
+            'Croissants and scones on trays at a bakery counter, with loaves on the shelves behind.',
           ],
         ],
         ownerResponse:
@@ -559,7 +568,10 @@ export function storefrontEntity(now: Date): EntityPageData {
           kind: 'service',
           name: 'Coffee subscription',
           priceLabel: 'From $17/mo',
-          image: image('cafe-beans.webp', 'Roasted coffee beans'),
+          image: image(
+            'cafe-subscription.webp',
+            'Kraft coffee bags packed upright in cardboard shipping boxes.'
+          ),
           href: '/marketplace/services/example-coffee-subscription',
         },
       ],
@@ -613,7 +625,7 @@ export function storefrontEntity(now: Date): EntityPageData {
         id: 'cafe-post-2',
         headline: 'Holiday blend is back',
         body: 'Cocoa, orange peel and a little spice. Twelve-ounce bags on the shelf and in the online shop while it lasts.',
-        imageUrl: asset('cafe-beans.webp'),
+        imageUrl: asset('cafe-holiday-blend.webp'),
         buttonLabel: 'Shop the blend',
         endsAt: futureIso(now, 21),
       },
@@ -621,7 +633,7 @@ export function storefrontEntity(now: Date): EntityPageData {
         id: 'cafe-post-3',
         headline: 'Patio open, heaters on',
         body: 'Eight more tables out back and the heaters are lit for the cold months. Dogs welcome.',
-        imageUrl: asset('cafe-patio.webp'),
+        imageUrl: asset('cafe-patio-heater.webp'),
         buttonLabel: 'Book a table',
         endsAt: futureIso(now, 27),
       },
