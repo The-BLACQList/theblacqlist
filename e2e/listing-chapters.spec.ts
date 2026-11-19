@@ -90,11 +90,23 @@ test.describe('Listing chapters: an eligible listing', () => {
   })
 })
 
-// Ticket 233 (Creative F11): no photo shows twice on a chapters page. The
-// cover, the duo, the interludes and the menu photo are left out of the
-// gallery. Images go through next/image, so compare the source url param.
-const PHOTO_SLOTS =
-  '#lp-root .s-hero-photo img, #lp-root .s-duo img, #lp-root .il img, #lp-root .s-menu img, #lp-root .glide-track img'
+// Ticket 233 (Creative F11, QA233-03): no photo shows twice on a chapters page.
+// The cover, the duo, the interludes and the menu photo are left out of the
+// gallery, and the sample's posts, Shop items, review and team photos are their
+// own photos. Images go through next/image, so compare the source url param.
+const PHOTO_SLOTS = [
+  '.s-hero-photo',
+  '.s-duo',
+  '.il',
+  '.s-menu',
+  '.glide-track',
+  '.hn-strip',
+  '.s-shop',
+  '.rev-ph',
+  '.team',
+]
+  .map((slot) => `#lp-root ${slot} img`)
+  .join(', ')
 
 async function photoSources(page: import('@playwright/test').Page): Promise<string[]> {
   return page.locator(PHOTO_SLOTS).evaluateAll((imgs) =>

@@ -212,3 +212,23 @@ describe('no photo repeats on a Storefront page (F11)', () => {
     )
   })
 })
+
+describe('sample storefront: posts, Shop and review photos are their own (QA233-01, QA233-02)', () => {
+  it('repeats no gallery or cover photo, and none of each other', () => {
+    const e = storefrontEntity(NOW)
+    const pool = new Set(
+      [e.cover_image_path, ...e.images.map((g) => g.src)].map((s) => photoKey(s!))
+    )
+    const own = [
+      ...(e.happeningNow ?? []).map((p) => p.imageUrl),
+      ...(e.shop?.items ?? []).map((i) => i.image?.src),
+      ...e.reviews.flatMap((r) => (r.photos ?? []).map((p) => p.src)),
+      ...(e.team ?? []).map((t) => t.photo?.src),
+    ]
+      .filter((s): s is string => Boolean(s))
+      .map(photoKey)
+    expect(own.length).toBeGreaterThan(5)
+    expect(own.filter((k) => pool.has(k))).toEqual([])
+    expect(new Set(own).size).toBe(own.length)
+  })
+})
