@@ -89,7 +89,7 @@ describe('sendBusinessInviteAction (ticket 168)', () => {
     expect(h.sendEmail.mock.calls[0]?.[0]).toMatchObject({
       to: 'owner@example.com',
       subject: 'Customers Are Adding Your Receipts on The BLACQList',
-      replyTo: 'founder@example.com',
+      replyTo: 'support@theblacqlist.com',
     })
     expect(h.state.writes).toHaveLength(1)
     expect(h.state.writes[0]).toMatchObject({

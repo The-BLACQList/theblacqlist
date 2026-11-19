@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { Mail, MessageSquare, Briefcase, Shield } from 'lucide-react'
 import { Section } from '@/components/layout/section'
 import { PageHeader } from '@/components/layout/page-header'
+import { SUPPORT_EMAIL } from '@/lib/email/support'
 
 export const metadata: Metadata = {
   title: 'Contact | The BLACQList',
@@ -11,10 +12,10 @@ export const metadata: Metadata = {
 const CONTACT_CHANNELS = [
   {
     icon: MessageSquare,
-    heading: 'General Inquiries',
-    body: 'Questions about the platform, feedback, or anything else.',
-    email: 'hello@theblacqlist.com',
-    label: 'hello@theblacqlist.com',
+    heading: 'Questions and Feedback',
+    body: 'Questions about the platform, feedback, a problem you ran into, or anything else.',
+    email: SUPPORT_EMAIL,
+    label: SUPPORT_EMAIL,
   },
   {
     icon: Briefcase,
@@ -77,10 +78,13 @@ export default function ContactPage() {
           <h2 className="font-headline text-2xl text-brand-black">Response Times</h2>
           <div className="mt-6 space-y-4">
             {[
-              { type: 'Business support', time: 'Within 48 hours' },
-              { type: 'General inquiries', time: 'Within 3–5 business days' },
-              { type: 'Press requests', time: 'Within 2 business days' },
-              { type: 'Privacy requests', time: 'Within 30 days' },
+              // User feedback plan, founder decision 2026-11-19. Public promises
+              // only; the same-day target for outages is internal. Claims match
+              // the 3–5 business days the claim form and email promise (D-014).
+              { type: 'Questions and Feedback', time: 'Within 2 Business Days' },
+              { type: 'Business Claims', time: 'Within 3–5 Business Days' },
+              { type: 'Press Requests', time: 'Within 2 Business Days' },
+              { type: 'Privacy Requests', time: 'Within 30 Days' },
             ].map(({ type, time }) => (
               <div
                 key={type}
