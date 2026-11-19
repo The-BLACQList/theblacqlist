@@ -355,7 +355,7 @@ export default async function ForBusinessPage() {
           <div className="ch-hd">
             <h2 className="ch-h" id="plans-h">
               <span className="num">04</span>
-              <span>Free to Claim, Paid If You Want More</span>
+              <span>Start Free</span>
             </h2>
             <p className="lede">You don&apos;t need Starter to claim or keep your Page.</p>
           </div>
