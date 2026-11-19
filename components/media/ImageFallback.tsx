@@ -10,6 +10,13 @@ interface Props {
    * arrangement — the layout is identical either way, only node placement moves.
    */
   seed?: string | null
+  /**
+   * Where the monogram sits. `center` (cards, tiles) puts it in the middle.
+   * `aside` is for a hero with text over it (ticket 232): the monogram moves to
+   * the right on tablet and desktop, clear of the bottom-left text block, and is
+   * hidden on phones, where the text fills the hero.
+   */
+  placement?: 'center' | 'aside'
   className?: string
 }
 
@@ -67,7 +74,14 @@ function groundPosition(seed: string | null | undefined): string {
  * `opacity-30` because five hard gold dots at full strength read as decoration
  * competing with the monogram; this one does not have that problem.
  */
-export function ImageFallback({ name, categoryName, size = 'hero', seed, className }: Props) {
+export function ImageFallback({
+  name,
+  categoryName,
+  size = 'hero',
+  seed,
+  placement = 'center',
+  className,
+}: Props) {
   const initials = name
     .split(' ')
     .filter((w) => /^[A-Za-z]/.test(w))
@@ -77,11 +91,17 @@ export function ImageFallback({ name, categoryName, size = 'hero', seed, classNa
     .toUpperCase()
 
   const isHero = size === 'hero'
+  const aside = placement === 'aside'
 
   return (
     <div
-      className={cn('absolute inset-0 bg-deep-bg flex items-center justify-center', className)}
+      className={cn(
+        'absolute inset-0 bg-deep-bg flex items-center',
+        aside ? 'justify-end md:pr-[8%]' : 'justify-center',
+        className
+      )}
       aria-hidden="true"
+      data-fallback={placement}
     >
       {/* Gold node network — signature accent, seeded so a grid never repeats */}
       <div
@@ -92,7 +112,10 @@ export function ImageFallback({ name, categoryName, size = 'hero', seed, classNa
         }}
       />
 
-      <div className="relative flex flex-col items-center gap-2">
+      <div
+        className={cn('relative flex-col items-center gap-2', aside ? 'hidden md:flex' : 'flex')}
+        data-monogram=""
+      >
         {/* Monogram inside the Q frame.
             The asset is cropped square with the ring dead centre and the tail
             fully inside it, so ordinary flex centring lands the initials in the

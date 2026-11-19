@@ -15,6 +15,8 @@ interface Props {
   /** Adaptive text scrim for content overlaid on the photo */
   scrim?: 'bottom' | 'none'
   fallbackSize?: 'hero' | 'card'
+  /** Where the fallback monogram sits; see ImageFallback. */
+  fallbackPlacement?: 'center' | 'aside'
   /** next/image quality; must be listed in next.config images.qualities. */
   quality?: 75 | 90
   className?: string
@@ -36,6 +38,7 @@ export function CoverImage({
   sizes = '100vw',
   scrim = 'none',
   fallbackSize = 'hero',
+  fallbackPlacement,
   quality,
   className,
 }: Props) {
@@ -57,6 +60,7 @@ export function CoverImage({
           categoryName={categoryName}
           size={fallbackSize}
           seed={seed}
+          placement={fallbackPlacement}
         />
       )}
 

@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { StatusBadge } from '@/components/ui/status-badge'
+import { TrustTierLabel } from '@/components/entity-page/TrustTierLabel'
 import { ALLY_ONE_LINER } from '@/lib/constants/listing'
 import type { EntityPageData } from '@/types'
 
@@ -30,7 +30,7 @@ export function TemplateTrustPanel({ entity }: Props) {
       <h2 className="font-headline text-[19px] text-brand-black mb-3.5">Trust on The BLACQList</h2>
 
       <div className="mb-4">
-        <StatusBadge tier={entity.trust_tier} size="standard" />
+        <TrustTierLabel tier={entity.trust_tier} />
       </div>
 
       <div className="divide-y divide-charcoal/10 font-body text-[13.5px] text-charcoal">
