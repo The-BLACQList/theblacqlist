@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { StatusBadge } from '@/components/ui/status-badge'
+import { TrustTierLabel } from '@/components/entity-page/TrustTierLabel'
 import type { EntityPageData } from '@/types'
 
 const TIER_DESCRIPTIONS: Record<EntityPageData['trust_tier'], string> = {
@@ -30,7 +30,7 @@ export function EntityTrustSection({ entity }: Props) {
 
         <div className="flex flex-col md:flex-row md:items-start gap-6">
           <div className="flex-shrink-0">
-            <StatusBadge tier={entity.trust_tier} size="standard" />
+            <TrustTierLabel tier={entity.trust_tier} />
           </div>
 
           <div className="flex-1">

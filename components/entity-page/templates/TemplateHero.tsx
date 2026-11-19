@@ -141,6 +141,7 @@ export function TemplateHero({ entity, initialSaved = false, variant, mode = 'li
         quality={90}
         scrim={cover.src ? 'bottom' : 'none'}
         fallbackSize="hero"
+        fallbackPlacement="aside"
       />
 
       {/* Ported from EntityPageHero — the only place is_featured surfaces on a
@@ -155,7 +156,14 @@ export function TemplateHero({ entity, initialSaved = false, variant, mode = 'li
         </div>
       )}
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-5 md:px-8 lg:px-10 pt-24 pb-9 md:pb-10">
+      {/* With no cover the monogram sits on the right (ticket 232), so the text
+          stops short of it on tablet and desktop. */}
+      <div
+        className={cn(
+          'relative z-10 w-full max-w-7xl mx-auto px-5 md:px-8 lg:px-10 pt-24 pb-9 md:pb-10',
+          !cover.src && 'md:pr-[34%] lg:pr-[34%]'
+        )}
+      >
         {isCreative && entity.category?.name && (
           <p className="font-subhead text-xs md:text-[13px] font-bold uppercase tracking-[0.22em] text-gold mb-2.5">
             {entity.category.name}

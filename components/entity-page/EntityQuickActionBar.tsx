@@ -9,6 +9,7 @@ import { ShareButton } from '@/components/entity-page/ShareButton'
 import { getCtaHref, getEntityCtaLabel } from '@/components/entity-page/templates/cta'
 import { trackContactTap } from '@/lib/analytics/contactTap'
 import { directionsUrl } from '@/lib/listings/directions'
+import { quickBarVisibility } from '@/lib/entity-page/quickBar'
 import type { EntityPageData } from '@/types'
 
 interface Props {
@@ -26,7 +27,9 @@ export function EntityQuickActionBar({
   initialSaved = false,
   showShoppedHere = false,
 }: Props) {
+  // Phone bar and tablet/desktop bar; see quickBarVisibility.
   const [visible, setVisible] = useState(false)
+  const [topVisible, setTopVisible] = useState(false)
 
   const ctaLabel = getEntityCtaLabel(entity)
   // Same resolution the hero uses, so the bar's button and the hero's button
@@ -45,7 +48,9 @@ export function EntityQuickActionBar({
 
     const observer = new IntersectionObserver(
       ([entry]) => {
-        setVisible(!entry!.isIntersecting)
+        const next = quickBarVisibility(entry!)
+        setVisible(next.bottom)
+        setTopVisible(next.top)
       },
       { threshold: 0 }
     )
@@ -138,13 +143,15 @@ export function EntityQuickActionBar({
         </div>
       </div>
 
-      {/* Desktop bar — fixed top (below nav at 64px), fades in */}
+      {/* Desktop bar: fixed top (below nav at 64px), fades in once the hero
+          button has scrolled past the top (ticket 232) */}
       <div
-        aria-hidden={!visible}
+        aria-hidden={!topVisible}
+        data-quick-bar-top={topVisible ? 'shown' : 'hidden'}
         className={cn(
           'hidden md:flex fixed top-16 left-0 right-0 z-40 bg-brand-black border-b border-white/10',
           'transition-opacity duration-300 ease-out h-[52px]',
-          visible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          topVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         )}
       >
         <div className="max-w-7xl mx-auto w-full px-4 md:px-6 lg:px-8 flex items-center gap-4">
@@ -156,7 +163,7 @@ export function EntityQuickActionBar({
             <a
               href={phoneHref}
               onClick={tap(phoneHref)}
-              tabIndex={visible ? 0 : -1}
+              tabIndex={topVisible ? 0 : -1}
               className="inline-flex items-center gap-1.5 font-subhead text-sm text-white/70 hover:text-white transition-colors"
               aria-label={`Call ${entity.name}: ${entity.details.phone}`}
             >
@@ -171,7 +178,7 @@ export function EntityQuickActionBar({
               onClick={tap(mapsHref)}
               target="_blank"
               rel="noopener noreferrer"
-              tabIndex={visible ? 0 : -1}
+              tabIndex={topVisible ? 0 : -1}
               aria-label="Get directions"
               className="inline-flex items-center gap-1.5 font-subhead text-sm text-white/70 hover:text-white transition-colors"
             >
@@ -183,7 +190,7 @@ export function EntityQuickActionBar({
           {showShoppedHere && (
             <Link
               href={receiptHref}
-              tabIndex={visible ? 0 : -1}
+              tabIndex={topVisible ? 0 : -1}
               className="inline-flex items-center justify-center h-9 px-4 rounded-full border border-white/30 hover:bg-white/10 text-white font-subhead font-semibold text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-gold"
             >
               I shopped here
@@ -194,7 +201,7 @@ export function EntityQuickActionBar({
             <a
               href={ctaHref}
               onClick={tap(ctaHref)}
-              tabIndex={visible ? 0 : -1}
+              tabIndex={topVisible ? 0 : -1}
               className="inline-flex items-center justify-center h-9 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-gold"
             >
               {ctaLabel}
@@ -205,7 +212,7 @@ export function EntityQuickActionBar({
             <a
               href={firstExtra.href}
               onClick={tap(firstExtra.href)}
-              tabIndex={visible ? 0 : -1}
+              tabIndex={topVisible ? 0 : -1}
               className="inline-flex items-center justify-center h-9 px-4 rounded-full border border-white/30 hover:bg-white/10 text-white font-subhead font-semibold text-sm whitespace-nowrap transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-gold"
             >
               {firstExtra.label}
@@ -216,7 +223,7 @@ export function EntityQuickActionBar({
             <MoreButtons
               buttons={moreExtras}
               listingId={entity.id}
-              visible={visible}
+              visible={topVisible}
               placement="down"
               className="size-9"
             />
@@ -225,7 +232,7 @@ export function EntityQuickActionBar({
           <SaveButton
             listingId={entity.id}
             initialSaved={initialSaved}
-            tabIndex={visible ? 0 : -1}
+            tabIndex={topVisible ? 0 : -1}
             surface="bar"
             className="size-9"
           />
@@ -236,7 +243,7 @@ export function EntityQuickActionBar({
             listingSlug={entity.slug}
             cityName={entity.city?.name}
             categoryName={entity.category.name}
-            tabIndex={visible ? 0 : -1}
+            tabIndex={topVisible ? 0 : -1}
             className="size-9 bg-white/10 hover:bg-white/20 text-white"
           />
         </div>
