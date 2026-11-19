@@ -38,8 +38,18 @@ export function reviewerEmail(n: number): string {
   return `demo-reviewer-${n}@example.com`
 }
 
-export function reviewerDisplayName(n: number): string {
-  return `Demo Reviewer ${n}`
+/**
+ * One demo reviewer account per fixture review, across all plans in order, each
+ * named as the fixture names its reviewer ("Jasmine R."). The page shows the
+ * name as first name + last initial, so it matches the owner's reply ("Thank
+ * you, Jasmine!"). Founder, 2026-11-19: "Use the sample names".
+ */
+export function seedReviewers(
+  plans: Pick<ExampleSeedPlan, 'reviews'>[]
+): { email: string; displayName: string }[] {
+  return plans
+    .flatMap((p) => p.reviews.map((r) => r.reviewer))
+    .map((displayName, i) => ({ email: reviewerEmail(i + 1), displayName }))
 }
 
 export function seedSlug(variant: ExampleVariant): string {
@@ -131,6 +141,8 @@ export interface SeedPost {
 }
 
 export interface SeedReview {
+  /** The fixture's reviewer name ("Jasmine R."); the demo account's display name. */
+  reviewer: string
   rating: number
   title: string | null
   body: string | null
@@ -452,6 +464,7 @@ export function buildSeedPlan(variant: ExampleVariant, now: Date): ExampleSeedPl
     shop: shop(e, variant),
     jobs: jobs(e, variant),
     reviews: e.reviews.map((r) => ({
+      reviewer: r.reviewer_display_name ?? '',
       rating: r.rating,
       title: r.title,
       body: r.body,

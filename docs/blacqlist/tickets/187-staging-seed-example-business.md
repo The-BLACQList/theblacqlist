@@ -23,7 +23,7 @@
   - Extra buttons are seeded as type `learn-more` with the fixture's label, because the fixtures carry a label and a link but no type.
   - Posts have no "pinned" column, so none is pinned.
   - A location's city is matched by name. Where staging has no such city, it falls back to the main page's city.
-  - Reviews are written only with `--with-reviews`. Reviewer `N` writes the page's `N`th fixture review, under the display name "Demo Reviewer N". Criteria scores and review photos are left out.
+  - Reviews are written only with `--with-reviews`. Each fixture review gets its own reviewer account, numbered across the three pages in order, under the name the fixture gives it ("Jasmine R."), so the owner's reply matches the name on the review (founder, 2026-11-19; it was "Demo Reviewer N", shared across pages). Criteria scores and review photos are left out.
   - `--purge` does not need `--owner-email`.
 
 ## Checks

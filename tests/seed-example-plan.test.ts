@@ -10,6 +10,7 @@ import {
   placeholderPdf,
   priceCents,
   reviewerEmail,
+  seedReviewers,
   seedSlugs,
 } from '@/scripts/lib/example-seed-plan'
 
@@ -235,6 +236,28 @@ describe('helpers', () => {
     expect(REVIEWER_EMAIL_RE.test(reviewerEmail(12))).toBe(true)
     expect(REVIEWER_EMAIL_RE.test('demo-reviewer-1@example.com.evil.test')).toBe(false)
     expect(REVIEWER_EMAIL_RE.test('someone@gmail.com')).toBe(false)
+  })
+
+  // Founder 2026-11-19, "Use the sample names": one account per fixture review,
+  // named as the fixture names it, so "Thank you, Jasmine!" sits under Jasmine R.
+  it('gives every fixture review its own reviewer account, under the sample name', () => {
+    const reviewers = seedReviewers(plans)
+    const reviews = plans.flatMap((p) => p.reviews)
+    expect(reviewers).toHaveLength(reviews.length)
+    expect(reviewers.map((r) => r.email)).toEqual(reviews.map((_, i) => reviewerEmail(i + 1)))
+    expect(reviewers.map((r) => r.displayName)).toEqual(reviews.map((r) => r.reviewer))
+    for (const r of reviewers) {
+      expect(REVIEWER_EMAIL_RE.test(r.email)).toBe(true)
+      expect(r.displayName).toMatch(/^\p{L}+ \p{Lu}\.$/u)
+    }
+    expect(reviewers[0]?.displayName).toBe('Jasmine R.')
+  })
+
+  it('answers each reviewer by the first name the page shows', () => {
+    for (const r of plans.flatMap((p) => p.reviews)) {
+      const thanked = r.owner_response?.match(/\b(?:Thanks|Thank you),? (\p{Lu}\p{L}+)/u)?.[1]
+      if (thanked) expect(r.reviewer.split(' ')[0]).toBe(thanked)
+    }
   })
 
   it('writes a well-formed PDF', () => {

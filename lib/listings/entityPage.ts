@@ -583,17 +583,21 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
     })
     .filter((g) => g.values.length > 0)
 
-  const reviewerIds = (reviewsData ?? [])
-    .map((r) => r.reviewer_user_id)
-    .filter((id): id is string => !!id)
+  // Review author names: first name + last initial ("Jasmine R."), founder
+  // 2026-11-19. profiles is own-read only, so a visitor cannot read it; the
+  // review_author_names() function returns only the short name, for authors of
+  // published reviews on this listing. Fail-soft: no names → "A Customer".
   const reviewerNameMap: Record<string, string> = {}
-  if (reviewerIds.length > 0) {
-    const { data: reviewerProfiles } = await supabase
-      .from('profiles')
-      .select('id, display_name')
-      .in('id', reviewerIds)
-    for (const p of reviewerProfiles ?? []) {
-      if (p.display_name) reviewerNameMap[p.id] = p.display_name
+  if ((reviewsData ?? []).some((r) => r.reviewer_user_id)) {
+    // Not in the generated Database types until types.ts is regenerated after
+    // 20261129000000, so call it untyped, as lib/listings/facets.ts does.
+    const rpc = supabase.rpc.bind(supabase) as unknown as (
+      fn: 'review_author_names',
+      args: { p_listing_id: string }
+    ) => Promise<{ data: { reviewer_user_id: string; short_name: string }[] | null }>
+    const { data: authorNames } = await rpc('review_author_names', { p_listing_id: raw.id })
+    for (const a of authorNames ?? []) {
+      if (a.reviewer_user_id && a.short_name) reviewerNameMap[a.reviewer_user_id] = a.short_name
     }
   }
 
