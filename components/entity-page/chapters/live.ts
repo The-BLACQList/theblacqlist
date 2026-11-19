@@ -1,7 +1,7 @@
 import type { EntityPageData } from '@/types'
 import { getEntityCtaLabel } from '@/components/entity-page/templates/cta'
 import type { ChapterDef, Photo } from './model'
-import { STOREFRONT_PRESET, type StorefrontPreset } from './presets'
+import { STOREFRONT_PRESET, photoKey, storefrontPlacedSrcs, type StorefrontPreset } from './presets'
 
 /**
  * The Storefront preset for a real listing (ticket 231). The sample pages take
@@ -13,11 +13,12 @@ import { STOREFRONT_PRESET, type StorefrontPreset } from './presets'
 /** The listing's gallery minus the cover, without repeats, in gallery order. */
 function spare(entity: EntityPageData): Photo[] {
   const seen = new Set<string>()
-  if (entity.cover_image_path) seen.add(entity.cover_image_path)
+  if (entity.cover_image_path) seen.add(photoKey(entity.cover_image_path))
   const out: Photo[] = []
   for (const g of entity.images) {
-    if (seen.has(g.src)) continue
-    seen.add(g.src)
+    const key = photoKey(g.src)
+    if (seen.has(key)) continue
+    seen.add(key)
     out.push({ src: g.src, alt: g.alt })
   }
   return out
@@ -65,6 +66,20 @@ export function liveStorefrontPreset(entity: EntityPageData): StorefrontPreset {
   const hasServices = Boolean(d.services?.length)
   const hasDeals = Boolean(entity.deals?.length)
 
+  // Ticket 233: every photo shows once. The slots below take the first
+  // photos; the menu photo only when a menu shows. The gallery gets the rest,
+  // and drops out (page and nav) when nothing is left and there are no videos.
+  const duo = [at(0), at(1)].filter((p): p is Photo => p !== null)
+  const interludes: StorefrontPreset['interludes'] = [at(2), at(4), at(5)]
+  const menuPhoto = hasServices ? at(3) : null
+  const placed = storefrontPlacedSrcs(
+    { duo, interludes, menuPhoto },
+    entity.cover_image_path,
+    hasServices
+  )
+  const photosLeft = entity.images.some((g) => !placed.has(photoKey(g.src)))
+  const hasGallery = photosLeft || Boolean(d.videos?.length)
+
   const chapters: ChapterDef[] = [
     { id: 'welcome', nav: 'Welcome', title: 'Welcome' },
     ...(hasVisit ? [{ id: 'visit', nav: 'Visit', title: 'Hours and Location' }] : []),
@@ -78,7 +93,13 @@ export function liveStorefrontPreset(entity: EntityPageData): StorefrontPreset {
         ? // Deals but no menu: the chapter is just the offers, named for them.
           [{ id: 'menu', nav: 'Offers', title: 'Offers' }]
         : []),
-    { id: 'gallery', nav: 'Gallery', title: 'Gallery' },
+    ...(hasGallery
+      ? [
+          photosLeft
+            ? { id: 'gallery', nav: 'Gallery', title: 'Gallery' }
+            : { id: 'gallery', nav: 'Videos', title: 'Videos' },
+        ]
+      : []),
     { id: 'reviews', nav: 'Reviews', title: 'Reviews' },
     { id: 'more', nav: 'More', title: 'More' },
   ]
@@ -91,9 +112,9 @@ export function liveStorefrontPreset(entity: EntityPageData): StorefrontPreset {
     cta: getEntityCtaLabel(entity),
     // The hero photo is decorative here: the name and story sit right on it.
     coverAlt: '',
-    duo: [at(0), at(1)].filter((p): p is Photo => p !== null),
-    interludes: [at(2), at(4), at(5)],
-    menuPhoto: at(3),
+    duo,
+    interludes,
+    menuPhoto,
     offersLede: 'Current offers from the business.',
     booking: { title: '', facts: [], action: '' },
     findLede: findLede(entity),

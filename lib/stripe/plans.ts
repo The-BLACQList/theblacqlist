@@ -78,6 +78,7 @@ export const PLANS: PlanMeta[] = [
       aiLine('starter'),
       'Up to 10 photos',
       'A video on your page, your own upload or a link',
+      'Your menu or service list, with prices',
       'Your full story, with no length limit',
       'Up to 10 details customers filter by',
       'A common questions section (up to 5)',

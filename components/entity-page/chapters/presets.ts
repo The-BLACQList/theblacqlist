@@ -20,6 +20,38 @@ export interface StorefrontPreset extends ChapterPreset {
   map: { land: string; block: string; road: string; park: string; minor: string }
 }
 
+/**
+ * Photos the Storefront page already shows outside the gallery, as
+ * `photoKey`s: the cover, the duo, the interludes and, when a menu shows, the
+ * menu photo. The gallery leaves these out so no photo appears twice on a
+ * page (Creative F11, ticket 233).
+ */
+/**
+ * One key per stored photo, however its address is written. A cover is kept
+ * as a bare storage path ("abc/cover.webp") or, on older listings, a full
+ * URL; gallery photos are full public URLs. Both end in the same
+ * `listing-media/` path, so that is the key.
+ */
+export function photoKey(src: string): string {
+  const at = src.indexOf('/listing-media/')
+  if (at >= 0) return src.slice(at + '/listing-media/'.length).split('?')[0]!
+  return src.split('?')[0]!.replace(/^\/+/, '')
+}
+
+export function storefrontPlacedSrcs(
+  preset: Pick<StorefrontPreset, 'duo' | 'interludes' | 'menuPhoto'>,
+  coverSrc: string | null | undefined,
+  menuShown: boolean
+): Set<string> {
+  const placed = [
+    coverSrc ?? null,
+    ...preset.duo.map((p) => p.src),
+    ...preset.interludes.map((p) => p?.src ?? null),
+    menuShown ? (preset.menuPhoto?.src ?? null) : null,
+  ]
+  return new Set(placed.filter((x): x is string => Boolean(x)).map(photoKey))
+}
+
 const photo = (file: string, alt: string): Photo => ({ src: asset(`${file}.webp`), alt })
 
 export const STOREFRONT_PRESET: StorefrontPreset = {

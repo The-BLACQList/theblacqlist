@@ -91,12 +91,13 @@ export const FEATURE_MIN_TIER: Record<GatedFeature, number> = {
   credentials: 1,
   documents: 1,
   highlights: 1,
+  // Ticket 233 (founder, 2026-11-19): Starter keeps priced menus.
+  service_menu_pricing: 1,
   // Growth+ (2)
   priority_placement: 2,
   review_criteria: 2,
   storefront: 2,
   photo_albums: 2,
-  service_menu_pricing: 2,
   events: 2,
   team_members: 2,
   editorial_eligibility: 2,

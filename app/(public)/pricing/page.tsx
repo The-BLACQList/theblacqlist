@@ -53,7 +53,7 @@ function faqItems(growthOpen: boolean, aiOn: boolean) {
   },
   {
     q: 'What does Starter add?',
-    a: `Starter adds ${starterAi}up to 10 photos, a video, your full story with no length limit, more details customers filter by, a common questions section, social links, public replies to reviews, and 30 days of views, saves, and taps.${growthOpen ? '' : ' It is the paid plan available today.'}`,
+    a: `Starter adds ${starterAi}up to 10 photos, a video, your menu or service list with prices, your full story with no length limit, more details customers filter by, a common questions section, social links, public replies to reviews, and 30 days of views, saves, and taps.${growthOpen ? '' : ' It is the paid plan available today.'}`,
   },
   ...(growthOpen
     ? [

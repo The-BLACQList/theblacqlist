@@ -89,3 +89,40 @@ test.describe('Listing chapters: an eligible listing', () => {
     await expectNoCriticalViolations(page, 'listing chapters')
   })
 })
+
+// Ticket 233 (Creative F11): no photo shows twice on a chapters page. The
+// cover, the duo, the interludes and the menu photo are left out of the
+// gallery. Images go through next/image, so compare the source url param.
+const PHOTO_SLOTS =
+  '#lp-root .s-hero-photo img, #lp-root .s-duo img, #lp-root .il img, #lp-root .s-menu img, #lp-root .glide-track img'
+
+async function photoSources(page: import('@playwright/test').Page): Promise<string[]> {
+  return page.locator(PHOTO_SLOTS).evaluateAll((imgs) =>
+    imgs.map((img) => {
+      const src = (img as HTMLImageElement).getAttribute('src') ?? ''
+      try {
+        return new URL(src, location.origin).searchParams.get('url') ?? src
+      } catch {
+        return src
+      }
+    })
+  )
+}
+
+test.describe('Listing chapters: no photo repeats (ticket 233)', () => {
+  test('the sample storefront shows each photo once', async ({ page }) => {
+    await page.goto('/example/storefront')
+    await expect(page.locator('#lp-root')).toBeVisible()
+    const srcs = await photoSources(page)
+    expect(srcs.length).toBeGreaterThan(3)
+    expect(new Set(srcs).size).toBe(srcs.length)
+  })
+
+  test('an eligible listing shows each photo once', async ({ page }) => {
+    test.skip(!ELIGIBLE, 'Set E2E_CHAPTERS_LISTING to an eligible listing path to run this')
+    await page.goto(`${ELIGIBLE}?layout=chapters`)
+    await expect(page.locator('#lp-root')).toBeVisible()
+    const srcs = await photoSources(page)
+    expect(new Set(srcs).size).toBe(srcs.length)
+  })
+})

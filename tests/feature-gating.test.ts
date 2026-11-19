@@ -94,6 +94,8 @@ describe('canAccess — the tier ladder', () => {
       'credentials',
       'documents',
       'highlights',
+      // Ticket 233: Starter keeps priced menus. The Shop stays Growth+.
+      'service_menu_pricing',
     ]
     for (const feature of starterFeatures) {
       expect(canAccess('free', feature)).toBe(false)
@@ -109,7 +111,6 @@ describe('canAccess — the tier ladder', () => {
       'review_criteria',
       'storefront',
       'photo_albums',
-      'service_menu_pricing',
       'events',
       'team_members',
       'editorial_eligibility',

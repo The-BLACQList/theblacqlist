@@ -338,15 +338,27 @@ export function VisitPanelInner({ data }: { data: ChapterData }) {
           </button>
         </div>
       )}
-      <div className="v-cols">
-        <div>
-          <h3 className="h4">Opening Hours</h3>
-          <HoursTable data={data} />
+      {data.hours.length > 0 ? (
+        <div className="v-cols">
+          <div>
+            <h3 className="h4">Opening Hours</h3>
+            <HoursTable data={data} />
+          </div>
+          <div>
+            <OverrideList data={data} />
+          </div>
         </div>
-        <div>
-          <OverrideList data={data} />
-        </div>
-      </div>
+      ) : (
+        // No weekly hours set (ticket 233): no empty table and no "No changes"
+        // line. Dated special hours still show if the owner added any.
+        data.overrides.length > 0 && (
+          <div className="v-cols" data-hours="overrides-only">
+            <div>
+              <OverrideList data={data} />
+            </div>
+          </div>
+        )
+      )}
     </>
   )
 }
@@ -1243,13 +1255,25 @@ export function Glide({
   )
 }
 
-export function Videos({ videos }: { videos: ChapterData['videos'] }) {
+/** "1 Video", "3 Videos" (ticket 233: one video used to read "1 Videos"). */
+export function videoCountLabel(n: number): string {
+  return `${n} ${n === 1 ? 'Video' : 'Videos'}`
+}
+
+export function Videos({
+  videos,
+  titled = true,
+}: {
+  videos: ChapterData['videos']
+  /** False when the chapter heading already says "Videos". */
+  titled?: boolean
+}) {
   if (!videos.length) return null
   return (
     <>
       <div className="vids-head">
-        <h3 className="h3">Videos</h3>
-        <p className="meta">{videos.length} Videos</p>
+        {titled && <h3 className="h3">{videos.length === 1 ? 'Video' : 'Videos'}</h3>}
+        <p className="meta">{videoCountLabel(videos.length)}</p>
       </div>
       <div className="vids">
         {videos.map((v) => {

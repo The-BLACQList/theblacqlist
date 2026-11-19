@@ -51,6 +51,16 @@ interface Props {
    * column exists; left out, the grid shows no album controls.
    */
   albums?: AlbumsProp
+  /**
+   * What the page still needs for the full (chapters) layout, from
+   * `chaptersMissing` (ticket 233). Left out when the type or plan can't get it.
+   */
+  fullPageMissing?: string[]
+}
+
+/** "a, b and c" */
+function listWords(items: string[]): string {
+  return items.length > 1 ? `${items.slice(0, -1).join(', ')} and ${items.at(-1)}` : (items[0] ?? '')
 }
 
 function AltTextForm({ item }: { item: MediaItem }) {
@@ -418,6 +428,7 @@ export function MediaGrid({
   hiddenIds,
   logo,
   albums,
+  fullPageMissing,
 }: Props) {
   const [cropSource, setCropSource] = useState<BannerSource | null>(null)
   const closeCrop = () => {
@@ -434,6 +445,13 @@ export function MediaGrid({
           your page and helps people using screen readers and search. Upload at <strong className="font-semibold">1920px wide or larger</strong> for
           the sharpest photos.
         </p>
+        {fullPageMissing && (
+          <p className="font-body text-sm text-charcoal mt-2" data-full-page-note="">
+            {fullPageMissing.length === 0
+              ? 'Your page has a banner photo, 4 gallery photos and a description, so it shows the full page layout.'
+              : `A banner photo, 4 gallery photos and a description turn on the full page layout. Still needed: ${listWords(fullPageMissing)}.`}
+          </p>
+        )}
       </div>
       <div className="px-5 py-4 space-y-4">
         {logo && (
