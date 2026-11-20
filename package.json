@@ -33,6 +33,7 @@
     "meta:publish": "npx tsx scripts/meta/publish-post.ts",
     "meta:exchange-token": "npx tsx scripts/meta/exchange-token.ts",
     "ops:metrics": "npx tsx scripts/ops/metrics-pull.ts",
+    "ops:kpis": "npx tsx scripts/ops/weekly-kpis.ts",
     "prepare": "husky"
   },
   "dependencies": {

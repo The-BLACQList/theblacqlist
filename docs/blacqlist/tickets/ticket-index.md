@@ -226,3 +226,4 @@
 | [231](231-listing-chapters.md) | Chapters layout on real business pages | V1.5 | P2 | 204 | In review | Founder 2026-11-18; Storefront first, thin pages keep today's page, flag off in production |
 | [234](234-signup-source.md) | Record where sign-ups come from | V1.5 | P1 | — | In review | Founder go 2026-11-20 (next-actions item 2); UTM tags + referring site, privacy and cookie policy lines |
 | [235](235-job-paid-email-admin-unpublish.md) | Payment email for paid jobs, and admin Unpublish | V1.5 | P1 | — | In review | Founder 2026-11-20 (next-actions item 6); no owner email on unpublish, refunds stay in Stripe |
+| [236](236-weekly-kpis.md) | Weekly key numbers report | V1.5 | P2 | 234 | In review | Founder 2026-11-20 (next-actions item 4); CSV per ISO week, testers and team left out, gaps print UNKNOWN |
