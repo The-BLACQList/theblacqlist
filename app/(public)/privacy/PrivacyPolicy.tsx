@@ -111,6 +111,8 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
               <li>Log data (browser type, operating system, referring URLs, pages visited, time and date of your visit). Your IP address is used transiently to deliver and secure the service and, where recorded for analytics, is stored only in irreversible hashed form. We do not retain your raw IP address</li>
               <li>Usage data (search queries, listings viewed, saves, clicks on calls-to-action), stored in anonymized form</li>
               <li>Device information (device type, screen resolution)</li>
+              {/* Ticket 234. Moves the "Last updated" date (PRIVACY_PROVIDERS_UPDATE). */}
+              <li>When you create an account, where you came from: the campaign tags in the link you followed to our site (utm_source, utm_medium and utm_campaign) and the name of the website that sent you, such as instagram.com, but not the full address of that page. We keep this with your account to learn which outreach brings people in, and we never use it for advertising</li>
               <li>Session authentication tokens managed through cookies (see our <Link href="/cookies" className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors">Cookie Policy</Link>)</li>
             </ul>
           </section>
