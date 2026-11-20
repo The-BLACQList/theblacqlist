@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import Link from 'next/link'
 import { Section } from '@/components/layout/section'
 import { PageHeader } from '@/components/layout/page-header'
-import { nextVersionSubtitle, type PolicyVersion } from '@/lib/legal/policyUpdate'
+import { COOKIE_POLICY_UPDATE, type PolicyVersion } from '@/lib/legal/policyUpdate'
 
 interface CookiePolicyProps {
   /** `current` is the June 30 text. `next` adds the October 2026 update (ticket 139). */
@@ -20,7 +20,7 @@ export function CookiePolicy({ version, notice }: CookiePolicyProps) {
       <Section variant="pale-lavender">
         <PageHeader
           title="Cookie Policy"
-          subtitle={isNext ? nextVersionSubtitle() : 'Last updated: June 30, 2026'}
+          subtitle={isNext ? `Last updated: ${COOKIE_POLICY_UPDATE.postedOnLabel}` : 'Last updated: June 30, 2026'}
         />
         {notice}
       </Section>
@@ -78,6 +78,31 @@ export function CookiePolicy({ version, notice }: CookiePolicyProps) {
                   These tokens are stored in httpOnly cookies and are not accessible to JavaScript
                   running in your browser, which reduces the risk of token theft.
                 </p>
+              </div>
+
+              {/* Ticket 234. Moves the "Last updated" date (COOKIE_POLICY_UPDATE). */}
+              <div>
+                <h3 className="font-subhead font-semibold text-brand-black mb-2">
+                  Where You Came From
+                </h3>
+                <p>
+                  When you arrive from another website, or through a link with campaign tags, we
+                  set one first-party cookie that remembers how you got here. If you create an
+                  account, we save it with the account so we can learn which outreach brings
+                  people in. It is never shared with anyone or used for advertising.
+                </p>
+                <ul className="list-disc list-inside space-y-1 pl-2 mt-2 text-sm">
+                  <li>
+                    <strong>bl_ft</strong>: the campaign tags in the link you followed (utm_source,
+                    utm_medium and utm_campaign) and the name of the website that sent you, such as
+                    instagram.com, but not the full address of that page. Set on your first such
+                    visit and kept for 30 days
+                  </li>
+                  <li>
+                    <strong>bl_src</strong>: notes that you came in through our printed flyer. Kept
+                    for 30 days
+                  </li>
+                </ul>
               </div>
 
               <div>

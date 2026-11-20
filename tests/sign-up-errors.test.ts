@@ -204,12 +204,15 @@ describe('signUpAction', () => {
       error: null,
     }
 
+    // While the coming-soon gate is up, a sign-up with no bl_src cookie counts
+    // as invited (after it, 'public': tests/signup-source.test.ts).
+    process.env.COMING_SOON_MODE = 'true'
     const state = await signUpAction(null, form())
+    delete process.env.COMING_SOON_MODE
 
     expect(state).toEqual({ success: true, email: 'someone@example.test' })
     expect(h.emailsSent).toHaveLength(1)
-    // With no bl_src cookie the account counts as invited; the event carries
-    // no email and no user id.
+    // The event carries no email and no user id.
     expect(h.events).toEqual([
       {
         event_name: 'sign_up_completed',

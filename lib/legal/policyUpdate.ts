@@ -72,7 +72,18 @@ export const PRIVACY_PROVIDERS_UPDATE = {
   // Moved to the receipt reading update (ticket 163, PR #291) and the Cue chat (ticket 169),
   // then to the owner Cue (ticket 203), then to the home city line (ticket 230, live
   // 2026-11-16; founder chose to move the date, notice email held), then to the
-  // review author names line (founder 2026-11-19).
+  // review author names line (founder 2026-11-19), then to the sign-up source
+  // line (ticket 234).
   // Change it if this text goes live on a later day.
-  postedOnLabel: 'November 19, 2026',
+  postedOnLabel: 'November 20, 2026',
+} as const
+
+/**
+ * Cookie Policy: the "Where You Came From" cookies (ticket 234), effective on
+ * posting like the Privacy Policy lines above. Before this, the page showed the
+ * October 2026 update's date (nextVersionSubtitle).
+ * Change it if this text goes live on a later day.
+ */
+export const COOKIE_POLICY_UPDATE = {
+  postedOnLabel: 'November 20, 2026',
 } as const
