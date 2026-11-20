@@ -7,6 +7,7 @@ import { resolveUserLabel, UNKNOWN_USER_LABEL } from '@/lib/admin/userLabel'
 import { createServiceClient } from '@/lib/supabase/server'
 import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
 import { EntityApprovalActions } from '@/components/admin/EntityApprovalActions'
+import { JobUnpublishAction } from '@/components/admin/JobUnpublishAction'
 import { TrustTierActions } from '@/components/admin/TrustTierActions'
 
 interface PageProps {
@@ -182,6 +183,8 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
             <h2 className="font-headline text-base text-brand-black mb-4">Admin Actions</h2>
             {listing.status === 'pending' ? (
               <EntityApprovalActions listingId={listing.id} listingName={listing.name} />
+            ) : listing.status === 'published' && listing.entity_type === 'job' ? (
+              <JobUnpublishAction listingId={listing.id} listingName={listing.name} />
             ) : (
               <div className="rounded-lg bg-[#f5f5f7] px-4 py-3">
                 <p className="font-subhead text-sm text-charcoal-soft">

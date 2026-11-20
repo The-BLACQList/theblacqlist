@@ -12,6 +12,7 @@ import {
   type SubmitForReviewState,
 } from '@/lib/actions/listings/submitListingForReview'
 import { useProfileSave } from '@/components/listings/finish/ProfileSave'
+import { SUPPORT_EMAIL } from '@/lib/email/support'
 
 interface Props {
   listingId: string
@@ -91,6 +92,10 @@ export function PublishSection({
     currentStatus === 'draft' && trustTier === 'unclaimed' && isSelfSubmittable
   const isDraftUnsubmitted =
     currentStatus === 'draft' && trustTier === 'unclaimed' && !isSelfSubmittable
+  // Ticket 235: an admin took a live job down. The owner can't move it back
+  // themselves (the listings guard refuses any move out of 'unpublished'), so
+  // the card says what happened and who to ask instead of showing nothing.
+  const isTakenDown = currentStatus === 'unpublished' && entityType === 'job'
 
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
@@ -128,7 +133,29 @@ export function PublishSection({
               </span>
             </>
           )}
+          {isTakenDown && (
+            <>
+              <EyeOff className="size-4 text-charcoal-soft shrink-0" aria-hidden="true" />
+              <span className="font-subhead text-sm font-semibold text-charcoal-soft">
+                Taken Down
+              </span>
+            </>
+          )}
         </div>
+
+        {isTakenDown && (
+          <p className="font-body text-sm text-charcoal-soft leading-relaxed">
+            Our team took this job off the job board, so it isn&apos;t visible to the public.
+            Questions? Email{' '}
+            <a
+              href={`mailto:${SUPPORT_EMAIL}`}
+              className="font-semibold text-brand-black underline underline-offset-2"
+            >
+              {SUPPORT_EMAIL}
+            </a>
+            .
+          </p>
+        )}
 
         {/* Pending — read-only message */}
         {isPending_ && (
