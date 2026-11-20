@@ -56,7 +56,10 @@ export const ANALYTICS_EVENTS = {
  *
  * Emitters: createListing.ts:314, createProduct.ts:164, createService.ts:144,
  * and signUp.ts for sign_up_completed (properties.source is 'flyer' when the
- * account came in through /join, else 'invite'; no user_id, no email).
+ * account came in through /join, else 'invite' while the coming-soon gate is up
+ * and 'public' after it; plus utm_source, utm_medium, utm_campaign and referrer
+ * (a host name) when the visitor arrived with them, ticket 234; no user_id, no
+ * email).
  */
 export const SERVER_ONLY_EVENTS = {
   LISTING_DRAFT_CREATED: 'listing_draft_created',

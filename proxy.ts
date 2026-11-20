@@ -1,6 +1,12 @@
 import { createServerClient } from '@supabase/ssr'
 import { type NextRequest, NextResponse } from 'next/server'
 
+import {
+  FIRST_TOUCH_COOKIE,
+  FIRST_TOUCH_MAX_AGE,
+  encodeFirstTouch,
+  firstTouchFrom,
+} from '@/lib/analytics/first-touch'
 import { isFeatureEnabled } from '@/lib/env'
 import { SOON_FEATURES, isSoonFeature, matchSoonFeature } from '@/lib/features/opening-soon'
 import { canonicalOpenNowQuery } from '@/lib/listings/discover-params'
@@ -99,6 +105,29 @@ export async function proxy(request: NextRequest) {
 
   const { pathname } = request.nextUrl
 
+  // ─── Where a visitor came from (ticket 234) ────────────────────────────────
+  // A signed-out page visit that arrives with campaign tags or from another site
+  // keeps that in bl_ft (lib/analytics/first-touch.ts) unless it is already
+  // set: first touch wins. signUpAction saves it with the new account. It is
+  // stamped on whatever this proxy answers, including the coming-soon bounce
+  // below, which drops the query string the tags arrived in.
+  const touch =
+    !user && request.method === 'GET' && !pathname.startsWith('/api') && !request.cookies.has(FIRST_TOUCH_COOKIE)
+      ? firstTouchFrom(request.nextUrl.searchParams, request.headers.get('referer'), request.nextUrl.hostname)
+      : null
+  const done = <T extends NextResponse>(res: T): T => {
+    if (touch) {
+      res.cookies.set(FIRST_TOUCH_COOKIE, encodeFirstTouch(touch), {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+        maxAge: FIRST_TOUCH_MAX_AGE,
+      })
+    }
+    return res
+  }
+
   // ─── Coming-soon gate ──────────────────────────────────────────────────────
   // While COMING_SOON_MODE is on, the public is redirected to /coming-soon.
   // Founder + testers bypass with ?preview=<token> (which sets a persistent
@@ -131,7 +160,7 @@ export async function proxy(request: NextRequest) {
       const url = request.nextUrl.clone()
       url.pathname = '/coming-soon'
       url.search = ''
-      return NextResponse.redirect(url)
+      return done(NextResponse.redirect(url))
     }
   }
 
@@ -159,14 +188,14 @@ export async function proxy(request: NextRequest) {
     const rewrite = NextResponse.rewrite(url, { request })
     // Keep any refreshed session cookie getUser() just set.
     supabaseResponse.cookies.getAll().forEach((cookie) => rewrite.cookies.set(cookie))
-    return rewrite
+    return done(rewrite)
   }
 
   // Once a feature opens, its cover page sends people to the real thing.
   if (pathname.startsWith('/soon/')) {
     const feature = pathname.split('/')[2] ?? ''
     if (isSoonFeature(feature) && isFeatureEnabled(SOON_FEATURES[feature].flag)) {
-      return NextResponse.redirect(new URL(SOON_FEATURES[feature].home, request.url))
+      return done(NextResponse.redirect(new URL(SOON_FEATURES[feature].home, request.url)))
     }
   }
 
@@ -176,7 +205,7 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone()
     url.pathname = '/sign-in'
     url.searchParams.set('next', pathname)
-    return NextResponse.redirect(url)
+    return done(NextResponse.redirect(url))
   }
 
   // Authenticated user visiting sign-in or sign-up → redirect to account
@@ -187,7 +216,7 @@ export async function proxy(request: NextRequest) {
   if (user && AUTH_PAGES.includes(pathname) && !request.nextUrl.searchParams.has('error')) {
     const url = request.nextUrl.clone()
     url.pathname = '/account'
-    return NextResponse.redirect(url)
+    return done(NextResponse.redirect(url))
   }
 
   // Legacy "Open now" links (`/discover?open=now`) → the canonical `open_now=1`.
@@ -198,11 +227,11 @@ export async function proxy(request: NextRequest) {
   if (pathname === '/discover') {
     const canonical = canonicalOpenNowQuery(Object.fromEntries(request.nextUrl.searchParams))
     if (canonical !== null) {
-      return NextResponse.redirect(new URL(`/discover${canonical}`, request.url))
+      return done(NextResponse.redirect(new URL(`/discover${canonical}`, request.url)))
     }
   }
 
-  return supabaseResponse
+  return done(supabaseResponse)
 }
 
 export const config = {

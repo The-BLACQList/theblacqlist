@@ -4,6 +4,7 @@ import * as Sentry from '@sentry/nextjs'
 import { cookies } from 'next/headers'
 
 import { SERVER_ONLY_EVENTS } from '@/lib/analytics/constants'
+import { FIRST_TOUCH_COOKIE, decodeFirstTouch } from '@/lib/analytics/first-touch'
 import { trackServerEvent } from '@/lib/analytics/server'
 import { createClient } from '@/lib/supabase/server'
 import { getAppUrl } from '@/lib/env'
@@ -53,11 +54,25 @@ export async function signUpAction(_prev: SignUpState, formData: FormData): Prom
   const captchaToken = formData.get(TURNSTILE_TOKEN_FIELD)?.toString() || undefined
 
   // Where the account came from. /join sets bl_src=flyer when the flyer code
-  // checks out; every other tester arrived through the emailed invite link.
-  // Only those two values are stored, so a tampered cookie cannot write an
-  // arbitrary string into user metadata or the analytics table.
-  const sourceCookie = (await cookies()).get('bl_src')?.value
-  const signupSource = sourceCookie === 'flyer' ? 'flyer' : 'invite'
+  // checks out. While the coming-soon gate is up, every other sign-up arrived
+  // through the emailed invite link; once it is down (ticket 234), the rest are
+  // 'public'. Only these fixed values are stored, so a tampered cookie cannot
+  // write an arbitrary string into user metadata or the analytics table.
+  const jar = await cookies()
+  const sourceCookie = jar.get('bl_src')?.value
+  const gated = process.env.COMING_SOON_MODE === 'true'
+  const signupSource = sourceCookie === 'flyer' ? 'flyer' : gated ? 'invite' : 'public'
+
+  // Campaign tags and the referring site from the visitor's first arrival, kept
+  // by proxy.ts in bl_ft (lib/analytics/first-touch.ts). decodeFirstTouch cleans
+  // every field again, because the browser can send anything.
+  const touch = decodeFirstTouch(jar.get(FIRST_TOUCH_COOKIE)?.value) ?? {}
+  const touchMetadata = {
+    ...(touch.utm_source && { signup_utm_source: touch.utm_source }),
+    ...(touch.utm_medium && { signup_utm_medium: touch.utm_medium }),
+    ...(touch.utm_campaign && { signup_utm_campaign: touch.utm_campaign }),
+    ...(touch.referrer && { signup_referrer: touch.referrer }),
+  }
 
   // `data` is captured, not discarded. It carries the only signal that a
   // duplicate account exists once email confirmation is on — see
@@ -75,6 +90,7 @@ export async function signUpAction(_prev: SignUpState, formData: FormData): Prom
         onboarding_role: role,
         onboarding_intent: onboardingIntent,
         signup_source: signupSource,
+        ...touchMetadata,
       },
     },
   })
@@ -116,12 +132,12 @@ export async function signUpAction(_prev: SignUpState, formData: FormData): Prom
     react: WelcomeEmail({ displayName }),
   })
 
-  // Counts flyer versus invited sign-ups for the Go/No-Go. Deliberately no
-  // user_id and no email: the account is unconfirmed at this point and the
-  // count is all the question needs.
+  // Counts sign-ups by where they came from, for the Go/No-Go and the weekly
+  // numbers. Deliberately no user_id and no email: the account is unconfirmed
+  // at this point and the count is all the question needs.
   trackServerEvent({
     event_name: SERVER_ONLY_EVENTS.SIGN_UP_COMPLETED,
-    properties: { source: signupSource, role },
+    properties: { source: signupSource, role, ...touch },
   })
 
   return { success: true, email }
