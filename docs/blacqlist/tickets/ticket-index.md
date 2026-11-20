@@ -224,3 +224,4 @@
 | [229](229-marketplace-staging-rehearsal-go-live.md) | Staging rehearsal and the marketplace go-live gate | V1.5 | P1 | 210 to 228 | Blocked | No real money until CPA + attorney sign off |
 | [230](230-onboarding-city-typeahead.md) | Type any US city in onboarding | V1.5 | P2 | — | In review | Founder 2026-11-15; our own Census list, Use My Location; migration at GATE-DATA |
 | [231](231-listing-chapters.md) | Chapters layout on real business pages | V1.5 | P2 | 204 | In review | Founder 2026-11-18; Storefront first, thin pages keep today's page, flag off in production |
+| [235](235-job-paid-email-admin-unpublish.md) | Payment email for paid jobs, and admin Unpublish | V1.5 | P1 | — | In review | Founder 2026-11-20 (next-actions item 6); no owner email on unpublish, refunds stay in Stripe |

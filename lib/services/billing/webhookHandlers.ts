@@ -34,6 +34,7 @@ import { buildEntityUrl } from '@/lib/listings/url'
 import { writeSystemAuditLog } from '@/lib/audit/system'
 import { sendEmail } from '@/lib/email/resend'
 import { PaymentFailedEmail } from '@/lib/email/templates/payment-failed'
+import { JobPostingPaidEmail, jobPostingPaidSubject } from '@/lib/email/templates/job-posting-paid'
 import type { PlanSlug } from '@/lib/stripe/plans'
 import { jobPostingExpiryFrom } from '@/lib/stripe/jobPostings'
 import { transitionToPendingReview } from '@/lib/listings/submitForReview'
@@ -547,7 +548,7 @@ export async function handleCheckoutSessionCompleted(
   // published the listing must not drag it back to `pending`.
   const { data: listing } = await supabase
     .from('listings')
-    .select('status')
+    .select('status, name')
     .eq('id', listingId)
     .eq('owner_user_id', userId)
     .maybeSingle()
@@ -571,4 +572,60 @@ export async function handleCheckoutSessionCompleted(
       stripe_checkout_session_id: session.id,
     },
   })
+
+  // Ticket 235: tell the poster the money arrived and the role is in review.
+  // Sent only on the draft → pending step above, so a redelivery (listing no
+  // longer a draft) never sends it twice. The email is a courtesy: nothing
+  // about it may fail the webhook, or Stripe would retry a fulfilled payment.
+  await sendJobPostingPaidEmail(supabase, session, {
+    listingId,
+    userId,
+    jobTitle: listing.name ?? 'your job posting',
+  })
+}
+
+/** Stripe's charged amount as the poster saw it, e.g. "$9.99". Null when nothing was charged. */
+export function formatChargedAmount(
+  amountCents: number | null | undefined,
+  currency: string | null | undefined
+): string | null {
+  if (!amountCents || amountCents <= 0) return null
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: (currency ?? 'usd').toUpperCase(),
+    }).format(amountCents / 100)
+  } catch {
+    return null
+  }
+}
+
+async function sendJobPostingPaidEmail(
+  supabase: ServiceClient,
+  session: Stripe.Checkout.Session,
+  { listingId, userId, jobTitle }: { listingId: string; userId: string; jobTitle: string }
+): Promise<void> {
+  try {
+    // The email Stripe collected at checkout first; else the account email.
+    let to = session.customer_details?.email ?? null
+    if (!to) {
+      const { data: userRes } = await supabase.auth.admin.getUserById(userId)
+      to = userRes.user?.email ?? null
+    }
+    if (!to) return
+
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://theblacqlist.com'
+    await sendEmail({
+      to,
+      subject: jobPostingPaidSubject(jobTitle),
+      react: JobPostingPaidEmail({
+        jobTitle,
+        amount: formatChargedAmount(session.amount_total, session.currency),
+        roleUrl: `${siteUrl}/dashboard/pages/${listingId}/posted`,
+        siteUrl,
+      }),
+    })
+  } catch (err) {
+    console.error('[billing] job posting paid email not sent', err)
+  }
 }
