@@ -1,11 +1,16 @@
 'use server'
 
 import { headers } from 'next/headers'
+import { after } from 'next/server'
 import { z } from 'zod'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/security/rate-limit'
 import { PROBLEM_REPORT_MAX, PROBLEM_REPORT_MIN } from '@/lib/feedback/problem-report'
+import { getAppUrl } from '@/lib/env'
+import { sendEmail } from '@/lib/email/resend'
+import { SUPPORT_EMAIL } from '@/lib/email/support'
+import { ProblemReportNotificationEmail } from '@/lib/email/templates/problem-report-notification'
 
 // The "Report a problem" button (components/feedback/ReportProblemButton.tsx).
 // One text box on every signed-in page; the row lands in `problem_reports`
@@ -94,5 +99,35 @@ export async function submitProblemReportAction(
 
   if (error) return { error: 'Failed to send your report. Please try again.' }
 
+  // One email per report to the support inbox (user feedback plan, founder
+  // decision 2026-11-19), so a report is seen without opening /admin/feedback.
+  // After the response: the row is the record, the email is only the nudge,
+  // and sendEmail never throws. Reply-To is the reporter so answering the
+  // notice writes straight back to them.
+  const pagePath = parsed.data.page_path
+  const reportBody = parsed.data.body
+  const role = roleRow?.role ?? null
+  const reporterEmail = user.email ?? null
+  after(() =>
+    sendEmail({
+      to: SUPPORT_EMAIL,
+      subject: `New Problem Report: ${subjectPath(pagePath)}`,
+      react: ProblemReportNotificationEmail({
+        pagePath,
+        body: reportBody,
+        role,
+        reporterEmail,
+        adminUrl: `${getAppUrl()}/admin/feedback`,
+      }),
+      ...(reporterEmail ? { replyTo: reporterEmail } : {}),
+    })
+  )
+
   return { success: true }
+}
+
+/** The page path, safe and short enough for a subject line. */
+function subjectPath(p: string): string {
+  const clean = p.replace(/[\u0000-\u001f\u007f]/g, '')
+  return clean.length > 80 ? `${clean.slice(0, 79)}…` : clean
 }

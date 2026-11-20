@@ -6,6 +6,7 @@ import { z } from 'zod'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAdminSession, writeAuditLog } from '@/lib/admin/guard'
 import { sendEmail } from '@/lib/email/resend'
+import { SUPPORT_EMAIL } from '@/lib/email/support'
 import { BusinessInviteEmail } from '@/lib/email/templates/business-invite'
 import { normalizeBusinessName } from '@/lib/spend/business-name'
 import { BUSINESS_INVITE_SUBJECT } from '@/lib/spend/unlisted'
@@ -78,8 +79,9 @@ export async function sendBusinessInviteAction(
     to: email.data,
     subject: BUSINESS_INVITE_SUBJECT,
     react: BusinessInviteEmail({ businessName: business.name, siteUrl: siteUrl() }),
-    // One-to-one from the founder: a reply, STOP included, reaches them.
-    replyTo: admin.user.email ?? undefined,
+    // A reply, STOP included, lands in the one support inbox the founder
+    // works from (user feedback plan, 2026-11-19), not a personal mailbox.
+    replyTo: SUPPORT_EMAIL,
   })
 
   const emailedAt = new Date().toISOString()

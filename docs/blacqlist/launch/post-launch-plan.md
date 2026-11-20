@@ -88,8 +88,8 @@ Every business day for the first 2 weeks:
 
 ### Feedback Intake
 
-- `feedback@theblacqlist.com` — monitored daily by Product Lead
-- Slack `#user-feedback` — all team members route tester feedback here
+- `support@theblacqlist.com`: the one support inbox, read daily by the founder
+- Report a Problem form: each report is emailed to support@ and queued at `/admin/feedback`
 - See `user-feedback-plan.md` for triage SLAs and response templates
 
 ### Week 1 Goal — All P0/P1 Bugs from Testers Resolved
@@ -327,7 +327,7 @@ ORDER BY l.created_at ASC;
 >
 > To claim your page: [claim URL]
 >
-> Questions? Reply to this email or visit [feedback@theblacqlist.com].
+> Questions? Reply to this email or write to [support@theblacqlist.com].
 >
 > — The BLACQList Team
 

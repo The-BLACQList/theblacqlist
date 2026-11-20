@@ -1,258 +1,194 @@
-# User Feedback Plan — The BLACQList
+# User Feedback Plan: The BLACQList
 
-**Date:** 2026-05-11
-**Status:** Active — operational from launch day
-**Owner:** Product Lead
-**References:** `post-launch-plan.md`, `rollback-plan.md`, `next-90-days-roadmap.md`
+**Updated:** 2026-11-19 (replaces the 2026-05-11 team version)
+**Status:** Active from launch day
+**Owner:** Chalece (founder). One person holds every role in this plan.
+**References:** `support-playbook.md`, `on-call.md`, `rollback-plan.md`, `post-launch-plan.md`
 
-This document covers how feedback is collected, categorized, triaged, and routed from launch day forward. Every team member is responsible for routing feedback to the right channel — not for deciding what to do with it.
-
----
-
-## Section 1 — Feedback Channels
-
-| Channel                           | Purpose                                               | Monitored by     | Frequency                       |
-| --------------------------------- | ----------------------------------------------------- | ---------------- | ------------------------------- |
-| `feedback@theblacqlist.com`       | Primary public feedback email                         | Product Lead     | Daily                           |
-| Reply to the invite email         | Tester week feedback: testers reply to the invite they were sent, from the founder's mailbox | Founder          | Daily during tester week        |
-| Soft launch tester channel        | Direct channel with soft launch testers               | Product Lead     | Active during first 2 weeks     |
-| Social mentions (`@theblacqlist`) | Twitter/X, Instagram, Facebook mentions               | Product Lead     | Manual, daily for first 30 days |
-| In-app feedback form              | Dedicated `/feedback` form if built                   | Product Lead     | Daily (same as email)           |
-
-**If the in-app feedback form is not yet built:** All in-app feedback CTAs should link to `mailto:feedback@theblacqlist.com` until the form exists.
-
-**Social mentions note:** Do not respond to social mentions with specific support or bug triage. For any bug report on social: reply publicly with "Thanks for letting us know — we'd love more details at feedback@theblacqlist.com" and route to the internal channel.
+This plan is written for one operator. There are no named roles, no Slack and no tester channel. Every piece of feedback ends up in one inbox, gets one reply clock, and is swept once a week.
 
 ---
 
-## Section 2 — Feedback Categories
+## 1. One Inbox
 
-Every piece of feedback must be assigned exactly one category before it enters the triage queue.
+**support@theblacqlist.com** is the only place feedback is answered from.
 
-| Category              | Definition                                                                       | Owner        | Default route                                     |
-| --------------------- | -------------------------------------------------------------------------------- | ------------ | ------------------------------------------------- |
-| **Bug**               | Something is broken, wrong, or not working as designed                           | Tech Lead    | → Bug triage (Section 3)                          |
-| **UX issue**          | Flow confusion, missing label, unclear state, confusing behavior (not broken)    | Product Lead | → Backlog ticket or next sprint                   |
-| **Data quality**      | Incorrect info on a listing: wrong hours, wrong address, wrong phone, wrong name | Admin        | → Admin correction queue + business outreach      |
-| **Feature request**   | A capability the user wants that does not currently exist                        | Product Lead | → reply to invite email → monthly review          |
-| **Claim issue**       | Problem with submitting a claim, claim status, or claim result                   | Admin        | → Claim queue manual review at `/admin/claims`    |
-| **Accessibility**     | Screen reader, keyboard navigation, contrast, or label issue                     | Tech Lead    | → Accessibility ticket (link to ticket 087 group) |
-| **Praise / positive** | Positive feedback about the product                                              | Product Lead | → Log in monthly summary; share with team         |
-| **Unclear**           | Cannot determine category from the submission                                    | Product Lead | → Reply to gather more detail before categorizing |
+| Channel                 | How it reaches support@                                                                                                                                                                        | When to check                                                 |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| Email                   | People write to support@ directly. The Contact page lists it under Questions and Feedback.                                                                                                     | Daily                                                         |
+| Report a Problem form   | Signed-in users only. Each report is saved to the queue at `/admin/feedback` and emailed to support@. Replying to that email answers the reporter.                                             | Daily (arrives as email)                                      |
+| Replies to site emails  | Every site email is sent from noreply@ with Reply-To set to support@ (claims, receipts, billing, verification). Booking requests are the exception: the business's reply goes to the customer. | Daily (arrives as email)                                      |
+| Business invite replies | The unlisted-business invite sets Reply-To to support@, so replies, including STOP, land here.                                                                                                 | Daily (arrives as email)                                      |
+| Social mentions         | Not automatic. Check @theblacqlist mentions by hand and move anything that needs an answer to email.                                                                                           | Daily for the first 30 days (Ops recommendation), then weekly |
 
----
+**On social:** do not troubleshoot in public. Reply with "Thanks for letting us know. Could you email the details to support@theblacqlist.com so we can look into it?" and handle it from the inbox.
 
-## Section 3 — Triage SLA
-
-These SLAs apply from the moment feedback enters any monitored channel.
-
-| Category                                     | Response SLA                              | Resolution SLA                    |
-| -------------------------------------------- | ----------------------------------------- | --------------------------------- |
-| P0 bug (site down, auth broken, data breach) | Same day → escalate to `rollback-plan.md` | Same day                          |
-| P1 bug (critical flow broken)                | 24 hours                                  | 48 hours                          |
-| P2 bug (non-critical feature broken)         | 72 hours                                  | Next deploy                       |
-| P3 bug / UX issue                            | 1 week acknowledgement                    | Next sprint                       |
-| Data quality issue                           | 24 hours (admin action)                   | N/A — correction made immediately |
-| Feature request                              | 7 days acknowledgement                    | Monthly product review            |
-| Claim issue                                  | 24 hours                                  | 48 hours                          |
-| Accessibility issue                          | 48 hours                                  | Next sprint (or sooner if severe) |
-
-**Escalation rule:** If any P1 bug goes unresolved for 36 hours, Tech Lead notifies Product Lead and both agree on next action (hotfix, rollback, or accept and timeline).
+Other addresses on the Contact page (business@, press@, privacy@) are separate and keep their own reply times (Section 3).
 
 ---
 
-## Section 4 — Response Templates
+## 2. Categories
 
-Use these templates for all first responses. Personalize where indicated by `[brackets]`.
+Tag each item with one category when you first read it. There is no owner column: the owner is always you.
 
----
-
-**Bug acknowledgement (P0/P1):**
-
-> Hi [Name or "there"],
->
-> Thank you for reporting this. We've logged it as a priority fix and are actively investigating.
->
-> We'll follow up within [24 hours / same day] with an update.
->
-> — The BLACQList Team
-
----
-
-**Bug acknowledgement (P2/P3):**
-
-> Hi [Name or "there"],
->
-> Thank you — we've logged this issue and it's in our queue for an upcoming fix.
->
-> — The BLACQList Team
+| Category            | What it means                                                                   | Where it goes                                                                 |
+| ------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **Urgent Problem**  | Site down, cannot sign in, a payment problem, or data shown to the wrong person | Same day. Use `rollback-plan.md` or `incident-response-runbook.md` if needed. |
+| **Bug**             | Something is broken but people can still use the site                           | A ticket, fixed in the next batch                                             |
+| **Confusing**       | Not broken, but people get lost (labels, steps, empty states)                   | Weekly sweep, ticket if the fix is clear                                      |
+| **Listing Fix**     | Wrong hours, address, phone or name on a listing                                | Fix in `/admin/listings`, or ask the business                                 |
+| **Claim**           | Trouble submitting a claim, or a question about one                             | `/admin/claims`                                                               |
+| **Feature Request** | Something the site does not do yet                                              | Feature list, reviewed monthly                                                |
+| **Accessibility**   | Screen reader, keyboard, contrast or label problems                             | Treated as a Bug, or as Urgent if someone is locked out                       |
+| **Praise**          | Kind words                                                                      | Saved for the monthly summary                                                 |
+| **Unclear**         | Not enough detail to tell                                                       | Reply asking for more (template in Section 4)                                 |
 
 ---
 
-**Feature request acknowledgement:**
+## 3. Reply Clocks
 
-> Hi [Name or "there"],
->
-> Thank you for the suggestion — we've added it to our product review list.
->
-> We review feature requests monthly and will keep this in mind as we plan upcoming releases. We'll reach out if it becomes part of a future update.
->
-> — The BLACQList Team
+Two clocks, measured from when the message arrives.
+
+| What                                                                                                | First reply            |
+| --------------------------------------------------------------------------------------------------- | ---------------------- |
+| **Urgent:** site down, sign-in, payment or data problems                                            | Same day               |
+| **Everything else:** bugs, confusing steps, listing fixes, claim questions, feature requests, press | Within 2 business days |
+
+A first reply is a real person saying "got it" and what happens next. It does not have to be the fix.
+
+**What the public sees.** The Contact page promises:
+
+| Row                    | Promise                  |
+| ---------------------- | ------------------------ |
+| Questions and Feedback | Within 2 Business Days   |
+| Business Claims        | Within 3–5 Business Days |
+| Press Requests         | Within 2 Business Days   |
+| Privacy Requests       | Within 30 Days           |
+
+"Same day" for urgent problems is an internal target, not a public promise.
+
+**Claims.** The public promise is a decision within **3–5 business days** (D-014). It matches the claim form, the claim page and the Claim Submitted email. Internally, aim to review each claim within 48 hours during business hours (`support-playbook.md`, `on-call.md`); this is the target launch gate M5 checks. Beating the public promise is fine. Missing it is not.
 
 ---
 
-**Data quality report acknowledgement:**
+## 4. Reply Templates
 
-> Hi [Name or "there"],
+Change the bracketed parts. Sign with your first name: a person, not a team.
+
+**Urgent problem**
+
+> Hi [name],
 >
-> Thank you for letting us know. We're reaching out to the business to confirm the correct information and will update the listing as soon as we hear back.
+> Thank you for telling us. I'm looking into it now and will write back today with an update.
 >
-> — The BLACQList Team
+> Chalece, The BLACQList
 
----
+**Bug or confusing step**
 
-**Unclear feedback — request for more detail:**
-
-> Hi [Name or "there"],
+> Hi [name],
 >
-> Thank you for reaching out. To help us look into this, could you share:
+> Thank you for reporting this. I've logged it and it's on the list for an upcoming fix. I'll let you know when it's done.
+>
+> Chalece, The BLACQList
+
+**Feature request**
+
+> Hi [name],
+>
+> Thank you for the idea. I've added it to the list I review every month, and I'll reach out if it makes it into an update.
+>
+> Chalece, The BLACQList
+
+**Listing fix**
+
+> Hi [name],
+>
+> Thank you for letting us know. I'm checking with the business and will update the listing as soon as I confirm the right details.
+>
+> Chalece, The BLACQList
+
+**Claim question**
+
+> Hi [name],
+>
+> Thank you for reaching out about your claim. I found your submission, and you'll have a decision within 3–5 business days. We'll email [their email] as soon as it's made.
+>
+> Chalece, The BLACQList
+
+**Need more detail**
+
+> Hi [name],
+>
+> Thank you for writing in. So I can look into this, could you tell me:
 >
 > - What you were trying to do
-> - What page or step you were on
-> - What you saw (an error message, a blank screen, something unexpected)
+> - Which page or step you were on
+> - What you saw (an error message, a blank screen, something else)
 >
-> — The BLACQList Team
+> Chalece, The BLACQList
 
 ---
 
-**Claim issue acknowledgement:**
+## 5. Routine
 
-> Hi [Name or "there"],
->
-> Thank you for reaching out about your claim. We've located your submission and will review it within 48 hours.
->
-> You'll receive an email at [their email] once a decision is made.
->
-> — The BLACQList Team
+### Daily (5 minutes)
 
----
+- Read support@. Answer anything Urgent the same day.
+- Tag the rest with a category. Answer what you can in under two minutes; the rest waits for the sweep, inside the 2 business day clock.
+- First 30 days: check social mentions.
 
-## Section 5 — Feedback → Ticket Pipeline
+### Weekly Sweep (30 minutes, same day each week)
 
-Not every piece of feedback becomes a ticket. This pipeline determines what does.
+1. Open `/admin/feedback` and set a status on every new report (triaged, fixed or dismissed).
+2. Check that every email from the week has had a first reply.
+3. Turn Bugs and clear Confusing fixes into tickets in `docs/blacqlist/tickets/` (title: `[Bug] short description`). Several small ones can share one "minor fixes" ticket.
+4. Fix or chase each Listing Fix: correct it in `/admin/listings`, or ask the business. If the business hasn't answered in 7 days and the detail is clearly wrong, flag the listing for review with a note.
+5. Note anything that came up more than once.
 
-### Step 1 — Daily Triage (15 minutes, in standup)
+### Monthly Feature Review (first week of the month)
 
-- Product Lead reviews all feedback received since last standup
-- Assigns a category (Section 2) and severity (P0–P3) to each item
-- Routes to the appropriate owner
-- Sends or delegates the response to the reporter
-
-### Step 2 — Bug Conversion
-
-| If     | Then                                                                                                         |
-| ------ | ------------------------------------------------------------------------------------------------------------ |
-| P0 bug | Create a ticket immediately with: symptom, reproduction steps, affected users, assigned engineer. Begin fix. |
-| P1 bug | Create a ticket within 4 hours. Add to top of current sprint.                                                |
-| P2 bug | Create a ticket. Add to backlog. Include in next deploy planning.                                            |
-| P3 bug | Add to backlog. Does not require a dedicated ticket — can be grouped as "minor fixes" in a sprint.           |
-
-**Ticket format:** Title: `[Bug] [P0/P1/P2] [short description]`. Use the existing ticket template from the `docs/blacqlist/tickets/` format.
-
-### Step 3 — UX Issue Conversion
-
-1. Product Lead reviews all UX issues weekly (Wednesdays)
-2. For confirmed issues with a clear fix: write a ticket and add to next sprint
-3. For issues requiring more investigation: schedule a 30-minute design review before writing a ticket
-4. For unclear issues: request a screen recording or more detail before triaging
-
-### Step 4 — Feature Request Review (Monthly)
-
-First Monday of each month, Product Lead reviews all tagged feature requests:
-
-1. Group similar requests (e.g., 5 users asked for the same thing)
-2. Assign a phase: `beta`, `v1`, `v2`, `do-not-build`, or `needs-research`
-3. For high-volume requests (5+ reports): write a product brief or add to the roadmap
-4. For low-volume requests: add to the `later` section of the roadmap with a note
-5. For do-not-build decisions: document the reason (scope creep, vision misalignment, complexity)
-
-### Step 5 — Data Quality Action
-
-Data quality issues do not create tickets — they create admin actions:
-
-1. Admin opens `/admin/listings` and finds the flagged listing
-2. Corrects the information directly from the admin edit view if data is known
-3. If data is uncertain: sends a data quality inquiry to the business using the business outreach process from `post-launch-plan.md`
-4. Marks the listing as "outreach-sent" in the tracking spreadsheet
-5. If no response in 7 days and the data is clearly incorrect: flag the listing as "needs-review" and add a note
+1. Group similar feature requests and count them.
+2. Mark each group: build soon, later, needs research, or not building (with one line on why).
+3. Anything asked for 5 or more times gets a short brief or a roadmap line.
 
 ---
 
-## Section 6 — Day 30 Feedback Summary
+## 6. Day 30 Summary
 
-At the end of Day 30, Product Lead produces a structured feedback summary for the team:
-
-### Summary Template
+Fill this in at Day 30. Counts can come from the support@ inbox and `/admin/feedback`.
 
 ```
-## Post-Launch Feedback Summary — Day 30
-**Period:** [Launch date] to [Day 30 date]
-**Total feedback items received:** [N]
+## Feedback Summary: Day 30
+Period: [launch date] to [Day 30 date]
+Total items: [N]
 
-### By channel
-- Email (feedback@theblacqlist.com): [N]
-- Reply to invite email (tester week): [N]
-- Soft launch tester channel: [N]
-- Social mentions: [N]
+By channel: email [N], Report a Problem [N], replies to site emails [N], invite replies [N], social [N]
+By category: urgent [N], bugs [N], confusing [N], listing fixes [N], claims [N], features [N], accessibility [N], praise [N]
 
-### By category
-- Bugs: [N] ([X] P0, [X] P1, [X] P2, [X] P3)
-- UX issues: [N]
-- Data quality reports: [N]
-- Feature requests: [N]
-- Claim issues: [N]
-- Accessibility: [N]
-- Praise: [N]
+Reply clocks met: urgent same day [X of N], others within 2 business days [X of N]
+Claims decided within 3–5 business days: [X of N]
 
-### Bug resolution status
-- P0 bugs: [N] reported / [N] resolved / [N] open
-- P1 bugs: [N] reported / [N] resolved / [N] open
-- P2 bugs: [N] reported / [N] resolved / [N] open
-
-### Top 3 UX issues (by report volume)
-1. [Description] — [N] reports — Status: [ticket created / investigating / resolved]
-2. [Description] — [N] reports
-3. [Description] — [N] reports
-
-### Top 5 feature requests (by report volume)
-1. [Description] — [N] requests — Phase: [beta / v1 / v2 / do-not-build]
-2. [Description] — [N] requests
-3. [Description] — [N] requests
-4. [Description] — [N] requests
-5. [Description] — [N] requests
-
-### Data quality corrections
-- Listings corrected: [N]
-- Listings awaiting business response: [N]
-
-### Tester satisfaction signal
-[Summary of qualitative feedback from the soft launch tester group — 2–3 sentences]
-
-### Key takeaways for next sprint
-1. [Takeaway]
-2. [Takeaway]
-3. [Takeaway]
+Top 3 problems (by count): 1. [...] 2. [...] 3. [...]
+Top 3 feature requests (by count): 1. [...] 2. [...] 3. [...]
+Next month's focus: [one or two lines]
 ```
 
 ---
 
-## Section 7 — Feedback Process Review
+## 7. Day 60 Check
 
-At the end of Month 2 (Day 60), review this plan:
+At Day 60, ask:
 
-- Is the `feedback@theblacqlist.com` email being monitored consistently?
-- Are P1 bugs being resolved within the SLA?
-- Are feature requests being reviewed monthly?
-- Is the triage taking more than 15 minutes per day? If yes, consider routing or tooling changes.
-- Is an in-app feedback form needed? If yes, add a ticket for it.
-- Should feedback be routed to a dedicated tool (Linear, Notion, Canny)? Evaluate at Month 2 based on volume.
+- Is support@ read every day, and are both reply clocks being met?
+- Is the weekly sweep taking more than 30 minutes? If yes, what is filling it?
+- Are claims decided within 3–5 business days?
+- Is daily social checking still worth it, or can it move to weekly?
+- Is volume high enough to need a tool (a help desk or shared inbox)? Decide on actual numbers.
+
+---
+
+## 8. Open Items
+
+- **support@ must receive mail.** A test on 2026-11-19 bounced ("address not found"). Chalece is adding support@ as an alias in Google Workspace; send a new test to confirm it before this plan goes live.
+- **Replies from support@ may land in spam.** The root SPF record for theblacqlist.com does not include Google (`include:_spf.google.com`) and there is no Google DKIM key. Mail sent from Gmail as support@ can fail checks. Fix in Google Admin (turn on DKIM) and DNS (add Google to SPF). This is a founder DNS task, separate from this plan.
+- **Other Contact page addresses** (business@, press@, privacy@) and hello@ (still on the Pricing page FAQ) have not been tested.

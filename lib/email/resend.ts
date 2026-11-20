@@ -3,6 +3,7 @@ import * as Sentry from '@sentry/nextjs'
 import type { ReactElement } from 'react'
 
 import { IS_PRODUCTION } from '@/lib/env'
+import { SUPPORT_EMAIL } from '@/lib/email/support'
 
 // Lazy: the Resend SDK throws in its constructor when the key is undefined,
 // which used to fail `next build` at import time. Constructed on first send.
@@ -36,7 +37,11 @@ export async function sendEmail({
   to: string | string[]
   subject: string
   react: ReactElement
-  /** Where replies go. Unset means the From address (noreply). */
+  /**
+   * Where replies go. Unset means the support inbox: mail comes from noreply@,
+   * but a person who hits Reply should still reach someone (user feedback
+   * plan, 2026-11-19). Booking requests pass the requester's address instead.
+   */
   replyTo?: string
 }): Promise<void> {
   if (!process.env.RESEND_API_KEY) {
@@ -64,7 +69,7 @@ export async function sendEmail({
       to,
       subject,
       react,
-      ...(replyTo ? { replyTo } : {}),
+      replyTo: replyTo ?? SUPPORT_EMAIL,
     })
     if (error) {
       console.error('[email] Send rejected:', subject, '→', to, error)
