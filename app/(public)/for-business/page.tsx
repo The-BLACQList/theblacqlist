@@ -33,8 +33,10 @@ type Row = { title: string; body: string; plan: 'free' | 'starter'; flag?: 'onbo
 // `listing_video`, `faqs`, `social_links`, `review_response`, `analytics`. The
 // AI rows render only while their flag is on: the /add-business draft is
 // FEATURE_AI_ONBOARDING and free; Explain My Numbers and the Write buttons are
-// FEATURE_AI_BETA, Starter and up, counted against aiQuota. Each AI row says
-// that AI writes it. The Collective is out: it is gated (FEATURE_COLLECTIVE_OPEN).
+// FEATURE_AI_BETA, Starter and up, counted against aiQuota. The AI rows name
+// Cue (founder 2026-11-21: no AI line repeated in every row), and the note under
+// the list says Cue is our AI assistant whenever a Cue row shows. The
+// Collective is out: it is gated (FEATURE_COLLECTIVE_OPEN).
 const ROWS: Row[] = [
   {
     title: 'Hours and How to Reach You',
@@ -48,7 +50,7 @@ const ROWS: Row[] = [
   },
   {
     title: 'Start from a Draft',
-    body: 'A free first draft when you add your business, written by AI. Change any of it.',
+    body: 'Cue writes your first draft free when you add your business. Change any of it.',
     plan: 'free',
     flag: 'onboarding',
   },
@@ -69,13 +71,13 @@ const ROWS: Row[] = [
   },
   {
     title: 'Explain My Numbers',
-    body: 'A plain read of what your numbers show. AI writes it.',
+    body: 'Ask Cue what your numbers mean, and get a plain answer.',
     plan: 'starter',
     flag: 'beta',
   },
   {
     title: 'More Drafts for Your Page',
-    body: 'About text, search title and summary, and Instagram captions. AI writes them, and you edit them.',
+    body: 'Cue drafts your about text, search summary, and Instagram captions. You make the final call.',
     plan: 'starter',
     flag: 'beta',
   },
@@ -226,7 +228,7 @@ export default async function ForBusinessPage() {
         </div>
       </section>
 
-      {/* What a Page can do: Free beside Starter and up */}
+      {/* What a Page can do: one even grid, each feature tagged with its plan */}
       <Reveal>
         <section aria-labelledby="gets-h" className="bg-white py-12 md:py-16">
           <div className={WRAP}>
@@ -238,24 +240,33 @@ export default async function ForBusinessPage() {
               Here&apos;s what&apos;s free, and what Starter adds.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 md:items-start gap-4 md:gap-6 mt-8">
-              <div className="rounded-2xl bg-off-white p-6 md:p-8">
-                <h3 className="font-headline text-[24px] text-brand-black">Free</h3>
-                <FeatureList rows={rows.filter((r) => r.plan === 'free')} />
-              </div>
-              <div className="rounded-2xl bg-deep-bg p-6 md:p-8">
-                <h3 className="font-headline text-[24px] text-white">Starter and Up</h3>
-                <p className="font-body text-[15px] text-off-white/80 mt-1">
-                  Everything in Free, plus:
-                </p>
-                <FeatureList rows={rows.filter((r) => r.plan === 'starter')} dark />
-                {aiBetaOn && (
-                  <p className="font-body text-sm text-off-white/75 mt-5">
-                    Your plan sets how many drafts you get every 30 days.
+            {/* One even grid, no boxes: every cell is the same width and each
+                row shares a height, whichever rows the flags turn on. The
+                plan tag on each cell says who gets it. */}
+            <ul className="mt-8 border-b border-stone-300">
+              {rows.map((row) => (
+                <li
+                  key={row.title}
+                  className="border-t border-stone-300 py-5 md:py-6 md:grid md:grid-cols-[160px_minmax(0,1fr)_minmax(0,1.3fr)] md:gap-x-8 md:items-baseline"
+                >
+                  <p
+                    className={`font-subhead text-sm font-bold uppercase tracking-[0.1em] ${row.plan === 'free' ? 'text-charcoal' : 'text-amber'}`}
+                  >
+                    {row.plan === 'free' ? 'Free' : 'Starter and Up'}
                   </p>
-                )}
-              </div>
-            </div>
+                  <h3 className="font-headline text-[22px] leading-snug text-brand-black mt-2 md:mt-0">
+                    {row.title}
+                  </h3>
+                  <p className="font-body text-[15px] text-charcoal mt-1 md:mt-0">{row.body}</p>
+                </li>
+              ))}
+            </ul>
+            {(aiOnboardingOn || aiBetaOn) && (
+              <p className="font-body text-sm text-charcoal mt-5">
+                Cue is our AI assistant.
+                {aiBetaOn && ' Your plan sets how many drafts Cue writes every 30 days.'}
+              </p>
+            )}
           </div>
         </section>
       </Reveal>
@@ -399,50 +410,5 @@ export default async function ForBusinessPage() {
         </section>
       </Reveal>
     </div>
-  )
-}
-
-function FeatureList({ rows, dark = false }: { rows: Row[]; dark?: boolean }) {
-  return (
-    <ul className="mt-5 grid gap-4">
-      {rows.map((row) => (
-        <li key={row.title} className="flex gap-3">
-          <Tick dark={dark} />
-          <div>
-            <p
-              className={`font-subhead text-[15px] font-semibold ${dark ? 'text-white' : 'text-brand-black'}`}
-            >
-              {row.title}
-            </p>
-            <p
-              className={`font-body text-[15px] mt-0.5 ${dark ? 'text-off-white/80' : 'text-charcoal'}`}
-            >
-              {row.body}
-            </p>
-          </div>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
-function Tick({ dark }: { dark: boolean }) {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 18 18"
-      aria-hidden="true"
-      focusable="false"
-      className="flex-none mt-[3px]"
-    >
-      <path
-        d="M3.5 9.5l3.6 3.4L14.5 5"
-        fill="none"
-        stroke={dark ? '#c4a065' : '#1d1c1d'}
-        strokeWidth="1.9"
-        strokeLinecap="square"
-      />
-    </svg>
   )
 }

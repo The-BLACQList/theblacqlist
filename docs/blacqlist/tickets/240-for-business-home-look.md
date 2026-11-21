@@ -12,7 +12,8 @@
   - The site's own fonts: Jost for headlines, Inter for body text.
   - `Reveal` on each band.
 - The page's own stylesheet (`for-business.css`) is gone. No section numbers remain.
-- The compare table is now two cards: **Free**, and **Starter and Up** with "Everything in Free, plus:". The gates and the AI flags are unchanged.
+- The compare table is now one full-width row per feature: plan label (Free / Starter and Up), title, one line of text. Even at any row count (founder 2026-11-21: no uneven boxes). The gates and the AI flags are unchanged.
+- The AI rows name Cue instead of saying "AI writes it" in each row (founder 2026-11-21). One note under the list, "Cue is our AI assistant.", shows whenever any Cue row shows, so the AI disclosure stays.
 - Copy is trimmed in two places:
   - Hero: one line of copy, then two facts. The help line and the numbered How It Works list are removed.
   - Shorter row, sample and trust lines. Every fact that `tests/for-business-copy.test.ts` pins is still there.
