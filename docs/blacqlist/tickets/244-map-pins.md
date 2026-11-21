@@ -13,6 +13,7 @@ Founder, 2026-11-21:
 3. "The multiple numbers and shapes for multiple things is very confusing and unattractive." Of three options for display rules, the founder picked **A, Calm Map**.
 4. Later the same day: "we do not need the city name plates on the map. just the circles and the numbers were just fine." Groups carry the country view.
 5. "On mobile, when the user selects a map pin, that pin is centered in the map viewport until they move it."
+6. "Make the logo a bit bigger." The paid square went from 42px to 46px and its logo from 28px to 36px (selected: 50px to 56px, logo 32px to 42px).
 
 ## Calm Map Rules
 
@@ -21,7 +22,7 @@ These rules hold at every zoom. A business is drawn once, as one mark, and each 
 | Mark | Means | Notes |
 |---|---|---|
 | Circle with a number | A group of nearby businesses | The only number on the map. Tap to zoom in |
-| Logo square, gold border | A claimed page on Starter and up, standing on its own | Logo first, then the cover photo, then initials |
+| Logo square, gold border | A claimed page on Starter and up, standing on its own | Logo first, then the cover photo, then initials. 46px with a 36px logo; 56px with a 42px logo when selected |
 | Plain ink square | A claimed page on Free, standing on its own | One initial |
 | Small ink dot | Any other business | Unclaimed pages are always dots |
 | Diamond | A landmark | Unchanged |

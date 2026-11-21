@@ -26,8 +26,8 @@ export type PopupAnchor = PositionAnchor
 export type OffsetPoint = [number, number]
 export type PopupOffset = Record<PopupAnchor, OffsetPoint>
 
-/** The selected logo tile is 50px square (globals.css `.blacq-pin-selected`). */
-export const SELECTED_TILE = 50
+/** The selected logo tile is 56px square (globals.css `.blacq-pin-selected`). */
+export const SELECTED_TILE = 56
 /** The caret under the tile; its tip is the coordinate. */
 export const PIN_CARET = 6
 /** The dark name pill under the tip, with its 6px gap (phones only). */
