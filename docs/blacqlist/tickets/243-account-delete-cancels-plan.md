@@ -30,4 +30,4 @@ It was worse than the charge alone. Deleting the auth user:
 
 ## Test-Mode Run
 
-See the PR for the Stripe test-mode run (ticket 238's checklist plus this ticket), done locally against staging and the Stripe sandbox, because Preview deployments can't receive Stripe webhooks.
+Not run yet. Preview deployments can't receive Stripe webhooks (SSO protection), so the run has to be local `pnpm dev` on staging Supabase with the Stripe sandbox and `stripe listen`, which needs the staging env file. The checklist (ticket 238's plus this ticket's) is in the PR.
