@@ -72,6 +72,7 @@ export function DeleteAccountSection() {
                     <li>Your account and sign-in</li>
                     <li>Your saved businesses and reviews</li>
                     <li>Your receipts and personal spend records</li>
+                    <li>Your paid plan, if you have one: cancelled right away, with no further charges</li>
                   </ul>
                 </div>
                 <div>

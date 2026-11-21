@@ -458,6 +458,15 @@ describe('handleSubscriptionDeleted', () => {
     expect(h.captured.rpc?.args.p_owner).toBe('u7')
     expect(audit()?.targetId).toBeNull()
   })
+
+  it('is a quiet no-op after the owner deleted their account (ticket 243)', async () => {
+    // deleteAccountAction cancelled the plan and freed the pages first; the
+    // user and their rows are gone, so the sync finds no billing and the
+    // webhook returns normally (200), with no retry and nothing to revalidate.
+    h.state.rpcResult = { skipped: 'no_billing' }
+    await expect(handleSubscriptionDeleted(makeFakeClient(), ended())).resolves.toBeUndefined()
+    expect(h.captured.rpc?.args).toEqual({ p_owner: 'u1', p_fill: false })
+  })
 })
 
 describe('the free month on a paid upgrade (ticket 136)', () => {

@@ -1,6 +1,6 @@
 # Ticket 238: Owner-Level Plans
 
-**Status:** PR open (`feat/238-owner-plans`). Merging needs the founder's OK (GATE-DEPLOY). The migration runs on staging, then production, only with the founder's OK; staging gets a dry run first (`BEGIN; <migration>; ROLLBACK;`) to read the backfill's NOTICE lines.
+**Status:** Merged #367 as 2df9453, 2026-11-21 (founder's go). Migration applied on staging, then production, after a dry run. Account-deletion follow-up: ticket 243.
 
 ## Why
 
@@ -32,4 +32,4 @@ An owner who has billing **and** a page the platform set to a paid tier by hand,
 
 ## Not in This Ticket
 
-- Deleting an account doesn't cancel its Stripe subscription (`lib/actions/account/deleteAccount.ts`), though Terms 13.9 says it does. Separate ticket.
+- Deleting an account doesn't cancel its Stripe subscription (`lib/actions/account/deleteAccount.ts`), though Terms 13.9 says it does. Ticket 243.
