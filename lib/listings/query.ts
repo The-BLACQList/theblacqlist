@@ -15,6 +15,7 @@ import {
   type FacetCounts,
 } from '@/lib/listings/facets'
 import { listingMatchesType } from '@/lib/listings/type-shortcuts'
+import { understandQuery } from '@/lib/search/understand'
 
 export const LISTINGS_PAGE_SIZE = 24
 
@@ -77,6 +78,13 @@ export interface ListingsResult {
    * the visitor is most likely reading the empty grid through.
    */
   filtersUnavailable?: boolean
+  /**
+   * Set when the search as typed found nothing and the understood form ran
+   * instead (ticket 254, lib/search/understand.ts). 'search' means the grid
+   * shows matches for `words`; 'browse' means only an identity phrase was
+   * typed ("black owned"), so the grid shows every business.
+   */
+  understood?: { mode: 'search' | 'browse'; words: string[] }
 }
 
 export type RawRow = {
@@ -387,12 +395,35 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   // four deep facets; `deepFilter` above is the same set the sponsored-injection
   // suppression uses, so the two can no longer disagree about what "deep" means.
   const deepRpcFailed = !!searchResult.error && deepFilter
-  const search =
+  let search =
     searchResult.error && !deepFilter
       ? await legacyFacetedIds(supabase, resolved, LISTINGS_PAGE_SIZE, offset)
       : deepRpcFailed
         ? { ids: [] as string[], total: 0 }
         : searchResult
+  let facetCounts = counts
+
+  // Nothing matched every word as typed: try what the visitor meant (ticket
+  // 254). "How do I switch to Black Owned bathroom products" becomes bathroom,
+  // bath, soap, lotion, toiletries. Only on an honest zero: a search that found
+  // anything keeps exactly that, and an outage stays an outage. Every word
+  // that is left still has to match [Decision — founder, 2026-11-21].
+  let understood: ListingsResult['understood']
+  if (resolved.p_q && search.total === 0 && !searchResult.error) {
+    const u = understandQuery(resolved.p_q)
+    if (u.mode !== 'none') {
+      const rescue = { ...resolved, p_q: u.mode === 'search' ? u.tsQuery : null }
+      const [again, againCounts] = await Promise.all([
+        searchFacetedIds(supabase, rescue, sort, LISTINGS_PAGE_SIZE, offset),
+        wantFacets ? getFacetCounts(supabase, rescue) : Promise.resolve(null),
+      ])
+      if (!again.error && again.total > 0) {
+        search = again
+        facetCounts = againCounts
+        understood = { mode: u.mode, words: u.words }
+      }
+    }
+  }
 
   // Hydrate the page of ids with the rich nested select, then reorder to the
   // RPC's ordering (the .in() filter does not preserve order).
@@ -404,7 +435,8 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     organicEntities = search.ids.map((id) => byId.get(id)).filter((e): e is DiscoveryEntity => !!e)
   }
 
-  const facets = wantFacets && counts && groups ? { groups, counts } : undefined
+  const facets =
+    wantFacets && facetCounts && groups ? { groups, counts: facetCounts } : undefined
 
   let finalEntities = organicEntities
 
@@ -470,6 +502,7 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     page,
     pageSize: LISTINGS_PAGE_SIZE,
     facets,
+    ...(understood ? { understood } : {}),
     // Radius wins when both are in play — see the ListingsResult comment.
     ...(deepRpcFailed ? (radiusActive ? { radiusUnavailable: true } : { filtersUnavailable: true }) : {}),
   }

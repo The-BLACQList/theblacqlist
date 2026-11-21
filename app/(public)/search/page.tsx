@@ -113,12 +113,25 @@ async function SearchResults({ searchParams }: { searchParams: SearchPageProps['
       />
     ) : null
 
+  // The search as typed found nothing, so the grid shows what the visitor
+  // meant (ticket 254). Say so: the cards should never look like matches for
+  // words they do not contain. No remark on ownership (#299).
+  const understood = result.understood
+  const understoodNote = understood ? (
+    <p className="font-subhead text-sm text-charcoal mb-4" data-testid="search-understood">
+      {understood.mode === 'browse'
+        ? 'Showing every business.'
+        : `Nothing matched every word, so here are results for “${understood.words.join(' ')}”.`}
+    </p>
+  ) : null
+
   return (
     <>
       {/* Tour evidence: a real search ran in this render. Sits after the
           empty-query early return — visiting /search is not searching. */}
       <TourWitness step="search_ran" />
       {cue}
+      {understoodNote}
       <DiscoveryGrid
         entities={result.entities}
         total={result.total}
