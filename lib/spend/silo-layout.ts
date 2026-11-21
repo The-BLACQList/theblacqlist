@@ -216,7 +216,8 @@ export const LEVEL_COLORS: Record<BusinessLevel, string> = {
   grower: '#86C95A',
 }
 
-export const GOLD = '#E2A428'
+/** Brand gold (ticket 246), the same #C4A065 the rest of the site uses. */
+export const GOLD = '#C4A065'
 export const GOLD_BRIGHT = '#FFD867'
 
 export type ColorBy = 'category' | 'level' | 'gold'
@@ -586,27 +587,34 @@ export function hashString(s: string): number {
 }
 
 /**
- * Round 17 concept D: a tall gold silo. Floors stack top to bottom (Shoppers
- * up top), and each category family owns one wedge of the wall, turning a
- * little floor by floor so the clusters spiral down. The hub sits under the
+ * Ticket 246, the Glass Tower: one lit glass tower with a glass plate per
+ * floor. Floors stack top to bottom (Shoppers up top), and each category
+ * family owns one wedge of every plate, turning a little floor by floor so the
+ * groups spiral down. Businesses sit flat on their plate in a wide band
+ * between the core column and the glass wall. The glowing core sits under the
  * last floor. All in scene units.
  */
 export const SILO = {
-  /** Cage radius. */
-  R: 17,
-  /** Where cluster centers sit, just inside the cage. */
-  rA: 15.2,
+  /** Glass wall radius. */
+  R: 42,
+  /** Where cluster centers sit on a plate. */
+  rA: 30,
   /** Smallest business cluster radius. */
-  cr: 3.0,
+  cr: 4.5,
   /** Shopper crowd radius on the top floor. */
-  crowdR: 3.5,
+  crowdR: 9,
   /** How far each floor turns, in radians. */
   twist: 0.32,
-  /** Floor heights, Shoppers first. */
-  y: [34, 17, 0, -17, -34] as const,
-  hub: { x: 0, y: -47, z: 0 },
-  hubR: 4.5,
+  /** Floor heights, Shoppers first. 36 apart, so each plate reads as its own storey. */
+  y: [72, 36, 0, -36, -72] as const,
+  hub: { x: 0, y: -100, z: 0 },
+  hubR: 5.5,
+  /** Glass reaches this far above the top floor and below the last one. */
+  shellPad: 14,
 } as const
+
+/** How high a business sits above its plate, so the disc never cuts the glass. */
+export const DOT_LIFT = 0.9
 
 export interface Point3 {
   x: number
@@ -632,23 +640,17 @@ export function wedgePoint(familyIndex: number, floorIndex: number, u = 0, v = 0
 }
 
 /**
- * Cluster radius grows with the crowd so busy wedges don't pile up. The cap
- * keeps a full cluster inside its wedge and clear of the floors above and
- * below (17 apart).
+ * Cluster radius grows with the crowd so busy wedges don't pile up (about two
+ * scene units between neighbours). The cap keeps a full cluster on its plate,
+ * clear of the core column and the glass, and inside its own wedge.
  */
-export const CLUSTER_MAX_R = 7.5
+export const CLUSTER_MAX_R = 9
+
+/** A cluster is this much wider along the wall than it is deep. */
+export const CLUSTER_WIDE = 1.3
 
 export function clusterRadius(count: number): number {
-  return Math.max(SILO.cr, Math.min(CLUSTER_MAX_R, 0.55 * Math.sqrt(count)))
-}
-
-/**
- * How deep a cluster may reach in toward the middle of the silo. A small
- * cluster stays flat against the wall; a busy one becomes a thick slab so its
- * dots stop sitting on top of each other (ticket 171b).
- */
-export function clusterDepth(count: number): number {
-  return 0.9 + Math.min(5.5, Math.max(0, clusterRadius(count) - SILO.cr) * 1.2)
+  return Math.max(SILO.cr, Math.min(CLUSTER_MAX_R, 0.95 * Math.sqrt(count)))
 }
 
 export interface PlacedBusiness extends Point3 {
@@ -658,8 +660,8 @@ export interface PlacedBusiness extends Point3 {
 const GOLDEN_ANGLE = 2.39996
 
 /**
- * Places each business in its family's wedge on its floor, as a sunflower so
- * the cluster fills evenly at any size. Same input, same picture.
+ * Places each business flat on its floor's plate, in its family's wedge, as a
+ * sunflower so the cluster fills evenly at any size. Same input, same picture.
  */
 export function placeBusinesses(businesses: readonly SiloBusiness[]): PlacedBusiness[] {
   const groups = new Map<string, SiloBusiness[]>()
@@ -675,20 +677,21 @@ export function placeBusinesses(businesses: readonly SiloBusiness[]): PlacedBusi
     const ordered = [...group].sort((a, b) => a.id.localeCompare(b.id))
     const n = ordered.length
     const radius = clusterRadius(n)
-    const deep = clusterDepth(n)
     ordered.forEach((b, j) => {
       const rad = radius * Math.sqrt((j + 0.5) / n)
       const ang = j * GOLDEN_ANGLE + b.familyIndex
-      // Mostly inward, a little outward, so the slab stays inside the cage.
-      const depth = mulberry32(hashString(b.id))() * deep - 0.45
-      // Narrow the slab as it goes in, so it keeps to its own wedge.
-      const narrow = (SILO.rA - depth) / SILO.rA
+      // In toward the core (+) or out toward the glass (-).
+      const inward = rad * Math.sin(ang)
+      // Narrow the cluster as it goes in, so it keeps to its own wedge.
+      const narrow = (SILO.rA - inward) / SILO.rA
+      // A little seeded height, so a busy cluster doesn't read as a flat sheet.
+      const lift = DOT_LIFT + mulberry32(hashString(b.id))() * 0.8
       const p = wedgePoint(
         b.familyIndex,
         b.floorIndex,
-        rad * Math.cos(ang) * narrow,
-        rad * Math.sin(ang),
-        depth
+        rad * Math.cos(ang) * CLUSTER_WIDE * narrow,
+        lift,
+        inward
       )
       placed.push({ id: b.id, ...p })
     })
@@ -708,7 +711,7 @@ export function crowdAnchor(familyIndex: number): Point3 {
  */
 export function linkControlPoints(a: Point3, b: Point3): [Point3, Point3, Point3, Point3] {
   const d = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z)
-  const f = 0.12 + 0.25 * Math.min(1, d / 30)
+  const f = 0.12 + 0.25 * Math.min(1, d / 70)
   const at = (t: number): Point3 => ({
     x: (a.x + (b.x - a.x) * t) * (1 - f),
     y: a.y + (b.y - a.y) * t,
@@ -717,10 +720,14 @@ export function linkControlPoints(a: Point3, b: Point3): [Point3, Point3, Point3
   return [a, at(1 / 3), at(2 / 3), b]
 }
 
+/** Where scroll starts (just under the top floor) and how far it travels, down past the core. */
+const SCROLL_TOP = SILO.y[0] - 1
+const SCROLL_SPAN = SCROLL_TOP - (SILO.hub.y - 2)
+
 /** The scroll position that frames a floor. */
 export function scrollForFloor(floorIndex: number): number {
   const y = SILO.y[floorIndex] ?? 0
-  return Math.min(1, Math.max(0, (33 - y) / 82))
+  return Math.min(1, Math.max(0, (SCROLL_TOP - y) / SCROLL_SPAN))
 }
 
 /** The floor nearest a height in the silo. */
@@ -760,13 +767,18 @@ export const ORBIT_KEYS = ['x', 'y', 'z', 'az', 'el', 'R'] as const
 const degrees = (d: number) => (d * Math.PI) / 180
 
 export const ORBIT = {
-  /** The default view: 13 above the floor and 6 back. */
-  el: Math.atan2(13, 6),
-  R: Math.hypot(13, 6),
-  /** Lower than the default, so dots on the wall sit inside the frame. */
-  floorEl: degrees(38),
+  /**
+   * The default view: inside the tower, a little over a third of the way up
+   * to the next floor, looking across the plate, so the floors above and
+   * below read as layers.
+   */
+  el: degrees(40),
+  R: 40,
+  /** Lower than the default, so a wedge's dots sit inside the frame. */
+  floorEl: degrees(30),
   minEl: degrees(5),
-  maxEl: degrees(78),
+  /** Steep enough to look down a plate, low enough to stay under the floor above. */
+  maxEl: degrees(64),
   /** Seconds to settle after a scroll or a drag. */
   easeS: 0.28,
   /** Seconds to settle after a jump to a floor or a dot. */
@@ -812,7 +824,45 @@ export function orbitPose(o: Orbit): { pos: Point3; look: Point3 } {
 
 /** The view at a scroll position, circling the silo's center line. */
 export function orbitForScroll(t: number, az: number, el: number): Orbit {
-  return { x: 0, y: 33 - t * 82, z: 0, az, el, R: ORBIT.R }
+  return { x: 0, y: SCROLL_TOP - t * SCROLL_SPAN, z: 0, az, el, R: ORBIT.R }
+}
+
+/**
+ * Zoom runs from a little closer than the default (ZOOM.min) out to the whole
+ * tower seen from outside (1), the sketch's opening shot. Ticket 246.
+ */
+export const ZOOM = {
+  min: -0.4,
+  /** Middle of the tower, from the top of the glass down to the core. */
+  y: (SILO.y[0] + SILO.shellPad + SILO.hub.y - SILO.hubR) / 2,
+  /** Far enough to fit the whole tower in a phone's portrait frame. */
+  R: 210,
+  el: degrees(24),
+  /** Fog thins out as the camera backs away, so the tower reads from outside. */
+  fogNear: 0.0042,
+  fogFar: 0.0011,
+} as const
+
+/** The view at a zoom level: 0 is the view as given, 1 the whole tower. */
+export function zoomOrbit(o: Orbit, zoom: number): Orbit {
+  const z = Math.min(1, Math.max(ZOOM.min, zoom))
+  if (z <= 0) return { ...o, R: o.R * (1 + z) }
+  // Distance grows by the same factor each step, so the zoom feels even.
+  const R = o.R * Math.pow(ZOOM.R / o.R, z)
+  const lerp = (a: number, b: number) => a + (b - a) * z
+  const el = Math.min(ORBIT.maxEl, Math.max(ORBIT.minEl, o.el + (ZOOM.el - ORBIT.el) * z))
+  return { x: lerp(o.x, 0), y: lerp(o.y, ZOOM.y), z: lerp(o.z, 0), az: o.az, el, R }
+}
+
+/** How far out the camera is, 0 inside to 1 at the whole tower, from its distance. */
+export function zoomAmount(R: number): number {
+  return Math.min(1, Math.max(0, Math.log(R / ORBIT.R) / Math.log(ZOOM.R / ORBIT.R)))
+}
+
+/** Fog density for a zoom amount. */
+export function fogForZoom(amount: number): number {
+  const a = Math.min(1, Math.max(0, amount))
+  return ZOOM.fogNear + (ZOOM.fogFar - ZOOM.fogNear) * a
 }
 
 /** The heading that stands at the center of the silo and faces a point. */
@@ -820,7 +870,7 @@ export function headingTo(p: Point3): number {
   return Math.atan2(-p.x, -p.z)
 }
 
-const FOCUS_R = { business: 8, gap: 11.5, floor: 13 } as const
+const FOCUS_R = { business: 17, gap: 24, floor: 34 } as const
 
 /** Up close on a dot, a gap or a ring, looking out from the middle of the silo. */
 export function focusFrame(p: Point3, kind: keyof typeof FOCUS_R): Orbit {

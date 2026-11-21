@@ -169,7 +169,7 @@ export function SiloExperience({
   const saidFloor = useRef(0)
   const hoverTagRef = useRef<HTMLDivElement>(null)
   const youTagRef = useRef<HTMLDivElement>(null)
-  const signsRef = useRef<HTMLDivElement>(null)
+  const [wholeTower, setWholeTower] = useState(false)
   const labelsRef = useRef<HTMLDivElement>(null)
   const gapLabelsRef = useRef<HTMLDivElement>(null)
 
@@ -228,16 +228,19 @@ export function SiloExperience({
   }, [])
 
   // ── Actions ──
-  const selectBusiness = useCallback((b: SiloBusiness | null) => {
-    setSelectedId(b?.id ?? null)
-    if (b) {
-      setFocusFloor(null)
-      setSelectedGap(null)
-      setStatus(
-        `Showing ${businessDisplayName(b)}${b.isYou ? ', you shopped here' : ''}. ${businessFiguresText(b)}`
-      )
-    }
-  }, [setStatus])
+  const selectBusiness = useCallback(
+    (b: SiloBusiness | null) => {
+      setSelectedId(b?.id ?? null)
+      if (b) {
+        setFocusFloor(null)
+        setSelectedGap(null)
+        setStatus(
+          `Showing ${businessDisplayName(b)}${b.isYou ? ', you shopped here' : ''}. ${businessFiguresText(b)}`
+        )
+      }
+    },
+    [setStatus]
+  )
 
   const findMe = useCallback(() => {
     if (youList.length === 0) return
@@ -252,14 +255,17 @@ export function SiloExperience({
     selectBusiness(you)
   }, [focusYou, you, selectBusiness])
 
-  const selectGap = useCallback((g: SiloGap | null) => {
-    setSelectedGap(g)
-    if (g) {
-      setSelectedId(null)
-      setFocusFloor(null)
-      setStatus(`${gapLabel(g)}.`)
-    }
-  }, [setStatus])
+  const selectGap = useCallback(
+    (g: SiloGap | null) => {
+      setSelectedGap(g)
+      if (g) {
+        setSelectedId(null)
+        setFocusFloor(null)
+        setStatus(`${gapLabel(g)}.`)
+      }
+    },
+    [setStatus]
+  )
 
   function clearCard() {
     setSelectedId(null)
@@ -392,6 +398,7 @@ export function SiloExperience({
     if (k === 'y' && you) findMe()
     else if (k === 'c') toggleColor()
     else if (k === 't') toggleList()
+    else if (k === 'w' && showScene) navRef.current?.wholeTower()
     else if (k === 'p') togglePause()
     else if (e.key === '?') setKeysOpen((v) => !v)
     else return
@@ -454,7 +461,9 @@ export function SiloExperience({
     }
     const t = window.setTimeout(() => {
       saidFloor.current = liveFloor
-      setStatus(`Floor ${liveFloor + 1} of ${SILO_FLOORS.length}, ${SILO_FLOORS[liveFloor]!.short}.`)
+      setStatus(
+        `Floor ${liveFloor + 1} of ${SILO_FLOORS.length}, ${SILO_FLOORS[liveFloor]!.short}.`
+      )
     }, 400)
     return () => window.clearTimeout(t)
   }, [liveFloor, focusFloor, selectedId, selectedGap, setStatus])
@@ -549,23 +558,11 @@ export function SiloExperience({
                     onContextLost={() => setContextLost(true)}
                     hoverTagRef={hoverTagRef}
                     youTagRef={youTagRef}
-                    signsRef={signsRef}
+                    onWholeTowerChange={setWholeTower}
                     labelsRef={labelsRef}
                     gapLabelsRef={gapLabelsRef}
                   />
                 </SceneBoundary>
-              )}
-              {showScene && (
-                <div ref={signsRef} className="silo-signs" aria-hidden="true">
-                  {SILO_FLOORS.map((f, i) => (
-                    <div key={f.key} className="silo-sign" hidden>
-                      <span className="ic">
-                        <FloorIcon floor={i} />
-                      </span>
-                      <b>{f.short}</b>
-                    </div>
-                  ))}
-                </div>
               )}
               {showScene && (
                 <div className="silo-labels" aria-hidden="true">
@@ -612,6 +609,15 @@ export function SiloExperience({
             {you && (
               <button type="button" className="find" onClick={findMe}>
                 Find Me
+              </button>
+            )}
+            {showScene && (
+              <button
+                type="button"
+                aria-pressed={wholeTower}
+                onClick={() => navRef.current?.wholeTower()}
+              >
+                {wholeTower ? 'Go Inside' : 'Whole Tower'}
               </button>
             )}
             <button
