@@ -8,7 +8,7 @@ import type { PlanSlug } from '@/lib/stripe/plans'
 // Starter 1 / Growth 2 / Premium 3 of their pages. Which pages, and every
 // page's tier, are decided in one place: the database function
 // sync_owner_plan_tiers (migration 20261201000000). This file is the app's
-// door to it: the Stripe webhook and the owner's "Pages On Your Plan" action
+// door to it: the Stripe webhook and the owner's "Pages on Your Plan" action
 // both come through here.
 
 type ServiceClient = ReturnType<typeof createServiceClient>

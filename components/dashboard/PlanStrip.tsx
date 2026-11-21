@@ -43,6 +43,15 @@ export function PlanStrip({ plan }: { plan: OwnerPlan }) {
         <p className="mt-0.5 font-body text-sm text-charcoal-soft">
           {due ? DUE_HINT : isFree ? FREE_HINT : meta.tagline}
         </p>
+        {plan.coverage && (
+          <Link
+            href="/dashboard/upgrade#plan-pages"
+            data-plan-coverage
+            className="mt-1 inline-flex items-center gap-1 font-subhead text-sm font-semibold text-amber hover:underline"
+          >
+            {coverageLabel(plan.coverage)} <ChevronRight className="size-4" aria-hidden="true" />
+          </Link>
+        )}
       </div>
 
       <div className="sm:ml-auto shrink-0">
@@ -68,6 +77,11 @@ export function PlanStrip({ plan }: { plan: OwnerPlan }) {
       </div>
     </section>
   )
+}
+
+/** "2 of 3 Pages Covered" (ticket 238). Title Case: it's a link label. */
+export function coverageLabel({ count, cap }: { count: number; cap: number }): string {
+  return `${count} of ${cap} ${cap === 1 ? 'Page' : 'Pages'} Covered`
 }
 
 /** The small plan tag in each page card's header. */

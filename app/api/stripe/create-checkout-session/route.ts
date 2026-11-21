@@ -11,7 +11,7 @@ const checkoutBodySchema = z
   .object({
     planSlug: z.enum(['starter', 'growth', 'premium']),
     // Ticket 238: the plan is the owner's. The page is only the first one it
-    // covers (the owner picks the rest under Pages On Your Plan).
+    // covers (the owner picks the rest under Pages on Your Plan).
     listingId: z.uuid().optional(),
     billingCycle: z.enum(['monthly', 'annual']).optional(),
   })

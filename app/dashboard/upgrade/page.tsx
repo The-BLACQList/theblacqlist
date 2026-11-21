@@ -6,6 +6,7 @@ import type { PlanSlug } from '@/lib/stripe/plans'
 import { getFreeMonthState } from '@/lib/tour/freeMonth'
 import { getOwnerPlan } from '@/lib/services/billing/ownerPlan'
 import { freeMonthHold } from '@/lib/tour/freeMonthHold'
+import { PlanPages } from '@/components/dashboard/PlanPages'
 import { FreeMonthCard } from './FreeMonthCard'
 import { UpgradePlans } from './UpgradePlans'
 
@@ -66,6 +67,18 @@ export default async function UpgradePage({
           state={freeMonth}
           availability={availability}
           primaryListingId={primaryListingId}
+        />
+      )}
+
+      {ownerPlan.coverage && coverable.length > 1 && (
+        <PlanPages
+          tier={currentTier}
+          cap={ownerPlan.coverage.cap}
+          pages={coverable.map((l) => ({
+            id: l.id,
+            name: l.name,
+            covered: ownerPlan.coverage!.pageIds.includes(l.id),
+          }))}
         />
       )}
 

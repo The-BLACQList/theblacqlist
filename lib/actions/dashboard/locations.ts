@@ -19,7 +19,7 @@ import { highestTier } from '@/lib/services/billing/ownerPlan'
 // each shows the others under Also At.
 //
 // Since ticket 238 a link is display only: which pages a plan covers is the
-// owner's choice under Pages On Your Plan, and no tier is written here.
+// owner's choice under Pages on Your Plan, and no tier is written here.
 // Ownership, the plan and the limit are checked on the owner's own client;
 // the link is written with the service client because the link table has no
 // write policy. Unlinking works on every plan.
