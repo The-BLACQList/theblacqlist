@@ -127,9 +127,17 @@ export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
  *   are sent; email and #visit are not. They feed the weekly Featured score
  *   (award_weekly_featured), so changing their shape changes who wins.
  *
+ *   marketplace_product_viewed (ticket 241, 2026-11-21): sent from the server
+ *            by the marketplace product and service pages, one per open.
+ *            entity_type 'product' | 'service', entity_id = the item id,
+ *            properties { listing_id }. The owner's Storefront numbers
+ *            (owner_listing_insights) attribute it by joining the item's
+ *            listing_id, never by this property. The marketplace cta_click
+ *            below was a lazy `void` insert that never ran until the same
+ *            ticket; storefront clicks before 2026-11-21 were never recorded.
+ *
  *   Declared, nothing emits them yet: filter_applied, collection_viewed,
- *            guide_viewed, search_performed,
- *            marketplace_product_viewed, marketplace_cta_click,
+ *            guide_viewed, search_performed, marketplace_cta_click,
  *            review_submitted, claim_started, receipt_submitted.
  *
  *   search_performed was written by lib/services/search.ts for every search,

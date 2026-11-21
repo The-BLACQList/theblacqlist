@@ -125,7 +125,7 @@ export const PLANS: PlanMeta[] = [
       'No limit on common questions or details customers filter by',
       'Up to 3 Happening now posts at a time (Starter has 1)',
       'Up to 2 extra buttons on your page (Starter has 1)',
-      'Analytics going back 12 months (Starter has 30 days)',
+      'Advanced analytics: 12 months (Starter has 30 days), each number compared with the period before, and numbers for your events and jobs',
     ],
     cta: 'Upgrade to Growth',
     highlighted: true,
