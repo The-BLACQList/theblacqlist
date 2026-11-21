@@ -13,6 +13,8 @@ import { jobQuotaFor } from '@/lib/stripe/jobPostings'
 import { postJobQuotaLine } from '@/lib/listings/jobEntryPoints'
 import { loadOpenClaims, resolvePostingReadiness } from '@/lib/jobs/postingReadiness'
 import { FreeMonthNotice } from './FreeMonthNotice'
+import { PlanStrip, PagePlanTag } from '@/components/dashboard/PlanStrip'
+import { getOwnerPlan } from '@/lib/services/billing/ownerPlan'
 
 function CompletenessItem({ done, label }: { done: boolean; label: string }) {
   return (
@@ -99,6 +101,10 @@ export default async function DashboardPage() {
     postingReadiness?.state === 'live' ? await jobQuotaFor(supabase, owner.user.id) : null
   const postJobLine = postJobQuotaLine(quotaRead?.ok ? quotaRead.value : null)
 
+  // Ticket 237: the owner's plan, shown once they have a page.
+  const ownerPlan =
+    listings && listings.length > 0 ? await getOwnerPlan(supabase, owner.user.id, listings) : null
+
   return (
     <div className="max-w-3xl space-y-6">
       <div>
@@ -107,6 +113,8 @@ export default async function DashboardPage() {
           Manage your BLACQList business pages.
         </p>
       </div>
+
+      {ownerPlan && <PlanStrip plan={ownerPlan} />}
 
       <FreeMonthNotice />
 
@@ -171,6 +179,7 @@ export default async function DashboardPage() {
                       >
                         {listing.trust_tier}
                       </span>
+                      <PagePlanTag tier={listing.tier} />
                     </div>
                     {listing.last_edited_by_owner_at && (
                       <p className="font-body text-xs text-charcoal-faint mt-0.5 flex items-center gap-1">
