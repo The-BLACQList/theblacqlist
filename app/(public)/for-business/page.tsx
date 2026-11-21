@@ -34,8 +34,10 @@ type Row = { title: string; body: string; plan: 'free' | 'starter'; flag?: 'onbo
 // AI rows render only while their flag is on: the /add-business draft is
 // FEATURE_AI_ONBOARDING and free; Explain My Numbers and the Write buttons are
 // FEATURE_AI_BETA, Starter and up, counted against aiQuota. The AI rows name
-// Cue (founder 2026-11-21: no AI line repeated in every row), and the note under
-// the list says Cue is our AI assistant whenever a Cue row shows. The
+// no assistant name and no AI line repeated in every row (founder 2026-11-21);
+// one note under the list says they are written by AI whenever an AI row shows.
+// Not Cue: the dashboard tools aren't called Cue, and Marketing keeps Cue in
+// the supporter lane. The
 // Collective is out: it is gated (FEATURE_COLLECTIVE_OPEN).
 const ROWS: Row[] = [
   {
@@ -50,7 +52,7 @@ const ROWS: Row[] = [
   },
   {
     title: 'Start from a Draft',
-    body: 'Cue writes your first draft free when you add your business. Change any of it.',
+    body: 'Get a free first draft when you add your business. Change any of it.',
     plan: 'free',
     flag: 'onboarding',
   },
@@ -71,13 +73,13 @@ const ROWS: Row[] = [
   },
   {
     title: 'Explain My Numbers',
-    body: 'Ask Cue what your numbers mean, and get a plain answer.',
+    body: 'A plain read of what your numbers mean, and one thing to try next.',
     plan: 'starter',
     flag: 'beta',
   },
   {
     title: 'More Drafts for Your Page',
-    body: 'Cue drafts your about text, search title and summary, and Instagram captions. You make the final call.',
+    body: 'Drafts of your about text, search title and summary, and Instagram captions. You make the final call.',
     plan: 'starter',
     flag: 'beta',
   },
@@ -265,8 +267,10 @@ export default async function ForBusinessPage() {
             </ul>
             {(aiOnboardingOn || aiBetaOn) && (
               <p className="font-body text-sm text-charcoal mt-5">
-                Cue is our AI assistant.
-                {aiBetaOn && ' Your plan sets how many drafts Cue writes every 30 days.'}
+                {aiBetaOn
+                  ? 'These drafts and reads are written by AI.'
+                  : 'This draft is written by AI.'}
+                {aiBetaOn && ' Your plan sets how many you get every 30 days.'}
               </p>
             )}
           </div>
