@@ -121,9 +121,17 @@ test.describe('admin entities queue', () => {
         'href',
         '/admin/entities?status=pending'
       )
+      // Entities sits in Pages & Content, closed on a first visit (ticket
+      // 251): the closed group carries the total, and opening it shows the
+      // item's own pill.
+      await expect(page.getByTestId('admin-nav-group-total-pages-content')).toHaveText(
+        String(cardCount)
+      )
+      await page.getByTestId('admin-nav-group-pages-content').click()
       await expect(entitiesPill).toHaveText(String(cardCount))
     } else {
       await expect(alert).toHaveCount(0)
+      await expect(page.getByTestId('admin-nav-group-total-pages-content')).toHaveCount(0)
       await expect(entitiesPill).toHaveCount(0)
     }
 
