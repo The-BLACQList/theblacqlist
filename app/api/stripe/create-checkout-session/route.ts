@@ -5,13 +5,14 @@ import { stripe } from '@/lib/stripe/client'
 import type { BillingCycle } from '@/lib/stripe/plans'
 import { checkRateLimit } from '@/lib/security/rate-limit'
 import { checkoutTermsConsentOn, renewalLine } from '@/lib/stripe/renewal'
-import { isMissingTable } from '@/lib/services/billing/locationTiers'
 import { z } from 'zod'
 
 const checkoutBodySchema = z
   .object({
     planSlug: z.enum(['starter', 'growth', 'premium']),
-    listingId: z.uuid(),
+    // Ticket 238: the plan is the owner's. The page is only the first one it
+    // covers (the owner picks the rest under Pages On Your Plan).
+    listingId: z.uuid().optional(),
     billingCycle: z.enum(['monthly', 'annual']).optional(),
   })
   .strict()
@@ -68,57 +69,38 @@ export async function POST(request: Request) {
     )
   }
 
-  // Verify the user owns this listing
-  const { data: listing } = await supabase
+  // The page the plan covers first: the one the owner clicked from, or their
+  // oldest page. Job and event pages are paid for on their own, so a plan never
+  // covers them.
+  let anchorQuery = supabase
     .from('listings')
     .select('id, name')
-    .eq('id', listingId)
     .eq('owner_user_id', user.id)
     .is('deleted_at', null)
+    .not('entity_type', 'in', '(job,event)')
+  if (listingId) anchorQuery = anchorQuery.eq('id', listingId)
+  const { data: listing } = await anchorQuery
+    .order('created_at', { ascending: true })
+    .limit(1)
     .maybeSingle()
 
   if (!listing) {
-    return NextResponse.json({ error: 'Listing not found', code: 'NOT_FOUND' }, { status: 404 })
+    return listingId
+      ? NextResponse.json({ error: 'Listing not found', code: 'NOT_FOUND' }, { status: 404 })
+      : NextResponse.json(
+          { error: 'Add a page before choosing a plan.', code: 'NO_PAGE' },
+          { status: 409 }
+        )
   }
 
-  // A linked location (ticket 110) is already covered by the Premium plan on
-  // its primary page. Its own plan would fight the primary over its tier, so
-  // the owner unlinks it first. A missing table (migration not applied yet)
-  // means no links exist; any other read error stops the checkout.
-  const { data: coveredBy, error: coveredError } = await supabase
-    .from('listing_location_links')
-    .select('primary_listing_id')
-    .eq('location_listing_id', listingId)
-    .maybeSingle()
-
-  if (coveredError && !isMissingTable(coveredError)) {
-    console.error('[create-checkout-session] location link lookup failed:', coveredError.message)
-    return NextResponse.json(
-      { error: 'Could not check your current plan. Please try again.', code: 'SERVER_ERROR' },
-      { status: 500 }
-    )
-  }
-  if (coveredBy) {
-    return NextResponse.json(
-      {
-        error:
-          'This page is covered by the Premium plan on another of your pages. Unlink it under Locations to give it its own plan.',
-        code: 'COVERED_BY_LOCATION',
-      },
-      { status: 409 }
-    )
-  }
-
-  // One live subscription per listing. A second one would leave two Stripe
-  // subscriptions fighting over `listings.tier`, and whichever ended first
-  // would downgrade the listing while the other was still paid. Plan changes go
-  // through the customer portal, which swaps the price on the existing
-  // subscription instead of adding one. RLS scopes this read to the caller's
-  // own rows; the webhook's live-sibling check covers anything else.
+  // One live plan per owner (ticket 238). A second subscription would bill
+  // twice for one plan; plan changes go through the customer portal, which
+  // swaps the price on the existing subscription. RLS scopes this read to the
+  // caller's own rows; the webhook flags anything that slips past.
   const { data: liveSubs, error: liveError } = await supabase
     .from('subscriptions')
     .select('id')
-    .eq('listing_id', listingId)
+    .eq('user_id', user.id)
     .in('status', LIVE_STATUSES)
     .limit(1)
 
@@ -132,16 +114,15 @@ export async function POST(request: Request) {
   if (liveSubs && liveSubs.length > 0) {
     return NextResponse.json(
       {
-        error: 'This listing already has a plan. Use Manage subscription to change it.',
+        error: 'You already have a plan. Use Manage Subscription to change it.',
         code: 'SUBSCRIPTION_EXISTS',
       },
       { status: 409 }
     )
   }
 
-  // Reuse the caller's Stripe customer when they already have one, so a second
-  // listing's plan lands on the same customer (one portal, one card on file)
-  // instead of minting a new customer per checkout.
+  // Reuse the caller's Stripe customer when they already have one (a plan that
+  // ended, a job posting), so the owner keeps one portal and one card on file.
   const { data: priorSub } = await supabase
     .from('subscriptions')
     .select('stripe_customer_id')
@@ -179,7 +160,7 @@ export async function POST(request: Request) {
   // by the audit log. billing_cycle lets us record monthly vs. annual.
   const metadata = {
     user_id: user.id,
-    listing_id: listingId,
+    listing_id: listing.id,
     plan_id: plan.id,
     plan_slug: planSlug,
     billing_cycle: billingCycle,

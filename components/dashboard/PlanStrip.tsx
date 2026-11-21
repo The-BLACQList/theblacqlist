@@ -55,7 +55,6 @@ export function PlanStrip({ plan }: { plan: OwnerPlan }) {
           </Link>
         ) : plan.canManage ? (
           <ManageSubscriptionButton
-            listingId={plan.manageListingId ?? undefined}
             label={due ? 'Update Card' : 'Manage Subscription'}
           />
         ) : (

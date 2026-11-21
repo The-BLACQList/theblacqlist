@@ -8,8 +8,9 @@ import { checkRateLimit } from '@/lib/security/rate-limit'
 import { z } from 'zod'
 
 // A server action's argument is whatever the browser sends, so it is parsed
-// like any other request body. Unknown keys are refused.
-const portalInputSchema = z.object({ listingId: z.uuid().optional() }).strict().optional()
+// like any other request body. Unknown keys are refused. The plan is the
+// owner's (ticket 238), so there is nothing to choose: no input is taken.
+const portalInputSchema = z.object({}).strict().optional()
 
 const PORTAL_RATE_LIMIT = 10
 
@@ -35,9 +36,7 @@ export type PortalResult =
  * client: a user can only ever read rows where user_id = auth.uid(), so the
  * resolved stripe_customer_id always belongs to the caller.
  */
-export async function createPortalSession(rawInput?: {
-  listingId?: string
-}): Promise<PortalResult> {
+export async function createPortalSession(rawInput?: Record<string, never>): Promise<PortalResult> {
   const session = await getOwnerSession()
   if (!session) {
     return { ok: false, code: 'UNAUTHORIZED', message: 'You must be signed in.' }
@@ -47,7 +46,6 @@ export async function createPortalSession(rawInput?: {
   if (!parsed.success) {
     return { ok: false, code: 'VALIDATION_ERROR', message: 'That request was not valid.' }
   }
-  const input = parsed.data
 
   const allowed = await checkRateLimit({
     bucket: 'billing_portal',
@@ -64,29 +62,23 @@ export async function createPortalSession(rawInput?: {
 
   const supabase = await createClient()
 
-  // Most recent non-canceled subscription with a Stripe customer, optionally
-  // scoped to one listing. RLS already restricts this to the caller's rows.
-  // Filters (.eq/.not/.neq) must precede transforms (.order/.limit).
-  let filter = supabase
+  // The owner's Stripe customer: a past-due plan first (its card needs
+  // updating), else the most recent one not canceled. RLS already restricts
+  // this to the caller's rows. Filters must precede transforms.
+  const { data: rows, error } = await supabase
     .from('subscriptions')
-    .select('stripe_customer_id, listing_id, created_at')
+    .select('stripe_customer_id, status, created_at')
     .not('stripe_customer_id', 'is', null)
     .neq('status', 'canceled')
-
-  if (input?.listingId) {
-    filter = filter.eq('listing_id', input.listingId)
-  }
-
-  const { data: sub, error } = await filter
     .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+    .limit(10)
 
   if (error) {
     console.error('[createPortalSession] lookup failed:', error.message)
     return { ok: false, code: 'SERVER_ERROR', message: 'Could not load your subscription.' }
   }
 
+  const sub = rows?.find((r) => r.status === 'past_due') ?? rows?.[0]
   const customerId = sub?.stripe_customer_id
   if (!customerId) {
     return {

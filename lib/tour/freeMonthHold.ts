@@ -1,12 +1,12 @@
 // Whether the upgrade page should hold back the paid checkout because a free
-// month is still waiting for this listing.
+// month is still waiting for this owner.
 //
 // A tester clicked "Upgrade to Starter" right under a saved free month and
 // landed on a $19-today Stripe page (founder, 2026-10-11). The regular
-// checkout has no trial. So while the month is unclaimed and could land on the
-// page the plan cards act on, those cards point at the free month instead of
-// charging. That holds for a page that already pays too: the month goes on a
-// bigger plan for 30 days free (ticket 136).
+// checkout has no trial. So while the month is unclaimed, the plan cards
+// point at the free month instead of charging. That holds for an owner who
+// already pays too: the month goes on a bigger plan for 30 days free
+// (ticket 136).
 //
 // Kept apart from freeMonth.ts so the client plan cards can import the type
 // without pulling in the Stripe and Supabase server code.
@@ -16,18 +16,16 @@ import type { FreeMonthState } from '@/lib/tour/freeMonth'
 /** 'waiting': the month needs a live page first. 'ready': it can be used now. */
 export type FreeMonthHold = 'waiting' | 'ready' | null
 
-export function freeMonthHold(
-  state: FreeMonthState | null,
-  primaryListingId: string
-): FreeMonthHold {
+export function freeMonthHold(state: FreeMonthState | null): FreeMonthHold {
   if (!state) return null
   switch (state.status) {
     case 'waiting':
       return 'waiting'
     case 'ready':
-      return state.listingId === primaryListingId ? 'ready' : null
     case 'pick':
-      return state.pages.some((p) => p.listingId === primaryListingId) ? 'ready' : null
+      // The plan cards sell the owner's plan (ticket 238), not one page's, so
+      // a month waiting on any of their pages holds them.
+      return 'ready'
     default:
       // 'used': the month is spent, so the normal checkout stays.
       return null

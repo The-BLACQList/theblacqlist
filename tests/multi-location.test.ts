@@ -472,12 +472,11 @@ describe('wiring', () => {
     expect(src).not.toContain('syncLocationTiers')
   })
 
-  it('checkout refuses a page another plan covers', () => {
+  it('checkout is one plan per owner, not per page (ticket 238)', () => {
     const src = read('app/api/stripe/create-checkout-session/route.ts')
-    expect(src).toContain(".from('listing_location_links')")
-    expect(src).toContain("code: 'COVERED_BY_LOCATION'")
-    // A missing table must not block every checkout before the migration lands.
-    expect(src).toContain('!isMissingTable(coveredError)')
+    expect(src).not.toContain('listing_location_links')
+    expect(src).not.toContain('COVERED_BY_LOCATION')
+    expect(src).toContain(".eq('user_id', user.id)")
   })
 
   it('the loader fills locations on covered business pages', () => {

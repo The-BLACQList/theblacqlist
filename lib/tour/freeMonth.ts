@@ -123,13 +123,42 @@ export async function listingCanTakeFreeMonth(
   )
 }
 
+/**
+ * The owner's live plan (ticket 238: plans are the owner's, not a page's).
+ * `tier` is the highest plan they pay for, null when no live row names a
+ * plan. Returns null when the read fails.
+ */
+async function ownerLivePlan(
+  service: SupabaseClient,
+  userId: string
+): Promise<{ paying: boolean; tier: PlanSlug | null } | null> {
+  const { data, error } = await service
+    .from('subscriptions')
+    .select('id, plans(plan_key)')
+    .eq('user_id', userId)
+    .in('status', LIVE_STATUSES)
+  if (error) return null
+  type PlanRef = { plan_key: string | null } | null
+  const rows = (data ?? []) as unknown as { plans?: PlanRef | PlanRef[] }[]
+  const order: PlanSlug[] = ['free', ...TESTER_TRIAL_TIERS]
+  let tier: PlanSlug | null = null
+  for (const r of rows) {
+    const ref = Array.isArray(r.plans) ? r.plans[0] : r.plans
+    const key = (ref?.plan_key ?? undefined) as PlanSlug | undefined
+    if (key && order.includes(key) && (tier === null || order.indexOf(key) > order.indexOf(tier))) {
+      tier = key
+    }
+  }
+  return { paying: rows.length > 0, tier }
+}
+
 /** A page an owner with no listing on their enrollment could use the month on. */
 export interface FreeMonthPage {
   listingId: string
   listingName: string | null
   currentTier: PlanSlug
-  /** Already on a live plan, so the month goes on a bigger plan for 30 days
-   *  and the page then goes back to the plan it has (ticket 136). */
+  /** The owner is already on a live plan, so the month goes on a bigger plan
+   *  for 30 days and then back to the plan they have (ticket 136). */
   paid: boolean
 }
 
@@ -225,22 +254,19 @@ export async function getFreeMonthState(): Promise<FreeMonthState | null> {
       }
     }
 
-    const [{ data: listing }, { data: subs, error: subsError }] = await Promise.all([
+    const [{ data: listing }, plan] = await Promise.all([
       service.from('listings').select('name, tier').eq('id', listingId).maybeSingle(),
-      service
-        .from('subscriptions')
-        .select('id')
-        .eq('listing_id', listingId)
-        .in('status', LIVE_STATUSES)
-        .limit(1),
+      ownerLivePlan(service, viewer.userId),
     ])
-    if (subsError) return null
+    if (plan === null) return null
 
     const row = listing as { name: string | null; tier: string | null } | null
-    const currentTier = (row?.tier ?? 'free') as PlanSlug
+    const pageTier = (row?.tier ?? 'free') as PlanSlug
+    // An owner who pays is on their plan, even on a page it doesn't cover.
+    const currentTier = plan.paying ? (plan.tier ?? pageTier) : pageTier
     const listingName = row?.name ?? null
 
-    const paying = (subs?.length ?? 0) > 0
+    const paying = plan.paying
     return { status: 'ready', listingId, listingName, currentTier, openTier, attach: false, paying }
   } catch {
     return null
@@ -273,23 +299,19 @@ async function findOwnerPages(userId: string): Promise<FreeMonthState | null> {
     const rows = owned.filter((r) => r.status === 'published')
     if (rows.length === 0) return { status: 'waiting', hasPage: owned.length > 0 }
 
-    const { data: subs, error: subsError } = await service
-      .from('subscriptions')
-      .select('listing_id')
-      .in(
-        'listing_id',
-        rows.map((r) => r.id)
-      )
-      .in('status', LIVE_STATUSES)
-    if (subsError) return null
-    const paidIds = new Set(((subs ?? []) as { listing_id: string }[]).map((s) => s.listing_id))
+    const plan = await ownerLivePlan(service, userId)
+    if (plan === null) return null
 
-    const pages: FreeMonthPage[] = rows.map((r) => ({
-      listingId: r.id,
-      listingName: r.name,
-      currentTier: (r.tier ?? 'free') as PlanSlug,
-      paid: paidIds.has(r.id),
-    }))
+    // The plan is the owner's (ticket 238): every page sees the same one.
+    const pages: FreeMonthPage[] = rows.map((r) => {
+      const pageTier = (r.tier ?? 'free') as PlanSlug
+      return {
+        listingId: r.id,
+        listingName: r.name,
+        currentTier: plan.paying ? (plan.tier ?? pageTier) : pageTier,
+        paid: plan.paying,
+      }
+    })
 
     if (pages.length > 1) return { status: 'pick', pages }
     const page = pages[0]

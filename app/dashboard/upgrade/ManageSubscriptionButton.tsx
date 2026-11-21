@@ -4,19 +4,18 @@ import { useState, useTransition } from 'react'
 import { createPortalSession } from '@/lib/actions/billing/createPortalSession'
 
 interface Props {
-  listingId?: string
   /** Button text. The dashboard plan strip says "Update Card" when a payment failed (ticket 237). */
   label?: string
 }
 
-export function ManageSubscriptionButton({ listingId, label = 'Manage Subscription' }: Props) {
+export function ManageSubscriptionButton({ label = 'Manage Subscription' }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   function handleClick() {
     setError(null)
     startTransition(async () => {
-      const result = await createPortalSession({ listingId })
+      const result = await createPortalSession()
       if (result.ok) {
         window.location.href = result.url
       } else {

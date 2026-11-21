@@ -23,7 +23,7 @@ import {
   FREE_MONTH_STARTED_URL,
   isMarked,
   isRefusal,
-  liveSubscriptionIds,
+  liveSubscriptionIdsForOwner,
   MULTIPLE_PLANS,
   putFreeMonthOn,
   recordFreeMonthEnd,
@@ -261,7 +261,7 @@ export async function POST(request: Request) {
           await recordFreeMonthEnd(serviceClient, enrollmentId, known)
           return NextResponse.json({ data: { url: FREE_MONTH_STARTED_URL } })
         }
-        const guard = await guardBeforeClaim(serviceClient, requested, listingId)
+        const guard = await guardBeforeClaim(serviceClient, requested, viewer.userId)
         if (guard instanceof NextResponse) return guard
         if (guard.kind !== 'upgrade') return NextResponse.json(CLAIM_FAILED, { status: 500 })
         return upgradeResponse(await putFreeMonthOn(stripe, serviceClient, {
@@ -300,7 +300,7 @@ export async function POST(request: Request) {
       const guard = await guardBeforeClaim(
         serviceClient,
         priorSessionId === null ? requested : tier,
-        listingId
+        viewer.userId
       )
       if (guard instanceof NextResponse) return guard
 
@@ -338,7 +338,7 @@ export async function POST(request: Request) {
     }
 
     // ── Open tier, and a plan the month can go on, BEFORE the claim ──────────
-    const guard = await guardBeforeClaim(serviceClient, requested, listingId)
+    const guard = await guardBeforeClaim(serviceClient, requested, viewer.userId)
     if (guard instanceof NextResponse) return guard
 
     // ── The compare-and-set (§4.3.1): claim BEFORE Stripe ────────────────────
@@ -432,11 +432,10 @@ type Guarded =
 /**
  * The refusals that must never spend the claim, checked before it:
  *
- *   - the listing has more than one live plan, or one the month can't go on
+ *   - the owner has more than one live plan, or one the month can't go on
  *     (annual, past due, trialing, set to end, a change already scheduled).
- *     A second subscription would share one `listings.tier`, so the month
- *     never opens a new checkout on a page that pays; it goes on the plan the
- *     page has (ticket 136);
+ *     Plans are the owner's (ticket 238), so the month never opens a second
+ *     checkout for an owner who pays; it goes on the plan they have (ticket 136);
  *   - the tier is not open (no active plan row with a monthly price). 422
  *     PLAN_NOT_OPEN, and the month keeps waiting.
  *
@@ -447,9 +446,11 @@ type Guarded =
 async function guardBeforeClaim(
   serviceClient: ReturnType<typeof createServiceClient>,
   requested: TesterTrialTier | null,
-  listingId: string
+  ownerId: string
 ): Promise<Guarded | NextResponse> {
-  const live = await liveSubscriptionIds(serviceClient, listingId)
+  // The plan is the owner's (ticket 238): the month goes on it, whichever
+  // page the claim names.
+  const live = await liveSubscriptionIdsForOwner(serviceClient, ownerId)
   if (live === null) return NextResponse.json(CLAIM_FAILED, { status: 500 })
   if (live.length > 1) return refuse(MULTIPLE_PLANS)
 

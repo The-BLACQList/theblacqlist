@@ -131,7 +131,7 @@ export function UpgradePlans({
                     Your current plan
                   </span>
                   {!isFree && canManage && (
-                    <ManageSubscriptionButton listingId={primaryListingId} />
+                    <ManageSubscriptionButton />
                   )}
                 </div>
               ) : isPurchasable && freeMonthHold === 'ready' ? (
