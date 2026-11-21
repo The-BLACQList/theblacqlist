@@ -330,6 +330,8 @@ export function SiloCard({
         <p>
           {businessFiguresText(selected)}
           {selected.isYou && ' You have a counted receipt here.'}
+          {selected.youPending &&
+            " Your receipt here is in review. Your line stays dashed until it's approved, and only you can see it."}
         </p>
         {selected.href && (
           <p>

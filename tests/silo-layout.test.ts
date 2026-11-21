@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
+import { AGGREGATE_MIN_TRANSACTIONS, LINK_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 import {
   CATEGORY_FAMILIES,
   FALLBACK_FAMILY_INDEX,
@@ -140,20 +140,62 @@ describe('buildSiloBusinesses', () => {
     a: listing({ name: 'Alpha', level: 'maker' }),
     b: listing({ name: 'Beta', categorySlug: 'beauty-grooming' }),
     below: listing({ name: 'Below' }),
+    none: listing({ name: 'None' }),
   }
 
-  it('shows every published business, linked ones first', () => {
+  it('shows every published business, totals first, then linked, then the rest', () => {
     const out = buildSiloBusinesses({ nodes, listings, isNameOptedIn: () => false })
     // 'gone' has receipts but no published listing, so it is not on the map.
-    expect(out.map((b) => b.id)).toEqual(['a', 'b', 'below'])
-    expect(out.map((b) => b.linked)).toEqual([true, true, false])
+    expect(out.map((b) => b.id)).toEqual(['a', 'b', 'below', 'none'])
+    expect(out.map((b) => b.linked)).toEqual([true, true, true, false])
+    expect(out.map((b) => b.figuresShown)).toEqual([true, true, false, false])
   })
 
-  it('keeps no total for a business under the min-transactions floor', () => {
+  // Ticket 250 (founder, 2026-11-21): "line at 1, $ at 5".
+  it('links a business from one counted receipt', () => {
+    expect(LINK_MIN_TRANSACTIONS).toBe(1)
+    const [one] = buildSiloBusinesses({
+      nodes: [{ entity_id: 'x', total_amount_cents: 4200, transaction_count: 1 }],
+      listings: { x: listing() },
+    })
+    expect(one!.linked).toBe(true)
+    expect(one!.figuresShown).toBe(false)
+  })
+
+  it('keeps no total, no count and no ranking under the min-transactions floor', () => {
     const out = buildSiloBusinesses({ nodes, listings, isNameOptedIn: () => false })
     const below = out.find((b) => b.id === 'below')!
     expect(below.amountCents).toBe(0)
     expect(below.transactionCount).toBe(0)
+    // Two linked businesses under the bar order by id, never by amount.
+    const pair = buildSiloBusinesses({
+      nodes: [
+        { entity_id: 'm', total_amount_cents: 100, transaction_count: 1 },
+        { entity_id: 'z', total_amount_cents: 90_000, transaction_count: MIN - 1 },
+      ],
+      listings: { m: listing(), z: listing() },
+    })
+    expect(pair.map((b) => b.id)).toEqual(['m', 'z'])
+  })
+
+  it('never puts a sub-threshold figure in the payload', () => {
+    const out = buildSiloBusinesses({ nodes, listings })
+    const json = JSON.stringify(out)
+    expect(json).not.toContain('99000')
+  })
+
+  it("marks the reader's pending receipts, and only where nothing is counted yet", () => {
+    const out = buildSiloBusinesses({
+      nodes,
+      listings,
+      youIds: new Set(['a']),
+      youPendingIds: new Set(['a', 'none']),
+    })
+    expect(out.find((b) => b.id === 'none')!.youPending).toBe(true)
+    // An approved receipt already draws the solid line.
+    expect(out.find((b) => b.id === 'a')!.youPending).toBe(false)
+    const someoneElse = buildSiloBusinesses({ nodes, listings })
+    expect(someoneElse.every((b) => !b.youPending)).toBe(true)
   })
 
   it('shows a business with no receipts at all as an unlinked node', () => {
@@ -576,15 +618,28 @@ describe('pickLabels', () => {
 })
 
 describe('businessFiguresText', () => {
-  const b = { linked: true, amountCents: 12500, transactionCount: 6 } as SiloBusiness
+  const b = {
+    linked: true,
+    figuresShown: true,
+    amountCents: 12500,
+    transactionCount: 6,
+  } as SiloBusiness
 
-  it('says the total and the receipts once linked', () => {
+  it('says the total and the receipts once the total bar is cleared', () => {
     expect(businessFiguresText(b)).toBe('$125 spent here, from 6 receipts.')
   })
 
-  it('never names a total for a business under the receipt gate', () => {
-    const text = businessFiguresText({ ...b, linked: false })
-    expect(text).toBe('Not enough receipts counted here yet to show a total.')
+  it('says receipts are counted, with no figure, between the line and the total', () => {
+    const text = businessFiguresText({ ...b, figuresShown: false })
+    expect(text).toBe(
+      `Receipts are counted here. The total shows once ${AGGREGATE_MIN_TRANSACTIONS} are in.`
+    )
+    expect(text).not.toMatch(/\$|125|\b6\b/)
+  })
+
+  it('says nothing is counted for a business with no line', () => {
+    const text = businessFiguresText({ ...b, linked: false, figuresShown: false })
+    expect(text).toBe('No receipts counted here yet.')
     expect(text).not.toMatch(/\$|\d/)
   })
 })

@@ -9,9 +9,10 @@ import { businessDisplayName, type SiloBusiness } from '@/lib/spend/silo-layout'
  * The Collective as a list (tickets 167 and 171). The fallback when the map
  * can't draw (no WebGL, low power, lost context, chunk failed) and the
  * "Explore as a list" view. Same numbers as the map, and the same naming
- * rule: a business that hasn't opted in shows as its kind, never its name.
- * The list ranks by money spent, so it only holds businesses with enough
- * receipts to show a total; the map also shows the ones still waiting.
+ * rule: every business shows by name (ticket 171b), or by its kind if the
+ * listing has none. The list ranks by money spent, so it only holds
+ * businesses with enough receipts to show a total (`figuresShown`); the map
+ * also shows the ones still waiting, and their lines from 1 receipt.
  */
 
 export interface SiloCityRow {
@@ -31,13 +32,15 @@ interface Props {
 }
 
 export function SiloList({ businesses, cities, note, action }: Props) {
-  const businessRows = businesses.filter((b) => b.linked).map((b) => ({
-    entity_id: b.id,
-    name: b.isYou ? `${businessDisplayName(b)} (you shopped here)` : businessDisplayName(b),
-    href: b.href,
-    total_amount_cents: b.amountCents,
-    transaction_count: b.transactionCount,
-  }))
+  const businessRows = businesses
+    .filter((b) => b.figuresShown)
+    .map((b) => ({
+      entity_id: b.id,
+      name: b.isYou ? `${businessDisplayName(b)} (you shopped here)` : businessDisplayName(b),
+      href: b.href,
+      total_amount_cents: b.amountCents,
+      transaction_count: b.transactionCount,
+    }))
 
   return (
     <div

@@ -42,15 +42,13 @@ export default function FlowMapMethodologyPage() {
       <Section variant="white">
         <div className="max-w-2xl space-y-10 font-body text-charcoal leading-relaxed">
           <p className="text-lg">
-            Numbers about a community should be checkable by that community. Every figure we
-            publish about community spend traces back through the process below. If a number
-            cannot be found on this page, we do not publish it.
+            Numbers about a community should be checkable by that community. Every figure we publish
+            about community spend traces back through the process below. If a number cannot be found
+            on this page, we do not publish it.
           </p>
 
           <section id="one-number" className="space-y-3">
-            <h2 className="font-headline text-xl text-brand-black">
-              1. What one unit of spend is
-            </h2>
+            <h2 className="font-headline text-xl text-brand-black">1. What one unit of spend is</h2>
             <p>
               <span className="font-semibold">
                 One receipt, approved by a person on our team, is one unit of measured spend, and it
@@ -59,9 +57,9 @@ export default function FlowMapMethodologyPage() {
             </p>
             <p>
               A dollar enters this dataset when someone reports paying it to a business on the
-              BLACQList and a reviewer approves that receipt. Nothing follows the dollar after
-              that. What the business goes on to pay its suppliers, its staff, or its landlord is
-              not something we can see, and we do not model or estimate it.
+              BLACQList and a reviewer approves that receipt. Nothing follows the dollar after that.
+              What the business goes on to pay its suppliers, its staff, or its landlord is not
+              something we can see, and we do not model or estimate it.
             </p>
           </section>
 
@@ -77,26 +75,25 @@ export default function FlowMapMethodologyPage() {
               </li>
               <li>
                 <span className="font-semibold">A reviewer approves or rejects it.</span> A rejected
-                receipt contributes nothing unless you fix it and send it back for review, where
-                it starts over. A receipt still waiting for review
-                contributes nothing either.{' '}
+                receipt contributes nothing unless you fix it and send it back for review, where it
+                starts over. A receipt still waiting for review contributes nothing either.{' '}
                 <span className="font-semibold">
                   Every public figure here is a figure about approved receipts only.
                 </span>
               </li>
               <li>
-                <span className="font-semibold">
-                  Only businesses on The BLACQList count.
-                </span>{' '}
-                If you add a receipt from a business we don&rsquo;t list, it is kept but not
-                approved. It waits up to 90 days for that business to join. If it does, you link
-                the receipt to its listing and it is reviewed like any other. If it doesn&rsquo;t,
-                the receipt never counts toward a public figure.
+                <span className="font-semibold">Only businesses on The BLACQList count.</span> If
+                you add a receipt from a business we don&rsquo;t list, it is kept but not approved.
+                It waits up to 90 days for that business to join. If it does, you link the receipt
+                to its listing and it is reviewed like any other. If it doesn&rsquo;t, the receipt
+                never counts toward a public figure.
               </li>
               <li>
-                <span className="font-semibold">The approved receipt becomes one anonymous
-                record</span> holding an amount, a date, and the business it names. That record has
-                no account attached to it. It is what the community-wide totals are summed from.
+                <span className="font-semibold">
+                  The approved receipt becomes one anonymous record
+                </span>{' '}
+                holding an amount, a date, and the business it names. That record has no account
+                attached to it. It is what the community-wide totals are summed from.
               </li>
               <li>
                 <span className="font-semibold">Running totals update</span> for that business and
@@ -114,9 +111,9 @@ export default function FlowMapMethodologyPage() {
             <p>
               <span className="font-semibold">From 13 November 2026, the totals went down.</span>{' '}
               Before that date, a receipt from a business we don&rsquo;t list could be approved, and
-              its amount was added to the community-wide totals (never to a named business or
-              city). We now leave that older spend out of every public figure, so the totals only
-              ever describe businesses on The BLACQList.
+              its amount was added to the community-wide totals (never to a named business or city).
+              We now leave that older spend out of every public figure, so the totals only ever
+              describe businesses on The BLACQList.
             </p>
           </section>
 
@@ -134,8 +131,8 @@ export default function FlowMapMethodologyPage() {
             <p>
               This is not only a wording choice. Our data cannot represent multi-hop flow even in
               principle, because we never observe a business paying anyone. There is no
-              business-to-business figure here to be misread, because there is no business-to-business
-              data.
+              business-to-business figure here to be misread, because there is no
+              business-to-business data.
             </p>
             <p>
               Circulation is still what this platform is <span className="italic">for</span>, and we
@@ -195,8 +192,8 @@ export default function FlowMapMethodologyPage() {
             </ul>
             <p>
               Totals are counted from the beginning and are not limited to a date range. Filtering
-              the page by city or category changes which businesses are listed; it never changes
-              the three community-wide figures at the top, which stay whole.
+              the page by city or category changes which businesses are listed; it never changes the
+              three community-wide figures at the top, which stay whole.
             </p>
           </section>
 
@@ -225,8 +222,15 @@ export default function FlowMapMethodologyPage() {
             <p>
               On The Collective map, every published business on the list shows as a dot from day
               one, so you can see how the list is spread out. Each dot shows the business by name,
-              because its page on the list is already public. A dot carries no dollar figure, no
-              receipt count and no line until it clears the same rule.
+              because its page on the list is already public. Once one counted receipt is behind a
+              business, it gets a line, so you can see money reach it. Every line under the rule
+              looks the same: it says someone shopped there, never how much. The dollar figure and
+              the receipt count still wait for {AGGREGATE_MIN_TRANSACTIONS} or more purchases.
+            </p>
+            <p>
+              A receipt you add shows on your own map straight away as a dashed line to that
+              business. Only you can see it. It turns into a regular line once it&rsquo;s approved
+              and counted.
             </p>
             <p>
               When you add a receipt you can choose to keep it out of community figures. Section 8
@@ -300,11 +304,11 @@ export default function FlowMapMethodologyPage() {
                 is approved.
               </span>{' '}
               It is a checkbox on the receipt form, and you can go back and change your mind from
-              Account → Receipts for as long as that receipt is still waiting or needs a fix. Once a reviewer
-              approves it, the receipt is locked, because its amount has already been folded into
-              the totals and pulling it back out is a deliberate recalculation rather than something
-              a form should trigger. There is no single account-wide switch, and no way to withdraw
-              spend that has already been counted. If that is what you need,{' '}
+              Account → Receipts for as long as that receipt is still waiting or needs a fix. Once a
+              reviewer approves it, the receipt is locked, because its amount has already been
+              folded into the totals and pulling it back out is a deliberate recalculation rather
+              than something a form should trigger. There is no single account-wide switch, and no
+              way to withdraw spend that has already been counted. If that is what you need,{' '}
               <Link href="/contact" className="text-amber hover:underline">
                 contact us
               </Link>{' '}

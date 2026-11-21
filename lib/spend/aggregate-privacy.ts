@@ -31,6 +31,22 @@
  */
 export const AGGREGATE_MIN_TRANSACTIONS = 5
 
+/**
+ * The bar for drawing a connection on the Collective (ticket 250, founder
+ * 2026-11-21: "line at 1, $ at 5").
+ *
+ * A line says only "a counted receipt landed here". It carries no amount and
+ * no count, and every linked business below `AGGREGATE_MIN_TRANSACTIONS` is
+ * drawn the same size, so the line itself cannot point to how much one
+ * shopper spent. Every dollar or count figure stays gated at
+ * `AGGREGATE_MIN_TRANSACTIONS`.
+ *
+ * Only `/flow-map` reads business nodes at this bar, and
+ * `buildSiloBusinesses` zeroes the figures for any row under the aggregate
+ * bar before the rows leave the server.
+ */
+export const LINK_MIN_TRANSACTIONS = 1
+
 /** A row that carries a transaction count. Structural, so it fits every caller. */
 type CountedRow = { transaction_count: number }
 
@@ -43,6 +59,11 @@ type CountedRow = { transaction_count: number }
  */
 export function meetsAggregateThreshold(row: CountedRow): boolean {
   return row.transaction_count >= AGGREGATE_MIN_TRANSACTIONS
+}
+
+/** True when a business has enough counted receipts to draw its line (ticket 250). */
+export function meetsLinkThreshold(row: CountedRow): boolean {
+  return row.transaction_count >= LINK_MIN_TRANSACTIONS
 }
 
 /** Drops every per-entity row that has not cleared the threshold. */
