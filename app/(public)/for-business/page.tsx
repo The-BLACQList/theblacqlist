@@ -26,18 +26,25 @@ export const metadata: Metadata = {
 // stylesheet, and drops the section numbers. The facts are ticket 206's,
 // trimmed. Marketing owns the words (WF-042 copy deck).
 
-type Row = { title: string; body: string; plan: 'free' | 'starter'; flag?: 'onboarding' | 'beta' }
+type Row = { title: string; body: string; plan: 'free' | 'starter' | 'freeToStart'; note?: string }
+
+const PLAN_LABEL: Record<Row['plan'], string> = {
+  free: 'Free',
+  starter: 'Starter and Up',
+  freeToStart: 'Free to Start',
+}
 
 // What a Page can do. `plan: 'starter'` marks what lib/stripe/features.ts gates
 // at tier 1 or above (access works by rank, so Starter and up): extra photos,
-// `listing_video`, `faqs`, `social_links`, `review_response`, `analytics`. The
-// AI rows render only while their flag is on: the /add-business writing help is
-// FEATURE_AI_ONBOARDING and free; Explain My Numbers and the Write buttons are
-// FEATURE_AI_BETA, Starter and up, counted against aiQuota. The AI rows speak
-// as the owner's AI business assistant, never "drafts" (founder 2026-11-21);
-// each title says AI, which is the disclosure. Not Cue: the dashboard tools
-// aren't called Cue, and Marketing keeps Cue in the supporter lane. The
-// Collective is out: it is gated (FEATURE_COLLECTIVE_OPEN).
+// `listing_video`, `faqs`, `social_links`, `review_response`, `analytics`.
+// AI is one row (founder 2026-11-21, wording workshopped together), built in
+// the page from the flags: it shows while FEATURE_AI_BETA is on (Explain My
+// Numbers and the Write buttons, Starter and up, counted against aiQuota), and
+// reads Free to Start when FEATURE_AI_ONBOARDING's free /add-business writing
+// help is on too. The title says AI, which is the disclosure. Never call them drafts;
+// not Cue (the dashboard tools aren't called Cue, and Marketing keeps Cue in
+// the supporter lane). The Collective is out: it is gated
+// (FEATURE_COLLECTIVE_OPEN).
 const ROWS: Row[] = [
   {
     title: 'Hours and How to Reach You',
@@ -48,12 +55,6 @@ const ROWS: Row[] = [
     title: 'Your Story and Photos',
     body: 'Your story in your own words, and add a photo.',
     plan: 'free',
-  },
-  {
-    title: 'Your AI Assistant Gets You Started',
-    body: 'When you add your business, it writes your tagline, About, and search text, free. Nothing goes live until you choose it.',
-    plan: 'free',
-    flag: 'onboarding',
   },
   {
     title: 'More on Your Page',
@@ -70,19 +71,12 @@ const ROWS: Row[] = [
     body: 'Your views, saves, and taps over the last 30 days.',
     plan: 'starter',
   },
-  {
-    title: 'Your AI Assistant Reads Your Numbers',
-    body: 'It tells you in plain words what your last 30 days show, and one thing to try next.',
-    plan: 'starter',
-    flag: 'beta',
-  },
-  {
-    title: 'Your AI Assistant Helps You Write',
-    body: 'It writes your About, search title and summary, and Instagram captions. You make the final call.',
-    plan: 'starter',
-    flag: 'beta',
-  },
 ]
+
+const AI_ROW = {
+  title: 'AI Help for What Matters',
+  body: "Your words, sharpened. Your numbers, explained. AI helps you write what customers and search engines read first, and tells you what's working and what to try next.",
+}
 
 // One sample page per layout, so an owner can see a Page filled in before
 // claiming theirs. Each line names what its sample really shows
@@ -171,9 +165,25 @@ export default async function ForBusinessPage() {
         : 'The other plans open once everything in them works.'
   const aiOnboardingOn = isFeatureEnabled('aiOnboarding')
   const aiBetaOn = isFeatureEnabled('aiBeta')
-  const rows = ROWS.filter(
-    (r) => !r.flag || (r.flag === 'onboarding' && aiOnboardingOn) || (r.flag === 'beta' && aiBetaOn)
-  )
+  // The AI row sits between the Free rows and the Starter and Up rows
+  // (founder 2026-11-21): it starts free and grows with the plan.
+  const rows: Row[] = aiBetaOn
+    ? [
+        ...ROWS.filter((r) => r.plan === 'free'),
+        aiOnboardingOn
+          ? {
+              ...AI_ROW,
+              plan: 'freeToStart',
+              note: 'Free to start when you add your business. Starter and up gets more every 30 days.',
+            }
+          : {
+              ...AI_ROW,
+              plan: 'starter',
+              note: 'Your plan sets how often it helps every 30 days.',
+            },
+        ...ROWS.filter((r) => r.plan !== 'free'),
+      ]
+    : ROWS
 
   return (
     <div className="bg-white" id="fb-root">
@@ -253,22 +263,20 @@ export default async function ForBusinessPage() {
                   className="border-t border-stone-300 py-5 md:py-6 md:grid md:grid-cols-[160px_minmax(0,1fr)_minmax(0,1.3fr)] md:gap-x-8 md:items-baseline"
                 >
                   <p
-                    className={`font-subhead text-sm font-bold uppercase tracking-[0.1em] ${row.plan === 'free' ? 'text-charcoal' : 'text-amber'}`}
+                    className={`font-subhead text-sm font-bold uppercase tracking-[0.1em] ${row.plan === 'starter' ? 'text-amber' : 'text-charcoal'}`}
                   >
-                    {row.plan === 'free' ? 'Free' : 'Starter and Up'}
+                    {PLAN_LABEL[row.plan]}
                   </p>
                   <h3 className="font-headline text-[22px] leading-snug text-brand-black mt-2 md:mt-0">
                     {row.title}
                   </h3>
-                  <p className="font-body text-[15px] text-charcoal mt-1 md:mt-0">{row.body}</p>
+                  <div className="mt-1 md:mt-0">
+                    <p className="font-body text-[15px] text-charcoal">{row.body}</p>
+                    {row.note && <p className="font-body text-sm text-charcoal mt-2">{row.note}</p>}
+                  </div>
                 </li>
               ))}
             </ul>
-            {aiBetaOn && (
-              <p className="font-body text-sm text-charcoal mt-5">
-                Your plan sets how often your AI business assistant can help every 30 days.
-              </p>
-            )}
           </div>
         </section>
       </Reveal>
