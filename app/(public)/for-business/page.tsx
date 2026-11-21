@@ -190,11 +190,13 @@ export default async function ForBusinessPage() {
           sizes="100vw"
           className="object-cover object-[50%_60%]"
         />
+        {/* Darker than HomeHero's shade: this copy runs higher and wider over the
+            bright skylight (measured 2026-11-21, every hero line at least 4.5:1). */}
         <div
           className="absolute inset-0 md:hidden"
           style={{
             background:
-              'linear-gradient(to bottom, rgba(4,4,5,0.15) 0%, rgba(4,4,5,0.3) 18%, rgba(4,4,5,0.8) 38%, rgba(4,4,5,0.9) 100%)',
+              'linear-gradient(to bottom, rgba(4,4,5,0.5) 0%, rgba(4,4,5,0.84) 15%, rgba(4,4,5,0.9) 40%, rgba(4,4,5,0.92) 100%)',
           }}
           aria-hidden="true"
         />
@@ -202,7 +204,7 @@ export default async function ForBusinessPage() {
           className="absolute inset-0 hidden md:block"
           style={{
             background:
-              'linear-gradient(to right, rgba(4,4,5,0.85) 0%, rgba(4,4,5,0.6) 55%, rgba(4,4,5,0.25) 100%)',
+              'linear-gradient(to right, rgba(4,4,5,0.9) 0%, rgba(4,4,5,0.82) 50%, rgba(4,4,5,0.55) 74%, rgba(4,4,5,0.2) 100%)',
           }}
           aria-hidden="true"
         />
