@@ -73,11 +73,16 @@ describe('/for-business copy', () => {
   it('shows one AI row, gated on its flags, and discloses AI', () => {
     expect(page.match(/title: '[^']*\bAI\b[^']*'/g)).toEqual(["title: 'AI Help for What Matters'"])
     expect(page).toContain(
-      "Your words, sharpened. Your numbers, explained. AI helps you write what customers and search engines read first, and tells you what's working and what to try next."
+      'Your words, sharpened. Your numbers, explained. AI helps you write what customers and search engines read first, and explains your numbers with one thing to try next.'
     )
+    // The read explains numbers and gives one thing to try; it can't know
+    // causes, so no "what's working". Free covers only the add-business
+    // writing help, so the Free to Start line says number reads are Starter
+    // and up (Marketing claim check, 2026-11-21).
+    expect(page).not.toMatch(/what's working/)
     expect(page).toMatch(/const rows: Row\[\] = aiBetaOn\s*\?/)
     expect(page).toMatch(
-      /aiOnboardingOn\s*\?[\s\S]{0,120}plan: 'freeToStart',[\s\S]{0,40}note: 'Free to start when you add your business\. Starter and up gets more every 30 days\.'/
+      /aiOnboardingOn\s*\?[\s\S]{0,120}plan: 'freeToStart',[\s\S]{0,40}note: 'Free when you add your business\. Starter and up explains your numbers\.'/
     )
     expect(page).toMatch(
       /plan: 'starter',\s*note: 'Your plan sets how often it helps every 30 days\.'/

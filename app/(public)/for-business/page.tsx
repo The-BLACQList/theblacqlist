@@ -75,7 +75,7 @@ const ROWS: Row[] = [
 
 const AI_ROW = {
   title: 'AI Help for What Matters',
-  body: "Your words, sharpened. Your numbers, explained. AI helps you write what customers and search engines read first, and tells you what's working and what to try next.",
+  body: 'Your words, sharpened. Your numbers, explained. AI helps you write what customers and search engines read first, and explains your numbers with one thing to try next.',
 }
 
 // One sample page per layout, so an owner can see a Page filled in before
@@ -174,7 +174,7 @@ export default async function ForBusinessPage() {
           ? {
               ...AI_ROW,
               plan: 'freeToStart',
-              note: 'Free to start when you add your business. Starter and up gets more every 30 days.',
+              note: 'Free when you add your business. Starter and up explains your numbers.',
             }
           : {
               ...AI_ROW,
