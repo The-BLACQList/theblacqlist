@@ -59,6 +59,14 @@ describe('planCompareGroups', () => {
     expect(layout.cells.growth).toEqual({ kind: 'yes', up: false })
   })
 
+  it('shows the logo pin from Starter, matching the gate (ticket 244)', () => {
+    const pin = findRow('Your logo as your map pin')
+    expect(canAccess('free', 'map_logo_pin')).toBe(false)
+    expect(pin.cells.free).toEqual({ kind: 'no' })
+    expect(pin.cells.starter).toEqual({ kind: 'yes', up: true })
+    expect(pin.cells.premium).toEqual({ kind: 'yes', up: false })
+  })
+
   it('prints analytics history as 30 days on Starter and 12 months on Growth', () => {
     const a = findRow('Views, saves, and taps')
     expect(a.cells.free).toEqual({ kind: 'no' })

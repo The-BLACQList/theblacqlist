@@ -8,13 +8,15 @@ import type { MapListing } from '@/lib/map/types'
 interface Options {
   map: MlMap | null
   listing: MapListing | null
+  /** A claimed page is a square standing above its point; any other a dot. */
+  mark: 'tile' | 'dot'
   /** Phones show the selection in the sheet instead of a card on the map. */
   enabled: boolean
   onClose: () => void
 }
 
 /** The preview card beside the selected pin (desktop). */
-export function useSelectionPopup({ map, listing, enabled, onClose }: Options) {
+export function useSelectionPopup({ map, listing, mark, enabled, onClose }: Options) {
   const popupRef = useRef<maplibregl.Popup | null>(null)
   const close = useRef(onClose)
   useEffect(() => {
@@ -35,7 +37,7 @@ export function useSelectionPopup({ map, listing, enabled, onClose }: Options) {
     const { clientWidth, clientHeight } = map.getContainer()
     const popup = new maplibregl.Popup({
       anchor: popupAnchor(point.x, point.y, clientWidth, clientHeight),
-      offset: popupOffset(),
+      offset: popupOffset(mark),
       closeButton: true,
       closeOnClick: false,
       maxWidth: 'none',
@@ -49,7 +51,7 @@ export function useSelectionPopup({ map, listing, enabled, onClose }: Options) {
     popup.on('close', () => {
       if (popupRef.current === popup) close.current()
     })
-  }, [map, listing, enabled])
+  }, [map, listing, mark, enabled])
 
   useEffect(() => {
     return () => {

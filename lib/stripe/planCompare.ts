@@ -129,6 +129,8 @@ export function planCompareGroups(): CompareGroup[] {
       rows: [
         row('Category, city, and search placement', () => true),
         row('Map pin', () => true, undefined, 'Once your address is confirmed'),
+        // Ticket 244: the look of the pin is paid; its order on the map is not.
+        row('Your logo as your map pin', gate('map_logo_pin'), undefined, 'Where you sit on the map still comes from trust'),
         row('Community reviews', () => true),
         row('Claim it and get Verified', () => true),
         row('Reply to reviews in public', gate('review_response')),

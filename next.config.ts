@@ -9,6 +9,12 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '10mb',
     },
+    // Next 16.3 turns on Turbopack's build cache by default, and Vercel restores
+    // it from an earlier deployment. On 2026-11-21 (ticket 244) a Preview built
+    // that way shipped main's old app/globals.css next to the branch's new
+    // JavaScript: the map pins rendered without their styles. Off until that
+    // cache reliably notices CSS changes (founder OK 2026-11-21).
+    turbopackFileSystemCacheForBuild: false,
   },
   // Removes `x-powered-by: Next.js`. It names the framework and its version
   // surface for anyone probing, and nothing in the app reads it.

@@ -99,6 +99,7 @@ describe('Starter copy matches the Starter gates and limits', () => {
       'review_response',
       'analytics',
       'chapters_layout',
+      'map_logo_pin',
     ] as const) {
       expect(canAccess('free', feature)).toBe(false)
       expect(canAccess('starter', feature)).toBe(true)
@@ -109,6 +110,7 @@ describe('Starter copy matches the Starter gates and limits', () => {
     expect(photoLimit('starter')).toBe(10)
     expect(starter).toContain('Up to 10 photos (Free has 3)')
     expect(starter).toContain('The full page layout for businesses, restaurants, and vendors')
+    expect(starter).toContain('Your logo as your map pin, once your page is claimed')
     expect(videoLimit('starter')).toBe(1)
     expect(starter).toContain('A video on your page, your own upload or a link')
     // Ticket 233: priced menus on Starter; the Shop (storefront) stays Growth+.

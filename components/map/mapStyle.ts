@@ -2,7 +2,7 @@ import { layers, namedFlavor } from '@protomaps/basemaps'
 import type { LayerSpecification, StyleSpecification, SymbolLayerSpecification } from 'maplibre-gl'
 
 /**
- * "Photo Pins" basemap: a warm sand ground so the photo pins and ink dots carry
+ * The basemap: a warm sand ground so the squares, groups and ink dots carry
  * all the contrast. No dark ground and no glow on the map itself. Protomaps
  * light flavor with the sand palette laid over it. Parks, water, campuses and
  * buildings each get their own step on that palette, and the labels have a

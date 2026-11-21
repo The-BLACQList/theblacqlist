@@ -15,7 +15,7 @@ Decided the same day (all recommended options):
 
 The other three points in that feedback are separate tickets:
 
-- 240: logo map pin on Starter and up, redesigned.
+- 244 (planned as 240): logo map pin on Starter and up, redesigned.
 - 241: advanced analytics on Growth and up.
 - 242: Cue, your business assistant, by plan.
 
@@ -42,7 +42,7 @@ The grid has no "pages your plan covers" row: a Free cell would have to say some
 
 ## Copy Rules Kept
 
-- A plan line ships only with the code that makes it true. "Advanced analytics" waits for 241, the logo pin for 240, Cue jobs for 242. Each adds its own row to `planCompare.ts` when it lands.
+- A plan line ships only with the code that makes it true. "Advanced analytics" waits for 241, the logo pin for 244, Cue jobs for 242. Each adds its own row to `planCompare.ts` when it lands.
 - A closed tier lists nothing, on the cards and in the grid.
 - No em dashes; Title Case headings.
 

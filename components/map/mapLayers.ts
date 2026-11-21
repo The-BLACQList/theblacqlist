@@ -1,14 +1,18 @@
-import type { Map as MlMap } from 'maplibre-gl'
+import type { ExpressionSpecification, Map as MlMap } from 'maplibre-gl'
 import type { LandmarkCollection } from '@/lib/map/landmarks'
 
 export const INK = '#1d1c1d'
+const GOLD = '#c4a065'
 export const DOT_LAYERS = ['dots', 'clusters'] as const
 
+const IS_POINT: ExpressionSpecification = ['!', ['has', 'point_count']]
+
 /**
- * The GL layers: clusters as white circles with an ink ring and the count, and
- * every other listing as a small ink dot. Numbered photo pins are HTML markers
- * (a small, bounded set), and MapExplore keeps their ids out of this source so a
- * listing is never drawn twice.
+ * The GL layers (ticket 244, Calm Map): groups as white circles with an ink
+ * ring and their count, the only number on the map, and every business not
+ * drawn as a square as a small ink dot. Squares are HTML markers;
+ * `setSquareIds` hides their dots so a business is never drawn twice. Every
+ * listing stays in the source, so a group counts everyone in it.
  */
 export function addListingLayers(map: MlMap): void {
   map.addSource('listings', {
@@ -44,19 +48,49 @@ export function addListingLayers(map: MlMap): void {
     },
     paint: { 'text-color': INK },
   })
+  const selected: ExpressionSpecification = ['boolean', ['feature-state', 'selected'], false]
+  const hover: ExpressionSpecification = ['boolean', ['feature-state', 'hover'], false]
   map.addLayer({
     id: 'dots',
     type: 'circle',
     source: 'listings',
-    filter: ['!', ['has', 'point_count']],
+    filter: IS_POINT,
     paint: {
-      'circle-radius': 4,
+      // Selected: bigger, solid, gold ring. Hover from its card: solid ink.
+      'circle-radius': ['case', selected, 7, hover, 5.5, 4],
       'circle-color': INK,
-      'circle-opacity': 0.55,
-      'circle-stroke-color': '#ffffff',
-      'circle-stroke-width': 1.5,
+      'circle-opacity': ['case', ['any', selected, hover], 1, 0.55],
+      'circle-stroke-color': ['case', selected, GOLD, '#ffffff'],
+      'circle-stroke-width': ['case', selected, 2.5, 1.5],
     },
   })
+}
+
+/** Hide the dots of the businesses drawn as squares. */
+export function setSquareIds(map: MlMap, ids: readonly string[]): void {
+  if (!map.getLayer('dots')) return
+  map.setFilter(
+    'dots',
+    ids.length ? ['all', IS_POINT, ['!', ['in', ['get', 'id'], ['literal', [...ids]]]]] : IS_POINT
+  )
+}
+
+/**
+ * What the map is drawing right now: the ids of businesses standing on their
+ * own (not folded into a group) and whether any group shows. Read after the
+ * map goes idle, when the source has settled for this zoom.
+ */
+export function readLooseIds(map: MlMap): { loose: Set<string>; groups: boolean } {
+  const loose = new Set<string>()
+  if (!map.getLayer('clusters')) return { loose, groups: false }
+  // The source, not the rendered dots: a square's dot is filtered out, but the
+  // business still stands on its own. Ids outside the view are harmless, the
+  // squares are picked from the listings in view.
+  for (const f of map.querySourceFeatures('listings')) {
+    if (!f.properties?.point_count && typeof f.properties?.id === 'string') loose.add(f.properties.id)
+  }
+  const groups = map.queryRenderedFeatures({ layers: ['clusters'] }).length > 0
+  return { loose, groups }
 }
 
 const LANDMARK_ICON = 'landmark-diamond'

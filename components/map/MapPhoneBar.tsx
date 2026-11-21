@@ -19,7 +19,7 @@ export function MapPhoneBar({ onLocate, ...filterProps }: Props) {
   const [extrasOpen, setExtrasOpen] = useState(false)
 
   return (
-    <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex flex-col gap-2">
+    <div data-map-phonebar="" className="pointer-events-none absolute inset-x-3 top-3 z-20 flex flex-col gap-2">
       <div className="pointer-events-auto flex min-h-[52px] items-center gap-2 rounded-[14px] bg-white p-1 shadow-[0_6px_20px_rgba(29,28,29,0.2)]">
         <label htmlFor="map-city-select" className="sr-only">
           City

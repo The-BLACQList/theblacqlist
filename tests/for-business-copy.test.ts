@@ -73,6 +73,15 @@ describe('/for-business copy', () => {
     expect(page).toMatch(/title: 'The Full Page Layout',[\s\S]{0,200}chapters\.',\s*plan: 'starter'/)
   })
 
+  // Ticket 244: the logo pin is Starter and up; the row says order stays trust.
+  it('marks the logo map pin Starter and up, matching features.ts', () => {
+    expect(canAccess('free', 'map_logo_pin')).toBe(false)
+    expect(canAccess('starter', 'map_logo_pin')).toBe(true)
+    expect(page).toMatch(
+      /title: 'Your Logo on the Map',[\s\S]{0,120}Your logo as your map pin[\s\S]{0,160}comes from trust, not your plan\.',\s*plan: 'starter'/
+    )
+  })
+
   // Ticket 206: AI shows only while its flag is on. Ticket 240 (founder
   // 2026-11-21): one row, "AI Help for What Matters", whose title is the
   // disclosure. Free to Start when the free add-business help is on too;
