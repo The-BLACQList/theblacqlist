@@ -7,8 +7,8 @@ import { createClient } from '@/lib/supabase/server'
 import { getPlanAvailability, isPlanPurchasable, isTierOpen } from '@/lib/stripe/availability'
 import { EXAMPLE_VARIANT_LABEL, type ExampleVariant } from '@/lib/example/fixtures'
 import { TrustMark } from '@/components/brand/TrustMark'
+import { Reveal } from '@/components/motion/Reveal'
 import { PricingPlans } from '../pricing/PricingPlans'
-import './for-business.css'
 
 // Plan availability comes from the live `plans` table, same as /pricing. A
 // prerendered page would keep showing a buy button after a tier is withheld.
@@ -20,67 +20,63 @@ export const metadata: Metadata = {
     'Claiming your Page on The BLACQList is free, and so is adding your business. Then keep your hours and details right yourself.',
 }
 
-// Ticket 206, the For Business workshop (2026-11-18). Layout: Creative's
-// approved build spec (blacqlist-for-business, DR-003 to DR-006). Words:
-// Marketing's copy deck (WF-042), with the Author OS voice pass. Marketing owns
-// the words; change them in the deck first.
+// Ticket 240 (founder, 2026-11-21): the page uses the home page's building
+// blocks (full-width photo hero, eyebrow + headline bands, pill buttons, the
+// site's Jost headlines over Inter text) instead of ticket 206's own
+// stylesheet, and drops the section numbers. The facts are ticket 206's,
+// trimmed. Marketing owns the words (WF-042 copy deck).
 
-const STEPS = ['Find Your Page', 'Claim It', 'Keep It Right']
+type Row = { title: string; body: string; plan: 'free' | 'starter' | 'freeToStart'; note?: string }
 
-type Row = { title: string; body: string; plan: 'free' | 'starter'; flag?: 'onboarding' | 'beta' }
+const PLAN_LABEL: Record<Row['plan'], string> = {
+  free: 'Free',
+  starter: 'Starter and Up',
+  freeToStart: 'Free to Start',
+}
 
-// The compare table. `plan: 'starter'` marks what lib/stripe/features.ts gates
+// What a Page can do. `plan: 'starter'` marks what lib/stripe/features.ts gates
 // at tier 1 or above (access works by rank, so Starter and up): extra photos,
-// `listing_video`, `faqs`, `social_links`, `review_response`, `analytics`. The
-// AI rows render only while their flag is on: the /add-business draft is
-// FEATURE_AI_ONBOARDING and free; Explain My Numbers and the Write buttons are
-// FEATURE_AI_BETA, Starter and up, counted against aiQuota. Each AI row says
-// that AI writes it. The Collective is out: it is gated (FEATURE_COLLECTIVE_OPEN).
+// `listing_video`, `faqs`, `social_links`, `review_response`, `analytics`.
+// AI is one row (founder 2026-11-21, wording workshopped together), built in
+// the page from the flags: it shows while FEATURE_AI_BETA is on (Explain My
+// Numbers and the Write buttons, Starter and up, counted against aiQuota), and
+// reads Free to Start when FEATURE_AI_ONBOARDING's free /add-business writing
+// help is on too. The title says AI, which is the disclosure. Never call them drafts;
+// not Cue (the dashboard tools aren't called Cue, and Marketing keeps Cue in
+// the supporter lane). The Collective is out: it is gated
+// (FEATURE_COLLECTIVE_OPEN).
 const ROWS: Row[] = [
   {
     title: 'Hours and How to Reach You',
-    body: "Your Page can show what you make or do, your hours, and how to reach you. Keep them right so people know when you're open.",
+    body: "What you do, when you're open, and how to reach you.",
     plan: 'free',
   },
   {
     title: 'Your Story and Photos',
-    body: "Tell people who you are in your own words, and add a photo. When you claim your Page, it shows who's behind the business.",
+    body: 'Your story in your own words, and add a photo.',
     plan: 'free',
-  },
-  {
-    title: 'Start from a Draft',
-    body: "Stuck on what to say? When you add your business, start from a free first draft. It's written by AI, and you can change any of it.",
-    plan: 'free',
-    flag: 'onboarding',
   },
   {
     title: 'More on Your Page',
-    body: 'Add more photos, a video, common questions, and your social links, on Starter and up.',
+    body: 'More photos, a video, common questions, and your social links.',
     plan: 'starter',
   },
   {
     title: 'Reviews You Can Answer',
-    body: "On Starter and up, reply to reviews in public so people see you're listening.",
+    body: 'Reply to reviews in public.',
     plan: 'starter',
   },
   {
     title: 'See Who Finds You',
-    body: 'See your views, saves, and taps over the last 30 days, on Starter and up.',
+    body: 'Your views, saves, and taps over the last 30 days.',
     plan: 'starter',
-  },
-  {
-    title: 'Explain My Numbers',
-    body: 'A plain read of what your numbers show, on Starter and up. AI writes it.',
-    plan: 'starter',
-    flag: 'beta',
-  },
-  {
-    title: 'More Drafts for Your Page',
-    body: 'Get drafts of your About text, your search title and summary, and Instagram captions, on Starter and up. AI writes them, and you edit them.',
-    plan: 'starter',
-    flag: 'beta',
   },
 ]
+
+const AI_ROW = {
+  title: 'AI Help for What Matters',
+  body: 'Your words, sharpened. Your numbers, explained. AI helps you write what customers and search engines read first, and explains your numbers with one thing to try next.',
+}
 
 // One sample page per layout, so an owner can see a Page filled in before
 // claiming theirs. Each line names what its sample really shows
@@ -89,17 +85,17 @@ const SAMPLES: { variant: ExampleVariant; shot: string; body: string }[] = [
   {
     variant: 'storefront',
     shot: '/images/for-business/sample-storefront.webp',
-    body: 'For places people visit, like cafés, restaurants, shops, and salons. The sample is a café with a menu, a shop, and table bookings.',
+    body: 'For places people visit, like cafés, shops, and salons. The sample is a café with a menu and bookings.',
   },
   {
     variant: 'professional',
     shot: '/images/for-business/sample-professional.webp',
-    body: 'For services and advice, like consultants, accountants, and agencies. The sample is a consulting firm with prices, a team, and discovery calls.',
+    body: 'For services and advice, like consultants and accountants. The sample is a consulting firm with prices and a team.',
   },
   {
     variant: 'creative',
     shot: '/images/for-business/sample-creative.webp',
-    body: 'For makers and artists, like designers, photographers, and studios. The sample is a design studio with a portfolio, commissions, and prints.',
+    body: 'For makers and artists, like designers and photographers. The sample is a design studio with a portfolio and prints.',
   },
 ]
 
@@ -110,44 +106,42 @@ const LADDER = [
   {
     tier: 2,
     name: 'Verified',
-    line: 'The owner sent proof, such as a business license, and we checked it by hand. Free for every owner.',
+    line: 'The owner sent proof, like a business license, and we checked it by hand. Free for every owner.',
   },
   {
     tier: 3,
     name: 'BLACQList Certified',
-    line: "Earned over time: 5 or more reviews, an average of 3.5 or better, 90 days since the claim, and complete details. It's automatic. Nobody can buy it.",
+    line: "5 or more reviews, an average of 3.5 or better, 90 days since the claim, and complete details. It's automatic. Nobody can buy it.",
   },
 ] as const
 
-// Drawn, not typed: the self-hosted Jost subset has no U+2192, so a typed →
-// fell back to another face (Creative QA-07). The head is Jost's x-height.
-const Arrow = () => (
-  <svg
-    className="arw"
-    viewBox="0 0 16 12"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth={1.6}
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-    focusable="false"
-  >
-    <path d="M1.5 6h12.5M9.5 1.5 14 6l-4.5 4.5" />
-  </svg>
-)
+// The home page's pill buttons and band layout (components/home/OwnerCta.tsx,
+// HomeMapBand.tsx). Eyebrows are 14px, not the home's 12px: this page keeps
+// ticket 206's 14px floor (e2e/for-business-brand.spec.ts).
+const PILL =
+  'inline-flex items-center justify-center h-12 px-6 md:px-7 rounded-full font-subhead text-sm font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold'
+const PILL_GOLD = `${PILL} bg-gold hover:bg-light-gold text-brand-black`
+const PILL_LINE = `${PILL} border border-off-white/40 text-white hover:bg-off-white/10`
+const WRAP = 'max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10'
+const EYEBROW = 'font-subhead text-sm font-bold uppercase tracking-[0.12em] mb-1.5'
+const H2 = 'font-headline text-[28px] md:text-[36px] leading-tight text-balance'
+const LINK_UNDER =
+  'font-subhead text-sm font-bold text-brand-black underline decoration-amber decoration-[1.5px] underline-offset-[5px]'
 
 // [Decision, founder, 2026-10-15: one owner door. Every general owner link
 // lands on #start, on one question: is your business already listed? Find
 // first, since claiming an existing Page avoids duplicates.] The id lives on
 // the hero only; the closing band repeats the buttons without it.
-function DoorButtons() {
+function DoorButtons({ center = false }: { center?: boolean }) {
   return (
-    <div className="btns">
-      <Link href="/claim" className="btn btn-gold">
-        Find My Business <Arrow />
+    <div className={`flex gap-3 flex-wrap${center ? ' justify-center' : ''}`}>
+      <Link href="/claim" className={PILL_GOLD}>
+        Find My Business
+        <span aria-hidden="true" className="ml-2">
+          →
+        </span>
       </Link>
-      <Link href="/add-business" className="btn btn-line-d">
+      <Link href="/add-business" className={PILL_LINE}>
         Add My Business
       </Link>
     </div>
@@ -171,254 +165,260 @@ export default async function ForBusinessPage() {
         : 'The other plans open once everything in them works.'
   const aiOnboardingOn = isFeatureEnabled('aiOnboarding')
   const aiBetaOn = isFeatureEnabled('aiBeta')
-  const rows = ROWS.filter(
-    (r) => !r.flag || (r.flag === 'onboarding' && aiOnboardingOn) || (r.flag === 'beta' && aiBetaOn)
-  )
+  // The AI row sits between the Free rows and the Starter and Up rows
+  // (founder 2026-11-21): it starts free and grows with the plan.
+  const rows: Row[] = aiBetaOn
+    ? [
+        ...ROWS.filter((r) => r.plan === 'free'),
+        aiOnboardingOn
+          ? {
+              ...AI_ROW,
+              plan: 'freeToStart',
+              note: 'Free when you add your business. Starter and up explains your numbers.',
+            }
+          : {
+              ...AI_ROW,
+              plan: 'starter',
+              note: 'Your plan sets how often it helps every 30 days.',
+            },
+        ...ROWS.filter((r) => r.plan !== 'free'),
+      ]
+    : ROWS
 
   return (
-    <div className="fb" id="fb-root">
-      {/* Hero: H2 Split (DR-005). The dark panel holds the door only (DR-006). */}
-      <section className="hx" aria-labelledby="door-h">
-        <div className="hx-grid">
-          <div className="hx-copy" id="start">
-            <p className="lbl">For Business Owners</p>
-            <h1 className="dq" id="door-h">
-              Is Your Business Already on the List?
-            </h1>
-            <p className="dl">
-              Search your business name first. If it&apos;s here, claim your Page free. If it
-              isn&apos;t, add your business free.
-            </p>
-            <div className="act on-dark">
-              <DoorButtons />
-            </div>
-            <ul className="facts">
-              <li>A real person checks every claim.</li>
-              <li>
-                Found your business here already? It was listed from public info, and nobody has
-                claimed it yet.
-              </li>
-            </ul>
-            <p className="help">
-              Search first, so your business doesn&apos;t end up with two Pages.
-            </p>
-            <div className="mini">
-              <p className="sub-lbl">How It Works</p>
-              <ol>
-                {STEPS.map((step, i) => (
-                  <li key={step}>
-                    <span className="n" aria-hidden="true">
-                      {i + 1}
-                    </span>
-                    {step}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
-          <div className="ph">
-            <Image
-              src="/images/example/cafe-interior.webp"
-              alt="A café with hanging plants, wicker lamps and a counter under a slatted roof."
-              fill
-              priority
-              sizes="(min-width: 1024px) 42vw, (min-width: 768px) 50vw, 100vw"
-            />
-          </div>
-        </div>
-      </section>
+    <div className="bg-white" id="fb-root">
+      {/* Hero: full width, built like components/home/HomeHero.tsx. The dark
+          ground under the photo gives the text a dark surface while it loads. */}
+      <section
+        aria-labelledby="door-h"
+        className="relative bg-deep-bg min-h-[480px] md:min-h-[72vh] flex items-end md:items-center"
+      >
+        <Image
+          src="/images/example/cafe-interior.webp"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-[50%_60%]"
+        />
+        {/* Darker than HomeHero's shade: this copy runs higher and wider over the
+            bright skylight (measured 2026-11-21, every hero line at least 4.5:1). */}
+        <div
+          className="absolute inset-0 md:hidden"
+          style={{
+            background:
+              'linear-gradient(to bottom, rgba(4,4,5,0.5) 0%, rgba(4,4,5,0.84) 15%, rgba(4,4,5,0.9) 40%, rgba(4,4,5,0.92) 100%)',
+          }}
+          aria-hidden="true"
+        />
+        <div
+          className="absolute inset-0 hidden md:block"
+          style={{
+            background:
+              'linear-gradient(to right, rgba(4,4,5,0.9) 0%, rgba(4,4,5,0.82) 50%, rgba(4,4,5,0.55) 74%, rgba(4,4,5,0.2) 100%)',
+          }}
+          aria-hidden="true"
+        />
 
-      {/* 01: compare table (DR-005, DR-006 C) */}
-      <section className="band s-white" id="gets" aria-labelledby="gets-h">
-        <div className="wrap">
-          <div className="ch-hd">
-            <h2 className="ch-h" id="gets-h">
-              <span className="num">01</span>
-              <span>What Your Page Can Do</span>
-            </h2>
-            <p className="lede">Here&apos;s what&apos;s free, and what Starter adds.</p>
-          </div>
-          <table className="ct" role="table" aria-label="What each plan includes">
-            <colgroup>
-              <col className="c1" />
-              <col className="c2" />
-              <col className="c3" />
-            </colgroup>
-            <thead role="rowgroup">
-              <tr role="row">
-                <th role="columnheader" scope="col">
-                  Feature
-                </th>
-                <th role="columnheader" scope="col" className="c">
-                  Free
-                </th>
-                <th role="columnheader" scope="col" className="c st">
-                  Starter and Up
-                </th>
-              </tr>
-            </thead>
-            <tbody role="rowgroup">
-              {rows.map((row) => (
-                <tr role="row" key={row.title}>
-                  <th role="rowheader" scope="row">
-                    <div className="fd">
-                      <b>{row.title}</b>
-                      <span>{row.body}</span>
-                    </div>
-                  </th>
-                  <td role="cell">{row.plan === 'free' ? <Tick /> : <Dash />}</td>
-                  <td role="cell" className="st">
-                    <Tick />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          {aiBetaOn && (
-            <p className="fine ct-after">Your plan sets how many drafts you get every 30 days.</p>
-          )}
-        </div>
-      </section>
-
-      {/* 02: sample pages (ticket 206) */}
-      <section className="band s-stone" aria-labelledby="samples-h">
-        <div className="wrap">
-          <div className="ch-hd">
-            <h2 className="ch-h" id="samples-h">
-              <span className="num">02</span>
-              <span>See a Sample Page</span>
-            </h2>
-            <p className="lede">Pick the type closest to your business and see a Page filled in.</p>
-          </div>
-          <ul className="strip">
-            {SAMPLES.map((sample) => {
-              const label = EXAMPLE_VARIANT_LABEL[sample.variant]
-              return (
-                <li className="sm" key={sample.variant}>
-                  <Link href={`/example/${sample.variant}`}>
-                    <div className="shot">
-                      <Image
-                        src={sample.shot}
-                        alt=""
-                        fill
-                        sizes="(min-width: 1024px) 400px, (min-width: 640px) 46vw, 84vw"
-                      />
-                    </div>
-                    <div className="cap">
-                      <h3>{label}</h3>
-                      <p>{sample.body}</p>
-                      <span className="go">
-                        See the {label} Sample <Arrow />
-                      </span>
-                    </div>
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
-          <p className="fine samples-fine">
-            The business on these pages is made up, and so are its reviews and numbers. Some
-            features need a paid plan. Live Pages look different from these samples.
+        <div id="start" className={`relative z-10 ${WRAP} pt-[104px] pb-10 md:py-20 scroll-mt-20`}>
+          <p className={`${EYEBROW} text-gold`}>For Business Owners</p>
+          <h1
+            id="door-h"
+            className="font-headline text-[40px] md:text-[60px] lg:text-[68px] text-white leading-[1.05] text-balance max-w-[18ch]"
+          >
+            Is Your Business Already on the List?
+          </h1>
+          <p className="font-body text-base md:text-lg text-off-white/90 mt-3 max-w-[46ch]">
+            Search for your business first. If it&apos;s here, claim it free. If not, add it free.
           </p>
+          <div className="mt-7">
+            <DoorButtons />
+          </div>
+          <ul className="mt-6 grid gap-1 font-body text-[15px] text-off-white/85 max-w-[52ch]">
+            <li>A real person checks every claim.</li>
+            <li>Already listed? We added it from public info. Claim it to make it yours.</li>
+          </ul>
         </div>
       </section>
 
-      {/* 03: trust ladder, round marks with the name in ink or white (DR-004, DR-006 A) */}
-      <section className="band s-ember on-dark" aria-labelledby="trust-h">
-        <div className="wrap">
-          <div className="ch-hd">
-            <h2 className="ch-h" id="trust-h">
-              <span className="num">03</span>
-              <span>How Trust Is Earned</span>
+      {/* What a Page can do: one even grid, each feature tagged with its plan */}
+      <Reveal>
+        <section aria-labelledby="gets-h" className="bg-white py-12 md:py-16">
+          <div className={WRAP}>
+            <p className={`${EYEBROW} text-amber`}>Your Page</p>
+            <h2 id="gets-h" data-fb-heading className={`${H2} text-brand-black`}>
+              What Your Page Can Do
             </h2>
-            <p className="lede">Claimed, Verified, and Certified are earned, never sold.</p>
-          </div>
-          <ol className="ladder">
-            {LADDER.map((rung) => (
-              <li key={rung.name}>
-                <h3>
-                  <span className="mk">
-                    <TrustMark tier={rung.tier} dark size={20} />
-                  </span>
-                  {rung.name}
-                </h3>
-                <p>{rung.line}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
+            <p className="font-body text-[15px] text-charcoal mt-3 max-w-[48ch]">
+              Here&apos;s what&apos;s free, and what Starter adds.
+            </p>
 
-      {/* 04: plans, the same component and data as /pricing */}
-      <section className="band s-off" aria-labelledby="plans-h">
-        <div className="wrap">
-          <div className="ch-hd">
-            <h2 className="ch-h" id="plans-h">
-              <span className="num">04</span>
-              <span>Start Free</span>
+            {/* One even grid, no boxes: every cell is the same width and each
+                row shares a height, whichever rows the flags turn on. The
+                plan tag on each cell says who gets it. */}
+            <ul className="mt-8 border-b border-stone-300">
+              {rows.map((row) => (
+                <li
+                  key={row.title}
+                  className="border-t border-stone-300 py-5 md:py-6 md:grid md:grid-cols-[160px_minmax(0,1fr)_minmax(0,1.3fr)] md:gap-x-8 md:items-baseline"
+                >
+                  <p
+                    className={`font-subhead text-sm font-bold uppercase tracking-[0.1em] ${row.plan === 'starter' ? 'text-amber' : 'text-charcoal'}`}
+                  >
+                    {PLAN_LABEL[row.plan]}
+                  </p>
+                  <h3 className="font-headline text-[22px] leading-snug text-brand-black mt-2 md:mt-0">
+                    {row.title}
+                  </h3>
+                  <div className="mt-1 md:mt-0">
+                    <p className="font-body text-[15px] text-charcoal">{row.body}</p>
+                    {row.note && <p className="font-body text-sm text-charcoal mt-2">{row.note}</p>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* Sample pages (ticket 206), laid out like the home Showcase */}
+      <Reveal>
+        <section aria-labelledby="samples-h" className="bg-off-white py-12 md:py-16">
+          <div className={WRAP}>
+            <div className="flex items-end justify-between gap-6 flex-wrap mb-8">
+              <div>
+                <p className={`${EYEBROW} text-amber`}>Samples</p>
+                <h2 id="samples-h" data-fb-heading className={`${H2} text-brand-black`}>
+                  See a Sample Page
+                </h2>
+                <p className="font-body text-[15px] text-charcoal mt-3 max-w-[48ch]">
+                  Pick the type closest to your business.
+                </p>
+              </div>
+              <Link href="/for-business#start" className={PILL_GOLD}>
+                Get Your Page
+              </Link>
+            </div>
+
+            <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+              {SAMPLES.map((sample) => {
+                const label = EXAMPLE_VARIANT_LABEL[sample.variant]
+                return (
+                  <li key={sample.variant}>
+                    <Link
+                      href={`/example/${sample.variant}`}
+                      className="group flex flex-col h-full rounded-2xl overflow-hidden bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+                    >
+                      <div className="relative aspect-[16/10] bg-stone-200 overflow-hidden">
+                        <Image
+                          src={sample.shot}
+                          alt=""
+                          fill
+                          sizes="(min-width: 768px) 33vw, 100vw"
+                          className="object-cover object-top transition-transform duration-700 motion-safe:group-hover:scale-[1.025]"
+                        />
+                      </div>
+                      <div className="flex flex-col grow p-5 md:p-6">
+                        <h3 className="font-headline text-[22px] text-brand-black">{label}</h3>
+                        <p className="font-body text-[15px] text-charcoal mt-1 grow">
+                          {sample.body}
+                        </p>
+                        <span className={`${LINK_UNDER} mt-4`}>
+                          See the {label} Sample
+                          <span aria-hidden="true" className="ml-2">
+                            →
+                          </span>
+                        </span>
+                      </div>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+            <p className="font-body text-sm text-charcoal mt-5 max-w-[64ch]">
+              The business on these pages is made up, and so are its reviews and numbers. Some
+              features need a paid plan.
+            </p>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* Trust ladder, round marks (DR-004) */}
+      <Reveal>
+        <section aria-labelledby="trust-h" className="bg-deep-bg py-12 md:py-16">
+          <div className={WRAP}>
+            <p className={`${EYEBROW} text-gold`}>Trust</p>
+            <h2 id="trust-h" data-fb-heading className={`${H2} text-white`}>
+              How Trust Is Earned
             </h2>
-            <p className="lede">You don&apos;t need Starter to claim or keep your Page.</p>
+            <p className="font-body text-[15px] text-off-white/80 mt-3 max-w-[48ch]">
+              Claimed, Verified, and Certified are earned, never sold.
+            </p>
+            <ol className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-px mt-8 rounded-2xl overflow-hidden bg-off-white/15">
+              {LADDER.map((rung) => (
+                <li key={rung.name} className="bg-deep-bg p-5 md:p-6">
+                  <h3 className="flex items-center gap-2.5 font-headline text-[20px] text-white">
+                    <TrustMark tier={rung.tier} dark size={20} className="flex-none" />
+                    {rung.name}
+                  </h3>
+                  <p className="font-body text-[15px] text-off-white/80 mt-2">{rung.line}</p>
+                </li>
+              ))}
+            </ol>
           </div>
-          <div className="fb-plans">
-            <PricingPlans
-              availability={availability}
-              showFeatured={false}
-              freeHref="/for-business#start"
-              waitlistHref="/pricing#pricing-waitlist"
-            />
-          </div>
-          <div className="plans-after">
-            {openLine && <p className="fine">{openLine}</p>}
-            <Link href="/pricing" className="tlink">
-              Compare Every Plan
-            </Link>
-          </div>
-        </div>
-      </section>
+        </section>
+      </Reveal>
 
-      {/* Closing door: the same two buttons, without the #start id */}
-      <section className="band close s-ground on-dark" aria-labelledby="close-h">
-        <div className="wrap">
-          <div className="close-txt">
-            <h2 className="sub-h" id="close-h">
+      {/* Plans: the same component and data as /pricing */}
+      <Reveal>
+        <section aria-labelledby="plans-h" className="bg-white py-12 md:py-16">
+          <div className={WRAP}>
+            <p className={`${EYEBROW} text-amber`}>Plans</p>
+            <h2 id="plans-h" data-fb-heading className={`${H2} text-brand-black`}>
+              Start Free
+            </h2>
+            <p className="font-body text-[15px] text-charcoal mt-3 max-w-[48ch]">
+              You don&apos;t need Starter to claim or keep your Page.
+            </p>
+            {/* data-fb-plans: the shared cards keep /pricing's own type (e2e audit skips them) */}
+            <div className="mt-8" data-fb-plans>
+              <PricingPlans
+                availability={availability}
+                showFeatured={false}
+                freeHref="/for-business#start"
+                waitlistHref="/pricing#pricing-waitlist"
+              />
+            </div>
+            <div className="grid justify-items-center gap-2 mt-7 text-center">
+              {openLine && <p className="font-body text-sm text-charcoal">{openLine}</p>}
+              <Link href="/pricing" className={`${LINK_UNDER} inline-flex items-center min-h-11`}>
+                Compare Every Plan
+              </Link>
+            </div>
+          </div>
+        </section>
+      </Reveal>
+
+      {/* Closing door, the home page's owner band: the same two buttons, without the #start id */}
+      <Reveal>
+        <section aria-labelledby="close-h" className="bg-brand-black py-14 md:py-16">
+          <div className={`${WRAP} text-center`}>
+            <h2
+              id="close-h"
+              className="font-headline text-[28px] md:text-[36px] text-white text-balance"
+            >
               Claim or Add Your Business
             </h2>
-            <p className="lede">
+            <p className="font-body text-[15px] text-off-white/80 mt-2 max-w-[48ch] mx-auto">
               Claiming is free, and so is adding your business.
               {starterOpen && ' Upgrade any time, or never.'}
             </p>
+            <div className="mt-6">
+              <DoorButtons center />
+            </div>
           </div>
-          <DoorButtons />
-        </div>
-      </section>
+        </section>
+      </Reveal>
     </div>
-  )
-}
-
-function Tick() {
-  return (
-    <>
-      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-        <path
-          d="M3.5 9.5l3.6 3.4L14.5 5"
-          fill="none"
-          stroke="#1d1c1d"
-          strokeWidth="1.9"
-          strokeLinecap="square"
-        />
-      </svg>
-      <span className="sr-only">Included</span>
-    </>
-  )
-}
-
-function Dash() {
-  return (
-    <>
-      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
-        <path d="M5 9h8" stroke="#595758" strokeWidth="1.5" />
-      </svg>
-      <span className="sr-only">Not included</span>
-    </>
   )
 }

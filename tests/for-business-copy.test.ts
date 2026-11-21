@@ -54,10 +54,10 @@ describe('/for-business copy', () => {
     expect(canAccess('starter', 'faqs')).toBe(true)
     expect(canAccess('free', 'social_links')).toBe(false)
     expect(canAccess('starter', 'social_links')).toBe(true)
-    // Access works by rank, so the Starter rows say "Starter and up".
+    // Access works by rank, so these rows carry the "Starter and Up" label.
     expect(canAccess('premium', 'listing_video')).toBe(true)
     expect(page).toMatch(
-      /title: 'More on Your Page',\s*body: 'Add more photos, a video, common questions, and your social links, on Starter and up\.',\s*plan: 'starter'/
+      /title: 'More on Your Page',\s*body: 'More photos, a video, common questions, and your social links\.',\s*plan: 'starter'/
     )
     // Free gets one photo, so the free row never types a number or says "photos" alone.
     expect(page).toMatch(
@@ -65,17 +65,36 @@ describe('/for-business copy', () => {
     )
   })
 
-  // Ticket 206: the AI rows show only while their flag is on, and say AI writes them.
-  it('gates every AI row on its flag and discloses AI', () => {
+  // Ticket 206: AI shows only while its flag is on. Ticket 240 (founder
+  // 2026-11-21): one row, "AI Help for What Matters", whose title is the
+  // disclosure. Free to Start when the free add-business help is on too;
+  // Starter and Up otherwise. Never "drafts". No Cue: the dashboard tools
+  // aren't called Cue, and Marketing keeps Cue in the supporter lane.
+  it('shows one AI row, gated on its flags, and discloses AI', () => {
+    expect(page.match(/title: '[^']*\bAI\b[^']*'/g)).toEqual(["title: 'AI Help for What Matters'"])
+    expect(page).toContain(
+      'Your words, sharpened. Your numbers, explained. AI helps you write what customers and search engines read first, and explains your numbers with one thing to try next.'
+    )
+    // The read explains numbers and gives one thing to try; it can't know
+    // causes, so no "what's working". Free covers only the add-business
+    // writing help, so the Free to Start line says number reads are Starter
+    // and up (Marketing claim check, 2026-11-21).
+    expect(page).not.toMatch(/what's working/)
+    expect(page).toMatch(/const rows: Row\[\] = aiBetaOn\s*\?/)
     expect(page).toMatch(
-      /title: 'Start from a Draft',[\s\S]{0,200}written by AI[\s\S]{0,80}flag: 'onboarding'/
+      /aiOnboardingOn\s*\?[\s\S]{0,120}plan: 'freeToStart',[\s\S]{0,40}note: 'Free when you add your business\. Starter and up explains your numbers\.'/
     )
     expect(page).toMatch(
-      /title: 'Explain My Numbers',[\s\S]{0,160}AI writes it\.[\s\S]{0,60}flag: 'beta'/
+      /plan: 'starter',\s*note: 'Your plan sets how often it helps every 30 days\.'/
     )
+    expect(page).toContain("freeToStart: 'Free to Start'")
+    // Between the Free rows and the Starter and Up rows (founder 2026-11-21).
     expect(page).toMatch(
-      /title: 'More Drafts for Your Page',[\s\S]{0,200}AI writes them[\s\S]{0,80}flag: 'beta'/
+      /\.\.\.ROWS\.filter\(\(r\) => r\.plan === 'free'\),\s*aiOnboardingOn[\s\S]{0,400}\.\.\.ROWS\.filter\(\(r\) => r\.plan !== 'free'\),/
     )
+    // Strings only (comments may name what is left out, and why).
+    const strings = page.match(/'[^'\n]*'|"[^"\n]*"/g) ?? []
+    expect(strings.filter((x) => /AI writes|\bCue\b|\bdrafts?\b/i.test(x))).toEqual([])
     expect(page).toContain("isFeatureEnabled('aiOnboarding')")
     expect(page).toContain("isFeatureEnabled('aiBeta')")
     expect(page).not.toMatch(/AI-powered/i)
