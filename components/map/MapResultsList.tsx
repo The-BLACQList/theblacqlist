@@ -20,7 +20,7 @@ interface Props extends MapResultsProps {
  */
 export function MapResultsList({
   listings,
-  numbers,
+  hoverId,
   loading,
   loadError,
   selectedId,
@@ -85,8 +85,8 @@ export function MapResultsList({
             <li key={listing.id} className={variant === 'strip' ? 'shrink-0' : undefined}>
               <MapListingCard
                 listing={listing}
-                number={numbers.get(listing.id) ?? null}
                 selected={listing.id === selectedId}
+                hovered={listing.id === hoverId}
                 variant={variant}
                 distance={near ? distanceMiles(near, listing) : null}
                 onSelect={onSelect}

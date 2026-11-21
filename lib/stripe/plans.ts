@@ -91,6 +91,7 @@ export const PLANS: PlanMeta[] = [
       aiLine('starter'),
       pagesLine('starter'),
       'The full page layout for businesses, restaurants, and vendors',
+      'Your logo as your map pin, once your page is claimed',
       'Up to 10 photos (Free has 3)',
       'A video on your page, your own upload or a link',
       'Your menu or service list, with prices',

@@ -18,6 +18,11 @@ export interface MapListing {
   zip: string | null
   trustTier: TrustTier
   logoSrc: string | null
+  /**
+   * Ticket 244: the page is claimed and on Starter or up, so its pin is the
+   * logo tile. Free claimed pages get the plain numbered tile.
+   */
+  logoPin: boolean
   ownershipLabel: string
   avgRating: number | null
   reviewCount: number
@@ -91,9 +96,10 @@ export interface MapFilterProps {
 
 /** What the results list (desktop panel or phone sheet) needs. */
 export interface MapResultsProps {
-  /** Ranked listings in view, same order the pins are numbered from. Nearest first while Near me is on. */
+  /** Ranked listings in view, trusted first. Nearest first while Near me is on. */
   listings: MapListing[]
-  numbers: Map<string, number>
+  /** The business whose square or dot the pointer is on, so its card lights up. */
+  hoverId: string | null
   inViewCount: number
   loading: boolean
   loadError: boolean

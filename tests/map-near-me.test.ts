@@ -42,6 +42,7 @@ function listing(id: string, at: { lat: number; lng: number }): MapListing {
     zip: null,
     trustTier: 'claimed',
     logoSrc: null,
+    logoPin: false,
     ownershipLabel: 'black_owned',
     avgRating: null,
     reviewCount: 0,

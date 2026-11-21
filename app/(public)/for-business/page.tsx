@@ -36,8 +36,8 @@ const PLAN_LABEL: Record<Row['plan'], string> = {
 
 // What a Page can do. `plan: 'starter'` marks what lib/stripe/features.ts gates
 // at tier 1 or above (access works by rank, so Starter and up): extra photos,
-// `chapters_layout`, `listing_video`, `faqs`, `social_links`, `review_response`,
-// `analytics`.
+// `chapters_layout`, `map_logo_pin`, `listing_video`, `faqs`, `social_links`,
+// `review_response`, `analytics`.
 // AI is one row (founder 2026-11-21, wording workshopped together), built in
 // the page from the flags: it shows while FEATURE_AI_BETA is on (Explain My
 // Numbers and the Write buttons, Starter and up, counted against aiQuota), and
@@ -67,6 +67,13 @@ const ROWS: Row[] = [
     // gated as `chapters_layout` in lib/stripe/features.ts.
     title: 'The Full Page Layout',
     body: 'For businesses, restaurants, and vendors: your photos in a gallery and your story in chapters.',
+    plan: 'starter',
+  },
+  {
+    // Ticket 244 (founder, 2026-11-21): gated as `map_logo_pin`. Only the look
+    // is paid; the order of pins on the map stays trust-based.
+    title: 'Your Logo on the Map',
+    body: 'Your logo as your map pin, once your page is claimed. Where you sit on the map still comes from trust, not your plan.',
     plan: 'starter',
   },
   {

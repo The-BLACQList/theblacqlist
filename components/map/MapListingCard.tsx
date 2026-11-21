@@ -12,9 +12,9 @@ import { cn } from '@/lib/utils'
 
 interface Props {
   listing: MapListing
-  /** Pin number, or null when this listing is a small dot on the map. */
-  number: number | null
   selected: boolean
+  /** The pointer is on this business's square or dot on the map (ticket 244). */
+  hovered: boolean
   /** strip = fixed 250px card in the phone carousel. grid = fills its cell. */
   variant: 'grid' | 'strip'
   /** Miles from the visitor while Near me is on, else null. */
@@ -43,11 +43,10 @@ function TierMark({ tier }: { tier: MapListing['trustTier'] }) {
  * One business as a photo card. The whole card selects its pin; the page link
  * appears once the card is selected so a keyboard user always has a way in.
  */
-export function MapListingCard({ listing, number, selected, variant, distance, onSelect, onHover }: Props) {
+export function MapListingCard({ listing, selected, hovered, variant, distance, onSelect, onHover }: Props) {
   const photo = resolveRemoteImage(listingPhoto(listing))
   const open = listing.hours ? isOpenNow(listing.hours) : null
   const hasRating = listing.avgRating !== null && listing.reviewCount > 0
-  const label = number ? `${listing.name}, number ${number}` : listing.name
 
   return (
     <article
@@ -55,7 +54,7 @@ export function MapListingCard({ listing, number, selected, variant, distance, o
       className={cn(
         'rounded-[18px] bg-white p-1.5 transition-shadow duration-150',
         variant === 'strip' ? 'w-[250px] shrink-0 snap-start' : 'w-full',
-        selected ? 'ring-2 ring-gold shadow-md' : 'ring-1 ring-hairline'
+        selected ? 'ring-2 ring-gold shadow-md' : hovered ? 'ring-2 ring-ink' : 'ring-1 ring-hairline'
       )}
     >
       <button
@@ -65,7 +64,7 @@ export function MapListingCard({ listing, number, selected, variant, distance, o
         onMouseLeave={() => onHover(null)}
         onFocus={() => onHover(listing.id)}
         onBlur={() => onHover(null)}
-        aria-label={label}
+        aria-label={listing.name}
         aria-pressed={selected}
         className="block w-full rounded-[14px] text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
       >
@@ -82,14 +81,6 @@ export function MapListingCard({ listing, number, selected, variant, distance, o
           ) : (
             <span className="flex h-full items-center justify-center font-headline text-2xl text-gold">
               {initials(listing.name)}
-            </span>
-          )}
-          {number && (
-            <span
-              aria-hidden="true"
-              className="absolute right-2 top-2 flex size-[26px] items-center justify-center rounded-full bg-ground font-headline text-[13px] text-white"
-            >
-              {number}
             </span>
           )}
         </span>

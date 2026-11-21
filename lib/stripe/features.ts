@@ -43,6 +43,7 @@ export type GatedFeature =
   | 'documents'
   | 'highlights'
   | 'chapters_layout'
+  | 'map_logo_pin'
   // ── Growth+ — "Get chosen": the merchandising tier
   | 'priority_placement'
   | 'review_criteria'
@@ -98,6 +99,10 @@ export const FEATURE_MIN_TIER: Record<GatedFeature, number> = {
   // perk, including pages the platform added. Free stops at 3 photos, one short
   // of the layout's 4, and this gate covers pages that already hold more.
   chapters_layout: 1,
+  // Ticket 244 (founder, 2026-11-21): a claimed page on Starter and up wears
+  // its logo as its map pin. Only the look is paid: map order and which pins
+  // get a number stay trust-based (lib/map/rankListings.ts).
+  map_logo_pin: 1,
   // Growth+ (2)
   priority_placement: 2,
   review_criteria: 2,

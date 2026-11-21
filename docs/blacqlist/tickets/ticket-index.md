@@ -233,4 +233,5 @@
 | 241 | Advanced analytics on Growth and up | V1.5 | P1 | 239 | Planned | Founder 2026-11-21; period compare, storefront views and clicks, events and jobs; Shop sales after Shop opens |
 | 242 | Cue, your business assistant, by plan | V1.5 | P1 | 239 | Planned | Founder 2026-11-21; jobs listed per plan, smaller monthly numbers in fine print |
 | [243](243-account-delete-cancels-plan.md) | Deleting an account cancels the paid plan | V1.5 | P1 | 238 | Merged #368 | Terms 13.9; Stripe cancel now, no refund, pages to Free before the user is deleted; failure keeps the account |
+| [244](244-map-pins.md) | Logo map pin on Starter and up, and a Calm Map (one mark per business, no rank numbers, selected pin centred on phones) | V1.5 | P1 | 239 | Merged #372 | Founder 2026-11-21; pin look is paid, map order stays trust; C shape with A's name tab; Calm Map A, groups at country view; planned as 240; Turbopack build cache off |
 | [245](245-account-delete-audit-log.md) | Owners can delete their account again (audit log blocked it) | V1.5 | P0 | 243 | Merged #370 | Found in the 243 test run; FK SET NULL vs immutable audit trigger; migration allows only actor → NULL |

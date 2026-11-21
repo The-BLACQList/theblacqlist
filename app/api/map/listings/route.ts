@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { resolveCoverImage } from '@/lib/listings/coverImage'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { hasLogoPin } from '@/lib/map/rankListings'
 
 export const revalidate = 900
 
@@ -11,6 +12,7 @@ interface Row {
   slug: string
   entity_type: string
   trust_tier: string
+  tier: string | null
   logo_path: string | null
   ownership_label: string
   avg_rating: number | null
@@ -36,14 +38,15 @@ interface Row {
  * All published, geocoded listings as GeoJSON for the map explore page.
  * A few hundred rows — the client filters and clusters; a bbox RPC comes
  * only when scale demands it. Photo URLs ship only for verified/certified
- * listings (the map tier ladder: prominence = trust, never pay).
+ * listings. Ticket 244: the logo pin is a paid look (Starter and up), sent as
+ * `logoPin`; the order and numbering of pins stay trust-based, never paid.
  */
 export async function GET() {
   const supabase = await createClient()
   const { data, error } = await supabase
     .from('listings')
     .select(
-      'id, name, slug, entity_type, trust_tier, logo_path, ownership_label, avg_rating, review_count, is_featured, is_sponsored, cover_image_path, categories!listings_category_id_fkey(name, slug), cities!listings_city_id_fkey(slug, name, states!cities_state_id_fkey(code)), listing_details_business(lat, lng, hours, price_range, address_line_1, city_text, state, zip)'
+      'id, name, slug, entity_type, trust_tier, tier, logo_path, ownership_label, avg_rating, review_count, is_featured, is_sponsored, cover_image_path, categories!listings_category_id_fkey(name, slug), cities!listings_city_id_fkey(slug, name, states!cities_state_id_fkey(code)), listing_details_business(lat, lng, hours, price_range, address_line_1, city_text, state, zip)'
     )
     .eq('status', 'published')
     .is('deleted_at', null)
@@ -69,6 +72,8 @@ export async function GET() {
       const showPhoto = row.trust_tier === 'verified' || row.trust_tier === 'certified'
       // Logo markers are a claimed+ feature (map-presence ladder level 2+)
       const showLogo = row.trust_tier !== 'unclaimed'
+      // Ticket 244: the pin wears the logo only on a paid plan.
+      const logoPin = hasLogoPin(row.trust_tier, row.tier)
       const logoSrc =
         showLogo && row.logo_path
           ? row.logo_path.startsWith('http')
@@ -94,6 +99,7 @@ export async function GET() {
           zip: d.zip ?? null,
           trustTier: row.trust_tier,
           logoSrc,
+          logoPin,
           ownershipLabel: row.ownership_label,
           avgRating: row.avg_rating,
           reviewCount: row.review_count,

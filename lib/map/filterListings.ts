@@ -32,7 +32,7 @@ export function filterListings(listings: readonly MapListing[], f: MapFilters): 
   })
 }
 
-/** Nearest first, for the list and the pin numbers while Near me is on. */
+/** Nearest first, for the list while Near me is on. */
 export function sortByDistance(
   listings: readonly MapListing[],
   from: { lat: number; lng: number },
