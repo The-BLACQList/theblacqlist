@@ -42,6 +42,7 @@ export type GatedFeature =
   | 'credentials'
   | 'documents'
   | 'highlights'
+  | 'chapters_layout'
   // ── Growth+ — "Get chosen": the merchandising tier
   | 'priority_placement'
   | 'review_criteria'
@@ -93,6 +94,10 @@ export const FEATURE_MIN_TIER: Record<GatedFeature, number> = {
   highlights: 1,
   // Ticket 233 (founder, 2026-11-19): Starter keeps priced menus.
   service_menu_pricing: 1,
+  // Ticket 239 (founder, 2026-11-21): the full page layout is a Starter and up
+  // perk, including pages the platform added. Free stops at 3 photos, one short
+  // of the layout's 4, and this gate covers pages that already hold more.
+  chapters_layout: 1,
   // Growth+ (2)
   priority_placement: 2,
   review_criteria: 2,
@@ -195,7 +200,9 @@ export interface TierLimits {
 
 export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
   free: {
-    photos: 1,
+    // Ticket 239 (founder, 2026-11-21): 3 photos. The 4th photo is where the
+    // full page layout starts (CHAPTERS_MIN_PHOTOS), and that stays paid.
+    photos: 3,
     videos: 0,
     faqs: 0,
     attributes: 3,

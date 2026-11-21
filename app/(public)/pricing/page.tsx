@@ -12,6 +12,8 @@ import { getPlanAvailability, isTierOpen } from '@/lib/stripe/availability'
 import { aiQuota } from '@/lib/stripe/features'
 import { PLANS } from '@/lib/stripe/plans'
 import { PricingPlans } from './PricingPlans'
+import { PlanCompareTable } from '@/components/billing/PlanCompareTable'
+import { compareOpen } from '@/lib/stripe/planCompare'
 import { LaunchWaitlist, type WaitlistOption } from '@/components/marketing/LaunchWaitlist'
 
 // The page reflects the live `plans` table, so it must not be a build-time
@@ -49,17 +51,17 @@ function faqItems(growthOpen: boolean, aiOn: boolean) {
   return [
   {
     q: 'Is listing my business really free?',
-    a: 'Yes. A BLACQList Page is free forever: your hours, contact info, website, a short description, a photo, and community reviews. Claiming it and getting Verified are free too. No credit card required.',
+    a: 'Yes. A BLACQList Page is free forever: your hours, contact info, website, a short description, up to 3 photos, and community reviews. Claiming it and getting Verified are free too. No credit card required.',
   },
   {
     q: 'What does Starter add?',
-    a: `Starter adds ${starterAi}up to 10 photos, a video, your menu or service list with prices, your full story with no length limit, more details customers filter by, a common questions section, social links, public replies to reviews, and 30 days of views, saves, and taps.${growthOpen ? '' : ' It is the paid plan available today.'}`,
+    a: `Starter adds ${starterAi}the full page layout, up to 10 photos, a video, your menu or service list with prices, your full story with no length limit, more details customers filter by, a common questions section, social links, public replies to reviews, and 30 days of views, saves, and taps.${growthOpen ? '' : ' It is the paid plan available today.'}`,
   },
   ...(growthOpen
     ? [
         {
           q: 'What does Growth add?',
-          a: `Growth adds ${growthAi}up to 25 photos, a storefront for up to 25 products and services, up to 3 events at a time, and 1 job posting every 30 days.`,
+          a: `Growth adds ${growthAi}up to 25 photos, a storefront for up to 25 products and services, up to 3 events at a time, 1 job posting every 30 days, and analytics going back 12 months.`,
         },
         {
           q: 'When is Premium available?',
@@ -142,8 +144,8 @@ export default async function PricingPage() {
           title="BLACQList Pricing"
           subtitle={
             growthOpen
-              ? `Getting listed is always free. ${aiLead}Starter adds richer media, review responses, and your analytics dashboard. Growth adds a storefront, events, and job postings. Pay monthly or save about 20% with annual billing. Premium is on the way.`
-              : `Getting listed is always free. ${aiLead}Starter adds richer media, review responses, and your analytics dashboard. Pay monthly or save about 20% with annual billing. Growth and Premium are on the way.`
+              ? `Getting listed is always free. ${aiLead}Starter adds the full page layout, more photos, review replies, and a simple analytics dashboard. Growth adds a storefront, events, job postings, and 12 months of analytics. Pay monthly or save about 20% with annual billing. Premium is on the way.`
+              : `Getting listed is always free. ${aiLead}Starter adds the full page layout, more photos, review replies, and a simple analytics dashboard. Pay monthly or save about 20% with annual billing. Growth and Premium are on the way.`
           }
         />
       </Section>
@@ -155,6 +157,14 @@ export default async function PricingPage() {
         </SectionHeading>
 
         <PricingPlans availability={availability} />
+      </Section>
+
+      {/* Ticket 239: every limit side by side, each step up marked in gold. */}
+      <Section variant="white">
+        <SectionHeading subtitle="Gold marks what each plan adds over the one before it.">
+          Compare Every Plan
+        </SectionHeading>
+        <PlanCompareTable open={compareOpen(availability)} className="mt-6 max-w-6xl mx-auto" />
       </Section>
 
       {/* Waitlist for anything not yet purchasable */}

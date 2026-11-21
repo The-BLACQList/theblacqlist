@@ -482,8 +482,8 @@ describe('ownership', () => {
 
 describe('the plan photo limit', () => {
   it('refuses a gallery upload once the tier limit is reached', async () => {
-    h.state.listing = { id: LISTING_ID, owner_user_id: USER_ID, tier: 'free' } // 1 photo
-    h.state.photoCount = 1
+    h.state.listing = { id: LISTING_ID, owner_user_id: USER_ID, tier: 'free' } // 3 photos
+    h.state.photoCount = 3
     const res = await POST(listingMedia())
     expect(res.status).toBe(400)
     expect((await body(res)).code).toBe('PLAN_LIMIT')
@@ -504,7 +504,7 @@ describe('the plan photo limit', () => {
     h.state.photoCount = 0
     expect((await POST(listingMedia())).status).toBe(201)
 
-    h.state.photoCount = 1
+    h.state.photoCount = 3
     const res = await POST(listingMedia())
     expect(res.status).toBe(400)
     expect((await body(res)).code).toBe('PLAN_LIMIT')

@@ -4,7 +4,14 @@ import { useState } from 'react'
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
-import { PLANS, annualSavingsPct, type BillingCycle, type PlanSlug } from '@/lib/stripe/plans'
+import {
+  PLANS,
+  addedLines,
+  annualSavingsPct,
+  leadIn,
+  type BillingCycle,
+  type PlanSlug,
+} from '@/lib/stripe/plans'
 import { isPlanPurchasable, type PlanAvailability } from '@/lib/stripe/availability'
 import { BillingCycleToggle } from '@/components/billing/BillingCycleToggle'
 import { renewalLine } from '@/lib/stripe/renewal'
@@ -109,20 +116,29 @@ export function UpgradePlans({
               {withheld ? (
                 <div className="mb-5 flex-1" />
               ) : (
-                <ul className="space-y-1.5 mb-5 flex-1">
-                  {plan.features.map((f) => (
-                    <li
-                      key={f}
-                      className="flex items-start gap-1.5 font-subhead text-xs text-charcoal-soft"
-                    >
-                      <span
-                        className="mt-[5px] h-1 w-1 shrink-0 rounded-full bg-amber-gold"
-                        aria-hidden="true"
-                      />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
+                <div className="mb-5 flex-1">
+                  {/* Ticket 239: the lead-in makes the bullets read as what
+                      this plan adds over the one before it. */}
+                  {leadIn(plan.features) && (
+                    <p className="font-subhead text-xs font-semibold text-brand-black mb-1.5">
+                      {leadIn(plan.features)}, plus:
+                    </p>
+                  )}
+                  <ul className="space-y-1.5">
+                    {addedLines(plan.features).map((f) => (
+                      <li
+                        key={f}
+                        className="flex items-start gap-1.5 font-subhead text-xs text-charcoal-soft"
+                      >
+                        <span
+                          className="mt-[5px] h-1 w-1 shrink-0 rounded-full bg-amber-gold"
+                          aria-hidden="true"
+                        />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
 
               {isCurrent ? (

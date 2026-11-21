@@ -228,6 +228,9 @@
 | [235](235-job-paid-email-admin-unpublish.md) | Payment email for paid jobs, and admin Unpublish | V1.5 | P1 | — | In review | Founder 2026-11-20 (next-actions item 6); no owner email on unpublish, refunds stay in Stripe |
 | [236](236-weekly-kpis.md) | Weekly key numbers report | V1.5 | P2 | 234 | In review | Founder 2026-11-20 (next-actions item 4); CSV per ISO week, testers and team left out, gaps print UNKNOWN |
 | [238](238-owner-plans.md) | Owner-level plans: a plan covers up to 1/1/2/3 of the owner's pages | V1.5 | P1 | 237 | Merged #367 | Founder 2026-11-21; Pages on Your Plan on Upgrade; Terms 13.1/13.4/13.7 effective on posting; no cooldown on moves |
+| [239](239-plan-compare.md) | Compare plans clearly: "Everything in X, plus" cards, a full compare grid, 3 photos on Free, full layout Starter and up | V1.5 | P1 | 238 | Merged #371 | Founder 2026-11-21; grid computed from features.ts; Free pages leave chapters; no migration |
 | [240](240-for-business-home-look.md) | For Business looks like the home page | V1.5 | P2 | 206 | Merged #369 | Founder 2026-11-21; full-width hero, no section numbers, trimmed copy, same buttons |
+| 241 | Advanced analytics on Growth and up | V1.5 | P1 | 239 | Planned | Founder 2026-11-21; period compare, storefront views and clicks, events and jobs; Shop sales after Shop opens |
+| 242 | Cue, your business assistant, by plan | V1.5 | P1 | 239 | Planned | Founder 2026-11-21; jobs listed per plan, smaller monthly numbers in fine print |
 | [243](243-account-delete-cancels-plan.md) | Deleting an account cancels the paid plan | V1.5 | P1 | 238 | Merged #368 | Terms 13.9; Stripe cancel now, no refund, pages to Free before the user is deleted; failure keeps the account |
 | [245](245-account-delete-audit-log.md) | Owners can delete their account again (audit log blocked it) | V1.5 | P0 | 243 | Merged #370 | Found in the 243 test run; FK SET NULL vs immutable audit trigger; migration allows only actor → NULL |

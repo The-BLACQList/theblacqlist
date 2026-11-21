@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { BillingCycleToggle } from '@/components/billing/BillingCycleToggle'
 import { isPlanPurchasable, type PlanAvailability } from '@/lib/stripe/availability'
-import { PLANS, annualSavingsPct, type BillingCycle } from '@/lib/stripe/plans'
+import { PLANS, addedLines, annualSavingsPct, leadIn, type BillingCycle } from '@/lib/stripe/plans'
 
 // Free links to the free-signup path; paid tiers route through sign-in to the
 // dashboard upgrade page where the live Stripe checkout lives.
@@ -99,20 +99,29 @@ export function PricingPlans({
               {comingSoon ? (
                 <div className="mb-6 flex-1" />
               ) : (
-                <ul className="space-y-2 mb-6 flex-1">
-                  {plan.features.map((feature) => (
-                    <li
-                      key={feature}
-                      className="flex items-start gap-2 font-subhead text-sm text-charcoal"
-                    >
-                      <span
-                        className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-amber-gold"
-                        aria-hidden="true"
-                      />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+                <div className="mb-6 flex-1">
+                  {/* Ticket 239: "Everything in {lower}" leads the list, so
+                      the bullets read as what this plan adds. */}
+                  {leadIn(plan.features) && (
+                    <p className="font-subhead text-sm font-semibold text-brand-black mb-2">
+                      {leadIn(plan.features)}, plus:
+                    </p>
+                  )}
+                  <ul className="space-y-2">
+                    {addedLines(plan.features).map((feature) => (
+                      <li
+                        key={feature}
+                        className="flex items-start gap-2 font-subhead text-sm text-charcoal"
+                      >
+                        <span
+                          className="mt-[5px] h-1.5 w-1.5 shrink-0 rounded-full bg-amber-gold"
+                          aria-hidden="true"
+                        />
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
 
               {comingSoon ? (
