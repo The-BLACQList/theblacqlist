@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 
+import { cancelPlansForDeletedAccount } from '@/lib/services/billing/accountDeletion'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 
 type DeleteAccountState = { error: string } | null
@@ -17,7 +18,10 @@ type DeleteAccountState = { error: string } | null
  *                analytics references are anonymized; spend_events stay as
  *                de-linked anonymous aggregates (Privacy §7: not retroactively removed)
  *
- * Two things the bare cascade does NOT cover, handled explicitly here:
+ * Three things the bare cascade does NOT cover, handled explicitly here:
+ *   0. A paid plan (Terms 13.9): its Stripe subscriptions are cancelled and its
+ *      pages dropped to free FIRST, while the rows linking the user to Stripe
+ *      still exist (ticket 243). If that fails, the account is kept.
  *   1. Reviews (reviewer_user_id is SET NULL) — the spec says *remove* the user's
  *      reviews, so we delete them before deleting the auth user.
  *   2. Storage objects do not cascade — receipt images and the avatar are removed
@@ -43,6 +47,19 @@ export async function deleteAccountAction(
 
   const userId = user.id
   const service = createServiceClient()
+
+  // 0) Cancel the paid plan before anything is deleted. Deleting the user
+  //    cascades away the only rows that say which Stripe subscriptions are
+  //    theirs, so a failure here must stop the deletion.
+  try {
+    await cancelPlansForDeletedAccount(service, { id: userId, email: user.email })
+  } catch (err) {
+    console.error('[deleteAccount] plan cancel failed; account kept:', { userId, err })
+    return {
+      error:
+        "We couldn't cancel your paid plan, so your account wasn't deleted. Please try again, or email privacy@theblacqlist.com.",
+    }
+  }
 
   // Paths collected before the auth-user delete cascades the rows away.
   let receiptPaths: string[] = []
