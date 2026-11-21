@@ -39,7 +39,8 @@ interface Row {
  * A few hundred rows — the client filters and clusters; a bbox RPC comes
  * only when scale demands it. Photo URLs ship only for verified/certified
  * listings. Ticket 244: the logo pin is a paid look (Starter and up), sent as
- * `logoPin`; the order and numbering of pins stay trust-based, never paid.
+ * `logoPin`; which pages get a square, and their order, stay trust-based,
+ * never paid (see `pickTiles` in lib/map/rankListings.ts).
  */
 export async function GET() {
   const supabase = await createClient()

@@ -1,6 +1,6 @@
 # Ticket 244: Logo Map Pin on Starter and Up, and a Calm Map
 
-**Status:** Branch `feat/244-map-pins`, stacked on `feat/239-plan-compare`. Rebase onto main after 239 merges. Merging needs the founder's OK (GATE-DEPLOY). No migration.
+**Status:** Merged #372, 2026-11-21 (founder OK), after #371 (239). No migration.
 
 Planned as ticket 240; renumbered because 240 went to the For Business home look (#369).
 
@@ -47,7 +47,8 @@ These rules hold at every zoom. A business is drawn once, as one mark, and each 
 | Explorer | `components/map/MapExplore.tsx`, `usePinMarkers.ts`, `useSelectionPopup.ts` | Squares from what the map drew at its last idle; hover state shared with the cards; popup offset for a square or a dot |
 | Phone centring | `components/map/useFollowSelection.ts`, `lib/map/followOffset.ts`, `components/map/MapPhoneBar.tsx` | Eases the selected pin to the middle of the visible strip, follows sheet resizes, stops on the visitor's own move |
 | Cards and legend | `MapListingCard.tsx`, `MapResultsList.tsx`, `MapLegend.tsx` | Number badge removed, hover ring added; legend built from the marks on screen |
-| Plan copy | `lib/stripe/plans.ts`, `lib/stripe/planCompare.ts`, `app/(public)/for-business/page.tsx` | Starter line "Your logo as your map pin, once your page is claimed"; compare row "Your logo as your map pin" with the note "Where you sit on the map still comes from trust"; For Business row "Your Logo on the Map" |
+| Plan copy | `lib/stripe/plans.ts`, `lib/stripe/planCompare.ts`, `app/(public)/for-business/page.tsx` | Starter line "Your logo as your map pin, once your page is claimed"; compare row "Your logo as your map pin" with the note "Where you sit on the map still comes from trust"; For Business row "Your Logo on the Map" ("Your logo as your map pin, once your page is claimed. Where you sit on the map still comes from trust, not your plan.", in #369's trimmed voice) |
+| Build | `next.config.ts` | `turbopackFileSystemCacheForBuild: false`. See Build Cache below |
 
 ## Behaviour Changes to Know
 
@@ -82,7 +83,15 @@ The /for-business table has a new row, **Your Logo on the Map** (Starter and up)
 - On the phone, the selected square's middle landed 1 to 5px from the middle of the visible strip after a square tap, a card tap and a List round trip. After a touch drag it stayed where the visitor left it.
 - The phone page never scrolls sideways.
 
-Not checked yet: a real Starter page with an uploaded logo on the Preview (the staging seed pages use cover photos and initials). Check before merging.
+On the Preview, 2026-11-21, the demo storefront (a real uploaded logo) switched between plans on staging, at 1280px and 390px:
+
+- Starter: the selected square is 56px with its 42px logo loaded, a 3px gold border and the caret; no rank badges. The name pill shows on the phone only.
+- Free (same page, same logo): a plain ink square, 42px when selected, with the initial "D" and no logo.
+- The demo page went back on Premium afterwards.
+
+## Build Cache
+
+The first Preview of this branch showed unstyled pins. Next 16.3 turns on Turbopack's build cache by default, Vercel restored it from an earlier deployment, and the build shipped main's old `app/globals.css` next to this branch's JavaScript. `next.config.ts` now sets `turbopackFileSystemCacheForBuild: false` (founder OK). Builds may take a little longer. If a Preview ever looks unstyled, compare its served CSS (`vercel curl`) with the branch before debugging the code. Locally the same staleness clears by deleting `.next/dev`.
 
 ## Known Limits
 
