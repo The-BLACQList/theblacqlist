@@ -9,7 +9,7 @@
 **Written by:** Legal agent, 2026-10-28, as part of ticket 143 (Growth on sale).
 **Last updated:** 2026-11-21
 
-**Founder decision, 2026-11-21 (ticket 238):** a plan belongs to the owner's account, not to one page, and covers a set number of pages: Free 1, Starter 1, Growth 2, Premium up to 3, any of the owner's pages. 13.1, 13.4 and 13.7 below are corrected to match. The posted Terms (section 13.1, `app/(public)/terms/TermsOfService.tsx`) still say "Each plan covers one page", which is true until ticket 238 ships; the posted text changes with that ticket, with the notice in Changes to Terms.
+**Founder decision, 2026-11-21 (ticket 238):** a plan belongs to the owner's account, not to one page, and covers a set number of pages: Free 1, Starter 1, Growth 2, Premium up to 3, any of the owner's pages. 13.1, 13.4 and 13.7 below are corrected to match. **Built in ticket 238** (PR `feat/238-owner-plans`): the posted Terms 13.1, 13.4 and 13.7 take this text, effective on posting with no email, as in ticket 144 (see L11).
 
 ---
 
@@ -38,7 +38,7 @@ Taken from the code on 2026-10-28. Counsel should confirm each one still holds.
 | Fact | Source |
 |---|---|
 | Plans bill monthly or yearly, in advance, through Stripe Checkout | `create-checkout-session/route.ts` (`mode: 'subscription'`) |
-| A plan belongs to the owner's account and covers up to a set number of pages (Free 1, Starter 1, Growth 2, Premium 3). **Not built yet:** today checkout still sells one plan per page (`SUBSCRIPTION_EXISTS`) | founder 2026-11-21; ticket 238 |
+| A plan belongs to the owner's account and covers up to a set number of pages (Free 1, Starter 1, Growth 2, Premium 3). Checkout refuses a second live plan per owner (`SUBSCRIPTION_EXISTS`) | founder 2026-11-21; ticket 238 (`plan_covered_pages`) |
 | Owners change or cancel through the Stripe Customer Portal ("Manage subscription") | `ManageSubscriptionButton.tsx`, `createPortalSession` |
 | A failed payment keeps the paid plan while Stripe retries (`past_due`) | `lib/services/billing/webhookHandlers.ts` (`KEEPS_ACCESS`) |
 | When a plan ends, extra content is hidden, never deleted, and returns on upgrade | ticket 105 / #256 |

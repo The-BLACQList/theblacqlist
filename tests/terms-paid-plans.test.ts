@@ -40,4 +40,13 @@ describe('Terms section 13, Paid Plans and Billing', () => {
     expect(section).not.toMatch(/—/)
     expect(section).not.toMatch(/\[[0-9a-z ]+\]/i)
   })
+
+  it('says a plan belongs to the account and covers pages (ticket 238)', () => {
+    expect(terms).toContain('A plan belongs to your')
+    expect(terms).toContain('covers up to the number of your pages')
+    expect(terms).not.toContain('Each plan covers one page')
+    expect(terms).toContain('then the pages it')
+    expect(terms).toContain('the pages your plan covered move to the free plan')
+    expect(TERMS_PAID_PLANS.postedOnLabel).toBe('November 21, 2026')
+  })
 })

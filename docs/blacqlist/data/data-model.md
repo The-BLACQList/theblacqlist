@@ -98,7 +98,8 @@ Eight domains organize the 65 tables by function. Tables appear in the domain wh
 | -------------------------- | ----- | ------------------------------------------------------------------------- |
 | `claims`                   | MVP   | Ownership claim workflow queue                                            |
 | `verification_submissions` | V1    | Per-cycle document intake for verified trust tier                         |
-| `subscriptions`            | V1    | Active Stripe subscriptions per listing                                   |
+| `subscriptions`            | V1    | Stripe subscriptions per owner (`user_id`); `listing_id` is the optional checkout anchor (ticket 238) |
+| `plan_covered_pages`       | V1.5  | Which of the owner's pages their plan covers (Starter 1 / Growth 2 / Premium 3; ticket 238) |
 | `plans`                    | V1    | Subscription plan tiers with Stripe price IDs                             |
 | `orders`                   | V2    | Marketplace orders (buyer, vendor, status, totals, Stripe payment intent) |
 | `order_items`              | V2    | Line items within an order                                                |
@@ -210,7 +211,8 @@ Eight domains organize the 65 tables by function. Tables appear in the domain wh
 | --------------------------------------- | ---- | --------------------------------------------------- | --------- | ----------------------------------------------------------------------- |
 | `listings` → `claims`                   | 1:N  | `claims.listing_id → listings.id`                   | CASCADE   | Many claims over time; at most one approved per listing.                |
 | `profiles` → `claims`                   | 1:N  | `claims.claimant_user_id → profiles.id`             | SET NULL  | Claim preserved when claimant user deleted.                             |
-| `listings` → `subscriptions`            | 1:1  | `subscriptions.listing_id → listings.id`            | CASCADE   | One active subscription per listing.                                    |
+| `listings` → `subscriptions`            | 1:N  | `subscriptions.listing_id → listings.id` (nullable) | SET NULL  | Since ticket 238 a plan belongs to the owner; listing_id is only the page checkout started from. |
+| `auth.users` → `plan_covered_pages`     | 1:N  | `plan_covered_pages.owner_user_id → auth.users.id`  | CASCADE   | Pages the owner's plan covers; written only by `set_plan_page_coverage` / `sync_owner_plan_tiers`. |
 | `plans` → `subscriptions`               | 1:N  | `subscriptions.plan_id → plans.id`                  | RESTRICT  | Cannot delete a plan with active subscriptions.                         |
 | `listings` → `orders`                   | 1:N  | `orders.vendor_listing_id → listings.id`            | SET NULL  | Orders preserved when vendor listing deleted.                           |
 | `profiles` → `orders`                   | 1:N  | `orders.buyer_user_id → profiles.id`                | SET NULL  | Orders preserved when buyer profile deleted.                            |

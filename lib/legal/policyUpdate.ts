@@ -57,8 +57,10 @@ export const POLICY_PAGE_REVALIDATE_SECONDS = 3600
  * Change this label if the Terms page goes live on a later day.
  */
 export const TERMS_PAID_PLANS = {
-  // Moved to the receipt reading update (ticket 163, PR #291) and the Cue chat (ticket 169).
-  postedOnLabel: 'October 31, 2026',
+  // Moved to the receipt reading update (ticket 163, PR #291), the Cue chat
+  // (ticket 169), then owner-level plans (ticket 238: 13.1, 13.4, 13.7). Set it
+  // to the day 238 deploys if that's later.
+  postedOnLabel: 'November 21, 2026',
   anchor: 'paid-plans',
 } as const
 

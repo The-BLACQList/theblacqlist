@@ -147,7 +147,8 @@ describe('Growth and Premium lists match their limits', () => {
   // behind them yet. Put a line back only with the feature that makes it true.
   it('Growth does not promise search terms, team members or 1-day support', () => {
     const growth = getPlanMeta('growth').features
-    expect(growth).toHaveLength(8)
+    expect(growth).toHaveLength(9)
+    expect(growth).toContain('Covers up to 2 of your pages')
     const text = growth.join(' ').toLowerCase()
     expect(text).not.toContain('search terms')
     expect(text).not.toContain('team member')
@@ -162,7 +163,8 @@ describe('Growth and Premium lists match their limits', () => {
     expect(eventLimit('premium')).toBeNull()
     expect(jobLimit('premium')).toBe(3)
     expect(locationLimit('premium')).toBe(3)
-    expect(premium).toContain('Up to 3 locations on one account')
+    expect(premium).toContain('Link up to 3 locations so each page lists the others')
+    expect(premium).toContain('Covers up to 3 of your pages')
     expect(activePostLimit('premium')).toBe(5)
     expect(premium).toContain('Up to 5 Happening now posts at a time')
     expect(extraButtonLimit('premium')).toBe(3)
@@ -187,5 +189,17 @@ describe('/for-sponsors prints no price for an add-on that is not on sale', () =
   it('sends the waitlist button to the form that records interest', () => {
     expect(rendered).toContain('href="/pricing#pricing-waitlist"')
     expect(rendered).not.toContain('href="/sign-up"')
+  })
+})
+
+// Ticket 238: a plan belongs to the owner and covers some of their pages. The
+// numbers match pageCap(), which the database enforces. Free says nothing
+// about pages (founder 2026-11-21: extra pages are never stated).
+describe('each paid plan says how many pages it covers', () => {
+  it('Starter 1, Growth 2, Premium 3; Free has no pages line', () => {
+    expect(getPlanMeta('starter').features).toContain('Covers 1 of your pages')
+    expect(getPlanMeta('growth').features).toContain('Covers up to 2 of your pages')
+    expect(getPlanMeta('premium').features).toContain('Covers up to 3 of your pages')
+    expect(getPlanMeta('free').features.join(' ')).not.toMatch(/covers|pages/i)
   })
 })

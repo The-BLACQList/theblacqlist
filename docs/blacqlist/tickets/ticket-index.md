@@ -227,3 +227,4 @@
 | [234](234-signup-source.md) | Record where sign-ups come from | V1.5 | P1 | — | In review | Founder go 2026-11-20 (next-actions item 2); UTM tags + referring site, privacy and cookie policy lines |
 | [235](235-job-paid-email-admin-unpublish.md) | Payment email for paid jobs, and admin Unpublish | V1.5 | P1 | — | In review | Founder 2026-11-20 (next-actions item 6); no owner email on unpublish, refunds stay in Stripe |
 | [236](236-weekly-kpis.md) | Weekly key numbers report | V1.5 | P2 | 234 | In review | Founder 2026-11-20 (next-actions item 4); CSV per ISO week, testers and team left out, gaps print UNKNOWN |
+| [238](238-owner-plans.md) | Owner-level plans: a plan covers up to 1/1/2/3 of the owner's pages | V1.5 | P1 | 237 | In review | Founder 2026-11-21; Pages on Your Plan on Upgrade; Terms 13.1/13.4/13.7 effective on posting; no cooldown on moves |

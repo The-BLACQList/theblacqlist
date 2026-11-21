@@ -1623,7 +1623,7 @@ Required — seed three rows at migration time: `free` (price 0), `standard`, `p
 #### Indexes
 
 - `PRIMARY KEY (id)`
-- `CREATE UNIQUE INDEX subscriptions_listing_id_idx ON subscriptions (listing_id)` — one active subscription per listing
+- `CREATE UNIQUE INDEX subscriptions_listing_id_idx ON subscriptions (listing_id)` — one active subscription per listing. **Superseded by ticket 238 (2026-11-21):** a plan belongs to the owner (`user_id`); `listing_id` is nullable, `ON DELETE SET NULL`, and only marks the page checkout started from. Covered pages live in `plan_covered_pages` (migration `20261201000000_owner_plan_pages.sql`).
 - `CREATE INDEX subscriptions_stripe_subscription_id_idx ON subscriptions (stripe_subscription_id)` — Stripe webhook lookup
 - `CREATE INDEX subscriptions_status_idx ON subscriptions (status)` — filter by status for admin views
 
