@@ -57,9 +57,17 @@ Storefront item numbers are not in any plan line: they only show while the marke
 
 Staging, 2026-11-21, inside a rolled-back transaction: the demo page's owner gets its 8 items (5 products, 1 service, 2 jobs); another signed-in user gets `not authorized`; anon gets `permission denied`.
 
+On the Preview, 2026-11-21, signed in as the e2e owner, at 1280px and 390px. The e2e page has no activity, so for the run one demo job was moved onto it and 23 tagged test events were added on staging. All of it was put back afterwards: the job's owner and host restored, the test events deleted, the e2e page back on Starter, the demo page still on Premium.
+
+- Starter: the locked card **Advanced Analytics Comes with Growth** with three lines (compare, 90 days and 12 months, events and jobs). No storefront line while the marketplace is closed. No arrows.
+- Growth, 7 days: Page Views 6 **▲ 20%** (5 the week before), CTA Clicks 4 **▲ 33%** (3 before). Saves and Shares had nothing before, so no arrow. The caption reads "Arrows compare with the 7 days before."
+- Growth, 30 days: one arrow (Page Views); CTA Clicks had nothing in the 30 days before, so no arrow. 90 days: no arrows (nothing before). 12 months: no arrows and no caption, as designed.
+- Events and Jobs: the job shows with 4 views and 1 tap, labelled Job, with the "Posted from this page" note.
+- No Storefront section while the marketplace is closed. No "could not load" note. The page never scrolls sideways at 390px. The only em dash on screen is in the seeded job's own name.
+
 Still to do:
 
-1. A Preview: the demo storefront on Starter (locked card) and on Growth (arrows, Events and Jobs), at 1280px and 390px. Open a product page twice and check two `marketplace_product_viewed` rows (needs the marketplace flag on for that Preview).
+1. `marketplace_product_viewed` from a real visit. The marketplace is off on Previews, so product pages show "Opening Soon" and never reach the view code. The unit tests cover it; check two rows the first time the marketplace flag is on anywhere.
 2. Prod migration at merge (founder OK).
 
 ## Not in This Ticket
