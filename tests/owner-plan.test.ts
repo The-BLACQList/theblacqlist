@@ -15,25 +15,38 @@ vi.mock('@/lib/actions/billing/createPortalSession', () => ({
 import { getOwnerPlan, highestTier, type OwnerPlan } from '@/lib/services/billing/ownerPlan'
 import { PagePlanTag, PlanStrip } from '@/components/dashboard/PlanStrip'
 
-type Row = { listing_id: string | null; status: string; created_at: string }
+type Row = { status: string; created_at: string }
+type Result<T> = { data: T[] | null; error: { message: string } | null }
 
-/** A stand-in for the Supabase query chain the read uses. */
-function fakeClient(result: { data: Row[] | null; error: { message: string } | null }) {
+/**
+ * A stand-in for the two Supabase reads: subscriptions (resolves on .order())
+ * and plan_covered_pages (resolves on .eq(), so its chain is a thenable).
+ */
+function fakeClient(
+  result: Result<Row>,
+  covered: Result<{ listing_id: string }> = { data: [], error: null }
+) {
   const calls: Record<string, unknown[]> = {}
-  const chain = {
-    select: (...a: unknown[]) => ((calls.select = a), chain),
-    eq: (...a: unknown[]) => ((calls.eq = a), chain),
-    not: (...a: unknown[]) => ((calls.not = a), chain),
-    in: (...a: unknown[]) => ((calls.in = a), chain),
+  const tables: string[] = []
+  const subs = {
+    select: (...a: unknown[]) => ((calls.select = a), subs),
+    eq: (...a: unknown[]) => ((calls.eq = a), subs),
+    not: (...a: unknown[]) => ((calls.not = a), subs),
+    in: (...a: unknown[]) => ((calls.in = a), subs),
     order: (...a: unknown[]) => ((calls.order = a), Promise.resolve(result)),
+  }
+  const cover = {
+    select: () => cover,
+    eq: (...a: unknown[]) => ((calls.coverEq = a), Promise.resolve(covered)),
   }
   const client = {
     from: (table: string) => {
+      tables.push(table)
       calls.from = [table]
-      return chain
+      return table === 'plan_covered_pages' ? cover : subs
     },
   }
-  return { client: client as never, calls }
+  return { client: client as never, calls, tables }
 }
 
 describe('highestTier', () => {
@@ -62,28 +75,27 @@ describe('getOwnerPlan', () => {
       tier: 'free',
       paymentDue: false,
       canManage: false,
-      manageListingId: null,
+      coverage: null,
     })
   })
 
-  it('opens the portal on the newest live subscription', async () => {
+  it('opens the portal when there is a live subscription', async () => {
     const { client } = fakeClient({
       data: [
-        { listing_id: 'page-new', status: 'active', created_at: '2026-11-02' },
-        { listing_id: 'page-old', status: 'trialing', created_at: '2026-10-01' },
+        { status: 'active', created_at: '2026-11-02' },
+        { status: 'trialing', created_at: '2026-10-01' },
       ],
       error: null,
     })
     const plan = await getOwnerPlan(client, 'u', [{ tier: 'starter' }])
     expect(plan).toMatchObject({ tier: 'starter', paymentDue: false, canManage: true })
-    expect(plan.manageListingId).toBe('page-new')
   })
 
-  it('flags Payment Due and points the portal at the failed subscription', async () => {
+  it('flags Payment Due when any live subscription is past_due', async () => {
     const { client } = fakeClient({
       data: [
-        { listing_id: 'page-a', status: 'active', created_at: '2026-11-02' },
-        { listing_id: 'page-b', status: 'past_due', created_at: '2026-10-01' },
+        { status: 'active', created_at: '2026-11-02' },
+        { status: 'past_due', created_at: '2026-10-01' },
       ],
       error: null,
     })
@@ -92,8 +104,47 @@ describe('getOwnerPlan', () => {
       tier: 'growth',
       paymentDue: true,
       canManage: true,
-      manageListingId: 'page-b',
+      coverage: { pageIds: [], count: 0, cap: 2 },
     })
+  })
+
+  it('counts the pages on the plan against the plan’s cap (238)', async () => {
+    const { client, calls } = fakeClient(
+      { data: [{ status: 'active', created_at: '2026-11-02' }], error: null },
+      { data: [{ listing_id: 'a' }, { listing_id: 'b' }], error: null }
+    )
+    const plan = await getOwnerPlan(client, 'user-9', [{ tier: 'premium' }])
+    expect(calls.coverEq).toEqual(['owner_user_id', 'user-9'])
+    expect(plan.coverage).toEqual({ pageIds: ['a', 'b'], count: 2, cap: 3 })
+  })
+
+  it('never shows the cap below the count (a hand-set plan can cover more)', async () => {
+    const { client } = fakeClient(
+      { data: [], error: null },
+      { data: [{ listing_id: 'a' }, { listing_id: 'b' }], error: null }
+    )
+    const plan = await getOwnerPlan(client, 'u', [{ tier: 'starter' }])
+    expect(plan.coverage).toEqual({ pageIds: ['a', 'b'], count: 2, cap: 2 })
+  })
+
+  it('a paying owner with nothing covered sees 0 of their cap, so they can add a page', async () => {
+    // Prod 2026-11-21: a Starter plan bought on a job page, which can't be covered.
+    const { client } = fakeClient({ data: [{ status: 'active', created_at: '2026-11-15' }], error: null })
+    const plan = await getOwnerPlan(client, 'u', [{ tier: 'starter' }])
+    expect(plan.coverage).toEqual({ pageIds: [], count: 0, cap: 1 })
+  })
+
+  it('has no coverage on Free, with nothing covered, or when the read fails', async () => {
+    const free = fakeClient({ data: [], error: null }, { data: [{ listing_id: 'a' }], error: null })
+    expect((await getOwnerPlan(free.client, 'u', [{ tier: 'free' }])).coverage).toBeNull()
+    expect(free.tables).not.toContain('plan_covered_pages')
+
+    // A comped page: paid tier, no billing, nothing covered.
+    const none = fakeClient({ data: [], error: null })
+    expect((await getOwnerPlan(none.client, 'u', [{ tier: 'growth' }])).coverage).toBeNull()
+
+    const failed = fakeClient({ data: [], error: null }, { data: null, error: { message: 'x' } })
+    expect((await getOwnerPlan(failed.client, 'u', [{ tier: 'growth' }])).coverage).toBeNull()
   })
 
   it('keeps the plan name when the read fails', async () => {
@@ -102,7 +153,7 @@ describe('getOwnerPlan', () => {
       tier: 'growth',
       paymentDue: false,
       canManage: false,
-      manageListingId: null,
+      coverage: null,
     })
   })
 })
@@ -112,7 +163,7 @@ function strip(plan: Partial<OwnerPlan>) {
     tier: 'free',
     paymentDue: false,
     canManage: false,
-    manageListingId: null,
+    coverage: null,
     ...plan,
   }
   return renderToStaticMarkup(createElement(PlanStrip, { plan: full }))
@@ -130,7 +181,7 @@ describe('PlanStrip', () => {
   })
 
   it('Paid: names the plan and opens Manage Subscription', () => {
-    const html = strip({ tier: 'growth', canManage: true, manageListingId: 'p' })
+    const html = strip({ tier: 'growth', canManage: true })
     expect(html).toContain('Growth Plan')
     expect(html).toContain('Get chosen.')
     expect(html).toContain('Manage Subscription')
@@ -145,12 +196,26 @@ describe('PlanStrip', () => {
   })
 
   it('Payment Due: warns and offers Update Card', () => {
-    const html = strip({ tier: 'starter', paymentDue: true, canManage: true, manageListingId: 'p' })
+    const html = strip({ tier: 'starter', paymentDue: true, canManage: true })
     expect(html).toContain('Starter Plan')
     expect(html).toContain('Payment Due')
     expect(html).toContain('Update your card to keep your plan.')
     expect(html).toContain('Update Card')
     expect(html).toContain('data-payment-due="true"')
+  })
+
+  it('links the page count to Pages on Your Plan (238)', () => {
+    const html = strip({
+      tier: 'premium',
+      canManage: true,
+      coverage: { pageIds: ['a', 'b'], count: 2, cap: 3 },
+    })
+    expect(html).toContain('2 of 3 Pages Covered')
+    expect(html).toContain('href="/dashboard/upgrade#plan-pages"')
+    expect(strip({ tier: 'starter', coverage: { pageIds: ['a'], count: 1, cap: 1 } })).toContain(
+      '1 of 1 Page Covered'
+    )
+    expect(strip({ tier: 'growth' })).not.toContain('Covered')
   })
 
   it('uses an outlined amber-gold border, never the trust golds', () => {

@@ -25,31 +25,27 @@ const ready = (listingId: string): FreeMonthState => ({
 
 describe('freeMonthHold', () => {
   it('holds while the month waits for a live page', () => {
-    expect(freeMonthHold({ status: 'waiting', hasPage: true }, PAGE)).toBe('waiting')
+    expect(freeMonthHold({ status: 'waiting', hasPage: true })).toBe('waiting')
   })
 
-  it('holds when the month is ready on this page', () => {
-    expect(freeMonthHold(ready(PAGE), PAGE)).toBe('ready')
+  it('holds when the month is ready, on whichever of the owner\'s pages (ticket 238)', () => {
+    expect(freeMonthHold(ready(PAGE))).toBe('ready')
+    expect(freeMonthHold(ready(OTHER))).toBe('ready')
   })
 
-  it('does not hold when the month belongs to another page', () => {
-    expect(freeMonthHold(ready(OTHER), PAGE)).toBeNull()
-  })
-
-  it('holds when this page is one the owner can pick, paying or not (ticket 136)', () => {
+  it('holds while the owner picks a page, paying or not (ticket 136)', () => {
     const page = (listingId: string, paid: boolean) => ({
       listingId,
       listingName: null,
       currentTier: 'free' as const,
       paid,
     })
-    expect(
-      freeMonthHold({ status: 'pick', pages: [page(PAGE, false), page(OTHER, false)] }, PAGE)
-    ).toBe('ready')
-    expect(
-      freeMonthHold({ status: 'pick', pages: [page(PAGE, true), page(OTHER, false)] }, PAGE)
-    ).toBe('ready')
-    expect(freeMonthHold({ status: 'pick', pages: [page(OTHER, false)] }, PAGE)).toBeNull()
+    expect(freeMonthHold({ status: 'pick', pages: [page(PAGE, false), page(OTHER, false)] })).toBe(
+      'ready'
+    )
+    expect(freeMonthHold({ status: 'pick', pages: [page(PAGE, true), page(OTHER, true)] })).toBe(
+      'ready'
+    )
   })
 
   it('holds for a page that already pays, so a bigger plan points at the month', () => {
@@ -62,12 +58,12 @@ describe('freeMonthHold', () => {
       attach: false,
       paying: true,
     }
-    expect(freeMonthHold(paying, PAGE)).toBe('ready')
+    expect(freeMonthHold(paying)).toBe('ready')
   })
 
   it('does not hold once the month is used, or for non-testers', () => {
-    expect(freeMonthHold({ status: 'used', tier: 'starter' }, PAGE)).toBeNull()
-    expect(freeMonthHold(null, PAGE)).toBeNull()
+    expect(freeMonthHold({ status: 'used', tier: 'starter' })).toBeNull()
+    expect(freeMonthHold(null)).toBeNull()
   })
 })
 

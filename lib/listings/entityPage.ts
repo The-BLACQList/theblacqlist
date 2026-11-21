@@ -374,9 +374,9 @@ export async function getEntityPageFromDB(slug: string): Promise<EntityPageData 
       )
     : Promise.resolve(null)
 
-  // Other locations (ticket 110): the pages one Premium plan covers. A linked
-  // page carries the primary's tier while covered, so the same check works
-  // from either side. Fail-soft like the reads above.
+  // Other locations (ticket 110): the pages the owner linked as one business.
+  // Shown on a page its owner's Premium plan covers (ticket 238), from either
+  // side of the link. Fail-soft like the reads above.
   const locationsPromise: Promise<LocationLink[]> = locationsShowOn(raw)
     ? loadLocations(sb, raw.id).catch(() => [])
     : Promise.resolve([])
@@ -1090,7 +1090,7 @@ function teamShowsOn(listing: { tier: string | null; entity_type: string }): boo
   return canAccess(listing.tier, 'team_members')
 }
 
-/** Other locations show on business pages whose plan covers them (ticket 110). */
+/** Other locations show on Premium business pages (ticket 110). */
 function locationsShowOn(listing: { tier: string | null; entity_type: string }): boolean {
   if (listing.entity_type === 'job' || listing.entity_type === 'event') return false
   return coversLocations(listing.tier)

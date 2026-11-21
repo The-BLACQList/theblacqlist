@@ -99,9 +99,26 @@ describe('POST /api/stripe/create-checkout-session', () => {
     expect(res.status).toBe(400)
   })
 
-  it('400 when planSlug or listingId is missing', async () => {
-    const res = await POST(req({ planSlug: 'starter' }))
+  it('400 when planSlug is missing', async () => {
+    const res = await POST(req({ listingId: LISTING_ID }))
     expect(res.status).toBe(400)
+  })
+
+  // Ticket 238: the plan is the owner's; the page is only where it starts.
+  it('without a listingId, anchors the plan on the owner\'s oldest page', async () => {
+    const res = await POST(req({ planSlug: 'starter' }))
+    expect(res.status).toBe(200)
+    const args = h.createSession.mock.calls[0]![0]
+    expect(args.metadata.listing_id).toBe(LISTING_ID)
+    expect(args.subscription_data.metadata.user_id).toBe('u1')
+  })
+
+  it('409 NO_PAGE when the owner has no page a plan can cover', async () => {
+    h.state.listing = null
+    const res = await POST(req({ planSlug: 'starter' }))
+    expect(res.status).toBe(409)
+    expect(await res.json()).toMatchObject({ code: 'NO_PAGE' })
+    expect(h.createSession).not.toHaveBeenCalled()
   })
 
   it('400 for a non-paid plan slug', async () => {
@@ -194,11 +211,14 @@ describe('POST /api/stripe/create-checkout-session', () => {
     expect(h.createSession).not.toHaveBeenCalled()
   })
 
-  it('409 when the listing already has a live subscription', async () => {
+  it('409 when the owner already has a live plan, on any page', async () => {
     h.state.liveSubs = [{ id: 'sub-row-1' }]
     const res = await POST(req({ planSlug: 'growth', listingId: LISTING_ID }))
     expect(res.status).toBe(409)
-    expect(await res.json()).toMatchObject({ code: 'SUBSCRIPTION_EXISTS' })
+    expect(await res.json()).toMatchObject({
+      code: 'SUBSCRIPTION_EXISTS',
+      error: 'You already have a plan. Use Manage Subscription to change it.',
+    })
     expect(h.createSession).not.toHaveBeenCalled()
   })
 

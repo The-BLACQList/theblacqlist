@@ -96,18 +96,18 @@ export function nextTierUp(tier: PlanSlug): TesterTrialTier | null {
 }
 
 /**
- * The listing's live subscriptions, by Stripe id. null when the read failed.
+ * The owner's live subscriptions, by Stripe id (ticket 238: plans are the owner's). null when the read failed.
  * Zero means the ordinary checkout path; one means the upgrade path; more
  * than one is refused (it should not happen, and we can't tell which to use).
  */
-export async function liveSubscriptionIds(
+export async function liveSubscriptionIdsForOwner(
   service: Service,
-  listingId: string
+  ownerId: string
 ): Promise<string[] | null> {
   const { data, error } = await service
     .from('subscriptions')
     .select('stripe_subscription_id')
-    .eq('listing_id', listingId)
+    .eq('user_id', ownerId)
     .in('status', LIVE_STATUSES)
   if (error) return null
   return ((data ?? []) as { stripe_subscription_id: string | null }[]).map(
@@ -117,7 +117,7 @@ export async function liveSubscriptionIds(
 
 export const MULTIPLE_PLANS: UpgradeRefusal = {
   status: 409,
-  error: `This page has more than one plan, so your free month can’t go on it yet. Write to ${SUPPORT} and we’ll sort it out.`,
+  error: `You have more than one plan, so your free month can’t go on it yet. Write to ${SUPPORT} and we’ll sort it out.`,
   code: 'MULTIPLE_PLANS',
 }
 

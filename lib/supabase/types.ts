@@ -2947,6 +2947,32 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_covered_pages: {
+        Row: {
+          added_at: string
+          listing_id: string
+          owner_user_id: string
+        }
+        Insert: {
+          added_at?: string
+          listing_id: string
+          owner_user_id: string
+        }
+        Update: {
+          added_at?: string
+          listing_id?: string
+          owner_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_covered_pages_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plans: {
         Row: {
           created_at: string
@@ -3789,7 +3815,7 @@ export type Database = {
           current_period_end: string | null
           current_period_start: string | null
           id: string
-          listing_id: string
+          listing_id: string | null
           plan_id: string | null
           status: string
           stripe_customer_id: string | null
@@ -3803,7 +3829,7 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
-          listing_id: string
+          listing_id?: string | null
           plan_id?: string | null
           status?: string
           stripe_customer_id?: string | null
@@ -3817,7 +3843,7 @@ export type Database = {
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
-          listing_id?: string
+          listing_id?: string | null
           plan_id?: string | null
           status?: string
           stripe_customer_id?: string | null
@@ -4181,6 +4207,7 @@ export type Database = {
         Args: { p_listing_id: string }
         Returns: number
       }
+      owner_page_cap: { Args: { p_owner: string }; Returns: number }
       owns_entity: { Args: { p_entity_id: string }; Returns: boolean }
       owns_listing: { Args: { p_listing_id: string }; Returns: boolean }
       prune_launch_subscribe_attempts: { Args: never; Returns: undefined }
@@ -4234,6 +4261,10 @@ export type Database = {
         Args: { p_q: string; p_weights: string }
         Returns: unknown
       }
+      set_plan_page_coverage: {
+        Args: { p_add?: string[]; p_owner: string; p_remove?: string[] }
+        Returns: Json
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       sponsored_placement_delivery: {
@@ -4243,6 +4274,10 @@ export type Database = {
           impressions: number
           placement_id: string
         }[]
+      }
+      sync_owner_plan_tiers: {
+        Args: { p_anchor?: string; p_fill?: boolean; p_owner: string }
+        Returns: Json
       }
       unread_message_count: { Args: never; Returns: number }
     }

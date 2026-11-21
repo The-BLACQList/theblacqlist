@@ -461,16 +461,19 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
               2026-10-29, effective on posting, with counsel review to follow. 13.4 and
               13.6 depend on the Stripe Customer Portal cancelling and downgrading at the
               end of the period, and 13.3's yearly reminder on Stripe's renewal reminder
-              setting (ticket 145). Check both in the Stripe Dashboard. */}
+              setting (ticket 145). Check both in the Stripe Dashboard.
+              Ticket 238 (founder 2026-11-21): 13.1, 13.4 and 13.7 now say a plan belongs
+              to the account and covers a set number of pages, effective on posting like
+              the rest of section 13. */}
           <section id="paid-plans" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">13. Paid Plans and Billing</h2>
             <p>
-              <strong>13.1 Plans.</strong> Some features need a paid plan for your page. Current
-              plans, prices and what each one includes are shown on our{' '}
+              <strong>13.1 Plans.</strong> Some features need a paid plan. A plan belongs to your
+              account and covers up to the number of your pages shown for it on our{' '}
               <Link href="/pricing" className="text-brand-black underline underline-offset-2 hover:text-amber transition-colors">
                 Pricing page
               </Link>
-              . Each plan covers one page.
+              , along with its current price and what it includes.
             </p>
             <p>
               <strong>13.2 Billing.</strong> You pay in advance, monthly or yearly, depending on what
@@ -487,8 +490,8 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
             <p>
               <strong>13.4 Cancelling.</strong> You can cancel at any time from your dashboard under
               Upgrade, then Manage subscription. You do not need to contact us. When you cancel, your
-              plan stays active until the end of the term you already paid for, then your page moves
-              to the free plan.
+              plan stays active until the end of the term you already paid for, then the pages it
+              covered move to the free plan.
             </p>
             <p>
               <strong>13.5 Refunds.</strong> Payments are non-refundable, including for partial
@@ -505,7 +508,8 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
             <p>
               <strong>13.7 Failed payments.</strong> If a payment fails, we and Stripe will try again
               over a short period and let you know. Your plan stays active while we retry. If payment
-              still fails, your page moves to the free plan, with content handled as in 13.6.
+              still fails, the pages your plan covered move to the free plan, with content handled as
+              in 13.6.
             </p>
             <p>
               <strong>13.8 Free trials and promotions.</strong> We may offer a free period on a plan,

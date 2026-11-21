@@ -367,11 +367,26 @@ describe('getFreeMonthState: owner link with no page yet', () => {
       { id: 'l1', name: 'Hampton Greens', tier: 'free', status: 'published' },
       { id: 'l2', name: 'Hampton Farms', tier: 'starter', status: 'published' },
     ]
-    h.state.liveSubs = [{ listing_id: 'l2' }]
     expect(await getFreeMonthState()).toEqual({
       status: 'pick',
       pages: [
         { listingId: 'l1', listingName: 'Hampton Greens', currentTier: 'free', paid: false },
+        { listingId: 'l2', listingName: 'Hampton Farms', currentTier: 'starter', paid: false },
+      ],
+    })
+  })
+
+  // Ticket 238: the plan is the owner's, so every page sees it, covered or not.
+  it('an owner who pays is on their plan on every page', async () => {
+    h.state.ownedListings = [
+      { id: 'l1', name: 'Hampton Greens', tier: 'free', status: 'published' },
+      { id: 'l2', name: 'Hampton Farms', tier: 'starter', status: 'published' },
+    ]
+    h.state.liveSubs = [{ id: 's1', plans: { plan_key: 'starter' } } as never]
+    expect(await getFreeMonthState()).toEqual({
+      status: 'pick',
+      pages: [
+        { listingId: 'l1', listingName: 'Hampton Greens', currentTier: 'starter', paid: true },
         { listingId: 'l2', listingName: 'Hampton Farms', currentTier: 'starter', paid: true },
       ],
     })

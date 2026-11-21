@@ -1,4 +1,4 @@
-import { aiQuota } from '@/lib/stripe/features'
+import { aiQuota, pageCap } from '@/lib/stripe/features'
 
 export type PlanSlug = 'free' | 'starter' | 'growth' | 'premium'
 
@@ -39,6 +39,14 @@ export interface PlanMeta {
 // UpgradePlans), and Premium's list holds only what we can realistically build.
 // AI writing help is live (2026-10-16), so each paid plan's AI line comes from
 // aiQuota() and names the same number the quota enforces (ticket 146, 2026-10-29).
+// Ticket 238: a plan belongs to the owner and covers some of their pages. The
+// number comes from pageCap(), the same one the database enforces. Free has no
+// line: the founder chose (2026-11-21) not to state anything about extra pages.
+function pagesLine(slug: PlanSlug): string {
+  const cap = pageCap(slug)
+  return cap === 1 ? 'Covers 1 of your pages' : `Covers up to ${cap} of your pages`
+}
+
 // The plan's AI writing help line, with the number the quota enforces.
 function aiLine(slug: PlanSlug): string {
   const quota = aiQuota(slug)
@@ -76,6 +84,7 @@ export const PLANS: PlanMeta[] = [
     features: [
       'Everything in Free',
       aiLine('starter'),
+      pagesLine('starter'),
       'Up to 10 photos',
       'A video on your page, your own upload or a link',
       'Your menu or service list, with prices',
@@ -100,6 +109,7 @@ export const PLANS: PlanMeta[] = [
     features: [
       'Everything in Starter',
       aiLine('growth'),
+      pagesLine('growth'),
       'Up to 25 photos',
       'A storefront for up to 25 products and services',
       'Up to 3 events at a time',
@@ -119,6 +129,7 @@ export const PLANS: PlanMeta[] = [
     features: [
       'Everything in Growth',
       aiLine('premium'),
+      pagesLine('premium'),
       'Up to 50 photos',
       'Unlimited products, services, and events',
       '3 job postings every 30 days',
@@ -126,7 +137,7 @@ export const PLANS: PlanMeta[] = [
       'Up to 3 extra buttons on your page',
       'Coupons and deals',
       'Booking requests',
-      'Up to 3 locations on one account',
+      'Link up to 3 locations so each page lists the others',
       'Your community spend view, once 5 or more receipts are logged',
       'A named support contact',
     ],

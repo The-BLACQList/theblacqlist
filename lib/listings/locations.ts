@@ -1,11 +1,12 @@
 import { canAccess, locationLimit } from '@/lib/stripe/features'
 import { buildEntityUrl } from '@/lib/listings/url'
-import type { PlanSlug } from '@/lib/stripe/plans'
 import type { LocationLink } from '@/types'
 
-// Multi-location accounts (ticket 110). Pure rules shared by the owner actions,
-// the Stripe webhook and the public page loader. One Premium plan covers the
-// page the subscription is on (the primary) and up to 2 linked locations.
+// Multi-location accounts (ticket 110). Pure rules shared by the owner actions
+// and the public page loader. On Premium an owner links a main page (the
+// primary) and up to 2 more locations, and each shows the others under Also
+// At. Since ticket 238 links are display only: the owner's plan, not a link,
+// decides which pages are covered.
 
 export const LOCATION_LINK_COLUMNS = 'location_listing_id, primary_listing_id, created_at'
 
@@ -48,24 +49,6 @@ export function toLocationLinkRows(rows: unknown): LocationLinkRow[] {
     })
   }
   return out.sort((a, b) => a.created_at.localeCompare(b.created_at))
-}
-
-/**
- * The tier each linked location should have, given the primary's tier.
- * While the primary covers locations, the oldest links up to the plan's slots
- * take the primary's tier and any beyond (only possible if a limit is lowered)
- * go to Free. Below Premium they all go to Free. Links are never removed here.
- */
-export function linkedTiers(
-  primaryTier: string | null,
-  links: LocationLinkRow[]
-): { id: string; tier: PlanSlug }[] {
-  const covers = coversLocations(primaryTier)
-  const slots = linkedSlots(primaryTier)
-  return links.map((link, i) => ({
-    id: link.location_listing_id,
-    tier: covers && i < slots ? (primaryTier as PlanSlug) : 'free',
-  }))
 }
 
 // ── The public "Also At" list ────────────────────────────────────────────────
