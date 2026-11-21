@@ -47,8 +47,14 @@ export async function getOwnerPlan(
   listings: ReadonlyArray<{ tier: string | null }>
 ): Promise<OwnerPlan> {
   const tier = highestTier(listings)
-  const coverage = tier === 'free' ? null : await readCoverage(supabase, userId, tier)
-  const plan: OwnerPlan = { tier, paymentDue: false, canManage: false, coverage }
+  const read = tier === 'free' ? null : await readCoverage(supabase, userId, tier)
+  // Covered pages show when there are some, or when the owner pays and has
+  // none yet (e.g. a plan bought on a page that can't be covered), so they can
+  // add one. A comped owner with no billing and no rows shows nothing.
+  const withCoverage = (canManage: boolean): OwnerPlan['coverage'] =>
+    read && (read.count > 0 || canManage) ? read : null
+
+  const plan: OwnerPlan = { tier, paymentDue: false, canManage: false, coverage: withCoverage(false) }
 
   const { data, error } = await supabase
     .from('subscriptions')
@@ -60,13 +66,18 @@ export async function getOwnerPlan(
   if (error || !data || data.length === 0) return plan
 
   const rows = data as Array<{ status: string }>
-  return { ...plan, paymentDue: rows.some((r) => r.status === 'past_due'), canManage: true }
+  return {
+    tier,
+    paymentDue: rows.some((r) => r.status === 'past_due'),
+    canManage: true,
+    coverage: withCoverage(true),
+  }
 }
 
 /**
  * How many pages the plan covers (owner-read RLS on plan_covered_pages). The
  * cap never shows below the count: a hand-set plan can cover more. Null when
- * the read fails or nothing is covered yet (a comped page with no billing).
+ * the read fails.
  */
 async function readCoverage(
   supabase: AnyClient,
@@ -77,7 +88,7 @@ async function readCoverage(
     .from('plan_covered_pages')
     .select('listing_id')
     .eq('owner_user_id', userId)
-  if (error || !data || data.length === 0) return null
+  if (error || !data) return null
   const pageIds = (data as Array<{ listing_id: string }>).map((r) => r.listing_id)
   return { pageIds, count: pageIds.length, cap: Math.max(pageCap(tier), pageIds.length) }
 }

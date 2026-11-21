@@ -246,4 +246,12 @@ describe('PlanPages', () => {
     const html = section(1, rows(true, false), 'starter').toLowerCase()
     expect(html).not.toMatch(/\bfree\b/)
   })
+
+  it('with nothing covered yet, offers Add to Plan on every page and no Remove', () => {
+    const html = section(1, rows(false), 'starter')
+    expect(html).toContain('0 of 1 Page Covered')
+    expect(html).toContain('Add to Plan')
+    expect(html).not.toMatch(/>Remove</)
+    expect(html).not.toContain('Move Plan Here')
+  })
 })

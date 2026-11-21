@@ -100,7 +100,12 @@ describe('getOwnerPlan', () => {
       error: null,
     })
     const plan = await getOwnerPlan(client, 'u', [{ tier: 'growth' }, { tier: 'starter' }])
-    expect(plan).toEqual({ tier: 'growth', paymentDue: true, canManage: true, coverage: null })
+    expect(plan).toEqual({
+      tier: 'growth',
+      paymentDue: true,
+      canManage: true,
+      coverage: { pageIds: [], count: 0, cap: 2 },
+    })
   })
 
   it('counts the pages on the plan against the plan’s cap (238)', async () => {
@@ -122,11 +127,19 @@ describe('getOwnerPlan', () => {
     expect(plan.coverage).toEqual({ pageIds: ['a', 'b'], count: 2, cap: 2 })
   })
 
+  it('a paying owner with nothing covered sees 0 of their cap, so they can add a page', async () => {
+    // Prod 2026-11-21: a Starter plan bought on a job page, which can't be covered.
+    const { client } = fakeClient({ data: [{ status: 'active', created_at: '2026-11-15' }], error: null })
+    const plan = await getOwnerPlan(client, 'u', [{ tier: 'starter' }])
+    expect(plan.coverage).toEqual({ pageIds: [], count: 0, cap: 1 })
+  })
+
   it('has no coverage on Free, with nothing covered, or when the read fails', async () => {
     const free = fakeClient({ data: [], error: null }, { data: [{ listing_id: 'a' }], error: null })
     expect((await getOwnerPlan(free.client, 'u', [{ tier: 'free' }])).coverage).toBeNull()
     expect(free.tables).not.toContain('plan_covered_pages')
 
+    // A comped page: paid tier, no billing, nothing covered.
     const none = fakeClient({ data: [], error: null })
     expect((await getOwnerPlan(none.client, 'u', [{ tier: 'growth' }])).coverage).toBeNull()
 

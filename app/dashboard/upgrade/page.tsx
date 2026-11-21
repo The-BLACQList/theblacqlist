@@ -70,7 +70,9 @@ export default async function UpgradePage({
         />
       )}
 
-      {ownerPlan.coverage && coverable.length > 1 && (
+      {ownerPlan.coverage &&
+        coverable.length > 0 &&
+        (coverable.length > 1 || ownerPlan.coverage.count === 0) && (
         <PlanPages
           tier={currentTier}
           cap={ownerPlan.coverage.cap}
