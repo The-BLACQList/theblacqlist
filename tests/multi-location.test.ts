@@ -3,13 +3,11 @@ import { join } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 // Ticket 110: multi-location accounts. What is pinned here:
-//   * the rules: Premium covers the page and 2 linked locations; linked pages
-//     take the primary's tier while it covers them and Free below that.
-//   * the webhook's sync: only changed pages are written, a page with its own
-//     plan is left alone, a missing table is "no links", errors throw.
-//   * the owner's actions: link (ownership, business pages, Premium, no
-//     chains, the limit, no own plan) and unlink (back to Free or own plan).
-//   * the migration, the checkout refusal, the loader and the dashboard.
+//   * the rules: Premium links the page and 2 more locations.
+//   * the owner's actions: link (ownership, business pages, the owner's plan
+//     is Premium, no chains, the limit) and unlink. Since ticket 238 a link
+//     is display only (Also At): neither action writes a tier.
+//   * the migration, checkout, the loader and the dashboard.
 
 const A = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa' // primary
 const B = 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
@@ -142,18 +140,15 @@ vi.mock('@/lib/audit/system', () => ({
 import {
   coversLocations,
   linkedSlots,
-  linkedTiers,
   toLocationLinks,
   type LocationLinkRow,
 } from '@/lib/listings/locations'
-import { isMissingTable, ownTier, syncLocationTiers } from '@/lib/services/billing/locationTiers'
+import { isMissingTable } from '@/lib/services/billing/planPages'
 import { linkLocationAction, unlinkLocationAction } from '@/lib/actions/dashboard/locations'
 
 function read(file: string): string {
   return readFileSync(join(__dirname, '..', file), 'utf8')
 }
-
-const service = () => h.client() as unknown as Parameters<typeof syncLocationTiers>[0]
 
 function page(id: string, patch: Row = {}): Row {
   return {
@@ -209,19 +204,6 @@ describe('the rules', () => {
     { location_listing_id: D, primary_listing_id: A, created_at: '2026-11-03' },
   ]
 
-  it('linked pages take Premium up to the slots, oldest first', () => {
-    expect(linkedTiers('premium', links)).toEqual([
-      { id: B, tier: 'premium' },
-      { id: C, tier: 'premium' },
-      { id: D, tier: 'free' },
-    ])
-  })
-
-  it('below Premium every linked page is Free', () => {
-    expect(linkedTiers('growth', links).map((l) => l.tier)).toEqual(['free', 'free', 'free'])
-    expect(linkedTiers('free', links).map((l) => l.tier)).toEqual(['free', 'free', 'free'])
-  })
-
   it('builds the Also At list: primary first, never itself, only pages the read returned', () => {
     const rows = [
       {
@@ -276,75 +258,20 @@ describe('the rules', () => {
 
 // ── The webhook's sync ───────────────────────────────────────────────────────
 
-describe('syncLocationTiers', () => {
-  beforeEach(() => {
-    h.state.tables.listing_location_links = [link(B, A, '2026-11-01'), link(C, A, '2026-11-02')]
-  })
-
-  it('a Premium primary lifts its linked pages, and a second run writes nothing', async () => {
-    const first = await syncLocationTiers(service(), A, 'premium')
-    expect(first).toEqual([
-      { id: B, from: 'free', to: 'premium' },
-      { id: C, from: 'free', to: 'premium' },
-    ])
-    h.writes.length = 0
-    expect(await syncLocationTiers(service(), A, 'premium')).toEqual([])
-    expect(h.writes).toHaveLength(0)
-  })
-
-  it('a drop below Premium returns them to Free and keeps the links', async () => {
-    for (const r of h.state.tables.listings!) if (r.id !== A) r.tier = 'premium'
-    const changes = await syncLocationTiers(service(), A, 'growth')
-    expect(changes.map((c) => c.to)).toEqual(['free', 'free'])
-    expect(h.state.tables.listing_location_links).toHaveLength(2)
-    expect(h.writes.some((w) => w.op === 'delete')).toBe(false)
-  })
-
-  it('leaves a linked page with its own live plan alone', async () => {
-    h.state.tables.subscriptions = [{ listing_id: C, status: 'active' }]
-    const changes = await syncLocationTiers(service(), A, 'premium')
-    expect(changes.map((c) => c.id)).toEqual([B])
-  })
-
-  it('no links, or the table not there yet, is a no-op', async () => {
-    expect(await syncLocationTiers(service(), B, 'premium')).toEqual([])
-    h.state.errors['listing_location_links:select'] = { message: 'missing', code: '42P01' }
-    expect(await syncLocationTiers(service(), A, 'premium')).toEqual([])
-    h.state.errors['listing_location_links:select'] = {
-      message: "Could not find the table 'public.listing_location_links' in the schema cache",
-      code: 'PGRST205',
-    }
-    expect(await syncLocationTiers(service(), A, 'premium')).toEqual([])
-  })
-
-  it('isMissingTable knows both missing-table codes and nothing else', () => {
+describe('isMissingTable', () => {
+  it('knows both missing-table codes and nothing else', () => {
     expect(isMissingTable({ code: '42P01' })).toBe(true)
     expect(isMissingTable({ code: 'PGRST205' })).toBe(true)
     expect(isMissingTable({ code: '42501' })).toBe(false)
     expect(isMissingTable({})).toBe(false)
     expect(isMissingTable(null)).toBe(false)
   })
-
-  it('throws on a read or write error, so Stripe retries', async () => {
-    h.state.errors['listing_location_links:select'] = { message: 'down' }
-    await expect(syncLocationTiers(service(), A, 'premium')).rejects.toThrow()
-    h.state.errors = { 'listings:update': { message: 'denied' } }
-    await expect(syncLocationTiers(service(), A, 'premium')).rejects.toThrow()
-  })
-
-  it('ownTier is the page’s own live plan, else Free', async () => {
-    expect(await ownTier(service(), B)).toBe('free')
-    h.state.tables.subscriptions = [
-      { listing_id: B, status: 'active', plans: { plan_key: 'starter' } },
-    ]
-    expect(await ownTier(service(), B)).toBe('starter')
-  })
 })
 
 // ── The owner's actions ──────────────────────────────────────────────────────
 
 describe('linkLocationAction', () => {
-  it('links a page and gives it the primary’s tier', async () => {
+  it('links a page and writes no tier (ticket 238: links are display only)', async () => {
     expect(await linkLocationAction({ primaryId: A, locationId: B })).toEqual({ success: true })
     expect(h.state.tables.listing_location_links).toEqual([
       expect.objectContaining({
@@ -353,16 +280,23 @@ describe('linkLocationAction', () => {
         owner_user_id: 'owner-1',
       }),
     ])
-    expect(h.state.tables.listings!.find((r) => r.id === B)!.tier).toBe('premium')
-    expect(h.audits[0]).toMatchObject({ action: 'location_linked' })
+    expect(h.state.tables.listings!.find((r) => r.id === B)!.tier).toBe('free')
+    expect(h.writes.filter((w) => w.table === 'listings')).toHaveLength(0)
+    expect(h.audits[0]).toMatchObject({ action: 'location_linked', afterState: { primary_listing_id: A } })
   })
 
-  it('needs Premium on the primary', async () => {
+  it('needs Premium on the owner’s plan', async () => {
     h.state.tables.listings![0]!.tier = 'growth'
     expect(await linkLocationAction({ primaryId: A, locationId: B })).toEqual({
       error: 'Linking locations comes with Premium.',
     })
     expect(h.writes).toHaveLength(0)
+  })
+
+  it('goes by the owner’s plan, not the page’s own tier', async () => {
+    h.state.tables.listings![0]!.tier = 'free'
+    h.state.tables.listings!.find((r) => r.id === D)!.tier = 'premium'
+    expect(await linkLocationAction({ primaryId: A, locationId: B })).toEqual({ success: true })
   })
 
   it('only the owner’s own business pages', async () => {
@@ -381,7 +315,7 @@ describe('linkLocationAction', () => {
     await linkLocationAction({ primaryId: A, locationId: B })
     await linkLocationAction({ primaryId: A, locationId: C })
     expect(await linkLocationAction({ primaryId: A, locationId: D })).toEqual({
-      error: 'Premium covers 3 locations: this page and 2 more.',
+      error: 'Premium links up to 3 locations: this page and 2 more.',
     })
   })
 
@@ -398,17 +332,9 @@ describe('linkLocationAction', () => {
     expect(h.state.tables.listing_location_links).toHaveLength(1)
   })
 
-  it('refuses a page that pays for its own plan', async () => {
+  it('links a page whatever plan covers it', async () => {
     h.state.tables.subscriptions = [{ listing_id: B, status: 'active' }]
-    const r = await linkLocationAction({ primaryId: A, locationId: B })
-    expect(r).toHaveProperty('error')
-    expect('error' in r && r.error).toMatch(/has its own plan/)
-  })
-
-  it('takes the link back when the tier write fails', async () => {
-    h.state.errors['listings:update'] = { message: 'denied' }
-    expect(await linkLocationAction({ primaryId: A, locationId: B })).toHaveProperty('error')
-    expect(h.state.tables.listing_location_links).toHaveLength(0)
+    expect(await linkLocationAction({ primaryId: A, locationId: B })).toEqual({ success: true })
   })
 })
 
@@ -418,11 +344,12 @@ describe('unlinkLocationAction', () => {
     h.state.tables.listings!.find((r) => r.id === B)!.tier = 'premium'
   })
 
-  it('removes the link and returns the page to Free', async () => {
+  it('removes the link and leaves the page’s tier to the owner’s plan', async () => {
     expect(await unlinkLocationAction({ locationId: B })).toEqual({ success: true })
     expect(h.state.tables.listing_location_links).toHaveLength(0)
-    expect(h.state.tables.listings!.find((r) => r.id === B)!.tier).toBe('free')
-    expect(h.audits[0]).toMatchObject({ action: 'location_unlinked', afterState: { tier: 'free' } })
+    expect(h.state.tables.listings!.find((r) => r.id === B)!.tier).toBe('premium')
+    expect(h.writes.filter((w) => w.table === 'listings')).toHaveLength(0)
+    expect(h.audits[0]).toMatchObject({ action: 'location_unlinked' })
   })
 
   it('works whatever the primary’s plan', async () => {
@@ -433,12 +360,6 @@ describe('unlinkLocationAction', () => {
   it('refuses a page that isn’t linked, or isn’t yours', async () => {
     expect(await unlinkLocationAction({ locationId: C })).toHaveProperty('error')
     h.state.user = { id: 'stranger' }
-    expect(await unlinkLocationAction({ locationId: B })).toHaveProperty('error')
-    expect(h.state.tables.listing_location_links).toHaveLength(1)
-  })
-
-  it('puts the link back when the tier reset fails', async () => {
-    h.state.errors['listings:update'] = { message: 'denied' }
     expect(await unlinkLocationAction({ locationId: B })).toHaveProperty('error')
     expect(h.state.tables.listing_location_links).toHaveLength(1)
   })

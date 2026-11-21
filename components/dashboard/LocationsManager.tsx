@@ -6,9 +6,9 @@ import { useRouter } from 'next/navigation'
 import { Link2, Loader2, MapPin, Unlink } from 'lucide-react'
 import { linkLocationAction, unlinkLocationAction } from '@/lib/actions/dashboard/locations'
 
-// Multi-location accounts (ticket 110), the owner's side: the pages this
-// page's Premium plan covers, a way to link another, and the numbers for each
-// location and all of them together.
+// Multi-location accounts (ticket 110), the owner's side: the pages linked to
+// this one, a way to link another, and the numbers for each location and all
+// of them together. Links are display only since ticket 238 (Also At).
 
 export interface OwnerLocation {
   id: string
@@ -30,11 +30,11 @@ interface Props {
   primary: OwnerLocation
   linked: OwnerLocation[]
   candidates: LinkCandidate[]
-  /** The plan covers linked locations (Premium). */
+  /** The owner's plan links locations (Premium). */
   covers: boolean
-  /** Locations still free to link on this plan. */
+  /** Locations still open to link on this plan. */
   slotsLeft: number
-  /** Total the plan covers, this page included. */
+  /** Total the plan links, this page included. */
   total: number
 }
 
@@ -75,8 +75,8 @@ export function LocationsManager({ primary, linked, candidates, covers, slotsLef
         </h2>
         <p className="font-body text-sm text-charcoal-soft mt-1">
           {covers
-            ? `Your Premium plan covers ${total} locations: this page and ${total - 1} more. Linked pages get everything Premium includes, and each shows the others under Also At.`
-            : 'These pages are on Free while this page is below Premium. They’re still linked, and they get Premium again when this page does.'}
+            ? `Link up to ${total} locations: this page and ${total - 1} more. Linked pages show each other under Also At.`
+            : 'These pages are still linked. Linking more comes with Premium.'}
         </p>
 
         {linked.length === 0 ? (

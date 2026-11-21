@@ -16,11 +16,13 @@ import {
   type OwnerLocation,
 } from '@/components/dashboard/LocationsManager'
 import { PlanLimitNote } from '@/components/dashboard/PlanLimitNote'
+import { highestTier } from '@/lib/services/billing/ownerPlan'
 import { UnlinkSelfButton } from '@/components/dashboard/UnlinkSelfButton'
 
-// Multi-location accounts (ticket 110). On the page the plan is on: its linked
-// locations, linking another, and numbers per location and in total. On a
-// linked location: which page covers it, and a way out.
+// Multi-location accounts (ticket 110). On the main page of a group: its
+// linked locations, linking another, and numbers per location and in total.
+// On a linked location: which page it is linked to, and a way out. Since
+// ticket 238 links are display only (Also At); the plan is the owner's.
 
 export const dynamic = 'force-dynamic'
 
@@ -39,8 +41,6 @@ interface PageRow {
   review_count: number | null
   cities: { name: string } | null
 }
-
-const LIVE_STATUSES = ['active', 'trialing', 'past_due']
 
 const NOTE =
   'rounded-xl border border-charcoal/10 bg-white px-5 py-4 font-body text-sm text-charcoal'
@@ -97,18 +97,11 @@ export default async function LocationsPage({ params }: Props) {
     )
   }
 
-  const [linksRead, subsRead] = await Promise.all([
-    supabase
-      .from('listing_location_links')
-      .select(LOCATION_LINK_COLUMNS)
-      .eq('owner_user_id', owner.user.id),
-    supabase
-      .from('subscriptions')
-      .select('listing_id')
-      .eq('user_id', owner.user.id)
-      .in('status', LIVE_STATUSES),
-  ])
-  if (pagesError || linksRead.error || subsRead.error) {
+  const linksRead = await supabase
+    .from('listing_location_links')
+    .select(LOCATION_LINK_COLUMNS)
+    .eq('owner_user_id', owner.user.id)
+  if (pagesError || linksRead.error) {
     return (
       <div className="max-w-2xl space-y-4">
         <Heading name={self.name} />
@@ -121,7 +114,7 @@ export default async function LocationsPage({ params }: Props) {
   const links = toLocationLinkRows(linksRead.data)
   const byId = new Map(pages.map((p) => [p.id, p]))
 
-  // A linked location: say which page covers it.
+  // A linked location: say which page it is linked to.
   const asLocation = links.find((l) => l.location_listing_id === self.id)
   if (asLocation) {
     const primary = byId.get(asLocation.primary_listing_id)
@@ -141,14 +134,9 @@ export default async function LocationsPage({ params }: Props) {
             ) : (
               'another of your pages'
             )}
-            .{' '}
-            {primary && coversLocations(primary.tier)
-              ? 'Its Premium plan covers this page too.'
-              : 'That page is below Premium right now, so this page is on Free until it moves back.'}
+            . Linked pages show each other under Also At.
           </p>
-          <p className="mt-2 text-charcoal-soft">
-            Unlink it to manage its plan on its own. It goes back to Free.
-          </p>
+          <p className="mt-2 text-charcoal-soft">Unlink it to take it out of the group.</p>
           <div className="mt-4">
             <UnlinkSelfButton locationId={self.id} name={self.name} />
           </div>
@@ -157,7 +145,9 @@ export default async function LocationsPage({ params }: Props) {
     )
   }
 
-  const covers = coversLocations(self.tier)
+  // Linking comes with the owner's plan (ticket 238), not this page's.
+  const planTier = highestTier(pages)
+  const covers = coversLocations(planTier)
   const mine = links.filter((l) => l.primary_listing_id === self.id)
   const linked = mine
     .map((l) => byId.get(l.location_listing_id))
@@ -165,14 +155,13 @@ export default async function LocationsPage({ params }: Props) {
     .map(toOwnerLocation)
 
   // Pages that could be linked: the owner's other business pages that aren't
-  // in a group already and don't pay for a plan of their own.
+  // in a group already.
   const grouped = new Set(links.flatMap((l) => [l.location_listing_id, l.primary_listing_id]))
-  const paying = new Set((subsRead.data ?? []).map((s) => s.listing_id as string))
   const candidates: LinkCandidate[] = pages
-    .filter((p) => p.id !== self.id && isBusiness(p) && !grouped.has(p.id) && !paying.has(p.id))
+    .filter((p) => p.id !== self.id && isBusiness(p) && !grouped.has(p.id))
     .map((p) => ({ id: p.id, name: p.name, cityName: p.cities?.name ?? '' }))
 
-  const slots = linkedSlots(self.tier)
+  const slots = linkedSlots(planTier)
   const total = locationLimit('premium') ?? 3
   const premiumOpen = covers ? false : await premiumIsOpen()
 
@@ -181,8 +170,8 @@ export default async function LocationsPage({ params }: Props) {
       <Heading name={self.name} />
       {!covers && (
         <PlanLimitNote upgradeTo={premiumOpen ? 'Premium' : null}>
-          One Premium plan covers up to {total} locations: this page and {total - 1} more of your
-          business pages.
+          Premium links up to {total} locations of one business: this page and {total - 1} more.
+          Linked pages show each other under Also At.
         </PlanLimitNote>
       )}
       {(covers || linked.length > 0) && (

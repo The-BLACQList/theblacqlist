@@ -12,22 +12,22 @@ import {
   linkedSlots,
   toLocationLinkRows,
 } from '@/lib/listings/locations'
-import { ownTier } from '@/lib/services/billing/locationTiers'
+import { highestTier } from '@/lib/services/billing/ownerPlan'
 
-// Multi-location accounts, the owner's side (ticket 110). One Premium plan
-// covers the page it is on (the primary) and up to 2 linked locations.
+// Multi-location accounts, the owner's side (ticket 110). On Premium an owner
+// links up to 3 of their business pages as locations of one business, and
+// each shows the others under Also At.
 //
-// Ownership, the plan and the limit are checked on the owner's own client,
-// then the link and the linked page's tier are written with the service
-// client: the entitlement guard stops an owner's client from changing a tier,
-// and the link table has no write policy. Unlinking works on every plan and
-// returns the page to Free (or to its own plan, if it has one).
+// Since ticket 238 a link is display only: which pages a plan covers is the
+// owner's choice under Pages On Your Plan, and no tier is written here.
+// Ownership, the plan and the limit are checked on the owner's own client;
+// the link is written with the service client because the link table has no
+// write policy. Unlinking works on every plan.
 
 export type LocationActionState = { success: true } | { error: string }
 
 const NOT_FOUND = 'Page not found, or you can’t edit it.'
 const TRY_AGAIN = 'We couldn’t save that. Please try again.'
-const LIVE_STATUSES = ['active', 'trialing', 'past_due']
 
 interface OwnedPage {
   id: string
@@ -51,6 +51,18 @@ function revalidatePage(p: OwnedPage): void {
   revalidatePath(`/dashboard/pages/${p.id}/locations`)
 }
 
+/** The owner's plan: the highest tier across their pages (ticket 238). */
+async function ownerTier(userId: string): Promise<string | null> {
+  const supabase = await createClient()
+  const { data, error } = await supabase
+    .from('listings')
+    .select('tier')
+    .eq('owner_user_id', userId)
+    .is('deleted_at', null)
+  if (error) return null
+  return highestTier((data ?? []) as { tier: string | null }[])
+}
+
 async function ownedPages(userId: string, ids: string[]) {
   const supabase = await createClient()
   const { data, error } = await supabase
@@ -62,7 +74,7 @@ async function ownedPages(userId: string, ids: string[]) {
   return { supabase, pages: error ? null : ((data ?? []) as OwnedPage[]) }
 }
 
-/** Links one of the owner's pages to a Premium page, so the plan covers it. */
+/** Links one of the owner's business pages to another as a location (Premium). */
 export async function linkLocationAction(input: {
   primaryId: unknown
   locationId: unknown
@@ -81,8 +93,9 @@ export async function linkLocationAction(input: {
   if (!isBusinessPage(primary) || !isBusinessPage(location)) {
     return { error: 'Only business pages can be linked as locations.' }
   }
-  const planTier = primary.tier
-  if (!planTier || !coversLocations(planTier)) {
+  const planTier = await ownerTier(owner.user.id)
+  if (planTier === null) return { error: TRY_AGAIN }
+  if (!coversLocations(planTier)) {
     return { error: 'Linking locations comes with Premium.' }
   }
 
@@ -94,7 +107,7 @@ export async function linkLocationAction(input: {
   const links = toLocationLinkRows(linkData)
 
   if (links.some((l) => l.location_listing_id === primary.id)) {
-    return { error: `${primary.name} is covered by another page’s plan. Link from that page.` }
+    return { error: `${primary.name} is linked to another page. Link from that page.` }
   }
   const existing = links.find((l) => l.location_listing_id === location.id)
   if (existing) {
@@ -109,22 +122,9 @@ export async function linkLocationAction(input: {
     return { error: `${location.name} has its own linked locations, so it can’t be linked here.` }
   }
   const used = links.filter((l) => l.primary_listing_id === primary.id).length
-  const slots = linkedSlots(primary.tier)
+  const slots = linkedSlots(planTier)
   if (used >= slots) {
-    return { error: `Premium covers ${slots + 1} locations: this page and ${slots} more.` }
-  }
-
-  const { data: ownSubs, error: subError } = await supabase
-    .from('subscriptions')
-    .select('id')
-    .eq('listing_id', location.id)
-    .in('status', LIVE_STATUSES)
-    .limit(1)
-  if (subError) return { error: TRY_AGAIN }
-  if (ownSubs && ownSubs.length > 0) {
-    return {
-      error: `${location.name} has its own plan. Cancel it under Manage Subscription first, then link it here.`,
-    }
+    return { error: `Premium links up to ${slots + 1} locations: this page and ${slots} more.` }
   }
 
   const service = createServiceClient()
@@ -139,23 +139,12 @@ export async function linkLocationAction(input: {
       : { error: TRY_AGAIN }
   }
 
-  const { error: tierError } = await service
-    .from('listings')
-    .update({ tier: planTier })
-    .eq('id', location.id)
-  if (tierError) {
-    // Without the tier the link means nothing; take it back so the owner can retry.
-    await service.from('listing_location_links').delete().eq('location_listing_id', location.id)
-    return { error: TRY_AGAIN }
-  }
-
   await writeSystemAuditLog({
     actorUserId: owner.user.id,
     action: 'location_linked',
     targetTable: 'listing_location_links',
     targetId: location.id,
-    beforeState: { tier: location.tier },
-    afterState: { tier: planTier, primary_listing_id: primary.id },
+    afterState: { primary_listing_id: primary.id },
   })
 
   revalidatePage(primary)
@@ -163,10 +152,7 @@ export async function linkLocationAction(input: {
   return { success: true }
 }
 
-/**
- * Takes a page out of its group. Works from either page and on every plan; the
- * page goes back to Free, or to its own plan if it has one.
- */
+/** Takes a page out of its group. Works from either page and on every plan. */
 export async function unlinkLocationAction(input: {
   locationId: unknown
 }): Promise<LocationActionState> {
@@ -190,13 +176,6 @@ export async function unlinkLocationAction(input: {
   if (!link) return { error: `${location.name} isn’t linked.` }
 
   const service = createServiceClient()
-  let backTo: string
-  try {
-    backTo = await ownTier(service, location.id)
-  } catch {
-    return { error: TRY_AGAIN }
-  }
-
   const { error: deleteError } = await service
     .from('listing_location_links')
     .delete()
@@ -204,28 +183,12 @@ export async function unlinkLocationAction(input: {
     .eq('owner_user_id', owner.user.id)
   if (deleteError) return { error: TRY_AGAIN }
 
-  const { error: tierError } = await service
-    .from('listings')
-    .update({ tier: backTo })
-    .eq('id', location.id)
-  if (tierError) {
-    // The link is gone but the tier wasn't reset: put the link back rather
-    // than leave a page on Premium that nothing pays for.
-    await service.from('listing_location_links').insert({
-      location_listing_id: location.id,
-      primary_listing_id: link.primary_listing_id,
-      owner_user_id: owner.user.id,
-    })
-    return { error: TRY_AGAIN }
-  }
-
   await writeSystemAuditLog({
     actorUserId: owner.user.id,
     action: 'location_unlinked',
     targetTable: 'listing_location_links',
     targetId: location.id,
-    beforeState: { tier: location.tier, primary_listing_id: link.primary_listing_id },
-    afterState: { tier: backTo },
+    beforeState: { primary_listing_id: link.primary_listing_id },
   })
 
   revalidatePage(location)
