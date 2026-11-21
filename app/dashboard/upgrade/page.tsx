@@ -59,8 +59,8 @@ export default async function UpgradePage({
       <div className="mb-8">
         <h1 className="font-headline text-2xl text-brand-black mb-2">Upgrade Your Plan</h1>
         <p className="font-body text-sm text-charcoal-soft max-w-lg">
-          Unlock analytics, priority placement, and more for your pages. Pay monthly or save with
-          annual billing.
+          More photos, the full page layout, analytics, and more for your pages. Pay monthly or
+          save with annual billing.
         </p>
       </div>
 

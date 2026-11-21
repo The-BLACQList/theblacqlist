@@ -1,6 +1,6 @@
 # Ticket 239: Compare Plans Clearly, 3 Photos on Free, Full Layout on Starter and Up
 
-**Status:** Branch `feat/239-plan-compare`, on main after #367 (238) and #368 (243). Merging needs the founder's OK (GATE-DEPLOY). No migration.
+**Status:** Merged #371, 2026-11-21 (founder OK). Rebased on main after #369 (240). No migration.
 
 ## Why
 
@@ -29,7 +29,8 @@ The other three points in that feedback are separate tickets:
 | Cards | `lib/stripe/plans.ts`, `app/(public)/pricing/PricingPlans.tsx`, `app/dashboard/upgrade/UpgradePlans.tsx` | Each paid card opens with "Everything in {lower plan}, plus:" and lists only what it adds. A line that raises a number says what the plan below has, e.g. "Up to 25 photos (Starter has 10)". Starter now names the full layout and "a simple analytics dashboard"; Growth names 12 months of analytics |
 | Compare grid | `lib/stripe/planCompare.ts`, `components/billing/PlanCompareTable.tsx` | "Compare Every Plan" on /pricing and Upgrade. Every cell is computed from `features.ts`. Gold marks a step up from the plan to the left. A closed tier shows Coming Soon and no values; a row only a closed tier would fill is dropped. On phones the table scrolls inside its box with the labels pinned |
 | /pricing copy | `app/(public)/pricing/page.tsx` | Subtitle and FAQ: full layout, more photos, simple analytics on Starter; 12 months of analytics on Growth |
-| /for-business | `app/(public)/for-business/page.tsx` | Free row "add up to 3 photos"; Starter row "Add up to 10 photos"; new row The Full Page Layout (Starter and up) |
+| /for-business | `app/(public)/for-business/page.tsx` | In #369's trimmed voice: Free row "add up to 3 photos"; Starter row "Up to 10 photos, a video, common questions, and your social links."; new row The Full Page Layout (Starter and up) |
+| Upgrade subtitle | `app/dashboard/upgrade/page.tsx` | "Unlock analytics, priority placement, and more" became "More photos, the full page layout, analytics, and more". The plans don't sell priority placement (cut in the 2026-10 plan audit); the narrow Growth+ search tie-break is explained on /how-ranking-works, which is unchanged |
 
 The grid has no "pages your plan covers" row: a Free cell would have to say something about Free's pages, which the founder ruled is never stated (ticket 238).
 
@@ -47,7 +48,7 @@ The grid has no "pages your plan covers" row: a Free cell would have to say some
 
 ## For Marketing
 
-The /for-business rows changed (WF-042 copy deck): "add up to 3 photos", "Add up to 10 photos", and the new row The Full Page Layout. Update the deck to match.
+The /for-business rows changed (WF-042 copy deck): "add up to 3 photos", "Up to 10 photos, a video, common questions, and your social links.", and the new row The Full Page Layout ("For businesses, restaurants, and vendors: your photos in a gallery and your story in chapters."). Update the deck to match.
 
 ## Tests
 
@@ -58,7 +59,10 @@ The /for-business rows changed (WF-042 copy deck): "add up to 3 photos", "Add up
 
 `npm run typecheck`, `npm run lint` (0 errors, 2 old warnings), `npx vitest run` (5,452 passed). Local dev against staging, screenshots at 390px and 1280px: /pricing cards and grid, /for-business. The page never scrolls sideways at 390px (the grid scrolls in its own box).
 
-Not screenshotted yet (needs a signed-in owner): /dashboard/upgrade, and a Free page with 3 photos next to a Starter page with 4. Both are covered by tests (`listing-chapters`, `plan-compare`); check them on the Preview before merging.
+On the Preview, 2026-11-21:
+
+- /dashboard/upgrade signed in as the e2e owner, 1280px and 390px: "Everything in …, plus:" cards, the compare grid, no em dashes, no sideways scroll.
+- The demo storefront (12 photos) switched between plans on staging: Starter shows the chapters layout, Free the regular page. Previews need `?layout=chapters`, because the chapters flag is on in Production only.
 
 ## Not in This Ticket
 
