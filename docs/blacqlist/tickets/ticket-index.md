@@ -229,4 +229,4 @@
 | [236](236-weekly-kpis.md) | Weekly key numbers report | V1.5 | P2 | 234 | In review | Founder 2026-11-20 (next-actions item 4); CSV per ISO week, testers and team left out, gaps print UNKNOWN |
 | [238](238-owner-plans.md) | Owner-level plans: a plan covers up to 1/1/2/3 of the owner's pages | V1.5 | P1 | 237 | Merged #367 | Founder 2026-11-21; Pages on Your Plan on Upgrade; Terms 13.1/13.4/13.7 effective on posting; no cooldown on moves |
 | [243](243-account-delete-cancels-plan.md) | Deleting an account cancels the paid plan | V1.5 | P1 | 238 | Merged #368 | Terms 13.9; Stripe cancel now, no refund, pages to Free before the user is deleted; failure keeps the account |
-| [245](245-account-delete-audit-log.md) | Owners can delete their account again (audit log blocked it) | V1.5 | P0 | 243 | In review | Found in the 243 test run; FK SET NULL vs immutable audit trigger; migration allows only actor → NULL |
+| [245](245-account-delete-audit-log.md) | Owners can delete their account again (audit log blocked it) | V1.5 | P0 | 243 | Merged #370 | Found in the 243 test run; FK SET NULL vs immutable audit trigger; migration allows only actor → NULL |

@@ -1,6 +1,6 @@
 # Ticket 245: Owners Can Delete Their Account Again
 
-**Status:** PR open (`fix/245-account-delete-audit-log`). Merging needs the founder's OK (GATE-DEPLOY). **Has a migration:** apply on staging, then prod, through the Management API.
+**Status:** Merged #370 (06f5d9b), 2026-11-21. Migration applied through the Management API on staging, then prod (dry run first on each), and verified on both.
 
 ## Why
 
@@ -35,3 +35,14 @@ A service-role `UPDATE` that only nulls an actor is now allowed too. That is the
 1. Staging: delete the 243 test owner (`plans238-test@test.local`) from Settings. Expect a redirect to `/sign-in?deleted=1`, the auth user gone, and their audit rows kept with a null actor.
 2. Staging: a direct `UPDATE admin_audit_log SET action = 'x'` is still refused.
 3. Prod: apply after staging passes.
+
+## Applied (2026-11-21)
+
+| Check | Staging | Prod |
+|---|---|---|
+| Dry run in a transaction, aborted on purpose | Actor → NULL allowed; other UPDATE and DELETE refused; nothing kept | Same |
+| Applied | 201 | 201 |
+| Function has the fix | Yes | Yes |
+| Settings delete of the 243 test owner | `/sign-in?deleted=1`; auth user gone; pages Free with no owner; 20 audit rows kept with a null actor | Not run (no test owner in prod) |
+
+Prod deploy of 06f5d9b succeeded with no error logs after it. The staging test owner's pages were deleted afterwards.
