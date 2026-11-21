@@ -4207,6 +4207,16 @@ export type Database = {
         Args: { p_listing_id: string }
         Returns: number
       }
+      owner_listing_insights: {
+        Args: { p_listing_id: string; p_since: string; p_until: string }
+        Returns: {
+          clicks: number
+          item_id: string
+          item_kind: string
+          item_name: string
+          views: number
+        }[]
+      }
       owner_page_cap: { Args: { p_owner: string }; Returns: number }
       owns_entity: { Args: { p_entity_id: string }; Returns: boolean }
       owns_listing: { Args: { p_listing_id: string }; Returns: boolean }

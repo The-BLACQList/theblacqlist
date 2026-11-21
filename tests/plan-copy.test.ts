@@ -153,7 +153,14 @@ describe('Growth and Premium lists match their limits', () => {
     expect(growth).toContain('Up to 2 extra buttons on your page (Starter has 1)')
     expect(analyticsHistoryDays('starter')).toBe(30)
     expect(analyticsHistoryDays('growth')).toBeGreaterThanOrEqual(365)
-    expect(growth).toContain('Analytics going back 12 months (Starter has 30 days)')
+    // Ticket 241: the line names what advanced analytics shows today.
+    // Storefront item numbers stay off it while the marketplace is closed.
+    expect(canAccess('growth', 'analytics_advanced')).toBe(true)
+    expect(canAccess('starter', 'analytics_advanced')).toBe(false)
+    expect(growth).toContain(
+      'Advanced analytics: 12 months (Starter has 30 days), each number compared with the period before, and numbers for your events and jobs'
+    )
+    expect(growth.join(' ')).not.toMatch(/storefront (item )?numbers|product numbers/i)
   })
 
   // Founder 2026-10-28 (ticket 143): these came off because nothing works

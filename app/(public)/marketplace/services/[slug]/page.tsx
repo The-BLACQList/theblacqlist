@@ -8,6 +8,8 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { STOREFRONT_TIERS } from '@/lib/marketplace/visibility'
 import { CTAButton } from '@/components/marketplace/CTAButton'
 import { resolveRemoteImage } from '@/lib/listings/coverImage'
+import { trackServerEvent } from '@/lib/analytics/server'
+import { ANALYTICS_EVENTS } from '@/lib/analytics/constants'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -33,7 +35,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export const revalidate = 1800
+// No `revalidate` (it was 1800 until ticket 241): PublicHeader reads cookies
+// in the root layout, so this page renders per request anyway, and the view
+// event below relies on that.
 
 const DELIVERY_LABELS: Record<string, string> = {
   virtual: 'Virtual',
@@ -62,6 +66,17 @@ export default async function ServiceDetailPage({ params }: Props) {
     .maybeSingle()
 
   if (!svc) notFound()
+
+  // Ticket 241: one view per open, sent from the server like the listing
+  // page_view, so a visitor can't inflate it through /api/analytics. The
+  // owner's Storefront numbers read it by joining marketplace_services.listing_id, never
+  // the listing_id property.
+  trackServerEvent({
+    event_name: ANALYTICS_EVENTS.MARKETPLACE_PRODUCT_VIEWED,
+    entity_id: svc.id,
+    entity_type: 'service',
+    properties: { listing_id: svc.listing_id },
+  })
 
   type ListingRef = { id: string; name: string; slug: string; trust_tier: string } | null
   const listing = svc.listings as ListingRef
