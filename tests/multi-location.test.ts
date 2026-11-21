@@ -466,9 +466,10 @@ describe('migration 20261122000000_listing_location_links', () => {
 })
 
 describe('wiring', () => {
-  it('both subscription handlers sync linked locations after the primary’s tier', () => {
+  it('both subscription handlers set tiers through the owner plan sync (ticket 238)', () => {
     const src = read('lib/services/billing/webhookHandlers.ts')
-    expect(src.match(/await syncLocationTiers\(supabase, listingId, newTier\)/g)).toHaveLength(2)
+    expect(src.match(/await syncOwnerPlan\(supabase, userId/g)).toHaveLength(2)
+    expect(src).not.toContain('syncLocationTiers')
   })
 
   it('checkout refuses a page another plan covers', () => {

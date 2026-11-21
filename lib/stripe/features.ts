@@ -164,6 +164,13 @@ export interface TierLimits {
   teamMembers: number | null
   /** Locations (listings) under one owner account. */
   locations: number | null
+  /**
+   * Pages the owner's plan covers (ticket 238, founder 2026-11-21). A plan
+   * belongs to the owner, not the page. The database twin is plan_page_cap()
+   * in 20261201000000_owner_plan_pages.sql; tests/plan-pages-parity.test.ts
+   * keeps the two in step.
+   */
+  pagesCovered: number
   /** Successful AI generations per listing per 30 days. Enforced by ticket 104. */
   aiGenerationsPerMonth: number | null
   /** Listing description cap. Free is short on purpose — it is the upgrade prompt. */
@@ -197,6 +204,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     jobs: 0,
     teamMembers: 0,
     locations: 1,
+    pagesCovered: 1,
     aiGenerationsPerMonth: 0,
     descriptionChars: 300,
     analyticsHistoryDays: 0,
@@ -215,6 +223,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     jobs: 0,
     teamMembers: 0,
     locations: 1,
+    pagesCovered: 1,
     aiGenerationsPerMonth: 10,
     descriptionChars: null,
     analyticsHistoryDays: 30,
@@ -233,6 +242,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     jobs: 1,
     teamMembers: 5,
     locations: 1,
+    pagesCovered: 2,
     aiGenerationsPerMonth: 100,
     descriptionChars: null,
     analyticsHistoryDays: 365,
@@ -255,6 +265,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     jobs: 3,
     teamMembers: null,
     locations: 3,
+    pagesCovered: 3,
     aiGenerationsPerMonth: 500,
     descriptionChars: null,
     analyticsHistoryDays: 365,
@@ -340,6 +351,11 @@ export function extraButtonLimit(tier: string | null): number {
 
 export function locationLimit(tier: string | null): number | null {
   return limitsFor(tier).locations
+}
+
+/** Pages the owner's plan covers (ticket 238): Free 1, Starter 1, Growth 2, Premium 3. */
+export function pageCap(tier: string | null): number {
+  return limitsFor(tier).pagesCovered
 }
 
 export function descriptionCharLimit(tier: string | null): number | null {

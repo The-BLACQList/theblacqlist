@@ -1,72 +1,65 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-// Direct regression test for the subscription lifecycle handlers. The
-// whole-handler mock in stripe-webhook.test.ts stubs these functions out, so the
-// live-price -> plans tier resolution (the Finding 3 fix) has no coverage there.
-// Here we import the REAL handlers and feed them a hand-built fake Supabase
-// service client.
+// Direct test of the subscription lifecycle handlers with the REAL handlers and
+// a hand-built fake Supabase service client. The whole-handler mock in
+// stripe-webhook.test.ts stubs these out.
 //
-// The file name predates the second describe block: it now covers
-// handleSubscriptionDeleted as well, because the two handlers share the tier
-// write and its failure posture, and splitting them would duplicate the fake.
+// Since ticket 238 a plan belongs to the owner, and every tier write happens in
+// one database function, sync_owner_plan_tiers (its rules, including "a second
+// live subscription still counts" and "a lapse keeps the covered pages", are
+// pinned by tests/migrations/owner-plan-pages.test.ts). What is pinned here:
 //
-// What the second block exists for (E-7): the tier writes used to discard both
-// the error and the matched-row count, and the audit log was written
-// unconditionally afterwards. That meant a failed or no-op downgrade still
-// produced an audit row asserting the new tier — a log that reads as evidence of
-// something that never happened. Since the audit log is the only durable record
-// a human could ever check, the verification was unverifiable. These tests pin
-// the two failure modes apart:
+//   * The plan comes from the LIVE price, not checkout-time metadata
+//     (Finding 3), and a price no plan sells is flagged loudly.
+//   * When empty slots are filled: a new subscription, a different plan, or a
+//     plan coming back. Not on a plain renewal, not when the plan ends.
+//   * The checkout page is the anchor only while it exists.
+//   * The owner comes from metadata, else the stored row, else the page.
+//   * Failure posture (E-7): an error throws (the route records it and Stripe
+//     retries); a skipped sync doesn't; the audit row records what the
+//     database did, never what was intended.
 //
-//   error     → throw, so the route records a `failed_webhooks` row and Stripe
-//               genuinely retries
-//   zero rows → do NOT throw (retrying can't resurrect a deleted listing), log a
-//               distinct signature, and record the audit row honestly
-//
-// Vitest runs `environment: 'node'` with no Supabase available, so the client is
-// a fake that records its calls — the right instrument here, since what's being
-// asserted is which calls the handler makes and how it reacts to their results.
-//
-// Neutralize import-time / call-time side effects:
-//  - next/cache revalidatePath (no Next runtime in the test)
-//  - @/lib/email/resend sendEmail (payment-failed path only, but the module imports it)
-//  - @/lib/audit/system writeSystemAuditLog (hoisted so we can assert the afterState)
+// Neutralized side effects: next/cache revalidatePath (asserted), the email
+// sender, and writeSystemAuditLog (asserted).
 const h = vi.hoisted(() => {
-  // Typed on the one field these tests read back, so `.mock.calls[0][0]` is a
-  // real object rather than a never-indexable empty tuple.
-  const writeSystemAuditLog = vi.fn(async (_entry: { afterState: Record<string, unknown> }) => {})
+  const writeSystemAuditLog = vi.fn(
+    async (_entry: { action: string; targetId: string | null; afterState: Record<string, unknown> }) => {}
+  )
+  const revalidatePath = vi.fn()
 
-  // Per-test state: what plans.maybeSingle resolves to, and how the two write
-  // paths behave. Defaults are the happy path, so existing cases are unaffected.
   const state: {
     planRow: Record<string, unknown> | null
-    tierWriteError: { message: string } | null
-    tierWriteMatches: boolean
+    /** The stored row for this Stripe subscription, before the event. */
+    prevRow: { plan_id: string | null; status: string; user_id?: string } | null
+    prevReadError: { message: string } | null
+    /** The anchor page (null = deleted). Also what revalidation reads. */
+    listing: Record<string, unknown> | null
+    otherLive: { stripe_subscription_id: string }[]
     subscriptionWriteError: { message: string } | null
-    // Rows the live-sibling check reads back (another live subscription on the
-    // same listing), and an optional error for that read.
-    liveSiblings: { stripe_subscription_id: string; plans: { plan_key: string } | null }[]
-    siblingReadError: { message: string } | null
+    rpcResult: unknown
+    rpcError: { message: string } | null
   } = {
     planRow: null,
-    tierWriteError: null,
-    tierWriteMatches: true,
+    prevRow: null,
+    prevReadError: null,
+    listing: null,
+    otherLive: [],
     subscriptionWriteError: null,
-    liveSiblings: [],
-    siblingReadError: null,
+    rpcResult: null,
+    rpcError: null,
   }
 
-  // Captured writes, so tests can assert what the handler tried to persist.
   const captured: {
-    listingUpdate: Record<string, unknown> | null
     subscriptionUpsert: Record<string, unknown> | null
     subscriptionUpdate: Record<string, unknown> | null
-  } = { listingUpdate: null, subscriptionUpsert: null, subscriptionUpdate: null }
+    rpc: { fn: string; args: Record<string, unknown> } | null
+    order: string[]
+  } = { subscriptionUpsert: null, subscriptionUpdate: null, rpc: null, order: [] }
 
-  return { writeSystemAuditLog, state, captured }
+  return { writeSystemAuditLog, revalidatePath, state, captured }
 })
 
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+vi.mock('next/cache', () => ({ revalidatePath: h.revalidatePath }))
 vi.mock('@/lib/email/resend', () => ({ sendEmail: vi.fn(async () => {}) }))
 vi.mock('@/lib/audit/system', () => ({ writeSystemAuditLog: h.writeSystemAuditLog }))
 
@@ -76,38 +69,9 @@ import {
 } from '@/lib/services/billing/webhookHandlers'
 import type Stripe from 'stripe'
 
-// A minimal awaitable, table-aware fake of the Supabase service client.
-//
-// Reads are chains ending in `.maybeSingle()`. Writes are `upsert(...)` or
-// `update(...).eq(...)`, optionally followed by `.select('id')` — so the builder
-// is itself thenable and resolves to the write result. Every read path in the
-// handler terminates in `.maybeSingle()`, so nothing ever awaits the builder by
-// accident.
 function makeFakeClient() {
   function from(table: string) {
-    // Whether this chain is a write (update/upsert) or a plain read. The only
-    // awaited plain read is the live-sibling check on `subscriptions`.
     let isWrite = false
-
-    const settleWrite = () => {
-      if (table === 'subscriptions' && !isWrite) {
-        return {
-          data: h.state.siblingReadError ? null : h.state.liveSiblings,
-          error: h.state.siblingReadError,
-        }
-      }
-      if (table === 'listings') {
-        if (h.state.tierWriteError) return { data: null, error: h.state.tierWriteError }
-        // `.select('id')` returns the matched rows; an empty array is a filtered
-        // UPDATE that matched nothing, which Postgres reports without an error.
-        return { data: h.state.tierWriteMatches ? [{ id: 'l1' }] : [], error: null }
-      }
-      if (table === 'subscriptions') {
-        return { data: null, error: h.state.subscriptionWriteError }
-      }
-      return { data: null, error: null }
-    }
-
     const builder: Record<string, unknown> = {
       select: () => builder,
       eq: () => builder,
@@ -118,46 +82,47 @@ function makeFakeClient() {
       order: () => builder,
       limit: () => builder,
       upsert: (row: Record<string, unknown>) => {
+        h.captured.order.push(`upsert:${table}`)
         if (table === 'subscriptions') h.captured.subscriptionUpsert = row
         return Promise.resolve({ data: null, error: h.state.subscriptionWriteError })
       },
       update: (row: Record<string, unknown>) => {
         isWrite = true
-        if (table === 'listings') h.captured.listingUpdate = row
+        h.captured.order.push(`update:${table}`)
         if (table === 'subscriptions') h.captured.subscriptionUpdate = row
         return builder
       },
       maybeSingle: async () => {
         if (table === 'plans') return { data: h.state.planRow, error: null }
-        if (table === 'listings') {
-          // Serves both the prevTier read (.tier) and revalidateListingPage
-          // (.status / .slug / .entity_type / .cities). status !== 'published'
-          // keeps revalidatePath a no-op regardless.
-          return {
-            data: {
-              tier: 'growth',
-              status: 'draft',
-              slug: null,
-              entity_type: 'business',
-              cities: null,
-            },
-            error: null,
-          }
+        if (table === 'listings') return { data: h.state.listing, error: null }
+        if (table === 'subscriptions') {
+          return { data: h.state.prevReadError ? null : h.state.prevRow, error: h.state.prevReadError }
         }
         return { data: null, error: null }
       },
-      then: (onFulfilled: (v: unknown) => unknown) =>
-        Promise.resolve(settleWrite()).then(onFulfilled),
+      then: (onFulfilled: (v: unknown) => unknown) => {
+        const result =
+          table === 'subscriptions' && isWrite
+            ? { data: null, error: h.state.subscriptionWriteError }
+            : table === 'subscriptions'
+              ? { data: h.state.otherLive, error: null }
+              : { data: null, error: null }
+        return Promise.resolve(result).then(onFulfilled)
+      },
     }
     return builder
   }
-  return { from } as unknown as Parameters<typeof handleSubscriptionUpsert>[0]
+  const rpc = async (fn: string, args: Record<string, unknown>) => {
+    h.captured.order.push(`rpc:${fn}`)
+    h.captured.rpc = { fn, args }
+    return { data: h.state.rpcError ? null : h.state.rpcResult, error: h.state.rpcError }
+  }
+  return { from, rpc } as unknown as Parameters<typeof handleSubscriptionUpsert>[0]
 }
 
-// A subscription whose LIVE price is premium-yearly, but whose metadata is stale
-// (checkout-time 'growth') — exactly the Customer Portal in-place switch that
-// Finding 3 describes.
-function makeSub(livePriceId: string): Stripe.Subscription {
+// A subscription whose LIVE price may differ from its checkout-time metadata
+// ('growth'), as after a Customer Portal switch (Finding 3).
+function makeSub(livePriceId: string, overrides: Partial<Stripe.Subscription> = {}): Stripe.Subscription {
   return {
     id: 'sub_test',
     status: 'active',
@@ -179,6 +144,7 @@ function makeSub(livePriceId: string): Stripe.Subscription {
         },
       ],
     },
+    ...overrides,
   } as unknown as Stripe.Subscription
 }
 
@@ -188,377 +154,335 @@ const PREMIUM_ROW = {
   stripe_price_id_monthly: 'price_prem_monthly',
   stripe_price_id_yearly: 'price_prem_yearly',
 }
+const GROWTH_ROW = {
+  id: 'plan_growth',
+  plan_key: 'growth',
+  stripe_price_id_monthly: 'price_growth_monthly',
+  stripe_price_id_yearly: 'price_growth_yearly',
+}
+const STARTER_ROW = {
+  id: 'plan_starter',
+  plan_key: 'starter',
+  stripe_price_id_monthly: 'price_starter_monthly',
+  stripe_price_id_yearly: 'price_starter_yearly',
+}
+
+const PUBLISHED_PAGE = {
+  id: 'l1',
+  status: 'published',
+  slug: 'joes',
+  entity_type: 'business',
+  cities: { slug: 'atlanta' },
+}
 
 let errorSpy: ReturnType<typeof vi.spyOn>
+let warnSpy: ReturnType<typeof vi.spyOn>
 
 beforeEach(() => {
   vi.clearAllMocks()
   h.state.planRow = null
-  h.state.tierWriteError = null
-  h.state.tierWriteMatches = true
+  h.state.prevRow = null
+  h.state.prevReadError = null
+  h.state.listing = { id: 'l1', status: 'draft', slug: null, entity_type: 'business', cities: null }
+  h.state.otherLive = []
   h.state.subscriptionWriteError = null
-  h.state.liveSiblings = []
-  h.state.siblingReadError = null
-  h.captured.listingUpdate = null
+  h.state.rpcResult = { tier: 'growth', cap: 2, covered: ['l1'], changes: [] }
+  h.state.rpcError = null
   h.captured.subscriptionUpsert = null
   h.captured.subscriptionUpdate = null
+  h.captured.rpc = null
+  h.captured.order = []
   errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+  warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 })
 
 afterEach(() => {
   errorSpy.mockRestore()
+  warnSpy.mockRestore()
 })
 
-describe('handleSubscriptionUpsert — tier follows the live price (Finding 3)', () => {
-  it('syncs the listing to premium when the live price is premium, despite stale growth metadata', async () => {
+const audit = () => h.writeSystemAuditLog.mock.calls[0]?.[0]
+
+describe('handleSubscriptionUpsert — the plan follows the live price (Finding 3)', () => {
+  it('records the premium plan when the live price is premium, despite stale growth metadata', async () => {
     h.state.planRow = PREMIUM_ROW
     await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))
-
-    // Listing tier follows the resolved live price, not the stale metadata.
-    expect(h.captured.listingUpdate).toEqual({ tier: 'premium' })
-    // Subscription row records the resolved plan id.
-    expect(h.captured.subscriptionUpsert?.plan_id).toBe('plan_premium')
-    // Audit reflects the resolved plan + annual cycle (matched the yearly price).
-    expect(h.writeSystemAuditLog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        afterState: expect.objectContaining({
-          tier: 'premium',
-          plan_slug: 'premium',
-          billing_cycle: 'annual',
-        }),
-      })
-    )
+    expect(h.captured.subscriptionUpsert).toMatchObject({
+      plan_id: 'plan_premium',
+      user_id: 'u1',
+      listing_id: 'l1',
+      status: 'active',
+    })
+    expect(audit()?.afterState).toMatchObject({ plan_slug: 'premium', billing_cycle: 'annual' })
   })
 
-  it('falls back to metadata tier when the live price matches no plans row', async () => {
-    h.state.planRow = null // price not found in `plans`
+  it('falls back to the metadata plan when the live price matches no plans row', async () => {
     await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_unknown'))
-
-    // With no matching plan, the handler keeps the checkout-time metadata tier.
-    expect(h.captured.listingUpdate).toEqual({ tier: 'growth' })
     expect(h.captured.subscriptionUpsert?.plan_id).toBe('plan_growth')
-    expect(h.writeSystemAuditLog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        afterState: expect.objectContaining({ tier: 'growth', plan_slug: 'growth' }),
-      })
-    )
   })
 
-  // A Customer Portal switch onto a withheld tier lands on a price whose plans
-  // row has been nulled. Stripe bills it; the tier stays put. It must be loud.
   it('flags a live price no plan sells, in the error log and on the audit row', async () => {
-    h.state.planRow = null
     await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_unknown'))
-
     expect(errorSpy).toHaveBeenCalledWith(
       '[webhook] subscription is on a price no plan sells:',
-      expect.objectContaining({ priceId: 'price_unknown', fallbackTier: 'growth' })
+      expect.objectContaining({ priceId: 'price_unknown' })
     )
-    expect(h.writeSystemAuditLog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        afterState: expect.objectContaining({ price_unresolved: 'price_unknown' }),
-      })
-    )
+    expect(audit()?.afterState.price_unresolved).toBe('price_unknown')
   })
 
   it('does not flag a price that resolves to a plan', async () => {
     h.state.planRow = PREMIUM_ROW
-    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))
-
-    const audit = h.writeSystemAuditLog.mock.calls.at(-1)?.[0] as {
-      afterState: Record<string, unknown>
-    }
-    expect(audit.afterState).not.toHaveProperty('price_unresolved')
-  })
-})
-
-describe('handleSubscriptionUpsert — the tier write is observed, not assumed (E-7)', () => {
-  it('throws when the tier write errors, so the route can record it and Stripe retries', async () => {
-    h.state.planRow = PREMIUM_ROW
-    h.state.tierWriteError = { message: 'connection reset' }
-
-    await expect(
-      handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))
-    ).rejects.toThrow(/listing tier write failed/)
-  })
-
-  it('writes no audit row at all when the tier write errors', async () => {
-    h.state.planRow = PREMIUM_ROW
-    h.state.tierWriteError = { message: 'connection reset' }
-
-    await expect(
-      handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))
-    ).rejects.toThrow()
-
-    // The throw happens before the audit write. An audit row here would claim a
-    // tier change that definitively did not happen, and the Stripe retry would
-    // then produce a second one.
-    expect(h.writeSystemAuditLog).not.toHaveBeenCalled()
-  })
-
-  it('throws when the subscriptions upsert errors, before touching the listing tier', async () => {
-    h.state.planRow = PREMIUM_ROW
-    h.state.subscriptionWriteError = { message: 'unique violation' }
-
-    await expect(
-      handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))
-    ).rejects.toThrow(/subscriptions upsert failed/)
-    expect(h.captured.listingUpdate).toBeNull()
-  })
-
-  it('does not throw when the tier write matches no listing — a retry cannot fix that', async () => {
-    h.state.planRow = PREMIUM_ROW
-    h.state.tierWriteMatches = false
-
-    // Throwing here would put the event into Stripe's retry schedule for days
-    // against a condition that will never clear.
-    await expect(
-      handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))
-    ).resolves.toBeUndefined()
-
-    expect(errorSpy).toHaveBeenCalledWith(
-      '[webhook] tier write matched no listing:',
-      expect.objectContaining({ listingId: 'l1', intendedTier: 'premium' })
-    )
-  })
-
-  it('records the tier that actually survived, not the one it intended, when no row matched', async () => {
-    h.state.planRow = PREMIUM_ROW
-    h.state.tierWriteMatches = false
-
-    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))
-
-    // Before E-7 this asserted `tier: 'premium'` — the intended value — which is
-    // exactly what made the audit log unusable as evidence.
-    expect(h.writeSystemAuditLog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        beforeState: { tier: 'growth' },
-        afterState: expect.objectContaining({
-          tier: 'growth',
-          tier_write: 'no_matching_listing',
-          intended_tier: 'premium',
-        }),
-      })
-    )
-  })
-
-  it('leaves the successful path clean — no failure marker, nothing logged', async () => {
-    h.state.planRow = PREMIUM_ROW
-    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))
-
-    const afterState = h.writeSystemAuditLog.mock.calls[0]?.[0].afterState
-    expect(afterState).toBeDefined()
-    expect(afterState).not.toHaveProperty('tier_write')
-    expect(afterState).not.toHaveProperty('intended_tier')
+    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_monthly'))
+    expect(audit()?.afterState).not.toHaveProperty('price_unresolved')
     expect(errorSpy).not.toHaveBeenCalled()
   })
 })
 
-describe('handleSubscriptionDeleted — the downgrade is observed, not assumed (E-7)', () => {
-  function makeCanceledSub(): Stripe.Subscription {
-    return {
-      ...makeSub('price_prem_yearly'),
-      status: 'canceled',
-      canceled_at: 1_702_600_000,
-    } as unknown as Stripe.Subscription
-  }
-
-  it('downgrades the listing to free on the happy path', async () => {
-    await handleSubscriptionDeleted(makeFakeClient(), makeCanceledSub())
-
-    expect(h.captured.subscriptionUpdate).toEqual(expect.objectContaining({ status: 'canceled' }))
-    expect(h.captured.listingUpdate).toEqual({ tier: 'free' })
-    expect(h.writeSystemAuditLog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        afterState: expect.objectContaining({ tier: 'free', status: 'canceled' }),
-      })
+describe('handleSubscriptionUpsert — the owner sync (ticket 238)', () => {
+  it('records the subscription, then syncs the owner with the checkout page as anchor', async () => {
+    h.state.planRow = GROWTH_ROW
+    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_growth_monthly'))
+    expect(h.captured.order.indexOf('upsert:subscriptions')).toBeLessThan(
+      h.captured.order.indexOf('rpc:sync_owner_plan_tiers')
     )
+    expect(h.captured.rpc).toEqual({
+      fn: 'sync_owner_plan_tiers',
+      args: { p_owner: 'u1', p_fill: true, p_anchor: 'l1' },
+    })
   })
 
-  it('throws when the downgrade errors — the expensive direction of this bug', async () => {
-    h.state.tierWriteError = { message: 'statement timeout' }
+  it('fills empty slots for a new subscription', async () => {
+    h.state.planRow = GROWTH_ROW
+    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_growth_monthly'))
+    expect(h.captured.rpc?.args.p_fill).toBe(true)
+    expect(audit()?.afterState.filled).toBe(true)
+  })
 
-    // A silently failed downgrade leaves a listing holding paid placement after
-    // the money stopped, and nothing else in the system would ever notice.
-    await expect(handleSubscriptionDeleted(makeFakeClient(), makeCanceledSub())).rejects.toThrow(
-      /listing downgrade failed/
+  it('does not fill on a renewal of the same live plan', async () => {
+    h.state.planRow = GROWTH_ROW
+    h.state.prevRow = { plan_id: 'plan_growth', status: 'active' }
+    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_growth_monthly'))
+    expect(h.captured.rpc?.args.p_fill).toBe(false)
+  })
+
+  it('fills on a plan change', async () => {
+    h.state.planRow = PREMIUM_ROW
+    h.state.prevRow = { plan_id: 'plan_growth', status: 'active' }
+    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_monthly'))
+    expect(h.captured.rpc?.args.p_fill).toBe(true)
+  })
+
+  it('fills when a plan comes back to live', async () => {
+    h.state.planRow = GROWTH_ROW
+    h.state.prevRow = { plan_id: 'plan_growth', status: 'inactive' }
+    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_growth_monthly'))
+    expect(h.captured.rpc?.args.p_fill).toBe(true)
+  })
+
+  it('never fills when the status is not live', async () => {
+    h.state.planRow = GROWTH_ROW
+    h.state.rpcResult = {
+      tier: 'free',
+      cap: 0,
+      covered: ['l1'],
+      changes: [{ id: 'l1', from: 'growth', to: 'free' }],
+    }
+    await handleSubscriptionUpsert(
+      makeFakeClient(),
+      makeSub('price_growth_monthly', { status: 'incomplete_expired' })
+    )
+    expect(h.captured.subscriptionUpsert?.status).toBe('canceled')
+    expect(h.captured.rpc?.args.p_fill).toBe(false)
+  })
+
+  it('leaves the anchor out when the checkout page is gone', async () => {
+    h.state.planRow = GROWTH_ROW
+    h.state.listing = null
+    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_growth_monthly'))
+    expect(h.captured.subscriptionUpsert).not.toHaveProperty('listing_id')
+    expect(h.captured.rpc?.args).not.toHaveProperty('p_anchor')
+    expect(audit()?.targetId).toBeNull()
+  })
+
+  it('takes the owner from the stored row when metadata has none', async () => {
+    h.state.planRow = GROWTH_ROW
+    h.state.prevRow = { plan_id: 'plan_growth', status: 'active', user_id: 'u9' }
+    const sub = makeSub('price_growth_monthly')
+    sub.metadata = { listing_id: 'l1' }
+    await handleSubscriptionUpsert(makeFakeClient(), sub)
+    expect(h.captured.subscriptionUpsert?.user_id).toBe('u9')
+    expect(h.captured.rpc?.args.p_owner).toBe('u9')
+  })
+
+  it('does nothing when no owner can be found', async () => {
+    h.state.listing = null
+    const sub = makeSub('price_growth_monthly')
+    sub.metadata = {}
+    await handleSubscriptionUpsert(makeFakeClient(), sub)
+    expect(h.captured.subscriptionUpsert).toBeNull()
+    expect(h.captured.rpc).toBeNull()
+    expect(warnSpy).toHaveBeenCalled()
+  })
+
+  it('flags a second live subscription for the same owner', async () => {
+    h.state.planRow = GROWTH_ROW
+    h.state.otherLive = [{ stripe_subscription_id: 'sub_other' }]
+    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_growth_monthly'))
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[webhook] owner has more than one live subscription:',
+      expect.objectContaining({ others: ['sub_other'] })
+    )
+    expect(audit()?.afterState.other_live_subscriptions).toEqual(['sub_other'])
+  })
+
+  it('records what the database did and revalidates each changed published page', async () => {
+    h.state.planRow = PREMIUM_ROW
+    h.state.listing = PUBLISHED_PAGE
+    h.state.rpcResult = {
+      tier: 'premium',
+      cap: 3,
+      covered: ['l1', 'l2'],
+      changes: [
+        { id: 'l1', from: 'free', to: 'premium' },
+        { id: 'l2', from: 'free', to: 'premium' },
+      ],
+    }
+    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_monthly'))
+    expect(audit()?.afterState).toMatchObject({
+      owner_tier: 'premium',
+      cap: 3,
+      pages: ['l1', 'l2'],
+      changes: [
+        { id: 'l1', from: 'free', to: 'premium' },
+        { id: 'l2', from: 'free', to: 'premium' },
+      ],
+    })
+    expect(h.revalidatePath).toHaveBeenCalledTimes(2)
+    expect(h.revalidatePath).toHaveBeenCalledWith('/atlanta/business/joes')
+  })
+})
+
+describe('handleSubscriptionUpsert — failures are observed, not assumed (E-7)', () => {
+  it('throws when the sync errors, so the route can record it and Stripe retries', async () => {
+    h.state.rpcError = { message: 'deadlock detected' }
+    await expect(
+      handleSubscriptionUpsert(makeFakeClient(), makeSub('price_growth_monthly'))
+    ).rejects.toThrow(/owner plan sync failed for u1/)
+    expect(h.writeSystemAuditLog).not.toHaveBeenCalled()
+  })
+
+  it('throws when the subscriptions upsert errors, before any sync', async () => {
+    h.state.subscriptionWriteError = { message: 'connection reset' }
+    await expect(
+      handleSubscriptionUpsert(makeFakeClient(), makeSub('price_growth_monthly'))
+    ).rejects.toThrow(/subscriptions upsert failed/)
+    expect(h.captured.rpc).toBeNull()
+  })
+
+  it('throws when the previous row cannot be read, before any write', async () => {
+    h.state.prevReadError = { message: 'timeout' }
+    await expect(
+      handleSubscriptionUpsert(makeFakeClient(), makeSub('price_growth_monthly'))
+    ).rejects.toThrow(/subscription read failed/)
+    expect(h.captured.subscriptionUpsert).toBeNull()
+  })
+
+  it('throws on a sync result it does not understand rather than guess', async () => {
+    h.state.rpcResult = { tier: 'platinum', cap: 9 }
+    await expect(
+      handleSubscriptionUpsert(makeFakeClient(), makeSub('price_growth_monthly'))
+    ).rejects.toThrow(/unexpected shape/)
+  })
+
+  it('does not throw when the sync skips an unresolved plan, and says so on the audit row', async () => {
+    h.state.rpcResult = { skipped: 'plan_unresolved' }
+    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_unknown'))
+    expect(audit()?.afterState.tier_write).toBe('skipped_plan_unresolved')
+    expect(audit()?.afterState).not.toHaveProperty('owner_tier')
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[webhook] owner plan left unchanged, a live subscription has no plan:',
+      expect.objectContaining({ userId: 'u1' })
+    )
+    expect(h.revalidatePath).not.toHaveBeenCalled()
+  })
+})
+
+describe('handleSubscriptionDeleted', () => {
+  const ended = () =>
+    makeSub('price_growth_monthly', { status: 'canceled', canceled_at: 1_702_600_000 })
+
+  it('marks the row canceled, then syncs the owner without filling', async () => {
+    h.state.rpcResult = {
+      tier: 'free',
+      cap: 0,
+      covered: ['l1'],
+      changes: [{ id: 'l1', from: 'growth', to: 'free' }],
+    }
+    await handleSubscriptionDeleted(makeFakeClient(), ended())
+    expect(h.captured.subscriptionUpdate).toMatchObject({ status: 'canceled' })
+    expect(h.captured.order.indexOf('update:subscriptions')).toBeLessThan(
+      h.captured.order.indexOf('rpc:sync_owner_plan_tiers')
+    )
+    expect(h.captured.rpc?.args).toEqual({ p_owner: 'u1', p_fill: false })
+    expect(audit()).toMatchObject({
+      action: 'subscription_canceled',
+      afterState: {
+        status: 'canceled',
+        owner_tier: 'free',
+        changes: [{ id: 'l1', from: 'growth', to: 'free' }],
+      },
+    })
+  })
+
+  it('throws when the sync errors — the expensive direction of this bug', async () => {
+    h.state.rpcError = { message: 'connection reset' }
+    await expect(handleSubscriptionDeleted(makeFakeClient(), ended())).rejects.toThrow(
+      /owner plan sync failed/
     )
     expect(h.writeSystemAuditLog).not.toHaveBeenCalled()
   })
 
-  it('records honestly when the downgrade matches no listing', async () => {
-    h.state.tierWriteMatches = false
-
-    await expect(
-      handleSubscriptionDeleted(makeFakeClient(), makeCanceledSub())
-    ).resolves.toBeUndefined()
-
-    expect(errorSpy).toHaveBeenCalledWith(
-      '[webhook] downgrade matched no listing:',
-      expect.objectContaining({ listingId: 'l1' })
-    )
-    expect(h.writeSystemAuditLog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        afterState: expect.objectContaining({
-          tier: 'growth',
-          tier_write: 'no_matching_listing',
-          intended_tier: 'free',
-        }),
-      })
-    )
-  })
-
-  it('throws when the subscriptions cancel write errors, before touching the tier', async () => {
+  it('throws when the cancel write errors, before any sync', async () => {
     h.state.subscriptionWriteError = { message: 'connection reset' }
-
-    await expect(handleSubscriptionDeleted(makeFakeClient(), makeCanceledSub())).rejects.toThrow(
+    await expect(handleSubscriptionDeleted(makeFakeClient(), ended())).rejects.toThrow(
       /subscription cancel write failed/
     )
-    expect(h.captured.listingUpdate).toBeNull()
+    expect(h.captured.rpc).toBeNull()
+  })
+
+  it('finds the owner from the stored row when metadata is empty', async () => {
+    h.state.prevRow = { plan_id: 'plan_growth', status: 'canceled', user_id: 'u7' }
+    const sub = ended()
+    sub.metadata = {}
+    await handleSubscriptionDeleted(makeFakeClient(), sub)
+    expect(h.captured.rpc?.args.p_owner).toBe('u7')
+    expect(audit()?.targetId).toBeNull()
   })
 })
 
-describe('a downgrade never strips a plan another subscription still pays for', () => {
-  function makeEndedSub(
-    status: 'canceled' | 'incomplete_expired' = 'canceled'
-  ): Stripe.Subscription {
-    return {
-      ...makeSub('price_prem_yearly'),
-      id: 'sub_old_trial',
-      status,
-      canceled_at: 1_702_600_000,
-    } as unknown as Stripe.Subscription
-  }
-
-  it("deleted: keeps the live sibling's tier instead of dropping to free", async () => {
-    h.state.liveSiblings = [{ stripe_subscription_id: 'sub_paid', plans: { plan_key: 'growth' } }]
-
-    await handleSubscriptionDeleted(makeFakeClient(), makeEndedSub())
-
-    expect(h.captured.subscriptionUpdate).toEqual(expect.objectContaining({ status: 'canceled' }))
-    expect(h.captured.listingUpdate).toEqual({ tier: 'growth' })
-    expect(h.writeSystemAuditLog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        afterState: expect.objectContaining({ tier: 'growth', live_sibling: 'sub_paid' }),
-      })
-    )
-  })
-
-  it('deleted: still drops to free when no other live subscription exists', async () => {
-    await handleSubscriptionDeleted(makeFakeClient(), makeEndedSub())
-
-    expect(h.captured.listingUpdate).toEqual({ tier: 'free' })
-    const afterState = h.writeSystemAuditLog.mock.calls[0]?.[0].afterState
-    expect(afterState).not.toHaveProperty('live_sibling')
-  })
-
-  it("deleted: leaves the tier alone when the sibling's plan row is gone", async () => {
-    h.state.liveSiblings = [{ stripe_subscription_id: 'sub_paid', plans: null }]
-
-    await handleSubscriptionDeleted(makeFakeClient(), makeEndedSub())
-
-    // Guessing either way is wrong: free strips a paying owner, any paid tier
-    // may be the wrong one. No write, a loud log, and an honest audit row.
-    expect(h.captured.listingUpdate).toBeNull()
-    expect(errorSpy).toHaveBeenCalledWith(
-      '[webhook] live sibling has no plan row; tier left unchanged:',
-      expect.objectContaining({ siblingSubscriptionId: 'sub_paid' })
-    )
-    expect(h.writeSystemAuditLog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        afterState: expect.objectContaining({
-          tier: 'growth',
-          tier_write: 'skipped_live_sibling_unresolved',
-        }),
-      })
-    )
-  })
-
-  it('deleted: throws when the sibling check errors, before touching the tier', async () => {
-    h.state.siblingReadError = { message: 'connection reset' }
-
-    await expect(handleSubscriptionDeleted(makeFakeClient(), makeEndedSub())).rejects.toThrow(
-      /live sibling check failed/
-    )
-    expect(h.captured.listingUpdate).toBeNull()
-    expect(h.writeSystemAuditLog).not.toHaveBeenCalled()
-  })
-
-  it("upsert with a non-live status: keeps the live sibling's tier", async () => {
-    h.state.planRow = PREMIUM_ROW
-    h.state.liveSiblings = [{ stripe_subscription_id: 'sub_paid', plans: { plan_key: 'starter' } }]
-
-    await handleSubscriptionUpsert(makeFakeClient(), makeEndedSub('incomplete_expired'))
-
-    expect(h.captured.subscriptionUpsert?.status).toBe('canceled')
-    expect(h.captured.listingUpdate).toEqual({ tier: 'starter' })
-  })
-
-  it('upsert with a non-live status and no sibling: drops to free as before', async () => {
-    h.state.planRow = PREMIUM_ROW
-
-    await handleSubscriptionUpsert(makeFakeClient(), makeEndedSub('incomplete_expired'))
-
-    expect(h.captured.listingUpdate).toEqual({ tier: 'free' })
-  })
-
-  it('upsert with a live status: never consults siblings, the live plan wins', async () => {
-    h.state.planRow = PREMIUM_ROW
-    // Even if the read would error, a live subscription does not need it.
-    h.state.siblingReadError = { message: 'should not be read' }
-
-    await handleSubscriptionUpsert(makeFakeClient(), makeSub('price_prem_yearly'))
-
-    expect(h.captured.listingUpdate).toEqual({ tier: 'premium' })
-  })
-})
-
-// Ticket 136: a tester's free month on a bigger plan runs on a subscription
-// schedule. The subscription keeps its Starter checkout metadata the whole time;
-// only the live price and status change. The listing must read Growth while the
-// month is trialing, then Starter again once the return phase starts.
 describe('the free month on a paid upgrade (ticket 136)', () => {
-  const GROWTH_ROW = {
-    id: 'plan_growth',
-    plan_key: 'growth',
-    stripe_price_id_monthly: 'price_growth_monthly',
-    stripe_price_id_yearly: 'price_growth_yearly',
-  }
-  const STARTER_ROW = {
-    id: 'plan_starter',
-    plan_key: 'starter',
-    stripe_price_id_monthly: 'price_starter_monthly',
-    stripe_price_id_yearly: 'price_starter_yearly',
-  }
-
   function scheduled(status: Stripe.Subscription.Status, priceId: string) {
-    const sub = makeSub(priceId)
+    const sub = makeSub(priceId, { status })
     return {
       ...sub,
-      status,
       metadata: { ...sub.metadata, plan_id: 'plan_starter', plan_slug: 'starter' },
     } as Stripe.Subscription
   }
 
-  it('day 0: a trialing subscription on the Growth price reads Growth', async () => {
+  it('day 0: a trialing subscription on the Growth price records Growth and fills', async () => {
     h.state.planRow = GROWTH_ROW
+    h.state.prevRow = { plan_id: 'plan_starter', status: 'active' }
     await handleSubscriptionUpsert(makeFakeClient(), scheduled('trialing', 'price_growth_monthly'))
-    expect(h.captured.listingUpdate).toEqual({ tier: 'growth' })
     expect(h.captured.subscriptionUpsert?.plan_id).toBe('plan_growth')
+    expect(h.captured.rpc?.args.p_fill).toBe(true)
   })
 
-  it('day 31: back on the Starter price and active, it reads Starter', async () => {
+  it('day 31: back on the Starter price and active, it records Starter and refits', async () => {
     h.state.planRow = STARTER_ROW
+    h.state.prevRow = { plan_id: 'plan_growth', status: 'trialing' }
     await handleSubscriptionUpsert(makeFakeClient(), scheduled('active', 'price_starter_monthly'))
-    expect(h.captured.listingUpdate).toEqual({ tier: 'starter' })
     expect(h.captured.subscriptionUpsert?.plan_id).toBe('plan_starter')
-  })
-
-  it('a plan ended at the close of the month drops the page to free', async () => {
-    await handleSubscriptionDeleted(makeFakeClient(), {
-      ...scheduled('canceled', 'price_growth_monthly'),
-      canceled_at: 1_702_600_000,
-    } as Stripe.Subscription)
-    expect(h.captured.listingUpdate).toEqual({ tier: 'free' })
+    // A plan change: the database fills to the new cap and trims anything over it.
+    expect(h.captured.rpc?.args.p_fill).toBe(true)
   })
 })

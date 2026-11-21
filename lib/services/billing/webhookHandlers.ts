@@ -16,21 +16,20 @@
 //                  re-runs the handler. Every write before a throw is
 //                  idempotent, so a retry is safe.
 //
-//   zero rows    → the listing the metadata points at is gone. Retrying cannot
-//                  resurrect it, and throwing would schedule days of Stripe
-//                  retries against a condition that will never clear. Log a
-//                  distinct signature and record the audit row honestly.
+//   skipped      → the owner has no billing, or a live subscription's price
+//                  didn't resolve to a plan. Retrying can't change either, so
+//                  nothing is thrown: tiers are left as they are, the reason
+//                  is logged and stamped on the audit row.
 //
-// `.select('id')` on the tier writes is what makes the second case observable
-// at all: a filtered UPDATE that matches nothing returns no error.
+// Since ticket 238 the tier writes themselves happen in one database function,
+// sync_owner_plan_tiers, which returns exactly which pages changed. The audit
+// row records that result, so it is evidence of what happened, not intent.
 // =============================================================================
 
-import { revalidatePath } from 'next/cache'
 import type Stripe from 'stripe'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 import type { createServiceClient } from '@/lib/supabase/server'
-import { buildEntityUrl } from '@/lib/listings/url'
 import { writeSystemAuditLog } from '@/lib/audit/system'
 import { sendEmail } from '@/lib/email/resend'
 import { PaymentFailedEmail } from '@/lib/email/templates/payment-failed'
@@ -38,57 +37,23 @@ import { JobPostingPaidEmail, jobPostingPaidSubject } from '@/lib/email/template
 import type { PlanSlug } from '@/lib/stripe/plans'
 import { jobPostingExpiryFrom } from '@/lib/stripe/jobPostings'
 import { transitionToPendingReview } from '@/lib/listings/submitForReview'
-import { syncLocationTiers, type LocationTierChange } from '@/lib/services/billing/locationTiers'
+import {
+  resolveSubscriptionOwner,
+  revalidateChanged,
+  syncOwnerPlan,
+  type OwnerPlanSync,
+} from '@/lib/services/billing/planPages'
 
 type ServiceClient = ReturnType<typeof createServiceClient>
 
-// Statuses under which the listing keeps its paid tier. past_due is included
-// so an owner keeps access during Stripe's dunning/retry window (grace period);
-// only a real cancellation drops them to free.
+// Statuses under which the owner keeps their plan. past_due is included so an
+// owner keeps access during Stripe's dunning/retry window (grace period); only
+// a real cancellation drops them to free.
 const KEEPS_ACCESS = new Set<Stripe.Subscription.Status>(['active', 'trialing', 'past_due'])
 
 // The same three states as stored in `subscriptions.status` (normalizeStatus
 // maps `unpaid` onto past_due, so it is covered).
 const LIVE_DB_STATUSES = ['active', 'trialing', 'past_due']
-
-/**
- * Before any downgrade to free: does the listing still hold ANOTHER live
- * subscription?
- *
- * A listing can briefly carry two Stripe subscriptions (a tour trial that was
- * claimed before a paid checkout, or a duplicate from before checkout refused a
- * second plan). When the older one ends, an unconditional `tier: 'free'` would
- * strip the plan the owner is still paying for. So a downgrade first looks for a
- * sibling and, when one exists, the listing takes the sibling's tier instead.
- *
- * Returns null when there is no live sibling. `{ tier: null }` means a sibling
- * exists but its plan row is gone (plans.id ON DELETE SET NULL); the caller then
- * leaves the tier alone rather than guessing. A read error throws, so the route
- * records it and Stripe retries, because a guess in either direction is wrong.
- */
-async function findLiveSibling(
-  supabase: ServiceClient,
-  listingId: string,
-  excludeSubscriptionId: string
-): Promise<{ subscriptionId: string; tier: PlanSlug | null } | null> {
-  const { data, error } = await supabase
-    .from('subscriptions')
-    .select('stripe_subscription_id, plans(plan_key)')
-    .eq('listing_id', listingId)
-    .neq('stripe_subscription_id', excludeSubscriptionId)
-    .in('status', LIVE_DB_STATUSES)
-    .order('created_at', { ascending: false })
-    .limit(1)
-
-  if (error) {
-    throw new Error(`live sibling check failed for ${listingId}: ${error.message}`)
-  }
-
-  const row = data?.[0]
-  if (!row) return null
-  const planKey = (row.plans as { plan_key: string } | null)?.plan_key ?? null
-  return { subscriptionId: row.stripe_subscription_id ?? '', tier: planKey as PlanSlug | null }
-}
 
 // Maps Stripe's subscription status to the app's `subscriptions.status` CHECK
 // values ('active' | 'inactive' | 'canceled' | 'past_due' | 'trialing').
@@ -110,34 +75,33 @@ function toIso(unixSeconds: number | null | undefined): string | null {
   return unixSeconds ? new Date(unixSeconds * 1000).toISOString() : null
 }
 
-// Revalidate the public entity page after a tier change (tier can affect layout
-// capability and placement). Best-effort; only for published listings.
-async function revalidateListingPage(supabase: ServiceClient, listingId: string): Promise<void> {
-  const { data: listing } = await supabase
-    .from('listings')
-    .select('slug, entity_type, status, cities(slug)')
-    .eq('id', listingId)
-    .maybeSingle()
-
-  if (listing?.status === 'published' && listing.slug) {
-    const citySlug = (listing.cities as { slug: string } | null)?.slug ?? null
-    revalidatePath(buildEntityUrl(listing.entity_type, citySlug, listing.slug))
+/** The audit fields every sync writes: what the database actually did. */
+function syncAudit(result: OwnerPlanSync): Record<string, unknown> {
+  if (result.skipped) return { tier_write: `skipped_${result.skipped}` }
+  return {
+    owner_tier: result.tier,
+    cap: result.cap,
+    pages: result.covered,
+    ...(result.changes.length ? { changes: result.changes } : {}),
   }
 }
 
+// Ticket 238: a plan belongs to the owner. The webhook records the
+// subscription, then asks the database to set every one of the owner's pages
+// from it (sync_owner_plan_tiers). `metadata.listing_id` is only the page the
+// owner started checkout from, used to choose the first covered page.
 export async function handleSubscriptionUpsert(
   supabase: ServiceClient,
   sub: Stripe.Subscription
 ): Promise<void> {
-  const meta = sub.metadata as Record<string, string>
-  const userId = meta.user_id
-  const listingId = meta.listing_id
+  const meta = (sub.metadata ?? {}) as Record<string, string>
   let planId = meta.plan_id ?? null
   let planSlug = (meta.plan_slug ?? 'free') as PlanSlug
   let billingCycle = meta.billing_cycle ?? null
 
-  if (!userId || !listingId) {
-    console.warn('[webhook] subscription missing user_id or listing_id in metadata', sub.id)
+  const userId = await resolveSubscriptionOwner(supabase, sub.id, meta)
+  if (!userId) {
+    console.warn('[webhook] subscription has no owner (metadata, row or page)', sub.id)
     return
   }
 
@@ -155,7 +119,7 @@ export async function handleSubscriptionUpsert(
   // Set when the subscription sits on a price no `plans` row carries. Withholding a
   // tier nulls its price IDs (lib/stripe/availability.ts), so a Customer Portal
   // switch into Growth or Premium lands here: Stripe bills the new price while the
-  // listing keeps the checkout-time tier. That needs a person, not a guess, so it
+  // owner keeps the checkout-time plan. That needs a person, not a guess, so it
   // is logged loudly and stamped on the audit row. The real block is the portal
   // configuration offering only purchasable products (founder step, 2026-10-03).
   let unresolvedPriceId: string | null = null
@@ -174,7 +138,7 @@ export async function handleSubscriptionUpsert(
       unresolvedPriceId = livePriceId
       console.error('[webhook] subscription is on a price no plan sells:', {
         subscriptionId: sub.id,
-        listingId,
+        userId,
         priceId: livePriceId,
         fallbackTier: planSlug,
       })
@@ -186,18 +150,38 @@ export async function handleSubscriptionUpsert(
       ? sub.customer
       : ((sub.customer as Stripe.Customer)?.id ?? null)
 
-  const { data: prevListing } = await supabase
-    .from('listings')
-    .select('tier')
-    .eq('id', listingId)
-    .maybeSingle()
-  const prevTier = prevListing?.tier ?? null
-
   const status = normalizeStatus(sub.status)
+
+  // What the row said before this event decides whether empty slots get filled:
+  // a new plan, a different plan, or a plan coming back.
+  const { data: prev, error: prevError } = await supabase
+    .from('subscriptions')
+    .select('plan_id, status')
+    .eq('stripe_subscription_id', sub.id)
+    .maybeSingle()
+  if (prevError) {
+    throw new Error(`subscription read failed for ${sub.id}: ${prevError.message}`)
+  }
+  const nowLive = KEEPS_ACCESS.has(sub.status)
+  const fill =
+    nowLive &&
+    (!prev || prev.plan_id !== planId || !LIVE_DB_STATUSES.includes(prev.status))
+
+  // The anchor is only recorded while that page exists: the column is a
+  // foreign key, and a deleted page must not fail every later event.
+  let anchorId: string | null = null
+  if (meta.listing_id) {
+    const { data: anchor } = await supabase
+      .from('listings')
+      .select('id')
+      .eq('id', meta.listing_id)
+      .maybeSingle()
+    anchorId = anchor?.id ?? null
+  }
 
   const { error: subError } = await supabase.from('subscriptions').upsert(
     {
-      listing_id: listingId,
+      ...(anchorId ? { listing_id: anchorId } : {}),
       user_id: userId,
       plan_id: planId,
       status,
@@ -218,101 +202,59 @@ export async function handleSubscriptionUpsert(
     throw new Error(`subscriptions upsert failed for ${sub.id}: ${subError.message}`)
   }
 
-  // A non-live status would normally drop the listing to free, but not while
-  // another live subscription still pays for it (see findLiveSibling).
-  const sibling = KEEPS_ACCESS.has(sub.status)
-    ? null
-    : await findLiveSibling(supabase, listingId, sub.id)
+  // One live plan per owner is the rule (checkout refuses a second). One that
+  // slipped past it still counts toward the owner's pages; flag it for a person.
+  let otherLive: string[] = []
+  if (nowLive) {
+    const { data: others } = await supabase
+      .from('subscriptions')
+      .select('stripe_subscription_id')
+      .eq('user_id', userId)
+      .neq('stripe_subscription_id', sub.id)
+      .in('status', LIVE_DB_STATUSES)
+    otherLive = (others ?? []).map((o) => o.stripe_subscription_id ?? '').filter(Boolean)
+    if (otherLive.length) {
+      console.error('[webhook] owner has more than one live subscription:', {
+        subscriptionId: sub.id,
+        userId,
+        others: otherLive,
+      })
+    }
+  }
 
-  if (sibling && sibling.tier === null) {
-    console.error('[webhook] live sibling has no plan row; tier left unchanged:', {
+  const result = await syncOwnerPlan(supabase, userId, { fill, anchorId })
+  if (result.skipped === 'plan_unresolved') {
+    console.error('[webhook] owner plan left unchanged, a live subscription has no plan:', {
       subscriptionId: sub.id,
-      siblingSubscriptionId: sibling.subscriptionId,
-      listingId,
-    })
-    await writeSystemAuditLog({
-      actorUserId: userId,
-      action: 'subscription_synced',
-      targetTable: 'subscriptions',
-      targetId: listingId,
-      beforeState: { tier: prevTier },
-      afterState: {
-        tier: prevTier,
-        status,
-        tier_write: 'skipped_live_sibling_unresolved',
-        live_sibling: sibling.subscriptionId,
-      },
-    })
-    return
-  }
-
-  const newTier: PlanSlug = KEEPS_ACCESS.has(sub.status) ? planSlug : (sibling?.tier ?? 'free')
-
-  const { data: tierUpdated, error: tierError } = await supabase
-    .from('listings')
-    .update({ tier: newTier })
-    .eq('id', listingId)
-    .select('id')
-
-  if (tierError) {
-    throw new Error(`listing tier write failed for ${listingId}: ${tierError.message}`)
-  }
-
-  // Zero rows is a different failure and a retry cannot fix it: the metadata
-  // points at a listing that no longer exists. Throwing here would put the
-  // event into Stripe's retry schedule for days against a condition that will
-  // never clear, so this is logged loudly and recorded honestly instead.
-  const tierWritten = (tierUpdated?.length ?? 0) > 0
-  if (!tierWritten) {
-    console.error('[webhook] tier write matched no listing:', {
-      subscriptionId: sub.id,
-      listingId,
-      intendedTier: newTier,
+      userId,
     })
   }
 
-  // Linked locations (ticket 110) follow the primary: Premium covers them, a
-  // drop below Premium returns them to Free (links kept). Throws on a failed
-  // write, so Stripe retries; already-synced pages are not rewritten.
-  const locationChanges: LocationTierChange[] = tierWritten
-    ? await syncLocationTiers(supabase, listingId, newTier)
-    : []
-
-  // The audit row records what actually happened, not what was intended. Before
-  // this, `afterState.tier` was written unconditionally — so a failed or
-  // no-op write produced a log asserting a tier change that never occurred,
-  // which is worse than no log because it reads as evidence.
+  // The audit row records what the database did, not what was intended.
   await writeSystemAuditLog({
     actorUserId: userId,
     action: 'subscription_synced',
     targetTable: 'subscriptions',
-    targetId: listingId,
-    beforeState: { tier: prevTier },
+    targetId: anchorId,
     afterState: {
-      tier: tierWritten ? newTier : prevTier,
       status,
       plan_slug: planSlug,
       billing_cycle: billingCycle,
-      ...(sibling ? { live_sibling: sibling.subscriptionId } : {}),
-      ...(tierWritten ? {} : { tier_write: 'no_matching_listing', intended_tier: newTier }),
+      filled: fill,
+      ...syncAudit(result),
+      ...(otherLive.length ? { other_live_subscriptions: otherLive } : {}),
       ...(unresolvedPriceId ? { price_unresolved: unresolvedPriceId } : {}),
-      ...(locationChanges.length ? { locations: locationChanges } : {}),
     },
   })
 
-  if (tierWritten && newTier !== prevTier) {
-    await revalidateListingPage(supabase, listingId)
-  }
-  for (const change of locationChanges) await revalidateListingPage(supabase, change.id)
+  if (!result.skipped) await revalidateChanged(supabase, result.changes)
 }
 
 export async function handleSubscriptionDeleted(
   supabase: ServiceClient,
   sub: Stripe.Subscription
 ): Promise<void> {
-  const meta = sub.metadata as Record<string, string>
-  const listingId = meta.listing_id
-  const userId = meta.user_id ?? null
+  const meta = (sub.metadata ?? {}) as Record<string, string>
 
   const { error: cancelError } = await supabase
     .from('subscriptions')
@@ -323,86 +265,26 @@ export async function handleSubscriptionDeleted(
     throw new Error(`subscription cancel write failed for ${sub.id}: ${cancelError.message}`)
   }
 
-  if (!listingId) return
-
-  const { data: prevListing } = await supabase
-    .from('listings')
-    .select('tier')
-    .eq('id', listingId)
-    .maybeSingle()
-  const prevTier = prevListing?.tier ?? null
-
-  // Ending one subscription must not strip a plan another one still pays for.
-  const sibling = await findLiveSibling(supabase, listingId, sub.id)
-
-  if (sibling && sibling.tier === null) {
-    console.error('[webhook] live sibling has no plan row; tier left unchanged:', {
-      subscriptionId: sub.id,
-      siblingSubscriptionId: sibling.subscriptionId,
-      listingId,
-    })
-    await writeSystemAuditLog({
-      actorUserId: userId,
-      action: 'subscription_canceled',
-      targetTable: 'subscriptions',
-      targetId: listingId,
-      beforeState: { tier: prevTier },
-      afterState: {
-        tier: prevTier,
-        status: 'canceled',
-        tier_write: 'skipped_live_sibling_unresolved',
-        live_sibling: sibling.subscriptionId,
-      },
-    })
+  const userId = await resolveSubscriptionOwner(supabase, sub.id, meta)
+  if (!userId) {
+    console.warn('[webhook] canceled subscription has no owner (metadata, row or page)', sub.id)
     return
   }
 
-  const newTier: PlanSlug = sibling?.tier ?? 'free'
-
-  const { data: tierUpdated, error: tierError } = await supabase
-    .from('listings')
-    .update({ tier: newTier })
-    .eq('id', listingId)
-    .select('id')
-
-  // A cancellation whose downgrade silently fails is the expensive direction of
-  // this bug: the listing keeps paid placement after the money stops.
-  if (tierError) {
-    throw new Error(`listing downgrade failed for ${listingId}: ${tierError.message}`)
-  }
-
-  const tierWritten = (tierUpdated?.length ?? 0) > 0
-  if (!tierWritten) {
-    console.error('[webhook] downgrade matched no listing:', {
-      subscriptionId: sub.id,
-      listingId,
-    })
-  }
-
-  // Linked locations go back to Free with the primary (links kept, ticket 110).
-  const locationChanges: LocationTierChange[] = tierWritten
-    ? await syncLocationTiers(supabase, listingId, newTier)
-    : []
+  // Ending one subscription can't strip a plan another one still pays for:
+  // the sync reads every live subscription the owner has. Covered pages stay
+  // recorded, so a plan that comes back covers the same pages.
+  const result = await syncOwnerPlan(supabase, userId, { fill: false })
 
   await writeSystemAuditLog({
     actorUserId: userId,
     action: 'subscription_canceled',
     targetTable: 'subscriptions',
-    targetId: listingId,
-    beforeState: { tier: prevTier },
-    afterState: {
-      tier: tierWritten ? newTier : prevTier,
-      status: 'canceled',
-      ...(sibling ? { live_sibling: sibling.subscriptionId } : {}),
-      ...(tierWritten ? {} : { tier_write: 'no_matching_listing', intended_tier: newTier }),
-      ...(locationChanges.length ? { locations: locationChanges } : {}),
-    },
+    targetId: meta.listing_id ?? null,
+    afterState: { status: 'canceled', ...syncAudit(result) },
   })
 
-  if (tierWritten) {
-    await revalidateListingPage(supabase, listingId)
-  }
-  for (const change of locationChanges) await revalidateListingPage(supabase, change.id)
+  if (!result.skipped) await revalidateChanged(supabase, result.changes)
 }
 
 export async function handlePaymentFailed(
