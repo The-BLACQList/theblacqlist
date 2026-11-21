@@ -1,6 +1,6 @@
 # Ticket 243: Deleting an Account Cancels the Paid Plan
 
-**Status:** PR open (`fix/243-account-delete-cancels-plan`). Merging needs the founder's OK (GATE-DEPLOY). No migration.
+**Status:** Merged #368 (ece6769), 2026-11-21. No migration. Test-mode run 2026-11-21: the plan cancel passed; the account delete after it failed on a separate bug, fixed in [ticket 245](245-account-delete-audit-log.md).
 
 ## Why
 
@@ -28,6 +28,22 @@ It was worse than the charge alone. Deleting the auth user:
 - `tests/delete-account-action.test.ts` (3): cancel runs before any delete; a failed cancel keeps the account; no plan work without the DELETE confirmation.
 - `tests/subscription-upsert.test.ts`: the later webhook is a quiet no-op.
 
-## Test-Mode Run
+## Test-Mode Run (2026-11-21)
 
-Not run yet. Preview deployments can't receive Stripe webhooks (SSO protection), so the run has to be local `pnpm dev` on staging Supabase with the Stripe sandbox and `stripe listen`, which needs the staging env file. The checklist (ticket 238's plus this ticket's) is in the PR.
+Local `pnpm dev` on the merged code (ece6769) against staging Supabase, with the Stripe sandbox and `stripe listen`. Preview deployments can't receive Stripe webhooks. Driven with Playwright (hosted Checkout with card 4242, the portal, Settings). Every step was checked in the UI and in `subscriptions`, `plan_covered_pages` and `listings.tier`. Test owner with pages A, B and C, where A and C are linked as locations.
+
+| # | Step | Result |
+|---|---|---|
+| 1 | Buy Growth from page B | ✅ B covered first, A filled, both Growth, C Free; "2 of 2 Pages Covered" |
+| 2 | Second checkout | ✅ 409 `SUBSCRIPTION_EXISTS` |
+| 3 | Growth → Starter, then Move Plan Here to A | ✅ B (added first) kept, A Free; after the move A is Starter, B Free; no Remove with 1 page covered |
+| 4 | Starter → Premium; remove C; add C back | ✅ fills A, B, C; C Free after Remove; Premium again after Add to Plan |
+| 5 | Also At on public pages | ✅ A shows C, and C shows A |
+| 6 | Premium → Starter | ✅ A (added first) kept, B and C Free |
+| 7 | Failed payment | ✅ `past_due`, pages stay paid, strip shows "Payment Due", Update Card opens the portal ("Payment failed"); after a good card, back to active |
+| 8 | Cancel at period end, then cancel now, then resubscribe Growth | ✅ stays paid until it ends; all Free when it ends (coverage list kept); resubscribe brings back A and B |
+| 9 | Delete the account with Growth live (243) | ⚠️ Plan part ✅: Stripe subscription `canceled` with no new invoice, A and B to Free, audit row `subscription_canceled_account_deleted` written, the later `customer.subscription.deleted` webhook handled. **The user delete itself then failed** ("Database error deleting user"): see ticket 245. The account was kept, now with no plan. |
+
+Step 7 note: with this API version, `billing_cycle_anchor=now` plus `proration_behavior=none` did not invoice. The failed charge was made with an upgrade using `proration_behavior=always_invoice` and `payment_behavior=allow_incomplete` instead.
+
+Plan changes in steps 3, 4, 6 and 8 were made through the Stripe API, which sends the same `customer.subscription.updated` webhook as a portal change. The portal itself was opened from Manage Subscription and Update Card.
