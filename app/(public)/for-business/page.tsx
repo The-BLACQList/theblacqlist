@@ -77,7 +77,7 @@ const ROWS: Row[] = [
   },
   {
     title: 'More Drafts for Your Page',
-    body: 'Cue drafts your about text, search summary, and Instagram captions. You make the final call.',
+    body: 'Cue drafts your about text, search title and summary, and Instagram captions. You make the final call.',
     plan: 'starter',
     flag: 'beta',
   },
