@@ -31,13 +31,12 @@ type Row = { title: string; body: string; plan: 'free' | 'starter'; flag?: 'onbo
 // What a Page can do. `plan: 'starter'` marks what lib/stripe/features.ts gates
 // at tier 1 or above (access works by rank, so Starter and up): extra photos,
 // `listing_video`, `faqs`, `social_links`, `review_response`, `analytics`. The
-// AI rows render only while their flag is on: the /add-business draft is
+// AI rows render only while their flag is on: the /add-business writing help is
 // FEATURE_AI_ONBOARDING and free; Explain My Numbers and the Write buttons are
-// FEATURE_AI_BETA, Starter and up, counted against aiQuota. The AI rows name
-// no assistant name and no AI line repeated in every row (founder 2026-11-21);
-// one note under the list says they are written by AI whenever an AI row shows.
-// Not Cue: the dashboard tools aren't called Cue, and Marketing keeps Cue in
-// the supporter lane. The
+// FEATURE_AI_BETA, Starter and up, counted against aiQuota. The AI rows speak
+// as the owner's AI business assistant, never "drafts" (founder 2026-11-21);
+// each title says AI, which is the disclosure. Not Cue: the dashboard tools
+// aren't called Cue, and Marketing keeps Cue in the supporter lane. The
 // Collective is out: it is gated (FEATURE_COLLECTIVE_OPEN).
 const ROWS: Row[] = [
   {
@@ -51,8 +50,8 @@ const ROWS: Row[] = [
     plan: 'free',
   },
   {
-    title: 'Start from a Draft',
-    body: 'Get a free first draft when you add your business. Change any of it.',
+    title: 'Your AI Assistant Gets You Started',
+    body: 'When you add your business, it writes your tagline, About, and search text, free. Nothing goes live until you choose it.',
     plan: 'free',
     flag: 'onboarding',
   },
@@ -72,14 +71,14 @@ const ROWS: Row[] = [
     plan: 'starter',
   },
   {
-    title: 'Explain My Numbers',
-    body: 'A plain read of what your numbers mean, and one thing to try next.',
+    title: 'Your AI Assistant Reads Your Numbers',
+    body: 'It tells you in plain words what your last 30 days show, and one thing to try next.',
     plan: 'starter',
     flag: 'beta',
   },
   {
-    title: 'More Drafts for Your Page',
-    body: 'Drafts of your about text, search title and summary, and Instagram captions. You make the final call.',
+    title: 'Your AI Assistant Helps You Write',
+    body: 'It writes your About, search title and summary, and Instagram captions. You make the final call.',
     plan: 'starter',
     flag: 'beta',
   },
@@ -265,12 +264,9 @@ export default async function ForBusinessPage() {
                 </li>
               ))}
             </ul>
-            {(aiOnboardingOn || aiBetaOn) && (
+            {aiBetaOn && (
               <p className="font-body text-sm text-charcoal mt-5">
-                {aiBetaOn
-                  ? 'These drafts and reads are written by AI.'
-                  : 'This draft is written by AI.'}
-                {aiBetaOn && ' Your plan sets how many you get every 30 days.'}
+                Your plan sets how often your AI business assistant can help every 30 days.
               </p>
             )}
           </div>

@@ -65,20 +65,22 @@ describe('/for-business copy', () => {
     )
   })
 
-  // Ticket 206: the AI rows show only while their flag is on. Ticket 240: no
-  // "AI writes it" in every row; one note under the list discloses AI whenever
-  // any AI row shows (founder 2026-11-21). No Cue: the dashboard tools aren't
-  // called Cue, and Marketing keeps Cue in the supporter lane.
+  // Ticket 206: the AI rows show only while their flag is on. Ticket 240: they
+  // speak as the owner's AI business assistant, never "drafts" (founder
+  // 2026-11-21), and each title says AI, which is the disclosure. No Cue: the
+  // dashboard tools aren't called Cue, and Marketing keeps Cue in the supporter lane.
   it('gates every AI row on its flag and discloses AI', () => {
-    expect(page).toMatch(/title: 'Start from a Draft',[\s\S]{0,200}flag: 'onboarding'/)
-    expect(page).toMatch(/title: 'Explain My Numbers',[\s\S]{0,200}flag: 'beta'/)
-    expect(page).toMatch(/title: 'More Drafts for Your Page',[\s\S]{0,200}flag: 'beta'/)
     expect(page).toMatch(
-      /\(aiOnboardingOn \|\| aiBetaOn\) && \([\s\S]{0,160}written by AI\.[\s\S]{0,40}written by AI\./
+      /title: 'Your AI Assistant Gets You Started',[\s\S]{0,200}flag: 'onboarding'/
     )
-    // Strings only (comments may name Cue to explain why it's left out).
+    expect(page).toMatch(/title: 'Your AI Assistant Reads Your Numbers',[\s\S]{0,200}flag: 'beta'/)
+    expect(page).toMatch(/title: 'Your AI Assistant Helps You Write',[\s\S]{0,200}flag: 'beta'/)
+    expect(page).toMatch(
+      /aiBetaOn && \([\s\S]{0,120}your AI business assistant can help every 30 days\./
+    )
+    // Strings only (comments may name what is left out, and why).
     const strings = page.match(/'[^'\n]*'/g) ?? []
-    expect(strings.filter((x) => /AI writes|\bCue\b/.test(x))).toEqual([])
+    expect(strings.filter((x) => /AI writes|\bCue\b|\bdrafts?\b/i.test(x))).toEqual([])
     expect(page).toContain("isFeatureEnabled('aiOnboarding')")
     expect(page).toContain("isFeatureEnabled('aiBeta')")
     expect(page).not.toMatch(/AI-powered/i)
