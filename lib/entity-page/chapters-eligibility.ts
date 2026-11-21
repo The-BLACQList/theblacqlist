@@ -1,12 +1,17 @@
 import type { EntityPageData } from '@/types'
+import { canAccess } from '@/lib/stripe/features'
 
 /**
  * Which listing pages get the chapters layout (ticket 231).
  *
- * Founder, 2026-11-18: every plan gets it, but a thin listing keeps today's
- * page until it has enough to fill the chapters. Enough means a cover photo,
- * at least four gallery photos and a story. Storefront types only for now
- * (business, restaurant, vendor); the other templates follow in later passes.
+ * Founder, 2026-11-18: a thin listing keeps today's page until it has enough
+ * to fill the chapters. Enough means a cover photo, at least four gallery
+ * photos and a story. Storefront types only for now (business, restaurant,
+ * vendor); the other templates follow in later passes.
+ *
+ * Founder, 2026-11-21 (ticket 239): the layout is Starter and up, on every
+ * page, including ones the platform added with plenty of photos. Free allows
+ * 3 photos, so a Free owner meets the plan before the photo count.
  */
 
 const STOREFRONT_TYPES = new Set(['business', 'restaurant', 'vendor'])
@@ -40,10 +45,16 @@ export function chaptersMissing(facts: {
   return out
 }
 
+/** Whether this plan includes the full page layout (ticket 239). */
+export function chaptersPlanAllows(tier: string | null | undefined): boolean {
+  return canAccess(tier ?? null, 'chapters_layout')
+}
+
 export function chaptersEligible(
-  entity: Pick<EntityPageData, 'entity_type' | 'cover_image_path' | 'images' | 'details'>
+  entity: Pick<EntityPageData, 'entity_type' | 'tier' | 'cover_image_path' | 'images' | 'details'>
 ): boolean {
   if (!STOREFRONT_TYPES.has(entity.entity_type)) return false
+  if (!chaptersPlanAllows(entity.tier)) return false
   if (!entity.cover_image_path?.trim()) return false
   if (entity.images.length < CHAPTERS_MIN_PHOTOS) return false
   return Boolean(entity.details.description?.trim())

@@ -80,11 +80,11 @@ describe('importRemoteImage', () => {
   })
 
   it('passes the plan line through so the owner sees the real limit', async () => {
-    h.store = { ok: false, code: 'PLAN_LIMIT', error: 'Your plan includes 1 photo. Upgrade to add more.', status: 400 }
+    h.store = { ok: false, code: 'PLAN_LIMIT', error: 'Your plan includes 3 photos. Upgrade to add more.', status: 400 }
     expect(await importRemoteImage(args)).toEqual({
       ok: false,
       reason: 'plan_limit',
-      message: 'Your plan includes 1 photo. Upgrade to add more.',
+      message: 'Your plan includes 3 photos. Upgrade to add more.',
     })
   })
 

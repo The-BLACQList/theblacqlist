@@ -231,9 +231,10 @@ describe('checkVideoAdd', () => {
 })
 
 describe('checkPhotoAdd', () => {
-  it('allows the first Free photo and blocks the second', () => {
+  it('allows 3 Free photos and blocks the fourth', () => {
     expect(checkPhotoAdd('free', 0)).toBeNull()
-    expect(checkPhotoAdd('free', 1)).toBe('Your plan includes 1 photo. Upgrade to add more.')
+    expect(checkPhotoAdd('free', 2)).toBeNull()
+    expect(checkPhotoAdd('free', 3)).toBe('Your plan includes 3 photos. Upgrade to add more.')
   })
 
   it('allows Starter up to 10', () => {
@@ -276,7 +277,7 @@ describe('the Growth offer', () => {
   })
 
   it('leaves the Free messages alone, which already point at Starter', () => {
-    expect(checkPhotoAdd('free', 1, true)).toBe('Your plan includes 1 photo. Upgrade to add more.')
+    expect(checkPhotoAdd('free', 3, true)).toBe('Your plan includes 3 photos. Upgrade to add more.')
     expect(checkFaqAdd('free', 0, true)).toMatch(/part of Starter/)
   })
 

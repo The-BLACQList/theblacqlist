@@ -48,7 +48,7 @@ describe('shownLimits', () => {
       descriptionChars: null,
     })
     expect(shownLimits('free', 'starter')).toMatchObject({
-      photos: 1,
+      photos: 3,
       videos: 0,
       faqs: 0,
       attributes: 3,

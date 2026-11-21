@@ -8,7 +8,12 @@ import { computePageChecklist } from '@/lib/ai/checklist'
 import { creatorChecklistFacts } from '@/lib/listings/creatorAttributes'
 import { socialLinksAllowed, upgradeTarget, type UpgradeTarget } from '@/lib/stripe/planChecks'
 import { TIER_RANK, attributeLimit, descriptionCharLimit, faqLimit, photoLimit } from '@/lib/stripe/features'
-import { CHAPTERS_MIN_PHOTOS, chaptersMissing } from '@/lib/entity-page/chapters-eligibility'
+import {
+  CHAPTERS_MIN_PHOTOS,
+  chaptersLayoutType,
+  chaptersMissing,
+  chaptersPlanAllows,
+} from '@/lib/entity-page/chapters-eligibility'
 import { getCtaLabel, type CTAType } from '@/types'
 import { LivePagePreview } from '@/components/listings/LivePagePreview'
 import { extraButtonLabel, shownExtraButtons } from '@/lib/listings/pageButtons'
@@ -272,10 +277,13 @@ export function PageFinishView({
   })
 
   // Ticket 233: tell owners what turns the full page on. Only for types that
-  // get it and plans that allow enough photos (Free allows 1).
+  // get it and plans that include it (ticket 239: Starter and up). A Free
+  // page of a type that gets it is told the layout comes with Starter.
   const photoCap = photoLimit(tier)
+  const layoutType = chaptersLayoutType(data.entityType)
+  const fullPageUpsell = layoutType && !chaptersPlanAllows(tier)
   const fullPageMissing =
-    photoCap === null || photoCap >= CHAPTERS_MIN_PHOTOS
+    !fullPageUpsell && (photoCap === null || photoCap >= CHAPTERS_MIN_PHOTOS)
       ? (chaptersMissing({
           entityType: data.entityType,
           hasCover: Boolean(data.coverImagePath),
@@ -502,6 +510,7 @@ export function PageFinishView({
           data.albums ? { byId: data.albums, canFile: albumsAllowed(data.tier) } : undefined
         }
         fullPageMissing={fullPageMissing}
+        fullPageUpsell={fullPageUpsell}
       />
     ),
     'main-button': (

@@ -85,8 +85,17 @@ describe('chaptersEligible', () => {
     ['three photos', (e: EntityPageData) => ({ ...e, images: e.images.slice(0, 3) })],
     ['no story', (e: EntityPageData) => ({ ...e, details: { ...e.details, description: '' } })],
     ['a non-Storefront type', (e: EntityPageData) => ({ ...e, entity_type: 'professional' })],
+    // Ticket 239 (founder, 2026-11-21): the full layout is Starter and up,
+    // even for a Free page we added ourselves with plenty of photos.
+    ['a Free plan', (e: EntityPageData) => ({ ...e, tier: 'free' })],
   ] as const)('keeps today’s page with %s', (_, change) => {
     expect(chaptersEligible(change(full()) as EntityPageData)).toBe(false)
+  })
+
+  it('takes every paid plan', () => {
+    // The row holds a plan slug; types/index.ts Tier still says 'standard'.
+    for (const tier of ['starter', 'growth', 'premium'])
+      expect(chaptersEligible({ ...full(), tier } as unknown as EntityPageData)).toBe(true)
   })
 
   it('takes restaurants and vendors too', () => {

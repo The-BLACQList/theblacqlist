@@ -255,7 +255,7 @@ describe('importSitePhotosAction', () => {
   it('skips the remaining gallery photos once the plan is full, but still brings in the cover', async () => {
     h.importResult = (url) =>
       url.endsWith('chair.jpg')
-        ? { ok: false, reason: 'plan_limit', message: 'Your plan includes 1 photo.' }
+        ? { ok: false, reason: 'plan_limit', message: 'Your plan includes 3 photos.' }
         : { ok: true, path: 'p', mediaId: null }
     const res = await importSitePhotosAction({
       listingId: LISTING_ID,
@@ -270,7 +270,7 @@ describe('importSitePhotosAction', () => {
       ok: true,
       photos: [
         { ok: false, reason: 'plan_limit' },
-        { ok: false, reason: 'skipped', message: 'Your plan includes 1 photo.' },
+        { ok: false, reason: 'skipped', message: 'Your plan includes 3 photos.' },
         { ok: true, role: 'cover' },
       ],
     })

@@ -55,6 +55,11 @@ function aiLine(slug: PlanSlug): string {
     : `AI writing help: ${quota} drafts every 30 days`
 }
 
+// Ticket 239 (founder, 2026-11-21): side by side, it must be obvious how much
+// more each step up gives. Each paid list opens with "Everything in {lower}",
+// which the cards print as a lead-in, and a line that raises a number says
+// what the plan below has, in brackets. The full grid of every limit is
+// lib/stripe/planCompare.ts, built from the same limits.
 export const PLANS: PlanMeta[] = [
   {
     slug: 'free',
@@ -65,7 +70,7 @@ export const PLANS: PlanMeta[] = [
     features: [
       'Your page with hours, contact info, and website',
       'A short description (up to 300 characters)',
-      '1 photo',
+      'Up to 3 photos',
       'Up to 3 details customers filter by, like outdoor seating',
       'Category, city, and search placement',
       'A map pin once your address is confirmed',
@@ -85,17 +90,18 @@ export const PLANS: PlanMeta[] = [
       'Everything in Free',
       aiLine('starter'),
       pagesLine('starter'),
-      'Up to 10 photos',
+      'The full page layout for businesses, restaurants, and vendors',
+      'Up to 10 photos (Free has 3)',
       'A video on your page, your own upload or a link',
       'Your menu or service list, with prices',
       'Your full story, with no length limit',
-      'Up to 10 details customers filter by',
+      'Up to 10 details customers filter by (Free has 3)',
       'A common questions section (up to 5)',
       'Social links on your page',
       '1 extra button on your page, next to your main one',
       'A Happening now post on your page and city page, 1 at a time',
       'Reply to reviews in public',
-      'See your views, saves, and taps over the last 30 days',
+      'A simple analytics dashboard: views, saves, and taps over the last 30 days',
     ],
     cta: 'Upgrade to Starter',
     highlighted: false,
@@ -110,12 +116,15 @@ export const PLANS: PlanMeta[] = [
       'Everything in Starter',
       aiLine('growth'),
       pagesLine('growth'),
-      'Up to 25 photos',
       'A storefront for up to 25 products and services',
       'Up to 3 events at a time',
       '1 job posting every 30 days',
-      'Up to 3 Happening now posts at a time',
-      'Up to 2 extra buttons on your page',
+      'Up to 25 photos (Starter has 10)',
+      'Up to 3 videos (Starter has 1)',
+      'No limit on common questions or details customers filter by',
+      'Up to 3 Happening now posts at a time (Starter has 1)',
+      'Up to 2 extra buttons on your page (Starter has 1)',
+      'Analytics going back 12 months (Starter has 30 days)',
     ],
     cta: 'Upgrade to Growth',
     highlighted: true,
@@ -130,13 +139,13 @@ export const PLANS: PlanMeta[] = [
       'Everything in Growth',
       aiLine('premium'),
       pagesLine('premium'),
-      'Up to 50 photos',
-      'Unlimited products, services, and events',
-      '3 job postings every 30 days',
-      'Up to 5 Happening now posts at a time',
-      'Up to 3 extra buttons on your page',
       'Coupons and deals',
       'Booking requests',
+      'Unlimited products, services, and events (Growth has 25 and 3)',
+      '3 job postings every 30 days (Growth has 1)',
+      'Up to 50 photos (Growth has 25)',
+      'Up to 5 Happening now posts at a time (Growth has 3)',
+      'Up to 3 extra buttons on your page (Growth has 2)',
       'Link up to 3 locations so each page lists the others',
       'Your community spend view, once 5 or more receipts are logged',
       'A named support contact',
@@ -145,6 +154,16 @@ export const PLANS: PlanMeta[] = [
     highlighted: false,
   },
 ]
+
+/** "Everything in Starter" when a list opens with it (ticket 239), else null. */
+export function leadIn(features: readonly string[]): string | null {
+  return features[0]?.startsWith('Everything in ') ? features[0] : null
+}
+
+/** The lines a card prints as bullets: the list without its lead-in. */
+export function addedLines(features: readonly string[]): readonly string[] {
+  return leadIn(features) ? features.slice(1) : features
+}
 
 export function getPlanMeta(slug: PlanSlug): PlanMeta {
   const plan = PLANS.find((p) => p.slug === slug)

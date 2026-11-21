@@ -10,7 +10,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
-import { canAccess } from '@/lib/stripe/features'
+import { canAccess, photoLimit } from '@/lib/stripe/features'
 
 const page = readFileSync(path.join(process.cwd(), 'app/(public)/for-business/page.tsx'), 'utf8')
 
@@ -57,12 +57,20 @@ describe('/for-business copy', () => {
     // Access works by rank, so these rows carry the "Starter and Up" label.
     expect(canAccess('premium', 'listing_video')).toBe(true)
     expect(page).toMatch(
-      /title: 'More on Your Page',\s*body: 'More photos, a video, common questions, and your social links\.',\s*plan: 'starter'/
+      /title: 'More on Your Page',\s*body: 'Up to 10 photos, a video, common questions, and your social links\.',\s*plan: 'starter'/
     )
-    // Free gets one photo, so the free row never types a number or says "photos" alone.
+    // Ticket 239: Free gets 3 photos, Starter 10, and the rows say so.
+    expect(photoLimit('free')).toBe(3)
+    expect(photoLimit('starter')).toBe(10)
     expect(page).toMatch(
-      /title: 'Your Story and Photos',[\s\S]{0,160}add a photo\.[\s\S]{0,80}plan: 'free'/
+      /title: 'Your Story and Photos',[\s\S]{0,160}add up to 3 photos\.[\s\S]{0,80}plan: 'free'/
     )
+  })
+
+  it('marks the full page layout Starter and up, matching features.ts', () => {
+    expect(canAccess('free', 'chapters_layout')).toBe(false)
+    expect(canAccess('starter', 'chapters_layout')).toBe(true)
+    expect(page).toMatch(/title: 'The Full Page Layout',[\s\S]{0,200}chapters\.',\s*plan: 'starter'/)
   })
 
   // Ticket 206: AI shows only while its flag is on. Ticket 240 (founder

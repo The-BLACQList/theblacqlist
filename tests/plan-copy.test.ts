@@ -16,6 +16,7 @@ import { PLANS, getPlanMeta } from '@/lib/stripe/plans'
 import {
   activePostLimit,
   aiQuota,
+  analyticsHistoryDays,
   extraButtonLimit,
   attributeLimit,
   canAccess,
@@ -78,8 +79,8 @@ describe('Free copy matches the Free limits', () => {
   const free = getPlanMeta('free').features
 
   it('states the enforced numbers', () => {
-    expect(photoLimit('free')).toBe(1)
-    expect(free).toContain('1 photo')
+    expect(photoLimit('free')).toBe(3)
+    expect(free).toContain('Up to 3 photos')
     expect(descriptionCharLimit('free')).toBe(300)
     expect(free).toContain('A short description (up to 300 characters)')
     expect(attributeLimit('free')).toBe(3)
@@ -97,6 +98,7 @@ describe('Starter copy matches the Starter gates and limits', () => {
       'social_links',
       'review_response',
       'analytics',
+      'chapters_layout',
     ] as const) {
       expect(canAccess('free', feature)).toBe(false)
       expect(canAccess('starter', feature)).toBe(true)
@@ -105,7 +107,8 @@ describe('Starter copy matches the Starter gates and limits', () => {
 
   it('states the enforced numbers', () => {
     expect(photoLimit('starter')).toBe(10)
-    expect(starter).toContain('Up to 10 photos')
+    expect(starter).toContain('Up to 10 photos (Free has 3)')
+    expect(starter).toContain('The full page layout for businesses, restaurants, and vendors')
     expect(videoLimit('starter')).toBe(1)
     expect(starter).toContain('A video on your page, your own upload or a link')
     // Ticket 233: priced menus on Starter; the Shop (storefront) stays Growth+.
@@ -115,7 +118,7 @@ describe('Starter copy matches the Starter gates and limits', () => {
     expect(descriptionCharLimit('starter')).toBeNull()
     expect(starter).toContain('Your full story, with no length limit')
     expect(attributeLimit('starter')).toBe(10)
-    expect(starter).toContain('Up to 10 details customers filter by')
+    expect(starter).toContain('Up to 10 details customers filter by (Free has 3)')
     expect(faqLimit('starter')).toBe(5)
     expect(starter).toContain('A common questions section (up to 5)')
     expect(activePostLimit('free')).toBe(0)
@@ -133,21 +136,29 @@ describe('Growth and Premium lists match their limits', () => {
   it('Growth', () => {
     const growth = getPlanMeta('growth').features
     expect(photoLimit('growth')).toBe(25)
-    expect(growth).toContain('Up to 25 photos')
+    expect(growth).toContain('Up to 25 photos (Starter has 10)')
+    expect(videoLimit('growth')).toBe(3)
+    expect(growth).toContain('Up to 3 videos (Starter has 1)')
+    expect(faqLimit('growth')).toBeNull()
+    expect(attributeLimit('growth')).toBeNull()
+    expect(growth).toContain('No limit on common questions or details customers filter by')
     expect(productLimit('growth')).toBe(25)
     expect(eventLimit('growth')).toBe(3)
     expect(jobLimit('growth')).toBe(1)
     expect(activePostLimit('growth')).toBe(3)
-    expect(growth).toContain('Up to 3 Happening now posts at a time')
+    expect(growth).toContain('Up to 3 Happening now posts at a time (Starter has 1)')
     expect(extraButtonLimit('growth')).toBe(2)
-    expect(growth).toContain('Up to 2 extra buttons on your page')
+    expect(growth).toContain('Up to 2 extra buttons on your page (Starter has 1)')
+    expect(analyticsHistoryDays('starter')).toBe(30)
+    expect(analyticsHistoryDays('growth')).toBeGreaterThanOrEqual(365)
+    expect(growth).toContain('Analytics going back 12 months (Starter has 30 days)')
   })
 
   // Founder 2026-10-28 (ticket 143): these came off because nothing works
   // behind them yet. Put a line back only with the feature that makes it true.
   it('Growth does not promise search terms, team members or 1-day support', () => {
     const growth = getPlanMeta('growth').features
-    expect(growth).toHaveLength(9)
+    expect(growth).toHaveLength(12)
     expect(growth).toContain('Covers up to 2 of your pages')
     const text = growth.join(' ').toLowerCase()
     expect(text).not.toContain('search terms')
@@ -158,7 +169,9 @@ describe('Growth and Premium lists match their limits', () => {
   it('Premium', () => {
     const premium = getPlanMeta('premium').features
     expect(photoLimit('premium')).toBe(50)
-    expect(premium).toContain('Up to 50 photos')
+    expect(premium).toContain('Up to 50 photos (Growth has 25)')
+    expect(premium).toContain('Unlimited products, services, and events (Growth has 25 and 3)')
+    expect(premium).toContain('3 job postings every 30 days (Growth has 1)')
     expect(productLimit('premium')).toBeNull()
     expect(eventLimit('premium')).toBeNull()
     expect(jobLimit('premium')).toBe(3)
@@ -166,9 +179,9 @@ describe('Growth and Premium lists match their limits', () => {
     expect(premium).toContain('Link up to 3 locations so each page lists the others')
     expect(premium).toContain('Covers up to 3 of your pages')
     expect(activePostLimit('premium')).toBe(5)
-    expect(premium).toContain('Up to 5 Happening now posts at a time')
+    expect(premium).toContain('Up to 5 Happening now posts at a time (Growth has 3)')
     expect(extraButtonLimit('premium')).toBe(3)
-    expect(premium).toContain('Up to 3 extra buttons on your page')
+    expect(premium).toContain('Up to 3 extra buttons on your page (Growth has 2)')
   })
 })
 
@@ -201,5 +214,23 @@ describe('each paid plan says how many pages it covers', () => {
     expect(getPlanMeta('growth').features).toContain('Covers up to 2 of your pages')
     expect(getPlanMeta('premium').features).toContain('Covers up to 3 of your pages')
     expect(getPlanMeta('free').features.join(' ')).not.toMatch(/covers|pages/i)
+  })
+})
+
+// Ticket 239: the cards print "Everything in {lower}, plus:" and then only
+// what the plan adds, so the lead-in has to come first on every paid plan.
+describe('cards lead with what the plan below has', () => {
+  it('leadIn and addedLines split each paid list', async () => {
+    const { addedLines, leadIn } = await import('@/lib/stripe/plans')
+    expect(leadIn(getPlanMeta('free').features)).toBeNull()
+    expect(addedLines(getPlanMeta('free').features)).toEqual(getPlanMeta('free').features)
+    expect(leadIn(getPlanMeta('starter').features)).toBe('Everything in Free')
+    expect(leadIn(getPlanMeta('growth').features)).toBe('Everything in Starter')
+    expect(leadIn(getPlanMeta('premium').features)).toBe('Everything in Growth')
+    for (const slug of ['starter', 'growth', 'premium'] as const) {
+      const added = addedLines(getPlanMeta(slug).features)
+      expect(added).toHaveLength(getPlanMeta(slug).features.length - 1)
+      expect(added.some((l) => l.startsWith('Everything in'))).toBe(false)
+    }
   })
 })

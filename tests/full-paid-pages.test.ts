@@ -82,7 +82,7 @@ describe('strength meter gallery item', () => {
     expect(galleryItem(0, 'starter', 'professional')?.hint).not.toContain('full page')
   })
 
-  it('stays out of a Free page’s score, which allows 1 photo', () => {
+  it('stays out of a Free page’s score, which allows 3 photos', () => {
     expect(galleryItem(0, 'free')).toBeUndefined()
     expect(galleryItem(0, 'starter')).toBeDefined()
   })

@@ -2,6 +2,7 @@
 
 import { useActionState, useState, useRef } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Loader2,
@@ -56,6 +57,11 @@ interface Props {
    * `chaptersMissing` (ticket 233). Left out when the type or plan can't get it.
    */
   fullPageMissing?: string[]
+  /**
+   * The page's type gets the full layout but its plan doesn't (ticket 239:
+   * Starter and up). Shows one line pointing at Upgrade instead.
+   */
+  fullPageUpsell?: boolean
 }
 
 /** "a, b and c" */
@@ -429,6 +435,7 @@ export function MediaGrid({
   logo,
   albums,
   fullPageMissing,
+  fullPageUpsell = false,
 }: Props) {
   const [cropSource, setCropSource] = useState<BannerSource | null>(null)
   const closeCrop = () => {
@@ -445,6 +452,15 @@ export function MediaGrid({
           your page and helps people using screen readers and search. Upload at <strong className="font-semibold">1920px wide or larger</strong> for
           the sharpest photos.
         </p>
+        {fullPageUpsell && (
+          <p className="font-body text-sm text-charcoal mt-2" data-full-page-note="">
+            The full page layout, with your photos in a gallery and your story in chapters, comes
+            with Starter.{' '}
+            <Link href="/dashboard/upgrade" className="underline underline-offset-2 hover:text-brand-black">
+              See Plans
+            </Link>
+          </p>
+        )}
         {fullPageMissing && (
           <p className="font-body text-sm text-charcoal mt-2" data-full-page-note="">
             {fullPageMissing.length === 0

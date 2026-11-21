@@ -9,6 +9,8 @@ import { freeMonthHold } from '@/lib/tour/freeMonthHold'
 import { PlanPages } from '@/components/dashboard/PlanPages'
 import { FreeMonthCard } from './FreeMonthCard'
 import { UpgradePlans } from './UpgradePlans'
+import { PlanCompareTable } from '@/components/billing/PlanCompareTable'
+import { compareOpen } from '@/lib/stripe/planCompare'
 
 export const metadata: Metadata = { title: 'Upgrade | BLACQList Dashboard' }
 
@@ -57,8 +59,8 @@ export default async function UpgradePage({
       <div className="mb-8">
         <h1 className="font-headline text-2xl text-brand-black mb-2">Upgrade Your Plan</h1>
         <p className="font-body text-sm text-charcoal-soft max-w-lg">
-          Unlock analytics, priority placement, and more for your pages. Pay monthly or save with
-          annual billing.
+          More photos, the full page layout, analytics, and more for your pages. Pay monthly or
+          save with annual billing.
         </p>
       </div>
 
@@ -91,6 +93,14 @@ export default async function UpgradePage({
         availability={availability}
         freeMonthHold={freeMonthHold(freeMonth)}
       />
+
+      {/* Ticket 239: every limit side by side, each step up marked. */}
+      <section aria-labelledby="compare-h" className="mt-10">
+        <h2 id="compare-h" className="font-headline text-lg text-brand-black mb-3">
+          Compare Every Plan
+        </h2>
+        <PlanCompareTable open={compareOpen(availability, currentTier)} currentTier={currentTier} />
+      </section>
     </div>
   )
 }

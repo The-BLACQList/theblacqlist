@@ -60,8 +60,10 @@ const TIER_STEPS = [
 ] as const
 
 describe('photoLimit', () => {
-  it('caps free 1, starter 10, growth 25, premium 50', () => {
-    expect(photoLimit('free')).toBe(1)
+  // Ticket 239 (founder, 2026-11-21): Free goes from 1 photo to 3. The 4th
+  // photo is what the full layout needs, and that stays Starter and up.
+  it('caps free 3, starter 10, growth 25, premium 50', () => {
+    expect(photoLimit('free')).toBe(3)
     expect(photoLimit('starter')).toBe(10)
     expect(photoLimit('growth')).toBe(25)
     expect(photoLimit('premium')).toBe(50)
@@ -69,8 +71,8 @@ describe('photoLimit', () => {
   })
 
   it('treats null / unknown tiers as free', () => {
-    expect(photoLimit(null)).toBe(1)
-    expect(photoLimit('bogus')).toBe(1)
+    expect(photoLimit(null)).toBe(3)
+    expect(photoLimit('bogus')).toBe(3)
   })
 
   it('keeps a hard cap at every tier — photos are the storage cost tail', () => {
