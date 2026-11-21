@@ -7,7 +7,9 @@
 **Founder decision, 2026-10-29:** post section 13 effective on posting for everyone, with no advance email to owners already on a paid plan. The Terms (Changes to Terms) promise registered users 14 days' email notice of material changes, so this is an open question for counsel (L11 below).
 **Audience:** the founder and BLACQList's attorney.
 **Written by:** Legal agent, 2026-10-28, as part of ticket 143 (Growth on sale).
-**Last updated:** 2026-10-29
+**Last updated:** 2026-11-21
+
+**Founder decision, 2026-11-21 (ticket 238):** a plan belongs to the owner's account, not to one page, and covers a set number of pages: Free 1, Starter 1, Growth 2, Premium up to 3, any of the owner's pages. 13.1, 13.4 and 13.7 below are corrected to match. The posted Terms (section 13.1, `app/(public)/terms/TermsOfService.tsx`) still say "Each plan covers one page", which is true until ticket 238 ships; the posted text changes with that ticket, with the notice in Changes to Terms.
 
 ---
 
@@ -36,7 +38,7 @@ Taken from the code on 2026-10-28. Counsel should confirm each one still holds.
 | Fact | Source |
 |---|---|
 | Plans bill monthly or yearly, in advance, through Stripe Checkout | `create-checkout-session/route.ts` (`mode: 'subscription'`) |
-| One plan per page; a second page needs its own plan | the same route returns `SUBSCRIPTION_EXISTS` |
+| A plan belongs to the owner's account and covers up to a set number of pages (Free 1, Starter 1, Growth 2, Premium 3). **Not built yet:** today checkout still sells one plan per page (`SUBSCRIPTION_EXISTS`) | founder 2026-11-21; ticket 238 |
 | Owners change or cancel through the Stripe Customer Portal ("Manage subscription") | `ManageSubscriptionButton.tsx`, `createPortalSession` |
 | A failed payment keeps the paid plan while Stripe retries (`past_due`) | `lib/services/billing/webhookHandlers.ts` (`KEEPS_ACCESS`) |
 | When a plan ends, extra content is hidden, never deleted, and returns on upgrade | ticket 105 / #256 |
@@ -54,19 +56,19 @@ Plain-language draft. Bracketed items are choices for the founder and counsel.
 
 > ### 13. Paid Plans and Billing
 >
-> **13.1 Plans.** Some features need a paid plan for your page. Current plans, prices and what each one includes are shown on our Pricing page. Each plan covers one page.
+> **13.1 Plans.** Some features need a paid plan. A plan belongs to your account and covers up to the number of your pages shown for it on our Pricing page, along with its current price and what it includes.
 >
 > **13.2 Billing.** You pay in advance, monthly or yearly, depending on what you choose at checkout. Payments are processed by Stripe. Prices are in US dollars and do not include any taxes that apply.
 >
 > **13.3 Automatic renewal.** Your plan renews automatically at the end of each monthly or yearly term, and we charge the payment method on file at the then-current price, until you cancel. We will tell you at least [30] days before any price change takes effect for you. For yearly plans, we will email you at least [15] days before each renewal.
 >
-> **13.4 Cancelling.** You can cancel at any time from your dashboard under Upgrade, then Manage subscription. You do not need to contact us. When you cancel, your plan stays active until the end of the term you already paid for, then your page moves to the free plan. [Confirm the Portal is set to cancel at period end.]
+> **13.4 Cancelling.** You can cancel at any time from your dashboard under Upgrade, then Manage subscription. You do not need to contact us. When you cancel, your plan stays active until the end of the term you already paid for, then the pages it covered move to the free plan. [Confirm the Portal is set to cancel at period end.]
 >
 > **13.5 Refunds.** Payments are non-refundable, including for partial months or years, except where the law requires otherwise or where we decide to give a refund. [Alternative for counsel: a full refund on a first yearly payment if requested within [14] days.]
 >
 > **13.6 Changing plans.** If you move to a higher plan, the change takes effect right away and Stripe charges the prorated difference. If you move to a lower plan, the change takes effect [at the end of your current term]. Content over the lower plan's limits, such as extra photos, videos, products and services, is hidden from your public page, not deleted, and shows again if you move back up.
 >
-> **13.7 Failed payments.** If a payment fails, we and Stripe will try again over a short period and let you know. Your plan stays active while we retry. If payment still fails, your page moves to the free plan, with content handled as in 13.6.
+> **13.7 Failed payments.** If a payment fails, we and Stripe will try again over a short period and let you know. Your plan stays active while we retry. If payment still fails, the pages your plan covered move to the free plan, with content handled as in 13.6.
 >
 > **13.8 Free trials and promotions.** We may offer a free period on a plan, for example to early testers. We will say at the start whether a card is needed and what happens when it ends. A free period that did not ask for a card ends on its own, with no charge.
 >

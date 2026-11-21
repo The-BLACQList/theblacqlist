@@ -84,7 +84,7 @@ export function UpgradePlans({
             >
               {isCurrent ? (
                 <span className="absolute -top-3 left-4 inline-block rounded-full bg-amber-gold text-brand-black text-xs font-subhead font-bold px-3 py-0.5">
-                  Current plan
+                  Current Plan
                 </span>
               ) : (
                 plan.highlighted &&

@@ -5,9 +5,11 @@ import { createPortalSession } from '@/lib/actions/billing/createPortalSession'
 
 interface Props {
   listingId?: string
+  /** Button text. The dashboard plan strip says "Update Card" when a payment failed (ticket 237). */
+  label?: string
 }
 
-export function ManageSubscriptionButton({ listingId }: Props) {
+export function ManageSubscriptionButton({ listingId, label = 'Manage Subscription' }: Props) {
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
@@ -30,7 +32,7 @@ export function ManageSubscriptionButton({ listingId }: Props) {
         disabled={isPending}
         className="inline-flex items-center rounded-full border border-brand-black bg-white px-5 py-2 font-body font-bold text-sm text-brand-black transition-colors hover:bg-brand-black hover:text-white disabled:opacity-60 disabled:cursor-not-allowed min-h-[44px]"
       >
-        {isPending ? 'Opening…' : 'Manage Subscription'}
+        {isPending ? 'Opening…' : label}
       </button>
       {error && (
         <p role="alert" className="mt-2 font-body text-xs text-red-600">
