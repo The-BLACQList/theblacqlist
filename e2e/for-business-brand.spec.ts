@@ -1,17 +1,19 @@
 // =============================================================================
-// Ticket 206 — brand and accessibility audit for /for-business
+// Tickets 206 and 240: brand and accessibility audit for /for-business
 // =============================================================================
-// The page Creative's build spec describes (blacqlist-for-business, DR-003 to
-// DR-006), checked in a browser at phone, tablet and desktop widths:
-//   - Jost only, nothing under 14px, no grey lighter than #6b6b6b on light,
-//     all text at least 4.5:1, gold only on dark.
-//   - One owner door: a single #start, and on a phone the first fact ends
-//     inside the first screen (spec §2: at most 520px down at 375).
-//   - Every chapter heading starts on the page's left gutter.
+// Since ticket 240 the page uses the home page's faces and bands, checked in a
+// browser at phone, tablet and desktop widths:
+//   - The site's faces: headings in Jost, everything else in Inter. Nothing
+//     under 14px, no grey lighter than #6b6b6b on light, all text at least
+//     4.5:1, gold only on dark.
+//   - One owner door: a single #start. On a 375x667 phone both door buttons
+//     end within 520px and the first fact ends inside the first screen. The
+//     copy sits low on the photo, as on the home hero, so the fact is the
+//     last thing in it.
+//   - Every section heading starts on the same left edge as the hero's h1.
 //   - No horizontal scroll, and axe finds no serious or critical violation.
-// The shared plan cards (.fb-plans) are left out of the text audit: they are
-// unchanged in this ticket and keep the site's own faces and sizes. axe still
-// scans them, so a page rule that leaks into the cards fails here.
+// The shared plan cards ([data-fb-plans]) are left out of the text audit: they
+// are /pricing's component with its own sizes. axe still scans them.
 // =============================================================================
 
 import AxeBuilder from '@axe-core/playwright'
@@ -33,9 +35,18 @@ function auditText(page: Page): Promise<Audit> {
     const root = document.getElementById('fb-root')
     if (!root) throw new Error('#fb-root not found')
 
+    // Resolve any CSS colour through a canvas: Tailwind v4 writes opacity
+    // shades such as text-off-white/80 as oklab(), which a regex can't read.
+    const cv = document.createElement('canvas')
+    cv.width = cv.height = 1
+    const cx = cv.getContext('2d', { willReadFrequently: true })!
     const rgba = (s: string): number[] => {
-      const m = s.match(/[\d.]+/g)?.map(Number) ?? [0, 0, 0, 0]
-      return m.length === 3 ? [...m, 1] : m
+      cx.clearRect(0, 0, 1, 1)
+      cx.fillStyle = 'rgba(0, 0, 0, 0)'
+      cx.fillStyle = s
+      cx.fillRect(0, 0, 1, 1)
+      const d = cx.getImageData(0, 0, 1, 1).data
+      return [d[0]!, d[1]!, d[2]!, d[3]! / 255]
     }
     const lin = (c: number) => {
       const v = c / 255
@@ -71,15 +82,16 @@ function auditText(page: Page): Promise<Audit> {
       const el = n.parentElement
       if (!el || !n.textContent?.trim() || seen.has(el)) continue
       seen.add(el)
-      if (el.closest('.fb-plans, .sr-only, [hidden], script, style')) continue
+      if (el.closest('[data-fb-plans], .sr-only, [hidden], script, style')) continue
       const cs = getComputedStyle(el)
       const box = el.getBoundingClientRect()
       if (box.width <= 1 || cs.visibility === 'hidden' || cs.display === 'none') continue
 
       out.checked++
       const t = `"${n.textContent.trim().slice(0, 40)}"`
-      if (!/jost/i.test(cs.fontFamily.split(',')[0] ?? ''))
-        out.font.push(`${t} is set in ${cs.fontFamily}`)
+      const face = cs.fontFamily.split(',')[0] ?? ''
+      const want = el.closest('h1, h2, h3') ? /jost/i : /inter/i
+      if (!want.test(face)) out.font.push(`${t} is set in ${cs.fontFamily}`)
       if (parseFloat(cs.fontSize) < 14) out.size.push(`${t} is ${cs.fontSize}`)
 
       const bg = surface(el)
@@ -111,11 +123,11 @@ for (const width of WIDTHS) {
       contextOptions: { reducedMotion: 'reduce' },
     })
 
-    test('text is Jost, at least 14px, on the floor, gold only on dark', async ({ page }) => {
+    test('site faces, at least 14px, on the floor, gold only on dark', async ({ page }) => {
       await open(page)
       const a = await auditText(page)
       expect(a.checked, 'the audit found text to check').toBeGreaterThan(40)
-      expect(a.font, 'Jost only').toEqual([])
+      expect(a.font, 'Jost headings, Inter text').toEqual([])
       expect(a.size, 'nothing under 14px').toEqual([])
       expect(a.floor, 'no grey lighter than #6b6b6b on light').toEqual([])
       expect(a.gold, 'no gold on light').toEqual([])
@@ -125,7 +137,7 @@ for (const width of WIDTHS) {
     test('the audit catches a planted fault', async ({ page }) => {
       await open(page)
       await page.evaluate(() => {
-        const p = document.querySelector<HTMLElement>('#fb-root .s-white .lede')!
+        const p = document.querySelector<HTMLElement>('#fb-root #gets-h + p')!
         p.style.cssText = 'color:#c4a065;font-size:12px;font-family:Georgia'
       })
       const a = await auditText(page)
@@ -134,26 +146,28 @@ for (const width of WIDTHS) {
       expect(a.gold.length).toBeGreaterThan(0)
     })
 
-    test('one owner door, chapter headings on the gutter, no sideways scroll', async ({ page }) => {
+    test('one owner door, section headings on one edge, no sideways scroll', async ({ page }) => {
       await open(page)
       const m = await page.evaluate(() => {
         const root = document.getElementById('fb-root')!
-        const wrap = root.querySelector<HTMLElement>('.s-white .wrap')!
-        const gutter = Math.round(
-          wrap.getBoundingClientRect().left + parseFloat(getComputedStyle(wrap).paddingLeft)
-        )
-        const fact = [...root.querySelectorAll('.facts li')].find((li) =>
+        const gutter = Math.round(root.querySelector('h1')!.getBoundingClientRect().left)
+        const fact = [...root.querySelectorAll('#start li')].find((li) =>
           li.textContent?.includes('A real person checks every claim.')
         )
         return {
           starts: document.querySelectorAll('#start').length,
-          startInHero: !!document.querySelector('.hx #start'),
+          startInHero: !!document.querySelector('#start h1'),
           gutter,
-          headings: [...root.querySelectorAll<HTMLElement>('.ch-h')].map((h) => ({
+          headings: [...root.querySelectorAll<HTMLElement>('[data-fb-heading]')].map((h) => ({
             id: h.id,
             left: Math.round(h.getBoundingClientRect().left),
           })),
           factBottom: fact ? Math.round(fact.getBoundingClientRect().bottom + scrollY) : null,
+          doorBottom: Math.max(
+            ...[...root.querySelectorAll('#start a')].map((a) =>
+              Math.round(a.getBoundingClientRect().bottom + scrollY)
+            )
+          ),
           sideways: document.documentElement.scrollWidth > window.innerWidth,
         }
       })
@@ -162,7 +176,10 @@ for (const width of WIDTHS) {
       expect(m.headings).toHaveLength(4)
       for (const h of m.headings) expect(h.left, `${h.id} left edge`).toBe(m.gutter)
       expect(m.sideways, 'no horizontal scroll').toBe(false)
-      if (width === 375) expect(m.factBottom!, 'first fact on the first screen').toBeLessThan(521)
+      if (width === 375) {
+        expect(m.doorBottom, 'door buttons high on the first screen').toBeLessThan(521)
+        expect(m.factBottom!, 'first fact on the first screen').toBeLessThan(668)
+      }
     })
 
     test('axe finds no serious or critical violation', async ({ page }) => {

@@ -54,10 +54,10 @@ describe('/for-business copy', () => {
     expect(canAccess('starter', 'faqs')).toBe(true)
     expect(canAccess('free', 'social_links')).toBe(false)
     expect(canAccess('starter', 'social_links')).toBe(true)
-    // Access works by rank, so the Starter rows say "Starter and up".
+    // Access works by rank, so these rows sit under the "Starter and Up" card.
     expect(canAccess('premium', 'listing_video')).toBe(true)
     expect(page).toMatch(
-      /title: 'More on Your Page',\s*body: 'Add more photos, a video, common questions, and your social links, on Starter and up\.',\s*plan: 'starter'/
+      /title: 'More on Your Page',\s*body: 'More photos, a video, common questions, and your social links\.',\s*plan: 'starter'/
     )
     // Free gets one photo, so the free row never types a number or says "photos" alone.
     expect(page).toMatch(
