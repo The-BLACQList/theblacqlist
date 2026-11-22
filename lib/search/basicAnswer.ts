@@ -9,7 +9,8 @@
 //
 //   * strict matches first: the same search the grid runs, including the
 //     understood form from ticket 254
-//   * fewer than three: close matches from the category the words point to
+//   * fewer than three: close matches from the category the words point to,
+//     or from its group when that category has no one in it yet (ticket 257)
 //   * a Browse {Category} link, and Suggest a Business when we came up short
 //
 // No remark on ownership (#299). No text the visitor typed is stored or
@@ -22,12 +23,11 @@ import type { AssistantAction, AssistantCard } from '@/lib/ai/assistant-limits'
 import type { AssistantCategory } from '@/lib/ai/assistant'
 import { CUE_MAX_CARDS, toCard } from '@/lib/ai/cue/tools'
 import { DEFAULT_RADIUS_MILES } from '@/lib/listings/location-params'
-import type { ListingsParams } from '@/lib/listings/query'
+import type { ListingsParams, ListingsResult } from '@/lib/listings/query'
 import { categoryFilterHref } from '@/lib/listings/url'
 import { matchCategories, normalizeQuery, stem } from '@/lib/search/assist'
 import { CATEGORY_KEYWORDS } from '@/lib/search/categoryKeywords'
-import { INTENT_FAMILIES, understandQuery, type UnderstoodQuery } from '@/lib/search/understand'
-import type { DiscoveryEntity } from '@/types'
+import { echoWords, INTENT_FAMILIES, understandQuery, type UnderstoodQuery } from '@/lib/search/understand'
 
 /** Below this many strict matches, close matches from the category are added. */
 export const CLOSE_MATCH_BELOW = 3
@@ -57,6 +57,13 @@ export interface BasicAnswerParts {
   close: readonly AssistantCard[]
   category: { name: string; slug: string } | null
   near: boolean
+  /**
+   * Whether the strict matches came from the understood form (true) or the
+   * search as typed (false). The echo follows the search that found them:
+   * "The Shop ATL" found as typed is echoed as typed, not as "atl". Unset:
+   * the understood words when there are some (ticket 255 behaviour).
+   */
+  rescued?: boolean
 }
 
 function bucket(n: number): ExactBucket {
@@ -64,8 +71,13 @@ function bucket(n: number): ExactBucket {
 }
 
 /** The words to echo back: what carried the search, or what was typed. */
-function labelFor(query: string, understood: UnderstoodQuery): string {
-  const words = understood.mode === 'search' ? understood.words.join(' ') : normalizeQuery(query)
+function labelFor(query: string, understood: UnderstoodQuery, rescued: boolean | undefined): string {
+  const words =
+    rescued === false
+      ? echoWords(query)
+      : understood.mode === 'search'
+        ? understood.words.join(' ')
+        : normalizeQuery(query)
   if (words.length <= LABEL_MAX) return words
   return `${words.slice(0, LABEL_MAX).replace(/\s+\S*$/, '')}…`
 }
@@ -73,7 +85,7 @@ function labelFor(query: string, understood: UnderstoodQuery): string {
 /** Pure: the answer text, cards and actions. Never empty. */
 export function composeBasicAnswer(parts: BasicAnswerParts): BasicAnswer {
   const { understood, category, near } = parts
-  const label = labelFor(parts.query, understood)
+  const label = labelFor(parts.query, understood, parts.rescued)
   const exactIds = new Set(parts.exact.map((c) => c.id))
   const exact = parts.exact.slice(0, CUE_MAX_CARDS)
   const close = parts.close.filter((c) => !exactIds.has(c.id)).slice(0, CUE_MAX_CARDS - exact.length)
@@ -105,8 +117,11 @@ export function composeBasicAnswer(parts: BasicAnswerParts): BasicAnswer {
 }
 
 export interface BasicAnswerDeps {
-  /** queryListings, returning the entities. Cue's own search dependency. */
-  search: (params: ListingsParams) => Promise<DiscoveryEntity[]>
+  /**
+   * queryListings: the entities, and `understood` when they came from the
+   * understood form rather than the search as typed.
+   */
+  search: (params: ListingsParams) => Promise<Pick<ListingsResult, 'entities' | 'understood'>>
   /** Active categories, or null when they could not be read. */
   categories: readonly AssistantCategory[] | null
 }
@@ -137,21 +152,48 @@ export async function buildBasicAnswer(
       ? { lat: near.lat, lng: near.lng, radius: DEFAULT_RADIUS_MILES, sort: 'distance' }
       : { sort: 'relevance' }),
   }
-  const find = async (params: ListingsParams): Promise<AssistantCard[]> => {
+  const find = async (params: ListingsParams): Promise<{ cards: AssistantCard[]; rescued: boolean }> => {
     try {
       const found = await deps.search({ ...base, ...params })
-      return found.filter((e) => !e.sponsored_placement_id).map(toCard)
+      return {
+        cards: found.entities.filter((e) => !e.sponsored_placement_id).map(toCard),
+        rescued: found.understood !== undefined,
+      }
     } catch {
-      return []
+      return { cards: [], rescued: false }
     }
   }
 
   const text = categoryText(query, understood)
   const match = deps.categories && text ? matchCategories(text, deps.categories, CATEGORY_KEYWORDS, 1)[0] : undefined
-  const category = match ? { name: match.category.name, slug: match.category.slug } : null
+  let category = match ? { name: match.category.name, slug: match.category.slug } : null
 
   const exact = await find({ q: query })
-  const close = category && exact.length < CLOSE_MATCH_BELOW ? await find({ category: category.slug }) : []
+  let close: AssistantCard[] = []
+  if (category && exact.cards.length < CLOSE_MATCH_BELOW) {
+    close = (await find({ category: category.slug })).cards
+    // No one filed there yet ("computer support" → IT Support, empty on
+    // production): the group it sits in, and Browse that instead.
+    const parent = match?.category.parentId
+      ? deps.categories?.find((c) => c.id === match.category.parentId)
+      : undefined
+    if (close.length === 0 && parent) {
+      const wider = (await find({ category: parent.slug })).cards
+      if (wider.length > 0) {
+        close = wider
+        category = { name: parent.name, slug: parent.slug }
+      }
+    }
+  }
 
-  return composeBasicAnswer({ query, understood, exact, close, category, near: near !== null })
+  return composeBasicAnswer({
+    query,
+    understood,
+    exact: exact.cards,
+    close,
+    category,
+    near: near !== null,
+    // Only meaningful when something was found; an empty search echoes as before.
+    rescued: exact.cards.length > 0 ? exact.rescued : undefined,
+  })
 }

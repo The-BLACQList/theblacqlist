@@ -15,7 +15,7 @@ import {
   type FacetCounts,
 } from '@/lib/listings/facets'
 import { listingMatchesType } from '@/lib/listings/type-shortcuts'
-import { understandQuery } from '@/lib/search/understand'
+import { understandQuery, withTechIt } from '@/lib/search/understand'
 
 export const LISTINGS_PAGE_SIZE = 24
 
@@ -256,7 +256,8 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
       : 'relevance'
 
   const { params: resolved, unresolved } = await resolveFacetParams(supabase, {
-    q: params.q,
+    // "IT support" would search only "support": Postgres drops "it" (ticket 257).
+    q: params.q ? withTechIt(params.q) : params.q,
     category: params.category,
     city: params.city,
     type: params.type,

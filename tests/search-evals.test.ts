@@ -24,7 +24,7 @@ import { NO_PAGE } from '@/lib/assistant/page'
 import type { ListingsParams } from '@/lib/listings/query'
 import { normalizeQuery, stem } from '@/lib/search/assist'
 import { buildBasicAnswer } from '@/lib/search/basicAnswer'
-import { understandQuery } from '@/lib/search/understand'
+import { understandQuery, withTechIt } from '@/lib/search/understand'
 import type { DiscoveryEntity } from '@/types'
 
 import { CITIES, ctx as makeCtx, deps, entity } from './fixtures/cue'
@@ -54,7 +54,14 @@ const ENTITIES: DiscoveryEntity[] = EVAL_LISTINGS.map((l, i) => {
   } as Partial<DiscoveryEntity>)
 })
 
-const TEXT = new Map(ENTITIES.map((e) => [e.id, toks(`${e.name} ${e.description} ${e.category.name}`).map(stem)]))
+/** What search_vector holds: name, description, category and its group's name. */
+const TEXT = new Map(
+  ENTITIES.map((e) => {
+    const own = EVAL_CATEGORIES.find((c) => c.slug === e.category.slug)!
+    const parent = EVAL_CATEGORIES.find((c) => c.id === own.parentId)
+    return [e.id, toks(`${e.name} ${e.description} ${own.name} ${parent?.name ?? ''}`).map(stem)]
+  })
+)
 
 /** One alternative: a quoted phrase in order, or bare words all present. */
 function altMatches(words: string[], alt: string): boolean {
@@ -72,7 +79,9 @@ function hits(e: DiscoveryEntity, q: string): number {
 }
 
 /** queryListings as the eval needs it: category filter, AND search, the rescue. */
-async function fakeQueryListings(p: ListingsParams): Promise<DiscoveryEntity[]> {
+async function fakeQueryListings(
+  p: ListingsParams
+): Promise<{ entities: DiscoveryEntity[]; understood?: { mode: 'search' | 'browse'; words: string[] } }> {
   const parent = EVAL_CATEGORIES.find((c) => c.slug === p.category)
   const pool = p.category
     ? ENTITIES.filter((e) => {
@@ -80,21 +89,24 @@ async function fakeQueryListings(p: ListingsParams): Promise<DiscoveryEntity[]> 
         return own.slug === p.category || own.parentId === parent?.id
       })
     : ENTITIES
-  if (!p.q) return pool
+  if (!p.q) return { entities: pool }
   const search = (q: string) =>
     pool
       .map((e) => ({ e, n: hits(e, q) }))
       .filter((x) => x.n > 0)
       .sort((a, b) => b.n - a.n)
       .map((x) => x.e)
-  let found = search(p.q)
-  if (found.length === 0) {
-    const u = understandQuery(p.q)
-    if (u.mode === 'search') found = search(u.tsQuery!)
-    else if (u.mode === 'browse') found = pool
-  }
-  return found.slice(0, 24)
+  const q = withTechIt(p.q)
+  const found = search(q)
+  if (found.length > 0) return { entities: found.slice(0, 24) }
+  const u = understandQuery(q)
+  const rescued = u.mode === 'search' ? search(u.tsQuery!) : u.mode === 'browse' ? pool : []
+  if (rescued.length === 0 || u.mode === 'none') return { entities: [] }
+  return { entities: rescued.slice(0, 24), understood: { mode: u.mode, words: u.words } }
 }
+
+/** Cue's search dependency: the entities only. */
+const cueSearch = async (p: ListingsParams) => (await fakeQueryListings(p)).entities
 
 // ─── The rules ────────────────────────────────────────────────────────────────
 
@@ -135,7 +147,7 @@ describe('search eval set: Cue with the mock model', () => {
   it.each(SEARCH_EVALS.map((ev) => [ev.query, ev] as const))('%s', async (_q, ev) => {
     const ctx = makeCtx({
       categories: EVAL_CATEGORIES,
-      deps: deps({ search: fakeQueryListings }),
+      deps: deps({ search: cueSearch }),
     })
     const out = await runCue({
       call: createMockCueCall({ cities: CITIES }),

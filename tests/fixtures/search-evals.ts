@@ -33,13 +33,15 @@ export const SEARCH_EVALS: readonly SearchEval[] = [
   { query: 'replace my lotion with a black owned brand', find: ['Lather & Light Soap Co.', 'Shea Glow Body Butter'] },
   { query: 'where can I buy shea butter', find: ['Shea Glow Body Butter'] },
   { query: 'bath bombs', find: ['Lather & Light Soap Co.'] },
+  { query: 'body wash', find: ['Lather & Light Soap Co.', 'Shea Glow Body Butter', 'Pure Pit Naturals'] },
   { query: 'natural deodorant', find: ['Pure Pit Naturals'] },
   // Identity words alone: browse, never remark on them.
   { query: 'black owned' },
   { query: 'black owned businesses near me' },
   // Words that look alike but are other trades.
   { query: 'auto body shop', find: ['Precision Collision'], never: ['Lather & Light Soap Co.', 'Shea Glow Body Butter'] },
-  { query: 'IT support', find: ['Byte Fix IT Support'] },
+  { query: 'IT support', find: ['Byte Fix IT Support'], never: ['Lather & Light Soap Co.'] },
+  { query: 'IT services for a small office', find: ['Byte Fix IT Support'] },
   { query: 'computer support for my business', find: ['Byte Fix IT Support'] },
   { query: 'support black owned bakeries', find: ['Sweet Auburn Bakery'] },
   // Names, including ones made of filler words.
@@ -54,7 +56,8 @@ export const SEARCH_EVALS: readonly SearchEval[] = [
   { query: 'clothes for my son', find: ['Kente Kids Boutique'] },
   { query: 'makeup', find: ['Melanin Beauty Cosmetics'] },
   { query: 'tax help', find: ['Ledger Tax & Bookkeeping'] },
-  { query: 'a good mechanic', find: ['Precision Collision'] },
+  // "auto" alone found auto insurance (live eval, 2026-11-21).
+  { query: 'a good mechanic', find: ['Precision Collision'], never: ['Safe Harbor Insurance'] },
   { query: 'daycare for my toddler', find: ['Little Scholars Childcare'] },
   { query: 'counseling', find: ['Healing Roots Counseling'] },
   { query: 'photographer for a wedding', find: ['Golden Hour Photography'] },
@@ -71,6 +74,7 @@ export const SEARCH_EVALS: readonly SearchEval[] = [
 export const EVAL_CATEGORIES: AssistantCategory[] = [
   { id: 'p-retail', slug: 'retail-gifts', name: 'Retail & Gifts', parentId: null },
   { id: 'c-hwp', slug: 'health-wellness-products', name: 'Health & Wellness Products', parentId: 'p-retail' },
+  { id: 'c-bath', slug: 'bath-body', name: 'Bath & Body', parentId: 'p-retail' },
   { id: 'c-cloth', slug: 'clothing-boutiques', name: 'Clothing Boutiques', parentId: 'p-retail' },
   { id: 'c-books', slug: 'gift-shops', name: 'Gift Shops', parentId: 'p-retail' },
   { id: 'p-beauty', slug: 'beauty-personal-care', name: 'Beauty & Personal Care', parentId: null },
@@ -91,6 +95,7 @@ export const EVAL_CATEGORIES: AssistantCategory[] = [
   { id: 'p-pro', slug: 'professional-services', name: 'Professional Services', parentId: null },
   { id: 'c-tax', slug: 'tax-services', name: 'Tax Services', parentId: 'p-pro' },
   { id: 'c-law', slug: 'law-legal-services', name: 'Law & Legal Services', parentId: 'p-pro' },
+  { id: 'c-ins', slug: 'insurance', name: 'Insurance', parentId: 'p-pro' },
   { id: 'p-family', slug: 'family-education', name: 'Family & Education', parentId: null },
   { id: 'c-child', slug: 'childcare-centers', name: 'Childcare Centers', parentId: 'p-family' },
   { id: 'p-events', slug: 'events-entertainment', name: 'Events & Entertainment', parentId: null },
@@ -105,11 +110,11 @@ export interface EvalListing {
   description: string
 }
 
-/** Twenty-four businesses, each findable only by words its own text uses. */
+/** Twenty-five businesses, each findable only by words its own text uses. */
 export const EVAL_LISTINGS: readonly EvalListing[] = [
-  { name: 'Lather & Light Soap Co.', category: 'health-wellness-products', description: 'Handmade soap, bath bombs and lotion in small batches.' },
-  { name: 'Shea Glow Body Butter', category: 'health-wellness-products', description: 'Whipped shea butter and lotion for dry skin.' },
-  { name: 'Pure Pit Naturals', category: 'health-wellness-products', description: 'Aluminum-free deodorant made with natural oils.' },
+  { name: 'Lather & Light Soap Co.', category: 'bath-body', description: 'Handmade soap, bath bombs and lotion in small batches.' },
+  { name: 'Shea Glow Body Butter', category: 'bath-body', description: 'Whipped shea butter and lotion for dry skin.' },
+  { name: 'Pure Pit Naturals', category: 'bath-body', description: 'Aluminum-free deodorant made with natural oils.' },
   { name: 'Habesha Black Seed Oil Co.', category: 'health-wellness-products', description: 'Cold-pressed black seed oil and honey.' },
   { name: 'Precision Collision', category: 'auto-repair-mechanics', description: 'Collision repair, auto body work and paint. Certified mechanic on site.' },
   { name: 'Byte Fix IT Support', category: 'it-support-managed-services', description: 'Computer repair and IT support for small offices.' },
@@ -131,4 +136,5 @@ export const EVAL_LISTINGS: readonly EvalListing[] = [
   { name: 'Kingdom Cuts', category: 'barber-shops', description: 'Barbershop with kids cuts on Saturdays.' },
   { name: 'Roots Farm Stand', category: 'farms-farm-stands', description: 'Seasonal vegetables and fresh flowers.' },
   { name: 'Velvet Lounge', category: 'catering-events-food', description: 'Small plates and private events.' },
+  { name: 'Safe Harbor Insurance', category: 'insurance', description: 'Auto insurance, home and life policies.' },
 ]

@@ -24,18 +24,32 @@ const CATEGORIES: AssistantCategory[] = [
     name: 'Health & Wellness Products',
     parentId: 'c-health',
   },
+  { id: 'c-retail', slug: 'retail-gifts', name: 'Retail & Gifts', parentId: null },
+  { id: 'c-bath', slug: 'bath-body', name: 'Bath & Body', parentId: 'c-retail' },
   { id: 'c-pro', slug: 'professional-services', name: 'Professional Services', parentId: null },
   { id: 'c-tailor', slug: 'tailoring-alterations', name: 'Tailoring & Alterations', parentId: 'c-pro' },
 ]
 
 const FOUNDER = 'How do I switch to Black Owned bathroom products'
 
-/** A search that answers by params: q, or category, or nothing. */
-function fakeSearch(by: { q?: number[]; category?: number[] }) {
+/**
+ * A search that answers by params: q, or category, or nothing. The q search
+ * counts as the understood form (a rescue) unless `typed` is set, as for the
+ * founder's question.
+ */
+function fakeSearch(by: { q?: number[]; category?: number[] | Record<string, number[]>; typed?: boolean }) {
   return vi.fn(async (p: ListingsParams) => {
-    if (p.category) return (by.category ?? []).map((n) => entity(n))
-    if (p.q) return (by.q ?? []).map((n) => entity(n))
-    return []
+    if (p.category) {
+      const list = Array.isArray(by.category) ? by.category : (by.category?.[p.category] ?? [])
+      return { entities: list.map((n) => entity(n)) }
+    }
+    if (p.q) {
+      const entities = (by.q ?? []).map((n) => entity(n))
+      return by.typed || entities.length === 0
+        ? { entities }
+        : { entities, understood: { mode: 'search' as const, words: [] } }
+    }
+    return { entities: [] }
   })
 }
 
@@ -58,12 +72,12 @@ describe('buildBasicAnswer', () => {
   it('adds close matches from the category the words point to when strict is thin', async () => {
     const search = fakeSearch({ q: [1], category: [1, 7, 8] })
     const answer = await buildBasicAnswer(FOUNDER, null, { search, categories: CATEGORIES })
-    expect(search.mock.calls[1]![0]).toMatchObject({ category: 'health-wellness-products' })
+    expect(search.mock.calls[1]![0]).toMatchObject({ category: 'bath-body' })
     // The strict match first, and never twice.
     expect(answer.cards.map((c) => c.id)).toEqual([ID(1), ID(7), ID(8)])
-    expect(answer.text).toContain('A few more in Health & Wellness Products follow.')
+    expect(answer.text).toContain('A few more in Bath & Body follow.')
     expect(answer.actions).toEqual([
-      { kind: 'link', href: '/discover?category=health-wellness-products', label: 'Browse Health & Wellness Products' },
+      { kind: 'link', href: '/discover?category=bath-body', label: 'Browse Bath & Body' },
       SUGGEST_BUSINESS,
     ])
     expect(answer.exactBucket).toBe('1-2')
@@ -99,9 +113,52 @@ describe('buildBasicAnswer', () => {
   })
 
   it('drops paid slots', async () => {
-    const search = vi.fn(async () => [entity(1, { sponsored_placement_id: 'sp-1' } as never), entity(2)])
+    const search = vi.fn(async () => ({
+      entities: [entity(1, { sponsored_placement_id: 'sp-1' } as never), entity(2)],
+    }))
     const answer = await buildBasicAnswer('tailor', null, { search, categories: CATEGORIES })
     expect(answer.cards.map((c) => c.id)).toEqual([ID(2)])
+  })
+
+  it('echoes what was typed when the search as typed found it (ticket 257)', async () => {
+    // "The Shop ATL" used to be echoed as “atl”: the understood words, though
+    // the search as typed found the business.
+    const search = fakeSearch({ q: [1], typed: true })
+    const answer = await buildBasicAnswer('The Shop ATL', null, { search, categories: CATEGORIES })
+    expect(answer.text).toBe('Here’s the business that matches “the shop atl”.')
+  })
+
+  it('echoes the understood words when only the understood form found it', async () => {
+    const search = fakeSearch({ q: [1, 2, 3] })
+    const answer = await buildBasicAnswer('where can I find a good tailor near me', null, {
+      search,
+      categories: CATEGORIES,
+    })
+    expect(answer.text).toBe('Here are businesses that match “tailor”.')
+  })
+
+  it('widens to the group when the matched category has no one in it yet (ticket 257)', async () => {
+    const search = fakeSearch({ category: { 'professional-services': [5, 6] } })
+    const answer = await buildBasicAnswer('where can I find a tailor', null, { search, categories: CATEGORIES })
+    expect(search.mock.calls.map((c) => c[0].category).filter(Boolean)).toEqual([
+      'tailoring-alterations',
+      'professional-services',
+    ])
+    expect(answer.cards).toHaveLength(2)
+    expect(answer.text).toBe(
+      'Nothing matches “tailor” yet, so here are the closest: businesses in Professional Services.'
+    )
+    expect(answer.actions[0]).toEqual({
+      kind: 'link',
+      href: '/discover?category=professional-services',
+      label: 'Browse Professional Services',
+    })
+  })
+
+  it('keeps the category link when the group is empty too', async () => {
+    const search = fakeSearch({})
+    const answer = await buildBasicAnswer('where can I find a tailor', null, { search, categories: CATEGORIES })
+    expect(answer.actions[0]).toMatchObject({ label: 'Browse Tailoring & Alterations' })
   })
 
   it('browses for an identity phrase alone, with no remark on ownership', async () => {

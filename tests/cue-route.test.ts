@@ -74,6 +74,16 @@ vi.mock('@/lib/ai/cue/data', async () => {
     loadPage: async () => NO_PAGE,
   }
 })
+// The quick answer calls queryListings itself (ticket 257); it answers from
+// the same fake search Cue's tool uses.
+vi.mock('@/lib/listings/query', () => ({
+  // A keyword search counts as the understood form, as the founder's
+  // question is on the real database.
+  queryListings: async (p: { q?: string }) => ({
+    entities: await h.deps!.search(p as never),
+    ...(p.q ? { understood: { mode: 'search' as const, words: [] } } : {}),
+  }),
+}))
 vi.mock('@/lib/supabase/server', () => ({
   createServiceClient: () => ({
     from: (table: string) => ({

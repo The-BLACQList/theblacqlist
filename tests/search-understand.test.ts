@@ -9,7 +9,7 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-import { understandQuery, INTENT_FAMILIES } from '@/lib/search/understand'
+import { echoWords, understandQuery, INTENT_FAMILIES, withTechIt } from '@/lib/search/understand'
 
 describe('understandQuery', () => {
   it("turns the founder's question into the bathroom words", () => {
@@ -114,6 +114,66 @@ describe('understandQuery', () => {
   })
 })
 
+describe('withTechIt (ticket 257)', () => {
+  // Postgres drops "it", so "IT support" searched "support" alone.
+  it('reads "it" before a trade word as the trade', () => {
+    expect(withTechIt('IT support')).toBe('technology support')
+    expect(withTechIt('it services for my office')).toBe('technology services for my office')
+    expect(withTechIt('I need an IT guy')).toBe('I need an technology guy')
+    expect(withTechIt('Byte Fix IT Support')).toBe('Byte Fix technology Support')
+  })
+
+  it('reads a capital "IT" that ends the search as the trade', () => {
+    expect(withTechIt('help with IT')).toBe('help with technology')
+  })
+
+  it('leaves the pronoun alone', () => {
+    for (const q of [
+      'where can I get it',
+      'can it support two cars',
+      'make it work',
+      'IT Works Salon',
+      'IT WORKS',
+      'HELP WITH IT',
+      'it is a soap shop',
+      "it's a bakery",
+    ]) {
+      expect(withTechIt(q), q).toBe(q)
+    }
+  })
+
+  it('carries through to the words a search keeps', () => {
+    expect(understandQuery('IT support').words).toEqual(['technology', 'support'])
+    expect(understandQuery('who does IT support for small offices').words).toContain('technology')
+  })
+})
+
+describe('echoWords (ticket 257)', () => {
+  it('echoes a name as typed, without the question it opened with', () => {
+    expect(echoWords('The Shop ATL')).toBe('the shop atl')
+    expect(echoWords('where can I find The Shop ATL')).toBe('the shop atl')
+  })
+
+  it('never echoes an identity phrase', () => {
+    expect(echoWords('black owned barbers in atlanta')).toBe('barbers in atlanta')
+    expect(echoWords('Black-Owned soap')).toBe('soap')
+  })
+
+  it('falls back to the words that carry the search', () => {
+    expect(echoWords('where can I get')).toBe('')
+    expect(echoWords('can I get a haircut')).toBe('haircut')
+  })
+})
+
+describe('intent families after the live eval (ticket 257)', () => {
+  it('a mechanic never searches a lone "auto" (auto insurance)', () => {
+    const alts = understandQuery('a good mechanic').tsQuery!.split(' OR ')
+    expect(alts).not.toContain('auto')
+    expect(alts).toContain('auto repair')
+    expect(understandQuery('car help').tsQuery!.split(' OR ')).not.toContain('auto')
+  })
+})
+
 // ─── The rescue in queryListings ──────────────────────────────────────────────
 
 const h = vi.hoisted(() => {
@@ -193,6 +253,12 @@ describe('queryListings rescue', () => {
     expect(searches()).toHaveLength(2)
     expect(result.total).toBe(0)
     expect(result.understood).toBeUndefined()
+  })
+
+  it('searches "IT support" as technology support, not support alone', async () => {
+    h.state.rpc = [found]
+    await queryListings({ q: 'IT support' })
+    expect(searches()[0]!.args.p_q).toBe('technology support')
   })
 
   it('never rescues an outage', async () => {

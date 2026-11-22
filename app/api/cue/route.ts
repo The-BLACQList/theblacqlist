@@ -56,6 +56,7 @@ import {
   withinMonthlyCeiling,
 } from '@/lib/ai/spend'
 import { parsePagePath } from '@/lib/assistant/page'
+import { queryListings } from '@/lib/listings/query'
 import { isFeatureEnabled } from '@/lib/env'
 import { buildBasicAnswer, type ExactBucket } from '@/lib/search/basicAnswer'
 import type { AssistantCategory } from '@/lib/ai/assistant'
@@ -132,7 +133,7 @@ async function basicAnswerEvents(args: {
   try {
     const categories =
       args.categories !== undefined ? args.categories : ((await loadLists().catch(() => null))?.categories ?? null)
-    const answer = await buildBasicAnswer(args.message, args.near, { search: cueDeps.search, categories })
+    const answer = await buildBasicAnswer(args.message, args.near, { search: queryListings, categories })
     await logAnswer({ mode: 'basic', reason: args.reason, exact_bucket: answer.exactBucket })
     const events: CueEvent[] = []
     if (answer.cards.length > 0) events.push({ type: 'cards', cards: answer.cards })
