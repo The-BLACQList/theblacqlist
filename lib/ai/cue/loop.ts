@@ -13,7 +13,16 @@
  * No sampling settings and no prefill; the current models reject both.
  *
  * ── What reaches the screen ──────────────────────────────────────────────────
- * Text streams through TextGuard, which holds back links and phone numbers.
+ * Text goes through TextGuard, which holds back links and phone numbers.
+ * Each call's text is held until the call ends (ticket 261). Text from a call
+ * that looks something up (`lookupTools`) is a working note ("Dropping the
+ * owner wording", "Let me check your page") and never reaches the screen or
+ * the reply, even though both prompts already say not to narrate. The text of
+ * the call that ends the turn is the whole reply: the model often writes a
+ * full answer next to the cards and then writes it again at the end. If the
+ * last call writes nothing, the last text written next to cards or buttons is
+ * used, unless a tool had failed by then ("The cards failed, I'll retry"),
+ * and failing that the last working note, rather than an empty reply.
  * What the caller does with the finished reply (checks, cards, drafts) is the
  * caller's own; this loop only gathers the words.
  *
@@ -75,6 +84,9 @@ export interface ToolLoopArgs {
   messages: Anthropic.MessageParam[]
   tools: readonly Anthropic.Tool[]
   runTool: (name: string, input: unknown) => Promise<CueToolRun>
+  /** Tools that look something up. Text written alongside them is a working
+   *  note, not the answer, and is hidden (ticket 261). */
+  lookupTools: ReadonlySet<string>
   /** The line shown while a tool runs. */
   statusFor: (name: string, input: unknown) => string
   emit: (event: CueProgressEvent) => void
@@ -87,7 +99,7 @@ export interface ToolLoopArgs {
 }
 
 export interface ToolLoopResult {
-  /** The text of each call, trimmed, in order. Empty after a refusal. */
+  /** The reply text (one part: the final call's, or a held fallback), trimmed. Empty after a refusal. */
   replyParts: string[]
   stop: CueStop
   usage: CueUsage
@@ -118,6 +130,19 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
   const usage: CueUsage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 }
   const replyParts: string[] = []
   let streamedAny = false
+  // Held text, used only if the final call writes nothing: the last text
+  // written next to cards or buttons that worked, else the last working note.
+  let early: { pieces: string[]; text: string } | null = null
+  let note: { pieces: string[]; text: string } | null = null
+  const show = (pieces: readonly string[]) => {
+    if (pieces.length === 0) return
+    if (streamedAny) emit({ type: 'text', text: args.partBreak ?? ' ' })
+    streamedAny = true
+    for (const text of pieces) emit({ type: 'text', text })
+  }
+  // Set once any tool fails this turn. After that the model is recovering
+  // ("The cards failed, I'll retry"), so only the final call's text counts.
+  let recovering = false
   let calls = 0
   let retried = false
   let stop: CueStop | null = null
@@ -136,12 +161,9 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
       break
     }
 
-    let emittedThisCall = false
+    const pieces: string[] = []
     const guard = new TextGuard((text) => {
-      if (!emittedThisCall && streamedAny) emit({ type: 'text', text: args.partBreak ?? ' ' })
-      emittedThisCall = true
-      streamedAny = true
-      emit({ type: 'text', text })
+      pieces.push(text)
     })
 
     let message: Anthropic.Message
@@ -162,7 +184,8 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
       )
     } catch (err) {
       const code = err instanceof CueCallError ? err.code : 'provider_error'
-      if (code === 'bad_json' && !retried && !emittedThisCall) {
+      // Nothing from a failed call has been shown, so one retry is always safe.
+      if (code === 'bad_json' && !retried) {
         retried = true
         continue
       }
@@ -183,15 +206,27 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
       stop = 'refusal'
       break
     }
-    const text = textOf(message)
-    if (text.trim()) replyParts.push(text.trim())
+    const uses = message.content.filter((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use')
+    const toolTurn = message.stop_reason === 'tool_use' && uses.length > 0
+    const working = toolTurn && uses.some((use) => args.lookupTools.has(use.name))
+    const text = textOf(message).trim()
+    // Text next to a tool that only shows something waits for the tool: if it
+    // failed, the model will write again, so this text was a working note too.
+    let pending: { pieces: string[]; text: string } | null = null
+    if (text && working) note = { pieces, text }
+    else if (text && toolTurn) pending = { pieces, text }
+    else if (text) {
+      // The final call's text is the whole reply. The model often writes a
+      // full answer next to the cards and then writes it again here.
+      show(pieces)
+      replyParts.push(text)
+    }
     if (message.stop_reason === 'max_tokens') {
       stop = 'truncated'
       break
     }
 
-    const uses = message.content.filter((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use')
-    if (message.stop_reason !== 'tool_use' || uses.length === 0) {
+    if (!toolTurn) {
       stop = 'end'
       break
     }
@@ -219,12 +254,24 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
         })
       )
     } catch {
+      if (pending) note = pending
       stop = 'data_error'
       break
+    }
+    if (results.some((r) => r.is_error)) recovering = true
+    if (pending) {
+      if (recovering) note = pending
+      else early = pending
     }
     messages.push({ role: 'assistant', content: asParams(message.content) })
     messages.push({ role: 'user', content: results })
   }
 
-  return { replyParts, stop: stop ?? 'end', usage, calls }
+  const ended = stop ?? 'end'
+  const fallback = early ?? note
+  if (ended !== 'refusal' && replyParts.length === 0 && fallback) {
+    if (ended !== 'aborted') show(fallback.pieces)
+    replyParts.push(fallback.text)
+  }
+  return { replyParts, stop: ended, usage, calls }
 }

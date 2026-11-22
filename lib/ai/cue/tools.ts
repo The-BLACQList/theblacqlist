@@ -126,11 +126,28 @@ export const pageActionInput = z
   })
   .strict()
 
+/**
+ * What show_businesses accepts, which is looser than what the model is told
+ * (`showInput`). The model sometimes passes every search result (8) or one
+ * garbled id; failing the whole call left the reply with no cards and a "the
+ * cards failed, I'll retry" note (ticket 261). Ids that aren't ids are dropped
+ * here, and the handler keeps the first CUE_MAX_CARDS it knows.
+ */
+const showParse = z
+  .object({
+    ids: z
+      .array(z.string().max(64))
+      .min(1)
+      .max(CUE_SEARCH_RESULTS * 3)
+      .transform((ids) => ids.filter((id) => listingId.safeParse(id).success)),
+  })
+  .strict()
+
 const SCHEMAS = {
   search_listings: searchInput,
   find_place: findPlaceInput,
   get_listing: getListingInput,
-  show_businesses: showInput,
+  show_businesses: showParse,
   page_action: pageActionInput,
 } as const
 
@@ -146,6 +163,11 @@ function jsonSchema(schema: z.ZodType): Anthropic.Tool.InputSchema {
  * The tool list. Frozen and in a fixed order so the prompt cache holds; the
  * cache mark on the last tool caches the whole list.
  */
+/** The visitor tools that look something up: text written alongside them is a
+ *  working note and is hidden (ticket 261). show_businesses and page_action
+ *  are the answer's own parts, so text beside them is kept. */
+export const CUE_LOOKUP_TOOLS: ReadonlySet<string> = new Set(['search_listings', 'find_place', 'get_listing'])
+
 export const CUE_TOOLS: readonly Anthropic.Tool[] = Object.freeze([
   {
     name: 'search_listings',
@@ -609,14 +631,14 @@ async function getListing(input: z.infer<typeof getListingInput>, ctx: CueToolCo
   })
 }
 
-async function showBusinesses(input: z.infer<typeof showInput>, ctx: CueToolContext): Promise<CueToolResult> {
+async function showBusinesses(input: z.output<typeof showParse>, ctx: CueToolContext): Promise<CueToolResult> {
   const ids = [...new Set(input.ids)]
   const unknown = ids.filter((id) => !knownId(id, ctx))
   const toLoad = ids.filter((id) => !ctx.state.seen.has(id) && ctx.priorIds.has(id))
   if (toLoad.length > 0) {
     for (const e of await ctx.deps.loadByIds(toLoad)) ctx.state.seen.set(e.id, e)
   }
-  const shown = ids.filter((id) => ctx.state.seen.has(id))
+  const shown = ids.filter((id) => ctx.state.seen.has(id)).slice(0, CUE_MAX_CARDS)
   if (shown.length === 0) {
     return fail('None of those ids came from a tool. Search first, then show what it returned.')
   }
@@ -660,7 +682,7 @@ export async function runCueTool(name: string, rawInput: unknown, ctx: CueToolCo
     case 'get_listing':
       return getListing(parsed.data as z.infer<typeof getListingInput>, ctx)
     case 'show_businesses':
-      return showBusinesses(parsed.data as z.infer<typeof showInput>, ctx)
+      return showBusinesses(parsed.data as z.output<typeof showParse>, ctx)
     case 'page_action':
       return pageAction(parsed.data as z.infer<typeof pageActionInput>, ctx)
   }

@@ -1,6 +1,6 @@
 # Ticket 242: AI Help by Plan
 
-**Status:** PR #381 open. Migration `20261204000000_ai_suggestion_types_242.sql` applied on staging 2026-11-21; prod waits for merge (founder OK). Privacy wording approved by the founder 2026-11-21 and added (live text, "Last updated" moved to November 21, 2026).
+**Status:** Merged #381 (536c23b) 2026-11-21. Migration `20261204000000_ai_suggestion_types_242.sql` live on staging and prod. Privacy wording approved by the founder 2026-11-21 and live ("Last updated" November 21, 2026).
 
 ## Why
 The plan cards said "AI writing help: 10 / 100 / 500 drafts every 30 days". That is a number nobody shops for, and it didn't say what the help does. Founder, 2026-11-21: each plan lists the jobs AI does for you, with smaller and realistic limits. No name for the helper in plan copy (no "Cue"), and never the word "drafts".
@@ -101,5 +101,5 @@ Blocked, not by this ticket:
 Staging QA data was put back afterwards: the job's and event's owners, the event's tier and the job's hiring page were restored, and the test review was deleted. The failed request rows were left as the audit trail.
 
 ## Still To Do
-- Prod migration at merge (founder OK).
-- Once the Anthropic key on Preview works, write one review reply and one post, and check that nothing posts until Post Response or Post.
+- ~~Prod migration at merge.~~ Done 2026-11-21.
+- The Anthropic keys were reset 2026-11-21 and a Preview post write was seen working. Still to see by hand: write one review reply and one post, and check that nothing posts until Post Response or Post.

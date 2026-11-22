@@ -453,7 +453,7 @@ describe('the route (read as text)', () => {
 
 describe('replies read easily', () => {
   it('the prompt asks for short paragraphs, lists and a short reply', () => {
-    expect(OWNER_CUE_PROMPT_VERSION).toBe('OWNER_CUE@2')
+    expect(OWNER_CUE_PROMPT_VERSION).toBe('OWNER_CUE@3')
     expect(OWNER_CUE_RULES).toMatch(/Steps go in a numbered list/)
     expect(OWNER_CUE_RULES).toMatch(/bulleted list \("- "\)/)
     expect(OWNER_CUE_RULES).toMatch(/Never write a block of more than two sentences/)
@@ -461,27 +461,29 @@ describe('replies read easily', () => {
     expect(OWNER_CUE_RULES).not.toMatch(/One to four short sentences/)
   })
 
-  it('words from separate model calls become separate paragraphs', async () => {
-    const reply = (content: unknown[], stop: string) =>
-      ({
-        id: 'msg_test',
-        type: 'message',
-        role: 'assistant',
-        model: 'mock-v1',
-        content,
-        stop_reason: stop,
-        stop_sequence: null,
-        usage: { input_tokens: 1, output_tokens: 1 },
-      }) as unknown as Anthropic.Message
+  const reply = (content: unknown[], stop: string) =>
+    ({
+      id: 'msg_test',
+      type: 'message',
+      role: 'assistant',
+      model: 'mock-v1',
+      content,
+      stop_reason: stop,
+      stop_sequence: null,
+      usage: { input_tokens: 1, output_tokens: 1 },
+    }) as unknown as Anthropic.Message
+
+  // Two calls: the first writes `first` next to `tool`, the second ends the turn.
+  async function twoCalls(first: string, tool: string, input: unknown) {
     let n = 0
     const call: CueModelCall = async (_params, onText) => {
       n++
       if (n === 1) {
-        onText('Your page is close.')
+        onText(first)
         return reply(
           [
-            { type: 'text', text: 'Your page is close.' },
-            { type: 'tool_use', id: 'toolu_1', name: 'get_my_page', input: {} },
+            { type: 'text', text: first },
+            { type: 'tool_use', id: 'toolu_1', name: tool, input },
           ],
           'tool_use'
         )
@@ -506,12 +508,26 @@ describe('replies read easily', () => {
       emit: (e) => events.push(e),
       signal: new AbortController().signal,
     })
-    expect(result.text).toBe('Your page is close.\n\nAdd your hours first.')
     const streamed = events
       .filter((e) => e.type === 'text')
       .map((e) => e.text)
       .join('')
-    expect(streamed).toBe('Your page is close.\n\nAdd your hours first.')
+    return { result, streamed }
+  }
+
+  // Ticket 261: the final call's text is the whole reply, so an answer
+  // written next to a button and again at the end is said once.
+  it('the final call\'s words are the reply', async () => {
+    const { result, streamed } = await twoCalls('Your page is close.', 'go_to', { section: 'hours' })
+    expect(result.text).toBe('Add your hours first.')
+    expect(streamed).toBe('Add your hours first.')
+  })
+
+  // Ticket 261: text next to get_my_page or get_help is a working note.
+  it('hides a working note written next to get_my_page', async () => {
+    const { result, streamed } = await twoCalls('Dropping the owner wording.', 'get_my_page', {})
+    expect(result.text).toBe('Add your hours first.')
+    expect(streamed).toBe('Add your hours first.')
   })
 })
 

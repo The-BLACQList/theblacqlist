@@ -178,15 +178,19 @@ describe('runCue', () => {
     expect(out.text).toBe('')
   })
 
-  it('does not retry once text has streamed', async () => {
+  // Ticket 261: a call's text is held until the call ends, so nothing from a
+  // failed call was shown and the one retry is always safe.
+  it('retries a broken call once even after it wrote text, and shows none of it', async () => {
     const step: Step = (_p, onText) => {
       onText('Looking now ')
       throw new CueCallError('bad_json')
     }
-    const { call, params } = scripted([step, say('unused')])
-    const out = await setup().run(call)
-    expect(params).toHaveLength(1)
-    expect(out.stop).toBe('bad_json')
+    const { call, params } = scripted([step, say('Which city are you in?')])
+    const t = setup()
+    const out = await t.run(call)
+    expect(params).toHaveLength(2)
+    expect(out).toMatchObject({ stop: 'end', text: 'Which city are you in?' })
+    expect(streamedText(t.events)).toBe('Which city are you in?')
   })
 
   it('stops on a provider error', async () => {
@@ -230,24 +234,91 @@ describe('runCue', () => {
     expect(out.cards).toHaveLength(1)
   })
 
-  it('puts a space between text written in different calls', async () => {
+  // Ticket 261: text written next to a lookup is a working note, not the answer.
+  const withTool = (text: string, name: string, input: unknown): Step => (_p, onText) => {
+    onText(text)
+    return msg(
+      [
+        { type: 'text', text },
+        { type: 'tool_use', id: `toolu_${++toolN}`, name, input },
+      ],
+      'tool_use'
+    )
+  }
+
+  it('hides a working note written next to a lookup', async () => {
+    const { call } = scripted([withTool('Let me look.', 'find_place', { place: 'Atlanta' }), say('Atlanta is covered.')])
+    const t = setup()
+    const out = await t.run(call)
+    expect(streamedText(t.events)).toBe('Atlanta is covered.')
+    expect(out.text).toBe('Atlanta is covered.')
+  })
+
+  it('hides "Dropping the owner wording" next to a search (the founder\'s case)', async () => {
     const { call } = scripted([
-      (_p, onText) => {
-        onText('Let me look.')
-        return msg(
-          [
-            { type: 'text', text: 'Let me look.' },
-            { type: 'tool_use', id: 'x', name: 'find_place', input: { place: 'Atlanta' } },
-          ],
-          'tool_use'
-        )
-      },
-      say('Atlanta is covered.'),
+      withTool('Dropping the owner wording.', 'search_listings', { words: ['lawyer'], city: 'atlanta' }),
+      use('show_businesses', { ids: [ID(1)] }),
+      say('Peach Law Group handles family law.'),
     ])
     const t = setup()
     const out = await t.run(call)
-    expect(streamedText(t.events)).toBe('Let me look. Atlanta is covered.')
-    expect(out.text).toBe('Let me look. Atlanta is covered.')
+    expect(out.text).toBe('Peach Law Group handles family law.')
+    expect(streamedText(t.events)).toBe('Peach Law Group handles family law.')
+    expect(JSON.stringify(t.events)).not.toMatch(/owner wording/)
+  })
+
+  // Seen on the 261 Preview: a full answer next to the cards, then the same
+  // answer again at the end. The final call's text is the whole reply.
+  it('says the answer once when the model writes it next to the cards and again at the end', async () => {
+    const answer = 'Peach Law Group and Midtown Legal both handle family law.'
+    const { call } = scripted([
+      use('search_listings', { words: ['lawyer'], city: 'atlanta' }),
+      withTool(answer, 'show_businesses', { ids: [ID(1), ID(2)] }),
+      say(answer),
+    ])
+    const t = setup()
+    const out = await t.run(call)
+    expect(out.text).toBe(answer)
+    expect(streamedText(t.events)).toBe(answer)
+    expect(out.cards).toHaveLength(2)
+  })
+
+  it('keeps text written next to the cards when the final call writes nothing', async () => {
+    const { call } = scripted([
+      use('search_listings', { words: ['lawyer'], city: 'atlanta' }),
+      withTool('Peach Law Group handles family law.', 'show_businesses', { ids: [ID(1)] }),
+      () => msg([], 'end_turn'),
+    ])
+    const t = setup()
+    const out = await t.run(call)
+    expect(out.text).toBe('Peach Law Group handles family law.')
+    expect(streamedText(t.events)).toBe(out.text)
+    expect(out.cards).toHaveLength(1)
+  })
+
+  it('hides text written next to cards that failed, since the model writes again', async () => {
+    const { call } = scripted([
+      use('search_listings', { words: ['lawyer'], city: 'atlanta' }),
+      withTool('Here are some firms.', 'show_businesses', { ids: [ID(99)] }),
+      withTool("The cards failed, so I'll retry.", 'show_businesses', { ids: [ID(1)] }),
+      say('Peach Law Group handles family law.'),
+    ])
+    const t = setup()
+    const out = await t.run(call)
+    expect(out.text).toBe('Peach Law Group handles family law.')
+    expect(streamedText(t.events)).toBe(out.text)
+    expect(out.cards.map((c) => c.id)).toEqual([ID(1)])
+  })
+
+  it('uses the last working note when the final call writes nothing', async () => {
+    const { call } = scripted([
+      withTool('Atlanta is covered.', 'find_place', { place: 'Atlanta' }),
+      () => msg([], 'end_turn'),
+    ])
+    const t = setup()
+    const out = await t.run(call)
+    expect(out.text).toBe('Atlanta is covered.')
+    expect(streamedText(t.events)).toBe(out.text)
   })
 
   it('counts cache reads and writes as input', async () => {

@@ -16,7 +16,7 @@ import {
 } from '@/lib/ai/cue/loop'
 
 import type { OwnerDraft, OwnerLink } from './events'
-import { OWNER_CUE_TOOLS, ownerStatusFor, runOwnerCueTool, type OwnerCueContext } from './tools'
+import { OWNER_CUE_LOOKUP_TOOLS, OWNER_CUE_TOOLS, ownerStatusFor, runOwnerCueTool, type OwnerCueContext } from './tools'
 
 /** Words from separate model calls are separate paragraphs, never run together. */
 const OWNER_PART_BREAK = '\n\n'
@@ -49,6 +49,7 @@ export async function runOwnerCue(args: {
     system: args.system,
     messages: args.messages,
     tools: OWNER_CUE_TOOLS,
+    lookupTools: OWNER_CUE_LOOKUP_TOOLS,
     runTool: (name, input) => runOwnerCueTool(name, input, ctx),
     statusFor: (name) => ownerStatusFor(name),
     emit: args.emit,

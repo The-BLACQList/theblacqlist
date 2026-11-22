@@ -23,7 +23,7 @@ import { checkReply, cleanReply, lastFullSentence, SWAP_WITH_CARDS, type CueName
 import { CUE_INPUT_CHAR_CAP, CUE_MAX_CALLS, CUE_MAX_TOKENS, CUE_MAX_TOOLS_PER_CALL } from './limits'
 import { CueCallError, runToolLoop, type CueModelCall, type CueStop, type CueUsage } from './loop'
 import type { CueEvent } from './stream'
-import { CUE_MAX_CARDS, CUE_TOOLS, runCueTool, statusFor, turnOutput, type CueToolContext } from './tools'
+import { CUE_LOOKUP_TOOLS, CUE_MAX_CARDS, CUE_TOOLS, runCueTool, statusFor, turnOutput, type CueToolContext } from './tools'
 
 export { CUE_INPUT_CHAR_CAP, CUE_MAX_CALLS, CUE_MAX_TOKENS, CUE_MAX_TOOLS_PER_CALL }
 export { CueCallError, type CueCallErrorCode, type CueModelCall, type CueStop, type CueUsage } from './loop'
@@ -95,6 +95,7 @@ export async function runCue(args: {
     system: args.system,
     messages: args.messages,
     tools: CUE_TOOLS,
+    lookupTools: CUE_LOOKUP_TOOLS,
     runTool: (name, input) => runCueTool(name, input, ctx),
     statusFor: (name, input) => statusFor(name, input, ctx),
     emit: args.emit,
