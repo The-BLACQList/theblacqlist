@@ -76,7 +76,12 @@ import {
   SWIPE,
   RECENTER,
   pinchZoom,
-  swipeLanding,
+  RIDE,
+  clampPitch,
+  lookTurn,
+  rideCoast,
+  rideHeight,
+  rideOrbit,
   swipeTravel,
   swipeTurnRate,
   zoomAmount,
@@ -175,8 +180,9 @@ export interface SiloSceneProps {
    */
   preview?: boolean
   /**
-   * Phone full-screen (ticket 248): one finger swipes up and down the floors or
-   * sideways to turn; two fingers pinch the zoom and tilt. The page never moves.
+   * Phone full-screen (ticket 248): one finger swipes up and down the tower or
+   * sideways to turn; two fingers pinch the zoom and look up or down. The page
+   * never moves. The camera rides at eye height (ticket 270).
    */
   full?: boolean
   /**
@@ -609,6 +615,8 @@ interface Rig {
   vel: Orbit
   /** 0 is the view as picked, 1 the whole tower from outside (ticket 246). */
   zoom: number
+  /** Phone full-screen look, 0 level, positive down (ticket 270). */
+  pitch: number
 }
 
 const DRAG_TURN = 0.006
@@ -733,6 +741,7 @@ function Controls(
     cur: orbitForScroll(0, 0, ORBIT.el, props.shape),
     vel: { x: 0, y: 0, z: 0, az: 0, el: 0, R: 0 },
     zoom: 0,
+    pitch: RIDE.pitch,
   })
   const outNow = useRef(false)
   const zoomNow = useRef(0)
@@ -770,11 +779,23 @@ function Controls(
     r.t = scrollForFloor(focusFloor, shape)
     seatTrack(gl.domElement, r.t)
     r.el = family === null ? ORBIT.el : ORBIT.floorEl
+    r.pitch = RIDE.pitch
     if (family !== null) r.az = headingTo(wedgePoint(family, focusFloor, 0, 0, 0, shape))
     r.spin = 0
     r.ease = ORBIT.jumpS
     invalidate()
   }, [focusFloor, gl, invalidate])
+
+  // Entering phone full-screen glides down to eye height, looking across
+  // (ticket 270). Leaving it rises back to the page view.
+  const { full } = props
+  useEffect(() => {
+    const r = rig.current
+    r.pitch = RIDE.pitch
+    r.glide = 0
+    r.ease = ORBIT.jumpS
+    invalidate()
+  }, [full, invalidate])
 
   // A business: move in close and look at it.
   useEffect(() => {
@@ -957,9 +978,12 @@ function Controls(
       if (fingers.has(e.pointerId)) fingers.set(e.pointerId, { x: e.clientX, y: e.clientY })
       if (pinch && fingers.size >= 2) {
         const r = rig.current
-        // Two fingers moving together up or down tilt the view.
+        // Two fingers moving together up or down look up or down (ticket 270).
+        // Riding, the eye stays put and tips; on a pick, the close-up tilts.
         const midY = fingerMidY()
-        turn(r, 0, (midY - pinch.midY) * DRAG_TILT)
+        const dLook = lookTurn(midY - pinch.midY, el.clientHeight)
+        if (r.focus) turn(r, 0, dLook)
+        else r.pitch = clampPitch(r.pitch + dLook)
         pinch.midY = midY
         r.ease = ORBIT.easeS
         const gap = fingerGap()
@@ -1051,12 +1075,9 @@ function Controls(
         r.spin = 0
         r.glide = 0
       }
-      // A phone swipe up or down settles on a floor (ticket 248).
-      if (wasDrag && l.full && down.axis === 'y' && !r.focus) {
-        r.t = swipeLanding(r.t, r.glide, l.shape)
-        r.ease = ORBIT.easeS
-      }
-      r.glide = 0
+      // A phone swipe up or down glides on and stops where it stops; it never
+      // pulls to a floor (ticket 270). The frame loop carries the glide.
+      if (!(wasDrag && l.full && down.axis === 'y' && !r.focus)) r.glide = 0
       r.dragging = false
       down = null
       el.releasePointerCapture?.(e.pointerId)
@@ -1165,6 +1186,7 @@ function Controls(
       letGo()
       r.az = RECENTER.az
       r.el = RECENTER.el
+      r.pitch = RIDE.pitch
       r.zoom = RECENTER.zoom
       r.spin = 0
       r.ease = live.current.reducedMotion ? ORBIT.easeS : WHOLE_TOWER_S
@@ -1263,14 +1285,25 @@ function Controls(
     }
 
     const { shape } = l
-    const base = r.focus?.orbit ?? orbitForScroll(r.t, r.az, r.el, shape)
+    // A released phone swipe glides on (ticket 270).
+    if (r.glide && !r.dragging) {
+      if (r.focus || !l.full) r.glide = 0
+      else [r.t, r.glide] = rideCoast(r.t, r.glide, dt)
+    }
+
+    // Phone full-screen rides at eye height and looks freely (ticket 270).
+    const base =
+      r.focus?.orbit ??
+      (l.full ? rideOrbit(r.t, r.az, r.pitch, shape) : orbitForScroll(r.t, r.az, r.el, shape))
     const goal = r.zoom ? zoomGoal(base, r.zoom, l.phone, shape) : base
-    const floor = floorForHeight(base.y, shape)
+    // The floor being ridden, not where a tipped view happens to look.
+    const at = r.focus ? base.y : rideHeight(r.t, shape)
+    const floor = floorForHeight(at, shape)
     if (floor !== floorNow.current) {
       floorNow.current = floor
       l.onFloorChange?.(floor)
     }
-    let settled = !r.spin
+    let settled = !r.spin && !r.glide
     for (const k of ORBIT_KEYS) {
       const gap = k === 'az' ? wrapAngle(goal.az - r.cur.az) : goal[k] - r.cur[k]
       if (l.reducedMotion || (Math.abs(gap) < 0.001 && Math.abs(r.vel[k]) < 0.001)) {
@@ -1297,7 +1330,7 @@ function Controls(
     // The lit floor follows the floor being ridden, not the zoomed camera.
     setUniform(
       glass.floor,
-      THREE.MathUtils.clamp((shape.y[0]! - base.y) / floorGap(shape), 0, shape.y.length - 1)
+      THREE.MathUtils.clamp((shape.y[0]! - at) / floorGap(shape), 0, shape.y.length - 1)
     )
     const isOut = r.zoom >= 0.5
     if (isOut !== outNow.current) {

@@ -275,10 +275,14 @@ describe('/flow-map phone full-screen (ticket 248)', () => {
     expect(scene).toContain('pinchZoom(')
   })
 
-  it('swipes up and down the floors in full-screen and settles on one', () => {
+  it('rides up and down freely in full-screen, at eye height, and looks with two fingers', () => {
     expect(scene).toContain('swipeTravel(dy, el.clientHeight)')
-    expect(scene).toContain('swipeLanding(r.t, r.glide, l.shape)')
-    expect(experience).toContain('Swipe sideways to turn, up or down for floors.')
+    // Ticket 270: no pull to a floor; the glide carries on and stops.
+    expect(scene).not.toContain('swipeLanding')
+    expect(scene).toContain('rideCoast(r.t, r.glide, dt)')
+    expect(scene).toContain('rideOrbit(r.t, r.az, r.pitch, shape)')
+    expect(scene).toContain('lookTurn(midY - pinch.midY, el.clientHeight)')
+    expect(experience).toContain('Swipe to ride and turn. Two fingers to look up or down.')
   })
 
   // Ticket 268: turning was hard on an iPhone. The top of the screen took the

@@ -959,24 +959,24 @@ export function pinchZoom(startZoom: number, startGap: number, gap: number): num
   return Math.min(1, Math.max(ZOOM.min, z))
 }
 
-/** Radians a second the phone preview turns on its own (ticket 248): a lap in about 90 s. */
 /**
- * Phone full-screen swipes (ticket 248, round 2). Up and down travels the
- * floors: two screens of swipe cover the whole tower, as two screens of page
- * scroll do on a desktop. On release the view settles on a floor; a flick
- * carries it at most half a floor further.
- * Sideways turns, with a softer coast than a mouse, so a flick can't jump.
+ * Phone full-screen swipes (ticket 248, round 2). Up and down rides the
+ * tower: two screens of swipe cover the whole of it, as two screens of page
+ * scroll do on a desktop. Sideways turns, with a softer coast than a mouse,
+ * so a flick can't jump.
  *
- * Ticket 268: a finger moves `lockPx` before the swipe picks turning or floors,
+ * Ticket 268: a finger moves `lockPx` before the swipe picks turning or riding,
  * so a thumb's first wobble doesn't decide it. Until `settlePx` the swipe can
  * still change direction, since a thumb starts on an arc. A swipe across the
  * whole screen turns the view half way round (`turnPerScreen`).
+ *
+ * Ticket 270: a released swipe glides on and stops where it stops, like a
+ * page. It never pulls to a floor.
  */
 export const SWIPE = {
   screens: 2,
   glideMax: 0.5,
   spinMax: 2,
-  flingS: 0.2,
   lockPx: 12,
   settlePx: 64,
   turnPerScreen: Math.PI,
@@ -997,21 +997,75 @@ export function swipeTravel(dy: number, height: number): number {
   return -dy / (height * SWIPE.screens)
 }
 
-/** Where a released swipe settles: the floor nearest where its speed was taking it. */
-export function swipeLanding(t: number, glide: number, shape = SILO): number {
-  const aim = Math.min(1, Math.max(0, t + glide * SWIPE.flingS))
-  let best = t
-  let bestGap = Infinity
-  shape.y.forEach((_, i) => {
-    const floorT = scrollForFloor(i, shape)
-    if (Math.abs(floorT - aim) < bestGap) {
-      bestGap = Math.abs(floorT - aim)
-      best = floorT
-    }
-  })
-  return best
+/**
+ * Phone full-screen rides the tower at eye height (ticket 270). The eye sits
+ * `lift` above the height being ridden, so stopping on a floor stands on it,
+ * and looks freely: `pitch` 0 is level, positive looks down, from `minPitch`
+ * (up the tower) to `maxPitch` (down to the core). Two fingers sliding a whole
+ * screen height look `lookPerScreen` radians. A released swipe's glide fades
+ * by `coastDecay` a second.
+ */
+export const RIDE = {
+  lift: 6,
+  pitch: degrees(12),
+  minPitch: degrees(-75),
+  maxPitch: degrees(80),
+  /** Eye distance from the middle, as a share of the page view's. */
+  eyeD: 0.4,
+  lookPerScreen: Math.PI,
+  coastDecay: 4,
+} as const
+
+/** The height being ridden at track position `t`. */
+export function rideHeight(t: number, shape = SILO): number {
+  return scrollTop(shape) - Math.min(1, Math.max(0, t)) * scrollSpan(shape)
 }
 
+/**
+ * The phone full-screen view at track position `t` (ticket 270): the eye at
+ * heading `az`, just above the height being ridden, looking across the
+ * middle, tipped `pitch` down (negative looks up). As an Orbit, so it eases,
+ * zooms and turns like every other view; the eye is where `orbitPose` puts
+ * the camera.
+ */
+export function rideOrbit(t: number, az: number, pitch: number, shape = SILO): Orbit {
+  const p = Math.min(RIDE.maxPitch, Math.max(RIDE.minPitch, pitch))
+  const R = shape.orbitR
+  const d = R * Math.cos(ORBIT.el) * RIDE.eyeD
+  const reach = d - R * Math.cos(p)
+  return {
+    x: reach * Math.sin(az),
+    y: rideHeight(t, shape) + RIDE.lift - R * Math.sin(p),
+    z: reach * Math.cos(az),
+    az,
+    el: p,
+    R,
+  }
+}
+
+/** Radians of look for two fingers sliding `dy` px on a stage `height` px tall. Down looks down. */
+export function lookTurn(dy: number, height: number): number {
+  if (height <= 0) return 0
+  return (dy / height) * RIDE.lookPerScreen
+}
+
+/** A pitch held inside the ride's range. */
+export function clampPitch(pitch: number): number {
+  return Math.min(RIDE.maxPitch, Math.max(RIDE.minPitch, pitch))
+}
+
+/**
+ * One frame of a released swipe's glide: the new track position and speed.
+ * Stops dead at either end of the tower, and once too slow to see.
+ */
+export function rideCoast(t: number, glide: number, dt: number): [t: number, glide: number] {
+  const next = Math.min(1, Math.max(0, t + glide * dt))
+  const left = glide * Math.exp(-RIDE.coastDecay * dt)
+  if (next <= 0 || next >= 1 || Math.abs(left) < 0.002) return [next, 0]
+  return [next, left]
+}
+
+/** Radians a second the phone preview turns on its own (ticket 248): a lap in about 90 s. */
 export const PREVIEW_SPIN = (Math.PI * 2) / 90
 
 /**

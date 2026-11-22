@@ -1,6 +1,6 @@
 # Ticket 269: A Smaller Bottom Sheet on the Phone Map
 
-**Status:** Built on `feat/269-collective-idle-sheet`, 2026-11-22. Not merged.
+**Status:** Merged #399 (`d892e06`), 2026-11-22. Founder checked it on iPhone.
 
 Founder (2026-11-22): "shrink the phone's map panel when idle." This follows 268, which found that the bottom sheet covers the part of the phone where a thumb rests.
 

@@ -454,7 +454,9 @@ export function SiloExperience({
       window.history.pushState({ ...base, [FULL_STATE]: true }, '')
     }
     setFullAsked(true)
-    setStatus('Full screen. Swipe up or down for floors, sideways to turn. Back to close.')
+    setStatus(
+      'Full screen. Swipe up or down to ride the tower, sideways to turn, two fingers to look up or down. Back to close.'
+    )
   }, [setStatus])
 
   /** The X and Escape step back off the entry, so Back stays in step. */
@@ -956,7 +958,7 @@ export function SiloExperience({
           {showHint && (
             <p className="silo-hint">
               {full
-                ? 'Swipe sideways to turn, up or down for floors.'
+                ? 'Swipe to ride and turn. Two fingers to look up or down.'
                 : 'Keep scrolling to see every floor'}
             </p>
           )}
