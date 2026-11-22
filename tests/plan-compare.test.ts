@@ -74,6 +74,24 @@ describe('planCompareGroups', () => {
     expect(a.cells.growth).toMatchObject({ text: '12 months', up: true })
   })
 
+  it('shows advanced analytics from Growth, matching the gate (ticket 241)', () => {
+    expect(canAccess('starter', 'analytics_advanced')).toBe(false)
+    for (const label of ['Compared with the period before', 'Numbers for your events and jobs']) {
+      const r = findRow(label)
+      expect(r.cells.free).toEqual({ kind: 'no' })
+      expect(r.cells.starter).toEqual({ kind: 'no' })
+      expect(r.cells.growth).toEqual({ kind: 'yes', up: true })
+      expect(r.cells.premium).toEqual({ kind: 'yes', up: false })
+    }
+  })
+
+  it('drops the advanced analytics rows while only Free and Starter are open', () => {
+    const open = { free: true, starter: true, growth: false, premium: false }
+    const labels = visibleCompareGroups(open).flatMap((g) => g.rows.map((r) => r.label))
+    expect(labels).not.toContain('Compared with the period before')
+    expect(labels).toContain('Views, saves, and taps')
+  })
+
   it('never marks a Free cell as a step up', () => {
     for (const r of planCompareGroups().flatMap((g) => g.rows)) {
       const c = r.cells.free

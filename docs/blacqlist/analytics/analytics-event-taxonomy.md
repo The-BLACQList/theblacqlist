@@ -143,18 +143,22 @@ Fired when a user opens the share flow (native share or copy-link).
 
 #### `marketplace_product_viewed`
 
-Fired when a product detail page is loaded.
+Fired from the server when a marketplace product or service page is opened, one per open (ticket 241, since 2026-11-21). Server-sent, like the listing `page_view`, so a visitor can't inflate it through `/api/analytics/event`.
 
-| Property     | Type   | Notes                                     |
-| ------------ | ------ | ----------------------------------------- |
-| `listing_id` | string | UUID of the listing that owns the product |
+| Property     | Type   | Notes                                            |
+| ------------ | ------ | ------------------------------------------------ |
+| `listing_id` | string | UUID of the listing that owns the product/service |
 
-**entity_id:** UUID of the product (`marketplace_products.id`).  
-**entity_type:** `'product'`
+**entity_id:** UUID of the product or service (`marketplace_products.id` / `marketplace_services.id`).  
+**entity_type:** `'product'` or `'service'`
+
+The owner's Storefront numbers read it through `owner_listing_insights`, which attributes the row by joining the item's `listing_id` column, never this property.
 
 ---
 
 #### `marketplace_cta_click`
+
+**Not emitted.** The marketplace sends these clicks as plain `cta_click` with entity_type `'product'` or `'service'` (`/api/marketplace/cta-click`). The shape below is what that `cta_click` row carries.
 
 Fired when a user clicks an outbound CTA on a marketplace product or service (Shop Now, Book Now, Visit Website).
 
@@ -269,7 +273,7 @@ Amount/spend data is NOT included in properties — it lives in the `receipts` t
 2. **No rate limiting** — the `/api/analytics/event` endpoint has no rate limit. Implement a Redis-backed counter (keyed by `session_id`) before the platform has significant traffic.
 3. **Scroll depth events** — `scroll_depth_25/50/75/100` are defined in the schema but not in this foundation's constants. Add them when entity pages are instrumented.
 4. **Daily aggregation job** — `entity_analytics_daily` table exists but is not populated. A scheduled job at 00:05 UTC should aggregate previous-day raw events. Not built yet.
-5. **`/api/marketplace/cta-click`** — predates this foundation. It still inserts `cta_click` events correctly but doesn't use the new utility functions. Refactor is optional; the insert shape is compatible.
+5. **`/api/marketplace/cta-click`** inserted nothing until ticket 241 (2026-11-21): it used `void serviceClient.from(...).insert(...)`, and a lazy PostgREST builder never sends without an await. It now uses `trackServerEvent`. No storefront click before 2026-11-21 was recorded.
 6. **No deduplication** — repeated identical events within a session are recorded. The client uses `sendBeacon` which may send a request on every call; call `track()` judiciously.
 7. **`session_id` from server actions** — `trackServerEvent()` accepts `session_id` but does not auto-generate one. Server-side events will have `session_id = null` unless the caller explicitly threads it through.
 

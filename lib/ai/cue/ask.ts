@@ -48,13 +48,20 @@ export const cueAskSchema = z
     near: nearSchema.nullable().optional(),
     page: z.string().max(ASSISTANT_PAGE_MAX).nullable().optional(),
     cards: z.array(cardSchema).max(CUE_PRIOR_CARDS_MAX).optional(),
+    /**
+     * 'search': the answer strip on /search (ticket 255). When Cue can't
+     * answer, the route sends the quick answer from our listings instead of a
+     * fallback. The chat panel leaves it out.
+     */
+    surface: z.enum(['chat', 'search']).optional(),
   })
-  .transform(({ message, history, near, page, cards }) => ({
+  .transform(({ message, history, near, page, cards, surface }) => ({
     message,
     history: history ?? [],
     near: near ? { lat: roundCoord(near.lat), lng: roundCoord(near.lng) } : null,
     page: page ?? null,
     cards: cards ?? [],
+    surface: surface ?? 'chat',
   }))
 
 export type CueAskInput = z.input<typeof cueAskSchema>

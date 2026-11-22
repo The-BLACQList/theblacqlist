@@ -17,7 +17,6 @@ import {
 import { TourWitness } from '@/components/tour/TourWitness'
 import { SearchAssist } from '@/components/discovery/SearchAssist'
 import { CueSearchAnswer } from '@/components/discovery/CueSearchAnswer'
-import { isFeatureEnabled } from '@/lib/env'
 import { shouldAssist, wantsCue } from '@/lib/search/assist'
 import { logZeroResultSearch } from '@/lib/search/zeroResultLog'
 
@@ -101,11 +100,14 @@ async function SearchResults({ searchParams }: { searchParams: SearchPageProps['
     />
   ) : undefined
 
-  // Cue's answer above the grid, for searches that read like a question or
-  // came back thin (wantsCue). Keyword searches stay free and instant. Keyed
-  // on the words and place so a new search starts a fresh answer.
+  // The answer above the grid, for searches that read like a question or came
+  // back thin (wantsCue). Keyword searches stay free and instant. Mounted
+  // whatever the AI flag says (ticket 255): /api/cue answers with Cue when it
+  // can and with the quick answer from our listings when it can't, so the
+  // strip never vanishes. Keyed on the words and place so a new search starts
+  // a fresh answer.
   const cue =
-    isFeatureEnabled('aiAssistant') && wantsCue({ q: query, total: result.total, page }) ? (
+    wantsCue({ q: query, total: result.total, page }) ? (
       <CueSearchAnswer
         key={`${query}|${location?.lat ?? ''},${location?.lng ?? ''}`}
         query={query}
@@ -113,12 +115,27 @@ async function SearchResults({ searchParams }: { searchParams: SearchPageProps['
       />
     ) : null
 
+  // The search as typed found nothing, so the grid shows what the visitor
+  // meant (ticket 254). Say so: the cards should never look like matches for
+  // words they do not contain. No remark on ownership (#299).
+  const understood = result.understood
+  const understoodNote = understood ? (
+    <p className="font-subhead text-sm text-charcoal mb-4" data-testid="search-understood">
+      {understood.mode === 'browse'
+        ? 'Showing every business.'
+        : `Nothing matched every word, so here are results for “${understood.words.join(' ')}”.`}
+    </p>
+  ) : null
+
   return (
     <>
       {/* Tour evidence: a real search ran in this render. Sits after the
           empty-query early return — visiting /search is not searching. */}
       <TourWitness step="search_ran" />
       {cue}
+      {/* "See Results Below" in the answer strip jumps here. */}
+      <div id="search-results" tabIndex={-1} className="scroll-mt-24 outline-none" />
+      {understoodNote}
       <DiscoveryGrid
         entities={result.entities}
         total={result.total}

@@ -147,6 +147,21 @@ describe('streamCue', () => {
     expect(body.near).toEqual({ lat: 33.75, lng: -84.39 })
   })
 
+  it('asks for the search surface and carries the quick answer mark (ticket 255)', async () => {
+    fetchMock.mockResolvedValue(
+      streamed([lines([{ type: 'cards', cards: [card] }, { type: 'done', text: 'Here is one.', mode: 'basic' }])])
+    )
+    const reply = await streamCue('lawyer', { turns: [], locate: false, surface: 'search' })
+    const body = JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body)) as Record<string, unknown>
+    expect(body.surface).toBe('search')
+    expect(reply).toEqual({ kind: 'reply', text: 'Here is one.', cards: [card], actions: [], near: false, mode: 'basic' })
+  })
+
+  it('ignores a mode it does not know', async () => {
+    fetchMock.mockResolvedValue(streamed([lines([{ type: 'done', text: 'ok', mode: 'magic' } as unknown as CueEvent])]))
+    expect(await streamCue('lawyer', { turns: [] })).not.toHaveProperty('mode')
+  })
+
   it('passes a server fallback through', async () => {
     fetchMock.mockResolvedValue(
       streamed([lines([{ type: 'fallback', href: '/search?q=lawyer', reason: 'limited' }])])

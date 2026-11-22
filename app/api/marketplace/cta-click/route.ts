@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
 import { createClient } from '@/lib/supabase/server'
+import { trackServerEvent } from '@/lib/analytics/server'
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
   let body: unknown
@@ -69,10 +69,13 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     // fire-and-forget — no session is OK
   }
 
-  const serviceClient = createServiceClient()
-
-  // Fire and forget — do not await on the response path
-  void serviceClient.from('analytics_events').insert({
+  // This was `void serviceClient.from('analytics_events').insert({...})` until
+  // ticket 241 (2026-11-21), which inserted nothing: a PostgREST builder only
+  // sends its request when something awaits it, and `void` does not. So no
+  // storefront click was ever recorded. trackServerEvent awaits the insert
+  // inside after(), off the response path (same fix as /api/analytics/event,
+  // 2026-08-11).
+  trackServerEvent({
     event_name: 'cta_click',
     entity_id: entity_id as string,
     entity_type: entity_type as string,

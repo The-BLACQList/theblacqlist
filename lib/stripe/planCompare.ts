@@ -130,7 +130,12 @@ export function planCompareGroups(): CompareGroup[] {
         row('Category, city, and search placement', () => true),
         row('Map pin', () => true, undefined, 'Once your address is confirmed'),
         // Ticket 244: the look of the pin is paid; its order on the map is not.
-        row('Your logo as your map pin', gate('map_logo_pin'), undefined, 'Where you sit on the map still comes from trust'),
+        row(
+          'Your logo as your map pin',
+          gate('map_logo_pin'),
+          undefined,
+          'Where you sit on the map still comes from trust'
+        ),
         row('Community reviews', () => true),
         row('Claim it and get Verified', () => true),
         row('Reply to reviews in public', gate('review_response')),
@@ -138,16 +143,20 @@ export function planCompareGroups(): CompareGroup[] {
     },
     {
       title: 'AI Writing Help',
-      rows: [
-        row('Drafts every 30 days, per page', (t) => aiQuota(t) ?? null),
-      ],
+      rows: [row('Drafts every 30 days, per page', (t) => aiQuota(t) ?? null)],
     },
     {
       title: 'Analytics',
       rows: [
-        row('Views, saves, and taps', (t) => analyticsHistoryDays(t), (d) =>
-          d >= 365 ? '12 months' : count(d, 'day', 'days')
+        row(
+          'Views, saves, and taps',
+          (t) => analyticsHistoryDays(t),
+          (d) => (d >= 365 ? '12 months' : count(d, 'day', 'days'))
         ),
+        // Ticket 241. Storefront item numbers are not listed: they show only
+        // while the marketplace is open, and a plan line has to be true today.
+        row('Compared with the period before', gate('analytics_advanced')),
+        row('Numbers for your events and jobs', gate('analytics_advanced')),
       ],
     },
     {
@@ -157,7 +166,12 @@ export function planCompareGroups(): CompareGroup[] {
           canAccess(t, 'storefront') ? productLimit(t) : false
         ),
         row('Events at a time', (t) => (canAccess(t, 'events') ? eventLimit(t) : false)),
-        row('Job postings every 30 days', jobLimit, (n) => String(n), 'More can be bought on any plan'),
+        row(
+          'Job postings every 30 days',
+          jobLimit,
+          (n) => String(n),
+          'More can be bought on any plan'
+        ),
         row('Coupons and deals', gate('coupons')),
         row('Booking requests', gate('booking_requests')),
         row('Linked locations', (t) => (canAccess(t, 'multi_location') ? locationLimit(t) : false)),
@@ -184,9 +198,7 @@ export function visibleCompareGroups(open: Record<PlanSlug, boolean>): CompareGr
   return planCompareGroups()
     .map((g) => ({
       ...g,
-      rows: g.rows.filter((r) =>
-        COMPARE_TIERS.some((t) => open[t] && r.cells[t].kind !== 'no')
-      ),
+      rows: g.rows.filter((r) => COMPARE_TIERS.some((t) => open[t] && r.cells[t].kind !== 'no')),
     }))
     .filter((g) => g.rows.length > 0)
 }
