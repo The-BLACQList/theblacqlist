@@ -1,6 +1,6 @@
 # Ticket 267: No Black Hole or Flicker While Moving The Collective
 
-**Status:** Built on `fix/267-collective-core-nan`, 2026-11-22. Not merged.
+**Status:** Merged #398 (`bb76303`), 2026-11-22. Founder checked it on desktop and iPhone.
 
 Founder (2026-11-22, with a screenshot): "I get a big hole and flicker on desktop. Same problem on iPhone."
 
