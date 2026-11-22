@@ -453,7 +453,7 @@ describe('the route (read as text)', () => {
 
 describe('replies read easily', () => {
   it('the prompt asks for short paragraphs, lists and a short reply', () => {
-    expect(OWNER_CUE_PROMPT_VERSION).toBe('OWNER_CUE@2')
+    expect(OWNER_CUE_PROMPT_VERSION).toBe('OWNER_CUE@3')
     expect(OWNER_CUE_RULES).toMatch(/Steps go in a numbered list/)
     expect(OWNER_CUE_RULES).toMatch(/bulleted list \("- "\)/)
     expect(OWNER_CUE_RULES).toMatch(/Never write a block of more than two sentences/)

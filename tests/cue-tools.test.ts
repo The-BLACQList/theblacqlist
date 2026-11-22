@@ -9,6 +9,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 import {
   buildSearchQuery,
+  CUE_MAX_CARDS,
   CUE_MAX_TERMS,
   CUE_TOOLS,
   formatHours,
@@ -329,6 +330,26 @@ describe('get_listing and show_businesses', () => {
     c.state.seen.set(ID(1), entity(1))
     const r = await runCueTool('show_businesses', { ids: [ID(1), ID(9)] }, c)
     expect(JSON.parse(r.content)).toEqual({ showing: 1, ignored: [ID(9)] })
+    expect(c.state.shown).toEqual([ID(1)])
+  })
+
+  // Ticket 261: one bad id or too many ids used to fail the whole call, which
+  // left no cards and a "the cards failed, I'll retry" note in the reply.
+  it('shows the first six when given every search result', async () => {
+    const c = ctx()
+    for (let n = 1; n <= 8; n++) c.state.seen.set(ID(n), entity(n))
+    const ids = Array.from({ length: 8 }, (_, i) => ID(i + 1))
+    const r = await runCueTool('show_businesses', { ids }, c)
+    expect(r.isError).toBeFalsy()
+    expect(c.state.shown).toEqual(ids.slice(0, CUE_MAX_CARDS))
+    expect(JSON.parse(r.content)).toEqual({ showing: CUE_MAX_CARDS, ignored: ids.slice(CUE_MAX_CARDS) })
+  })
+
+  it('drops a garbled id and shows the rest', async () => {
+    const c = ctx()
+    c.state.seen.set(ID(1), entity(1))
+    const r = await runCueTool('show_businesses', { ids: ['not-a-uuid', ID(1)] }, c)
+    expect(r.isError).toBeFalsy()
     expect(c.state.shown).toEqual([ID(1)])
   })
 

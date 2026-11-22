@@ -13,9 +13,16 @@ Both prompts already say not to narrate. The model still does it sometimes, more
 - Text from a call that looks something up is a working note. It is dropped from the screen and the saved reply.
   - Visitor lookups (`CUE_LOOKUP_TOOLS`): `search_listings`, `find_place`, `get_listing`.
   - Owner lookups (`OWNER_CUE_LOOKUP_TOOLS`): `get_my_page`, `get_help`.
-- Text from a call that only shows something (`show_businesses`, `page_action`, `draft_text`, `go_to`) or ends the turn is the answer, and is shown.
+- Text from a call that only shows something (`show_businesses`, `page_action`, `draft_text`, `go_to`) is the answer once those tools work. Once any tool fails in a turn, the model writes again, so from then on only the final call's text counts.
+- Text from the call that ends the turn is the answer, and is shown.
 - If a turn has no answer text at all, the last working note is used, so the reply is never empty.
 - A broken tool input (`bad_json`) is always retried once, because nothing from the failed call was shown.
+
+### Found on the Preview (first pass)
+"lawyer in atlanta" still showed "The card display failed on the IDs, so I'll retry…" followed by a second answer. Search gives the model 8 results, but `show_businesses` took at most 6 and failed the whole call on 7, 8 or one garbled id.
+- `show_businesses` now drops ids that aren't ids and keeps the first 6 it knows. The model is still told 6.
+- The rule above (text after a failed tool is a note).
+- Both prompts: "never mention tools, ids, retries or errors" (`CUE_CHAT@4`, `OWNER_CUE@3`).
 
 ## Trade-off
 Answer text now appears when each model call ends, instead of word by word. The status line ("Searching Atlanta…") still shows while Cue works. Replies are short (800 tokens max), so the wait is small.
@@ -27,5 +34,7 @@ Answer text now appears when each model call ends, instead of word by word. The 
   - text next to `show_businesses` is kept;
   - the last note is used when the final call is empty;
   - a broken call is retried even after it wrote text.
+- `tests/cue-agent.test.ts` also: text next to failed cards, and the retry after them, is hidden.
+- `tests/cue-tools.test.ts`: 8 ids shows the first 6; a garbled id is dropped and the rest shown.
 - `tests/owner-cue.test.ts`: a note next to `get_my_page` is hidden; separate calls still become paragraphs.
-- Typecheck clean. Lint 0 errors (2 old warnings). Vitest: 5,747 passed.
+- Typecheck clean. Lint 0 errors (2 old warnings). Vitest: 5,750 passed.

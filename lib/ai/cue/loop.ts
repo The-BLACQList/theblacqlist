@@ -18,9 +18,11 @@
  * that looks something up (`lookupTools`) is a working note ("Dropping the
  * owner wording", "Let me check your page") and never reaches the screen or
  * the reply, even though both prompts already say not to narrate. Text from a
- * call that only shows cards or buttons, or that ends the turn, is the answer
- * and is shown. If a turn has no answer text at all, the last held note is
- * used rather than an empty reply.
+ * call that only shows cards or buttons is the answer once those tools work;
+ * once any tool fails, the model writes again ("The cards failed, I'll
+ * retry"), so from then on that text is a note too. Text from the call that
+ * ends the turn is the answer. If a turn has no answer text at all, the last
+ * held note is used rather than an empty reply.
  * What the caller does with the finished reply (checks, cards, drafts) is the
  * caller's own; this loop only gathers the words.
  *
@@ -136,6 +138,9 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
     streamedAny = true
     for (const text of pieces) emit({ type: 'text', text })
   }
+  // Set once any tool fails this turn. After that the model is recovering
+  // ("The cards failed, I'll retry"), so only the final call's text counts.
+  let recovering = false
   let calls = 0
   let retried = false
   let stop: CueStop | null = null
@@ -203,7 +208,11 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
     const toolTurn = message.stop_reason === 'tool_use' && uses.length > 0
     const working = toolTurn && uses.some((use) => args.lookupTools.has(use.name))
     const text = textOf(message).trim()
+    // Text next to a tool that only shows something waits for the tool: if it
+    // failed, the model will write again, so this text was a working note too.
+    let pending: { pieces: string[]; text: string } | null = null
     if (text && working) note = { pieces, text }
+    else if (text && toolTurn) pending = { pieces, text }
     else if (text) {
       show(pieces)
       replyParts.push(text)
@@ -241,8 +250,17 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
         })
       )
     } catch {
+      if (pending) note = pending
       stop = 'data_error'
       break
+    }
+    if (results.some((r) => r.is_error)) recovering = true
+    if (pending) {
+      if (recovering) note = pending
+      else {
+        show(pending.pieces)
+        replyParts.push(pending.text)
+      }
     }
     messages.push({ role: 'assistant', content: asParams(message.content) })
     messages.push({ role: 'user', content: results })

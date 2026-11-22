@@ -279,6 +279,20 @@ describe('runCue', () => {
     expect(streamedText(t.events)).toBe(out.text)
   })
 
+  it('hides text written next to cards that failed, since the model writes again', async () => {
+    const { call } = scripted([
+      use('search_listings', { words: ['lawyer'], city: 'atlanta' }),
+      withTool('Here are some firms.', 'show_businesses', { ids: [ID(99)] }),
+      withTool("The cards failed, so I'll retry.", 'show_businesses', { ids: [ID(1)] }),
+      say('Peach Law Group handles family law.'),
+    ])
+    const t = setup()
+    const out = await t.run(call)
+    expect(out.text).toBe('Peach Law Group handles family law.')
+    expect(streamedText(t.events)).toBe(out.text)
+    expect(out.cards.map((c) => c.id)).toEqual([ID(1)])
+  })
+
   it('uses the last working note when the final call writes nothing', async () => {
     const { call } = scripted([
       withTool('Atlanta is covered.', 'find_place', { place: 'Atlanta' }),
