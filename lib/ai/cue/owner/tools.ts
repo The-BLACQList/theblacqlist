@@ -84,6 +84,11 @@ const LISTING_ID_PROP = {
     "One of the owner's page ids from the context. Leave out to use the page they have open.",
 } as const
 
+/** The owner tools that look something up: text written alongside them is a
+ *  working note and is hidden (ticket 261). draft_text and go_to are part of
+ *  the answer, so text beside them is kept. */
+export const OWNER_CUE_LOOKUP_TOOLS: ReadonlySet<string> = new Set(['get_my_page', 'get_help'])
+
 export const OWNER_CUE_TOOLS: readonly Anthropic.Tool[] = [
   {
     name: 'get_my_page',

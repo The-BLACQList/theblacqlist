@@ -461,27 +461,29 @@ describe('replies read easily', () => {
     expect(OWNER_CUE_RULES).not.toMatch(/One to four short sentences/)
   })
 
-  it('words from separate model calls become separate paragraphs', async () => {
-    const reply = (content: unknown[], stop: string) =>
-      ({
-        id: 'msg_test',
-        type: 'message',
-        role: 'assistant',
-        model: 'mock-v1',
-        content,
-        stop_reason: stop,
-        stop_sequence: null,
-        usage: { input_tokens: 1, output_tokens: 1 },
-      }) as unknown as Anthropic.Message
+  const reply = (content: unknown[], stop: string) =>
+    ({
+      id: 'msg_test',
+      type: 'message',
+      role: 'assistant',
+      model: 'mock-v1',
+      content,
+      stop_reason: stop,
+      stop_sequence: null,
+      usage: { input_tokens: 1, output_tokens: 1 },
+    }) as unknown as Anthropic.Message
+
+  // Two calls: the first writes `first` next to `tool`, the second ends the turn.
+  async function twoCalls(first: string, tool: string, input: unknown) {
     let n = 0
     const call: CueModelCall = async (_params, onText) => {
       n++
       if (n === 1) {
-        onText('Your page is close.')
+        onText(first)
         return reply(
           [
-            { type: 'text', text: 'Your page is close.' },
-            { type: 'tool_use', id: 'toolu_1', name: 'get_my_page', input: {} },
+            { type: 'text', text: first },
+            { type: 'tool_use', id: 'toolu_1', name: tool, input },
           ],
           'tool_use'
         )
@@ -506,12 +508,24 @@ describe('replies read easily', () => {
       emit: (e) => events.push(e),
       signal: new AbortController().signal,
     })
-    expect(result.text).toBe('Your page is close.\n\nAdd your hours first.')
     const streamed = events
       .filter((e) => e.type === 'text')
       .map((e) => e.text)
       .join('')
+    return { result, streamed }
+  }
+
+  it('words from separate model calls become separate paragraphs', async () => {
+    const { result, streamed } = await twoCalls('Your page is close.', 'go_to', { section: 'hours' })
+    expect(result.text).toBe('Your page is close.\n\nAdd your hours first.')
     expect(streamed).toBe('Your page is close.\n\nAdd your hours first.')
+  })
+
+  // Ticket 261: text next to get_my_page or get_help is a working note.
+  it('hides a working note written next to get_my_page', async () => {
+    const { result, streamed } = await twoCalls('Dropping the owner wording.', 'get_my_page', {})
+    expect(result.text).toBe('Add your hours first.')
+    expect(streamed).toBe('Add your hours first.')
   })
 })
 

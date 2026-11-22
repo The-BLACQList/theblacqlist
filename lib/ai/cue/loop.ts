@@ -13,7 +13,14 @@
  * No sampling settings and no prefill; the current models reject both.
  *
  * ── What reaches the screen ──────────────────────────────────────────────────
- * Text streams through TextGuard, which holds back links and phone numbers.
+ * Text goes through TextGuard, which holds back links and phone numbers.
+ * Each call's text is held until the call ends (ticket 261). Text from a call
+ * that looks something up (`lookupTools`) is a working note ("Dropping the
+ * owner wording", "Let me check your page") and never reaches the screen or
+ * the reply, even though both prompts already say not to narrate. Text from a
+ * call that only shows cards or buttons, or that ends the turn, is the answer
+ * and is shown. If a turn has no answer text at all, the last held note is
+ * used rather than an empty reply.
  * What the caller does with the finished reply (checks, cards, drafts) is the
  * caller's own; this loop only gathers the words.
  *
@@ -75,6 +82,9 @@ export interface ToolLoopArgs {
   messages: Anthropic.MessageParam[]
   tools: readonly Anthropic.Tool[]
   runTool: (name: string, input: unknown) => Promise<CueToolRun>
+  /** Tools that look something up. Text written alongside them is a working
+   *  note, not the answer, and is hidden (ticket 261). */
+  lookupTools: ReadonlySet<string>
   /** The line shown while a tool runs. */
   statusFor: (name: string, input: unknown) => string
   emit: (event: CueProgressEvent) => void
@@ -87,7 +97,7 @@ export interface ToolLoopArgs {
 }
 
 export interface ToolLoopResult {
-  /** The text of each call, trimmed, in order. Empty after a refusal. */
+  /** The answer text of each shown call, trimmed, in order. Empty after a refusal. */
   replyParts: string[]
   stop: CueStop
   usage: CueUsage
@@ -118,6 +128,14 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
   const usage: CueUsage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 }
   const replyParts: string[] = []
   let streamedAny = false
+  // The last working note, used only if the turn ends with no answer text.
+  let note: { pieces: string[]; text: string } | null = null
+  const show = (pieces: readonly string[]) => {
+    if (pieces.length === 0) return
+    if (streamedAny) emit({ type: 'text', text: args.partBreak ?? ' ' })
+    streamedAny = true
+    for (const text of pieces) emit({ type: 'text', text })
+  }
   let calls = 0
   let retried = false
   let stop: CueStop | null = null
@@ -136,12 +154,9 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
       break
     }
 
-    let emittedThisCall = false
+    const pieces: string[] = []
     const guard = new TextGuard((text) => {
-      if (!emittedThisCall && streamedAny) emit({ type: 'text', text: args.partBreak ?? ' ' })
-      emittedThisCall = true
-      streamedAny = true
-      emit({ type: 'text', text })
+      pieces.push(text)
     })
 
     let message: Anthropic.Message
@@ -162,7 +177,8 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
       )
     } catch (err) {
       const code = err instanceof CueCallError ? err.code : 'provider_error'
-      if (code === 'bad_json' && !retried && !emittedThisCall) {
+      // Nothing from a failed call has been shown, so one retry is always safe.
+      if (code === 'bad_json' && !retried) {
         retried = true
         continue
       }
@@ -183,15 +199,21 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
       stop = 'refusal'
       break
     }
-    const text = textOf(message)
-    if (text.trim()) replyParts.push(text.trim())
+    const uses = message.content.filter((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use')
+    const toolTurn = message.stop_reason === 'tool_use' && uses.length > 0
+    const working = toolTurn && uses.some((use) => args.lookupTools.has(use.name))
+    const text = textOf(message).trim()
+    if (text && working) note = { pieces, text }
+    else if (text) {
+      show(pieces)
+      replyParts.push(text)
+    }
     if (message.stop_reason === 'max_tokens') {
       stop = 'truncated'
       break
     }
 
-    const uses = message.content.filter((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use')
-    if (message.stop_reason !== 'tool_use' || uses.length === 0) {
+    if (!toolTurn) {
       stop = 'end'
       break
     }
@@ -226,5 +248,10 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
     messages.push({ role: 'user', content: results })
   }
 
-  return { replyParts, stop: stop ?? 'end', usage, calls }
+  const ended = stop ?? 'end'
+  if (ended !== 'refusal' && replyParts.length === 0 && note) {
+    if (ended !== 'aborted') show(note.pieces)
+    replyParts.push(note.text)
+  }
+  return { replyParts, stop: ended, usage, calls }
 }

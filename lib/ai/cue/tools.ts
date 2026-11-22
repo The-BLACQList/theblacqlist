@@ -146,6 +146,11 @@ function jsonSchema(schema: z.ZodType): Anthropic.Tool.InputSchema {
  * The tool list. Frozen and in a fixed order so the prompt cache holds; the
  * cache mark on the last tool caches the whole list.
  */
+/** The visitor tools that look something up: text written alongside them is a
+ *  working note and is hidden (ticket 261). show_businesses and page_action
+ *  are the answer's own parts, so text beside them is kept. */
+export const CUE_LOOKUP_TOOLS: ReadonlySet<string> = new Set(['search_listings', 'find_place', 'get_listing'])
+
 export const CUE_TOOLS: readonly Anthropic.Tool[] = Object.freeze([
   {
     name: 'search_listings',
