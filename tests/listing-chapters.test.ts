@@ -171,8 +171,8 @@ describe('buildChapterData on a live listing', () => {
     expect(tier('claimed').live?.claimHref).toBeNull()
     expect(tier('verified').badges).toContainEqual({ label: 'Verified', tier: 2 })
     expect(tier('verified').trust?.short).toBe('Verified by The BLACQList')
-    expect(tier('certified').badges).toContainEqual({ label: 'BLACQList Certified', tier: 3 })
-    expect(tier('certified').trust?.short).toBe('BLACQList Certified')
+    expect(tier('certified').badges).toContainEqual({ label: 'Certified', tier: 3 })
+    expect(tier('certified').trust?.short).toBe('Certified by The BLACQList')
   })
 
   it('gives a signed-in customer the form, and the owner and a past reviewer neither', () => {

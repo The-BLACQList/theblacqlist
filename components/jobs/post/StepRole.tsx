@@ -29,7 +29,7 @@ export function StepRole({ values, errors, set, businesses, categories, readines
           Who Can Post a Job
         </h2>
         <p className="font-subhead text-sm text-charcoal mt-1 mb-4">
-          Jobs are posted by businesses on BLACQList. You need a page you own, and it needs to be live.
+          Jobs are posted by businesses on The BLACQList. You need a page you own, and it needs to be live.
         </p>
         <PostingChecklist readiness={readiness} />
       </section>

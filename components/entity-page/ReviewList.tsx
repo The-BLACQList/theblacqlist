@@ -66,7 +66,7 @@ export function ReviewList({ reviews, avgRating, reviewCount }: Props) {
           <div className="flex items-start justify-between gap-3 mb-2">
             <div>
               <p className="font-subhead text-sm font-semibold text-brand-black">
-                {review.reviewer_display_name ?? 'BLACQList Community Member'}
+                {review.reviewer_display_name ?? 'Community Member'}
               </p>
               {review.published_at && (
                 <p className="font-body text-xs text-charcoal-faint mt-0.5">

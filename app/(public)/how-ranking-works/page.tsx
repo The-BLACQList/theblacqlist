@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/layout/page-header'
 export const metadata: Metadata = {
   title: 'How Ranking Works | The BLACQList',
   description:
-    'Exactly how BLACQList orders search results, including where paid placement does and does not apply.',
+    'Exactly how The BLACQList orders search results, including where paid placement does and does not apply.',
   robots: { index: true, follow: true },
 }
 

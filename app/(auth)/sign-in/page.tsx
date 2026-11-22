@@ -57,7 +57,7 @@ function SignInContent() {
       <p className="font-subhead text-sm text-charcoal mb-6">
         {fromSave
           ? 'Sign in to save places. We’ll take you right back to this one.'
-          : 'Sign in to your BLACQList account.'}
+          : 'Sign in to your account on The BLACQList.'}
       </p>
 
       {accountDeleted && (

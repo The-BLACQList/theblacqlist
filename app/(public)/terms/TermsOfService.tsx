@@ -81,7 +81,7 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
             </p>
             <p>
               The BLACQList does not independently verify all information submitted by business
-              owners. Listings with a &ldquo;Verified&rdquo; or &ldquo;BLACQList Certified&rdquo;
+              owners. Listings with a &ldquo;Verified&rdquo; or &ldquo;Certified by The BLACQList&rdquo;
               badge have been reviewed through our verification process, but we cannot guarantee
               the accuracy of any listing information. Users should verify business information
               independently before transacting.
@@ -239,7 +239,7 @@ export function TermsOfService({ version, notice }: TermsOfServiceProps) {
               <strong>Partnerships.</strong> Any page may say it is open to partnerships (&ldquo;Open
               to brand deals&rdquo; on creator pages, &ldquo;Open to creator partnerships &amp;
               sponsorships&rdquo; on other pages). This is the page owner&apos;s own statement. The
-              BLACQList does not make introductions, arrange or guarantee deals, or take part in any
+              The BLACQList does not make introductions, arrange or guarantee deals, or take part in any
               agreement between creators and businesses, and is not responsible for those
               agreements. Creators are responsible for disclosing paid partnerships and sponsored
               content as the law requires, including the U.S. Federal Trade Commission&apos;s

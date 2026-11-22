@@ -133,7 +133,7 @@ export async function assertCanAddMarketplaceItem(
       }
     }
     return {
-      error: `Selling in the BLACQList Marketplace isn't open yet — we're not selling vendor access while ${kind === 'product' ? 'product' : 'service'} listings are still being built. Join the waitlist and we'll email you the day it opens.`,
+      error: `Selling in The BLACQList Marketplace isn't open yet. We're not selling vendor access while ${kind === 'product' ? 'product' : 'service'} listings are still being built. Join the waitlist and we'll email you the day it opens.`,
       fieldErrors: { listing_id: 'This business page cannot open a storefront yet.' },
     }
   }

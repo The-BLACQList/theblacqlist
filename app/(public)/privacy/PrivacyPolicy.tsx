@@ -406,7 +406,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
               <>
                 <p>
                   Individual receipt data (amounts, dates, specific businesses visited) is not shown
-                  publicly. It is visible to you, to BLACQList admins, and, for the purpose of verifying
+                  publicly. It is visible to you, to The BLACQList&apos;s admins, and, for the purpose of verifying
                   your purchase, to the business you bought from. That business sees your receipt photo,
                   the amount, the date and your first name and last initial, only while the receipt is
                   waiting to be verified. It never sees your email address or your other receipts.

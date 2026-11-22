@@ -68,7 +68,7 @@ export function VerificationAdminNotificationEmail({
             </Button>
 
             <Text style={footnote}>
-              This is an automated notification sent to BLACQList administrators. Do not reply to
+              This is an automated notification sent to The BLACQList&apos;s administrators. Do not reply to
               this email.
             </Text>
           </Section>

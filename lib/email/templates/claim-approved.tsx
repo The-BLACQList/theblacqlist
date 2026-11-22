@@ -43,7 +43,7 @@ export function ClaimApprovedEmail({
               {postJobOpen && ` ${OWNER_CAN_POST_JOB_LINE}`}
             </Text>
             <Text style={paragraph}>
-              Congratulations. You now have owner access to your BLACQList page. You can update
+              Congratulations. You now have owner access to your page on The BLACQList. You can update
               your business details, add photos, manage your services, and respond to community
               reviews.
             </Text>

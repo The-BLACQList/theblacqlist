@@ -51,7 +51,7 @@ export function TemplateInquiryBand({ entity }: Props) {
               id="inquire-heading"
               className="font-headline text-[23px] md:text-[32px] text-white max-w-[24ch] text-balance"
             >
-              Claim Your Official BLACQList Page
+              Claim Your Official Page on The BLACQList
             </h2>
             <div className="flex items-center gap-3 flex-wrap mt-6">
               <Link

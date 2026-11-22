@@ -113,7 +113,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h1 className="font-headline text-2xl md:text-3xl text-brand-black">
-                BLACQList Events
+                Events on The BLACQList
               </h1>
               <p className="font-subhead text-sm text-charcoal mt-1.5 max-w-xl">
                 Pop-ups, markets, networking nights, and cultural experiences, hosted by and for the

@@ -6,7 +6,7 @@ import { TermsOfService } from '../TermsOfService'
 
 export const metadata: Metadata = {
   title: 'Updated Terms of Service | The BLACQList',
-  description: 'The updated BLACQList Terms of Service, before they take effect.',
+  description: "The BLACQList's updated Terms of Service, before they take effect.",
   robots: { index: false, follow: true },
 }
 

@@ -6,7 +6,7 @@ import { PrivacyPolicy } from '../PrivacyPolicy'
 
 export const metadata: Metadata = {
   title: 'Updated Privacy Policy | The BLACQList',
-  description: 'The updated BLACQList Privacy Policy, before it takes effect.',
+  description: "The BLACQList's updated Privacy Policy, before it takes effect.",
   robots: { index: false, follow: true },
 }
 

@@ -7,7 +7,7 @@ import { STOREFRONT_TIERS } from '@/lib/marketplace/visibility'
 import { ServiceCard } from '@/components/marketplace/ServiceCard'
 
 export const metadata: Metadata = {
-  title: 'Services | BLACQList Marketplace',
+  title: 'Services | The BLACQList Marketplace',
   description: 'Book and hire services from Black-owned businesses. Virtual, in-person, and more.',
 }
 

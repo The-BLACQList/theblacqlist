@@ -11,7 +11,7 @@ const LABELS: Record<TrustTier, string> = {
   unclaimed: 'Unclaimed',
   claimed: 'Claimed',
   verified: 'Verified',
-  certified: 'BLACQList Certified',
+  certified: 'Certified by The BLACQList',
 }
 
 /** The TrustMark rung for a tier: the ladder order, 0 to 3. */

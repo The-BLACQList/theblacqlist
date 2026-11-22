@@ -125,7 +125,7 @@ const LADDER = [
   },
   {
     tier: 3,
-    name: 'BLACQList Certified',
+    name: 'Certified by The BLACQList',
     line: "5 or more reviews, an average of 3.5 or better, 90 days since the claim, and complete details. It's automatic. Nobody can buy it.",
   },
 ] as const

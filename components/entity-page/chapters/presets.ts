@@ -174,7 +174,7 @@ export const PROFESSIONAL_PRESET: ProfessionalPreset = {
     photo('pro-skyline', 'The view from the office'),
     photo('pro-meeting', 'The main meeting room'),
   ],
-  offersLede: 'For BLACQList members and companies new to the firm.',
+  offersLede: 'For members of The BLACQList and companies new to the firm.',
   booking: {
     title: 'Start with a Discovery Call',
     facts: ['Thirty minutes with a partner', 'No pitch', 'Reply within one business day'],

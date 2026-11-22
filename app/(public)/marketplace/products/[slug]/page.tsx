@@ -27,11 +27,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .in('listings.tier', STOREFRONT_TIERS)
     .maybeSingle()
 
-  if (!data) return { title: 'Product | BLACQList Marketplace' }
+  if (!data) return { title: 'Product | The BLACQList Marketplace' }
 
   return {
-    title: `${data.name} | BLACQList Marketplace`,
-    description: data.description ?? `Shop ${data.name} on BLACQList Marketplace.`,
+    title: `${data.name} | The BLACQList Marketplace`,
+    description: data.description ?? `Shop ${data.name} on The BLACQList Marketplace.`,
   }
 }
 

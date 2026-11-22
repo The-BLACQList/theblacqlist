@@ -45,7 +45,7 @@ const TIER_CONFIG: Record<TrustTier, TierConfig> = {
     Icon: CheckCircle,
   },
   certified: {
-    label: 'BLACQList Certified',
+    label: 'Certified',
     bgClass: 'bg-gold', // champagne gold — top tier
     textClass: 'text-brand-black',
     Icon: Star,

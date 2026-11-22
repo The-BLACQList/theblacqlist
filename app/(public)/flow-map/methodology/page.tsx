@@ -56,7 +56,7 @@ export default function FlowMapMethodologyPage() {
               </span>
             </p>
             <p>
-              A dollar enters this dataset when someone reports paying it to a business on the
+              A dollar enters this dataset when someone reports paying it to a business on The
               BLACQList and a reviewer approves that receipt. Nothing follows the dollar after that.
               What the business goes on to pay its suppliers, its staff, or its landlord is not
               something we can see, and we do not model or estimate it.
@@ -180,7 +180,7 @@ export default function FlowMapMethodologyPage() {
               </li>
               <li>
                 <span className="font-semibold">Businesses supported</span> &mdash; how many
-                distinct businesses on the BLACQList those receipts name. A receipt for a business
+                distinct businesses on The BLACQList those receipts name. A receipt for a business
                 we do not list yet still counts toward the total above, and toward nothing else.
                 That is why the headline and the tables can legitimately disagree.
               </li>

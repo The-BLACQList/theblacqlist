@@ -104,7 +104,7 @@ export function ExampleBanner({ variant, query = '' }: Props) {
               >
                 {CC_BY_3_LABEL}
               </a>
-              . Logos are BLACQList artwork.
+              . Logos are The BLACQList&apos;s own artwork.
             </p>
           </details>
         </div>

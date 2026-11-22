@@ -130,7 +130,7 @@ export function NameStep({ answers, onChange, problem, mode }: StepProps) {
         >
           <div>
             <h3 id="qs-claim-title" className="font-subhead text-base font-bold text-brand-black">
-              Already on BLACQList?
+              Already on The BLACQList?
             </h3>
             <p className={HINT_CLASS}>
               If your business is already listed, use that page instead of adding a new one.

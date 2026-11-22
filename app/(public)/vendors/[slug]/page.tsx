@@ -79,12 +79,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
   const storefront = await getStorefront(slug)
 
-  if (!storefront) return { title: 'Vendor | BLACQList Marketplace' }
+  if (!storefront) return { title: 'Vendor | The BLACQList Marketplace' }
 
   const { listing } = storefront
   return {
-    title: `${listing.name} | BLACQList Marketplace`,
-    description: listing.tagline ?? `Shop products and services from ${listing.name} on BLACQList.`,
+    title: `${listing.name} | The BLACQList Marketplace`,
+    description:
+      listing.tagline ?? `Shop products and services from ${listing.name} on The BLACQList.`,
   }
 }
 

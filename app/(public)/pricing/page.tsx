@@ -56,7 +56,7 @@ function faqItems(growthOpen: boolean, aiOn: boolean) {
   return [
     {
       q: 'Is listing my business really free?',
-      a: 'Yes. A BLACQList Page is free forever: your hours, contact info, website, a short description, up to 3 photos, and community reviews. Claiming it and getting Verified are free too. No credit card required.',
+      a: 'Yes. A page on The BLACQList is free forever: your hours, contact info, website, a short description, up to 3 photos, and community reviews. Claiming it and getting Verified are free too. No credit card required.',
     },
     {
       q: 'What does Starter add?',
@@ -93,7 +93,7 @@ function faqItems(growthOpen: boolean, aiOn: boolean) {
     },
     {
       q: 'What is a Sponsored Spotlight?',
-      a: 'A high-visibility paid placement on the BLACQList homepage, city pages, and category views, with limited inventory. It is not available for purchase yet — pricing will be published when it opens.',
+      a: 'A high-visibility paid placement on The BLACQList homepage, city pages, and category views, with limited inventory. It is not available for purchase yet — pricing will be published when it opens.',
     },
     {
       q: 'What is BLACQ Boost?',
@@ -146,7 +146,7 @@ export default async function PricingPage() {
       {/* Header */}
       <Section variant="pale-lavender">
         <PageHeader
-          title="BLACQList Pricing"
+          title="The BLACQList Pricing"
           subtitle={
             growthOpen
               ? `Getting listed is always free. ${aiLead}Starter adds the full page layout, more photos, review replies, and a simple analytics dashboard. Growth adds a storefront, events, job postings, and advanced analytics over 12 months. Pay monthly or save about 20% with annual billing. Premium is on the way.`
@@ -202,7 +202,7 @@ export default async function PricingPage() {
             </span>
             <h3 className="font-headline text-lg text-brand-black mb-1">Sponsored Spotlight</h3>
             <p className="font-subhead text-sm text-charcoal mb-4">
-              High-visibility placement on the BLACQList homepage, city pages, and category views.
+              High-visibility placement on The BLACQList homepage, city pages, and category views.
               Limited inventory. Pricing will be published when it opens.
             </p>
             <Button
