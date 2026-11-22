@@ -141,9 +141,17 @@ export function planCompareGroups(): CompareGroup[] {
         row('Reply to reviews in public', gate('review_response')),
       ],
     },
+    // Ticket 242 (founder, 2026-11-21): what AI helps with, by plan, then how
+    // often. Each row reads the gate the agents behind it check.
     {
-      title: 'AI Writing Help',
-      rows: [row('Drafts every 30 days, per page', (t) => aiQuota(t) ?? null)],
+      title: 'AI Help',
+      rows: [
+        row('Page text and Instagram captions', gate('ai_suggestions')),
+        row('Review replies and Happening Now posts', gate('ai_suggestions')),
+        row('A monthly read of your numbers', gate('ai_suggestions')),
+        row('Product, service, event, and job descriptions', gate('ai_item_writeups')),
+        row('Times a month, per page', (t) => aiQuota(t) ?? null),
+      ],
     },
     {
       title: 'Analytics',

@@ -1,8 +1,11 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useRef, useState } from 'react'
 import { Loader2, AlertCircle, CheckCircle } from 'lucide-react'
 import { updateJobDetailsAction } from '@/lib/actions/dashboard/updateJobDetails'
+import { ItemWriteHelp } from '@/components/ai/ItemWriteHelp'
+import type { ItemHelp } from '@/lib/ai/itemHelp'
+import type { ItemInput } from '@/lib/ai/itemFacts'
 import { easternToday } from '@/lib/validations/postJob'
 import {
   JOB_EMPLOYMENT_TYPES,
@@ -29,8 +32,12 @@ interface JobValues {
 
 interface Props {
   listingId: string
+  /** The job title (the listing's name), which AI help writes about. */
+  title?: string
   job: JobValues | null
   businesses: { id: string; name: string }[]
+  /** Ticket 242: AI help under About This Role. Null hides it. */
+  aiHelp?: ItemHelp
 }
 
 /**
@@ -49,9 +56,39 @@ const inputCls =
   'w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40'
 const labelCls = 'block font-subhead text-xs font-semibold text-charcoal-soft mb-1'
 
-export function JobDetailsSection({ listingId, job, businesses }: Props) {
+export function JobDetailsSection({
+  listingId,
+  title = '',
+  job,
+  businesses,
+  aiHelp = null,
+}: Props) {
   const [state, formAction, isPending] = useActionState(updateJobDetailsAction, null)
   const [workplaceType, setWorkplaceType] = useState(job?.workplace_type ?? 'on-site')
+  const formRef = useRef<HTMLFormElement>(null)
+  const descRef = useRef<HTMLTextAreaElement>(null)
+
+  // What the form says so far, saved or not. Pay goes in only as the owner
+  // typed it, so the write-up never names a figure they didn't.
+  function jobItem(): ItemInput | null {
+    if (!title.trim() || !formRef.current) return null
+    const data = new FormData(formRef.current)
+    const read = (key: string) => data.get(key)?.toString().trim() ?? ''
+    const label = (meta: Record<string, { label: string }>, key: string) => meta[key]?.label ?? null
+    const amounts = [read('salary_min'), read('salary_max')].filter(Boolean).map((n) => '$' + n)
+    const period = label(JOB_SALARY_PERIOD_META, read('salary_period'))
+    const pay = amounts.length
+      ? [amounts.join(' to '), period ? period.toLowerCase() : ''].filter(Boolean).join(' ')
+      : null
+    return {
+      kind: 'job',
+      title,
+      employmentType: label(JOB_EMPLOYMENT_TYPE_META, read('employment_type')),
+      workplaceType: label(JOB_WORKPLACE_TYPE_META, read('workplace_type')),
+      pay,
+      notes: read('description') || null,
+    }
+  }
 
   const fieldErr = (f: string) => (state && 'field' in state && state.field === f ? state.error : null)
 
@@ -64,7 +101,7 @@ export function JobDetailsSection({ listingId, job, businesses }: Props) {
         </p>
       </div>
 
-      <form action={formAction} className="px-5 py-4 space-y-4">
+      <form ref={formRef} action={formAction} className="px-5 py-4 space-y-4">
         <input type="hidden" name="listing_id" value={listingId} />
         <input type="hidden" name="salary_currency" value={job?.salary_currency ?? 'USD'} />
 
@@ -296,6 +333,7 @@ export function JobDetailsSection({ listingId, job, businesses }: Props) {
             About This Role
           </label>
           <textarea
+            ref={descRef}
             id="jb-desc"
             name="description"
             rows={5}
@@ -304,6 +342,19 @@ export function JobDetailsSection({ listingId, job, businesses }: Props) {
             className={`${inputCls} resize-y`}
             placeholder="What the work is, who it's for, what you're looking for."
           />
+          <div className="mt-2">
+            <ItemWriteHelp
+              listingId={listingId}
+              agentType="job_description"
+              help={aiHelp}
+              getItem={jobItem}
+              missing="Give the job a title first, then ask."
+              getValue={() => descRef.current?.value ?? ''}
+              setValue={(text) => {
+                if (descRef.current) descRef.current.value = text.slice(0, 2000)
+              }}
+            />
+          </div>
         </div>
 
         {state && 'error' in state && !('field' in state && state.field) && (

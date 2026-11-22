@@ -138,6 +138,8 @@ export function UpgradePlans({
                       </li>
                     ))}
                   </ul>
+                  {/* Ticket 242: how often AI help can be used, as small print. */}
+                  {plan.finePrint && <p className="font-subhead text-[11px] text-charcoal-soft mt-2">{plan.finePrint}</p>}
                 </div>
               )}
 

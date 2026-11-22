@@ -7,6 +7,8 @@ import type {
   WeeklyHours,
 } from '@/types'
 import { toTitleCase } from '@/lib/text/title-case'
+import type { ItemHelp } from '@/lib/ai/itemHelp'
+import { reviewReplyHelp } from '@/lib/ai/itemHelpServer'
 import { TIER_MEANING } from '@/components/ui/status-badge'
 import {
   getCtaHref,
@@ -331,6 +333,8 @@ export interface LiveView {
   reviewCriteria: ReviewCriterion[]
   hasReviews: boolean
   isOwner: boolean
+  /** Ticket 242: AI help under the owner's reply box. Null for everyone else. */
+  replyHelp?: ItemHelp
   claimHref: string | null
 }
 
@@ -495,6 +499,7 @@ function liveView(entity: EntityPageData, viewer: LiveInput): LiveView {
   const canReview = !viewer.isOwner && !viewer.hasReviewed
   return {
     listingId: entity.id,
+    replyHelp: viewer.isOwner ? reviewReplyHelp(entity.tier) : null,
     listingSlug: entity.slug,
     listingName: entity.name,
     cityName: entity.city?.name ?? null,

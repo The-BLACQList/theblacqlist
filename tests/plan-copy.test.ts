@@ -64,14 +64,45 @@ describe('AI lines match the AI quota', () => {
     for (const line of getPlanMeta('free').features) expect(line).not.toMatch(/\bAI\b/)
   })
 
-  it('each paid plan names its quota, right after "Everything in"', () => {
+  // Ticket 242 (founder, 2026-11-21): the line says what AI helps with; the
+  // number sits in the card's small print.
+  it('each paid plan lists the jobs AI helps with, right after "Everything in"', () => {
     for (const slug of ['starter', 'growth', 'premium'] as const) {
       const features = getPlanMeta(slug).features
       expect(features[0]).toMatch(/^Everything in /)
-      expect(features[1]).toBe(`AI writing help: ${aiQuota(slug)} drafts every 30 days`)
+      expect(features[1]).toMatch(/\bAI help\b/)
+      expect(features[1]).not.toMatch(/\d/)
     }
-    expect(getPlanMeta('starter').features[1]).toBe('AI writing help: 10 drafts every 30 days')
-    expect(getPlanMeta('growth').features[1]).toBe('AI writing help: 100 drafts every 30 days')
+    expect(getPlanMeta('starter').features[1]).toBe(
+      'AI help with your page text, Instagram captions, review replies, and Happening now posts, plus a monthly read of your numbers'
+    )
+    expect(getPlanMeta('growth').features[1]).toBe(
+      'AI help with product, service, event, and job descriptions too'
+    )
+    expect(getPlanMeta('premium').features[1]).toBe('The most AI help of any plan')
+  })
+
+  it('the small print names the quota per page, from aiQuota', () => {
+    expect(getPlanMeta('free').finePrint).toBeUndefined()
+    expect(getPlanMeta('starter').finePrint).toBe(
+      `AI help up to ${aiQuota('starter')} times a month per page.`
+    )
+    expect(getPlanMeta('growth').finePrint).toBe(
+      `AI help up to ${aiQuota('growth')} times a month per page (Starter has ${aiQuota('starter')}).`
+    )
+    expect(getPlanMeta('premium').finePrint).toBe(
+      `AI help up to ${aiQuota('premium')} times a month per page (Growth has ${aiQuota('growth')}).`
+    )
+  })
+
+  it('never says "drafts" or names the helper', () => {
+    for (const slug of ['free', 'starter', 'growth', 'premium'] as const) {
+      const meta = getPlanMeta(slug)
+      for (const line of [...meta.features, meta.finePrint ?? '']) {
+        expect(line).not.toMatch(/drafts?\b/i)
+        expect(line).not.toMatch(/\bCue\b/)
+      }
+    }
   })
 })
 

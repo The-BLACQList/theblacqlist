@@ -11,6 +11,11 @@ export interface PlanMeta {
   price_monthly: number
   price_yearly: number
   features: string[]
+  /**
+   * Small print under the bullets (ticket 242): how often AI help can be used.
+   * Hidden with the bullets on a card that cannot be bought.
+   */
+  finePrint?: string
   cta: string
   highlighted: boolean
 }
@@ -37,8 +42,8 @@ export interface PlanMeta {
 // 1-day support came off until they are built and staffed. Premium is not for
 // sale; a card that cannot be bought renders no bullets (PricingPlans,
 // UpgradePlans), and Premium's list holds only what we can realistically build.
-// AI writing help is live (2026-10-16), so each paid plan's AI line comes from
-// aiQuota() and names the same number the quota enforces (ticket 146, 2026-10-29).
+// AI help is live (2026-10-16). Each paid plan's small print comes from
+// aiQuota() and names the same number the quota enforces (tickets 146 and 242).
 // Ticket 238: a plan belongs to the owner and covers some of their pages. The
 // number comes from pageCap(), the same one the database enforces. Free has no
 // line: the founder chose (2026-11-21) not to state anything about extra pages.
@@ -47,12 +52,31 @@ function pagesLine(slug: PlanSlug): string {
   return cap === 1 ? 'Covers 1 of your pages' : `Covers up to ${cap} of your pages`
 }
 
-// The plan's AI writing help line, with the number the quota enforces.
-function aiLine(slug: PlanSlug): string {
+// Ticket 242 (founder, 2026-11-21): each plan says what AI helps with, and the
+// number sits in the small print. Never "drafts", and no assistant name. Each
+// line is true because the agents behind it check the same gates
+// (lib/ai/agents.ts `gate`): Starter's from `ai_suggestions`, Growth's
+// write-ups from `ai_item_writeups`.
+const AI_JOBS: Record<Exclude<PlanSlug, 'free'>, string> = {
+  starter:
+    'AI help with your page text, Instagram captions, review replies, and Happening now posts, plus a monthly read of your numbers',
+  growth: 'AI help with product, service, event, and job descriptions too',
+  premium: 'The most AI help of any plan',
+}
+
+function aiLine(slug: Exclude<PlanSlug, 'free'>): string {
+  return AI_JOBS[slug]
+}
+
+/** "AI help up to 50 times a month per page (Starter has 20)." The number is the quota enforced. */
+export function aiFinePrint(slug: PlanSlug): string | undefined {
   const quota = aiQuota(slug)
-  return quota === null
-    ? 'AI writing help: unlimited drafts'
-    : `AI writing help: ${quota} drafts every 30 days`
+  if (quota === 0) return undefined
+  if (quota === null) return 'AI help with no monthly limit.'
+  const below = slug === 'growth' ? 'starter' : slug === 'premium' ? 'growth' : null
+  const belowQuota = below ? aiQuota(below) : null
+  const was = below && belowQuota ? ` (${below === 'starter' ? 'Starter' : 'Growth'} has ${belowQuota})` : ''
+  return `AI help up to ${quota} times a month per page${was}.`
 }
 
 // Ticket 239 (founder, 2026-11-21): side by side, it must be obvious how much
@@ -104,6 +128,7 @@ export const PLANS: PlanMeta[] = [
       'Reply to reviews in public',
       'A simple analytics dashboard: views, saves, and taps over the last 30 days',
     ],
+    finePrint: aiFinePrint('starter'),
     cta: 'Upgrade to Starter',
     highlighted: false,
   },
@@ -127,6 +152,7 @@ export const PLANS: PlanMeta[] = [
       'Up to 2 extra buttons on your page (Starter has 1)',
       'Advanced analytics: 12 months (Starter has 30 days), each number compared with the period before, and numbers for your events and jobs',
     ],
+    finePrint: aiFinePrint('growth'),
     cta: 'Upgrade to Growth',
     highlighted: true,
   },
@@ -151,6 +177,7 @@ export const PLANS: PlanMeta[] = [
       'Your community spend view, once 5 or more receipts are logged',
       'A named support contact',
     ],
+    finePrint: aiFinePrint('premium'),
     cta: 'Upgrade to Premium',
     highlighted: false,
   },

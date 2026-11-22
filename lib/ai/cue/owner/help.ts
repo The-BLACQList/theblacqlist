@@ -39,7 +39,8 @@ function plansText(openTiers: ReadonlySet<PlanSlug>): string {
   const lines = PLANS.map((p) => {
     if (p.slug === 'free') return `Free ($0): ${p.features.join('; ')}.`
     if (!openTiers.has(p.slug)) return `${p.name}: not on sale yet.`
-    return `${p.name} ($${p.price_monthly} a month, or $${p.price_yearly} a year): ${p.features.join('; ')}.`
+    const small = p.finePrint ? ` ${p.finePrint}` : ''
+    return `${p.name} ($${p.price_monthly} a month, or $${p.price_yearly} a year): ${p.features.join('; ')}.${small}`
   })
   return [
     ...lines,
@@ -82,7 +83,7 @@ const STATIC: Record<Exclude<OwnerHelpTopic, 'plans'>, string> = {
   ].join(' '),
   google: [
     'Your search title and search description are what Google can show for your page. They are on the More tab, in the Google card.',
-    'Keep the title under 60 characters and the description under 160, and say what you offer and where. Writing help can draft both.',
+    'Keep the title under 60 characters and the description under 160, and say what you offer and where. AI help can write both.',
   ].join(' '),
   verification: [
     'Get Verified (under This page in the sidebar) walks you through showing the page is yours. It is free on every plan.',
@@ -93,9 +94,14 @@ const STATIC: Record<Exclude<OwnerHelpTopic, 'plans'>, string> = {
     'Growth and Premium add advanced analytics: up to 12 months, each number compared with the period before, and views and taps for the events and jobs you post.',
     'More photos, hours, a main button and a full About usually bring more views and taps.',
   ].join(' '),
+  // Ticket 242 (founder, 2026-11-21): say what AI helps with, never "drafts",
+  // and never give the helper a name.
   writing_help: [
-    `Writing help drafts your About, search title and search description from what is on your page. It comes with Starter (${count(aiQuota('starter'), 'draft')} every 30 days), Growth (${count(aiQuota('growth'), 'draft')}) and Premium (${count(aiQuota('premium'), 'draft')}), up to ${RATE_LIMIT_PER_LISTING_24H} a day per page.`,
-    'A draft never goes on your page by itself: you read it, then choose Use this, or set it aside. The more your page says (services, details, a line about what you do), the better the draft.',
+    'AI help writes your About, search title, search description and Instagram captions, replies to your reviews and Happening now posts, and explains your numbers each month. It comes with Starter and up.',
+    'Growth and Premium add product, service, event and job descriptions.',
+    `It can be used up to ${aiQuota('starter')} times a month per page on Starter, ${aiQuota('growth')} on Growth and ${aiQuota('premium')} on Premium, and up to ${RATE_LIMIT_PER_LISTING_24H} times a day per page.`,
+    'Look for the Write buttons: under your About and search text on Edit content, under each review reply box, on a Happening now post, and under the description of a service, event or job.',
+    'Nothing goes on your page or gets sent by itself: you read it, choose Use this or set it aside, and only your own Save or Send puts it live. The more your page says, the better it writes.',
   ].join(' '),
   import_site: [
     'Import from my website, at the top of Edit content, reads your site and shows what it found next to what your page has now: name, About, phone, email, address, hours, social links and photos.',

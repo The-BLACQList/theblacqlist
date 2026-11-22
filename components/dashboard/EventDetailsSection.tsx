@@ -1,8 +1,11 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useRef, useState } from 'react'
 import { Loader2, AlertCircle, CheckCircle } from 'lucide-react'
 import { updateEventDetailsAction } from '@/lib/actions/dashboard/updateEventDetails'
+import { ItemWriteHelp } from '@/components/ai/ItemWriteHelp'
+import type { ItemHelp } from '@/lib/ai/itemHelp'
+import type { ItemInput } from '@/lib/ai/itemFacts'
 
 interface EventValues {
   starts_at: string | null
@@ -20,8 +23,12 @@ interface EventValues {
 
 interface Props {
   listingId: string
+  /** The event's name, which AI help writes about. */
+  name?: string
   event: EventValues | null
   businesses: { id: string; name: string }[]
+  /** Ticket 242: AI help under About This Event. Null hides it. */
+  aiHelp?: ItemHelp
 }
 
 function toLocalInput(iso: string | null): string {
@@ -36,9 +43,38 @@ const inputCls =
   'w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40'
 const labelCls = 'block font-subhead text-xs font-semibold text-charcoal-soft mb-1'
 
-export function EventDetailsSection({ listingId, event, businesses }: Props) {
+export function EventDetailsSection({
+  listingId,
+  name = '',
+  event,
+  businesses,
+  aiHelp = null,
+}: Props) {
   const [state, formAction, isPending] = useActionState(updateEventDetailsAction, null)
   const [isOnline, setIsOnline] = useState(event?.is_online ?? false)
+  const formRef = useRef<HTMLFormElement>(null)
+  const descRef = useRef<HTMLTextAreaElement>(null)
+
+  // What the form says so far, saved or not. The server checks and trims it.
+  function eventItem(): ItemInput | null {
+    if (!name.trim() || !formRef.current) return null
+    const data = new FormData(formRef.current)
+    const read = (key: string) => data.get(key)?.toString().trim() ?? ''
+    const starts = read('starts_at')
+    const when = starts
+      ? new Date(starts).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short' })
+      : ''
+    const where = isOnline
+      ? 'Online'
+      : [read('venue_name'), read('city_text'), read('state_text')].filter(Boolean).join(', ')
+    return {
+      kind: 'event',
+      name,
+      when: when || null,
+      where: where || null,
+      notes: read('description') || null,
+    }
+  }
 
   const fieldErr = (f: string) => (state && 'field' in state && state.field === f ? state.error : null)
 
@@ -51,7 +87,7 @@ export function EventDetailsSection({ listingId, event, businesses }: Props) {
         </p>
       </div>
 
-      <form action={formAction} className="px-5 py-4 space-y-4">
+      <form ref={formRef} action={formAction} className="px-5 py-4 space-y-4">
         <input type="hidden" name="listing_id" value={listingId} />
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -230,6 +266,7 @@ export function EventDetailsSection({ listingId, event, businesses }: Props) {
             About This Event
           </label>
           <textarea
+            ref={descRef}
             id="ev-desc"
             name="description"
             rows={4}
@@ -238,6 +275,19 @@ export function EventDetailsSection({ listingId, event, businesses }: Props) {
             className={`${inputCls} resize-y`}
             placeholder="What's happening, who it's for, what to expect."
           />
+          <div className="mt-2">
+            <ItemWriteHelp
+              listingId={listingId}
+              agentType="event_description"
+              help={aiHelp}
+              getItem={eventItem}
+              missing="Give the event a name first, then ask."
+              getValue={() => descRef.current?.value ?? ''}
+              setValue={(text) => {
+                if (descRef.current) descRef.current.value = text.slice(0, 2000)
+              }}
+            />
+          </div>
         </div>
 
         {state && 'error' in state && !('field' in state && state.field) && (

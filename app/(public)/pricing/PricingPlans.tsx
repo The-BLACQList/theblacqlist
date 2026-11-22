@@ -121,6 +121,8 @@ export function PricingPlans({
                       </li>
                     ))}
                   </ul>
+                  {/* Ticket 242: how often AI help can be used, as small print. */}
+                  {plan.finePrint && <p className="font-subhead text-xs text-charcoal-soft mt-3">{plan.finePrint}</p>}
                 </div>
               )}
 
