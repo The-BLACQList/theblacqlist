@@ -257,7 +257,13 @@ const QUESTION_LEAD: ReadonlySet<string> = new Set([
   'how', 'what', 'whats', 'where', 'wheres', 'who', 'which', 'can', 'could', 'do', 'does', 'did',
   'i', 'im', 'is', 'are', 'there', 'get', 'find', 'need', 'want', 'looking', 'please', 'for',
   'to', 'a', 'an', 'some', 'any', 'show', 'me', 'tell',
+  // Follow-ups in the /search thread (ticket 258): "and lotion?", "do you have lotion".
+  'and', 'also', 'you', 'have', 'got',
 ])
+
+// Taken off only after a question word, so "About Face Salon" keeps its name
+// while "what about lotion" echoes as "lotion".
+const AFTER_LEAD: ReadonlySet<string> = new Set(['about', 'else'])
 
 /**
  * The visitor's words to echo back when the search as typed found something:
@@ -268,7 +274,11 @@ const QUESTION_LEAD: ReadonlySet<string> = new Set([
 export function echoWords(text: string): string {
   const { rest } = withoutIdentity(normalizeQuery(text).split(' ').filter(Boolean))
   let start = 0
-  while (start < rest.length && QUESTION_LEAD.has(rest[start]!)) start++
+  while (
+    start < rest.length &&
+    (QUESTION_LEAD.has(rest[start]!) || (start > 0 && AFTER_LEAD.has(rest[start]!)))
+  )
+    start++
   const echo = rest.slice(start)
   return echo.length > 0 ? echo.join(' ') : queryWords(text).words.join(' ')
 }

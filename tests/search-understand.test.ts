@@ -163,6 +163,16 @@ describe('echoWords (ticket 257)', () => {
     expect(echoWords('where can I get')).toBe('')
     expect(echoWords('can I get a haircut')).toBe('haircut')
   })
+
+  it('takes the follow-up opening off too (ticket 258)', () => {
+    expect(echoWords('What about lotion?')).toBe('lotion')
+    expect(echoWords('how about shea butter')).toBe('shea butter')
+    expect(echoWords('and lotion?')).toBe('lotion')
+    expect(echoWords('do you have body wash')).toBe('body wash')
+    expect(echoWords('what else is there')).toBe('')
+    // A name that starts with "about" keeps it.
+    expect(echoWords('About Face Salon')).toBe('about face salon')
+  })
 })
 
 describe('intent families after the live eval (ticket 257)', () => {
