@@ -943,6 +943,56 @@ export function stepZoom(zoom: number, dir: 1 | -1): number {
 }
 
 /**
+ * Phone full-screen (ticket 248). Zoom per natural-log unit of finger spread:
+ * pinching the fingers to half their gap backs out about 0.7 of the way.
+ */
+export const PINCH = { perLog: 1, startPx: 8 } as const
+
+/**
+ * A two-finger pinch: `startZoom` when the fingers were `startGap` apart, now
+ * `gap` apart. Fingers together back out toward the whole tower (1); fingers
+ * apart move in, never past ZOOM.min. A gap of 0 (one finger lifted) holds.
+ */
+export function pinchZoom(startZoom: number, startGap: number, gap: number): number {
+  if (startGap <= 0 || gap <= 0) return startZoom
+  const z = startZoom + Math.log(startGap / gap) * PINCH.perLog
+  return Math.min(1, Math.max(ZOOM.min, z))
+}
+
+/** Radians a second the phone preview turns on its own (ticket 248): a lap in about 90 s. */
+/**
+ * Phone full-screen swipes (ticket 248, round 2). Up and down travels the
+ * floors: two screens of swipe cover the whole tower, as two screens of page
+ * scroll do on a desktop. On release the view settles on a floor; a flick
+ * carries it at most half a floor further.
+ * Sideways turns, with a softer coast than a mouse, so a flick can't jump.
+ */
+export const SWIPE = { screens: 2, glideMax: 0.5, spinMax: 1.2, flingS: 0.2 } as const
+
+/** Track travel for a finger moving `dy` px on a stage `height` px tall. Up goes down. */
+export function swipeTravel(dy: number, height: number): number {
+  if (height <= 0) return 0
+  return -dy / (height * SWIPE.screens)
+}
+
+/** Where a released swipe settles: the floor nearest where its speed was taking it. */
+export function swipeLanding(t: number, glide: number, shape = SILO): number {
+  const aim = Math.min(1, Math.max(0, t + glide * SWIPE.flingS))
+  let best = t
+  let bestGap = Infinity
+  shape.y.forEach((_, i) => {
+    const floorT = scrollForFloor(i, shape)
+    if (Math.abs(floorT - aim) < bestGap) {
+      bestGap = Math.abs(floorT - aim)
+      best = floorT
+    }
+  })
+  return best
+}
+
+export const PREVIEW_SPIN = (Math.PI * 2) / 90
+
+/**
  * Where Recenter goes (ticket 247): the opening heading, tilt and distance,
  * inside the tower, with nothing picked. The level stays where the reader is.
  */
