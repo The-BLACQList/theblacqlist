@@ -261,3 +261,20 @@ describe('getEnabledFeatures', () => {
     expect(getEnabledFeatures()).toEqual(['ocrExtraction'])
   })
 })
+
+describe('meaning search (ticket 259)', () => {
+  it.each(['production', 'preview', 'development'])('stays off in a bare %s deployment', async (env) => {
+    // It sends listing text (and, from 260, search words) to Voyage AI, a
+    // provider the live privacy policy names only while it is on.
+    const { isFeatureEnabled } = await loadEnv({ VERCEL_ENV: env })
+    expect(isFeatureEnabled('semanticSearch')).toBe(false)
+  })
+
+  it('opens only when set to true', async () => {
+    const { isFeatureEnabled } = await loadEnv({
+      VERCEL_ENV: 'preview',
+      FEATURE_SEMANTIC_SEARCH: 'true',
+    })
+    expect(isFeatureEnabled('semanticSearch')).toBe(true)
+  })
+})

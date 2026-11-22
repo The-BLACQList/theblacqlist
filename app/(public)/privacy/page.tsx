@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { isFeatureEnabled } from '@/lib/env'
 import { PolicyUpdateBanner } from '@/components/legal/PolicyUpdateBanner'
 import { isPolicyUpdateInEffect, livePolicyVersion } from '@/lib/legal/policyUpdate'
 import { PrivacyPolicy } from './PrivacyPolicy'
@@ -18,6 +19,7 @@ export default function PrivacyPage() {
   return (
     <PrivacyPolicy
       version={livePolicyVersion()}
+      meaningSearch={isFeatureEnabled('semanticSearch')}
       notice={
         inEffect ? undefined : (
           <PolicyUpdateBanner kind="coming" docName="Privacy Policy" href="/privacy/upcoming" />

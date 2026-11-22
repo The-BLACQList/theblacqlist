@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { isFeatureEnabled } from '@/lib/env'
 import { permanentRedirect } from 'next/navigation'
 import { PolicyUpdateBanner } from '@/components/legal/PolicyUpdateBanner'
 import { isPolicyUpdateInEffect } from '@/lib/legal/policyUpdate'
@@ -19,6 +20,7 @@ export default function UpcomingPrivacyPage() {
   return (
     <PrivacyPolicy
       version="next"
+      meaningSearch={isFeatureEnabled('semanticSearch')}
       notice={<PolicyUpdateBanner kind="preview" docName="Privacy Policy" href="/privacy" />}
     />
   )
