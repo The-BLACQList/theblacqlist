@@ -1,6 +1,6 @@
 # Ticket 270: Ride the Tower Freely and Look Up or Down on a Phone
 
-**Status:** Built on `feat/270-collective-phone-ride-look`, 2026-11-22. Not merged.
+**Status:** Merged #400 (`135c9c4`), 2026-11-22. Founder checked it on iPhone.
 
 Founder (2026-11-22, iPhone, full-screen map):
 
