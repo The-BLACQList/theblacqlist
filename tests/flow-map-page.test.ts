@@ -5,8 +5,9 @@
 // summary cards with the Silo. This suite pins what the page must keep doing
 // through that change, and the a11y and loading rules the Silo adds:
 //
-//   1. Every named per-business or per-city read stays gated at
-//      AGGREGATE_MIN_TRANSACTIONS, and the community total still leaves out
+//   1. Every named per-business or per-city figure stays gated at
+//      AGGREGATE_MIN_TRANSACTIONS (lines show from LINK_MIN_TRANSACTIONS,
+//      ticket 250), and the community total still leaves out
 //      receipts kept out of community figures.
 //   2. The Silo's rows are built on the server. Every business shows by name
 //      (ticket 171b), but amounts and counts stay server-side below the bar.
@@ -46,11 +47,31 @@ const SUPPORT = `${SILO}/use-silo-support.ts`
 describe('/flow-map data reads', () => {
   const page = read(PAGE)
 
-  it('gates every flow_nodes read at the shared threshold', () => {
+  it('gates every flow_nodes read at a shared threshold', () => {
     const reads = page.match(/\.from\('flow_nodes'\)/g) ?? []
-    const gates = page.match(/\.gte\('transaction_count', AGGREGATE_MIN_TRANSACTIONS\)/g) ?? []
+    const gates =
+      page.match(/\.gte\('transaction_count', (AGGREGATE|LINK)_MIN_TRANSACTIONS\)/g) ?? []
     expect(reads.length).toBeGreaterThan(0)
     expect(gates.length).toBe(reads.length)
+  })
+
+  // Ticket 250: business lines from 1 receipt; every figure the page publishes
+  // directly (cities) stays at the aggregate bar. buildSiloBusinesses zeroes
+  // the business figures under it (tests/silo-layout.test.ts).
+  it('reads business nodes at the line bar and city nodes at the total bar', () => {
+    expect(page).toMatch(
+      /\.eq\('node_type', 'business'\)\s*\.gte\('transaction_count', LINK_MIN_TRANSACTIONS\)/
+    )
+    expect(page).toMatch(
+      /\.eq\('node_type', 'city'\)\s*\.gte\('transaction_count', AGGREGATE_MIN_TRANSACTIONS\)/
+    )
+    expect(page).toContain('buildSiloBusinesses(')
+  })
+
+  it("draws the reader's pending line only from their own receipts in review", () => {
+    expect(page).toMatch(/r\.status === 'pending_review' && !r\.aggregate_opt_out && r\.listing_id/)
+    expect(page).toMatch(/\.from\('receipt_uploads'\)[\s\S]{0,160}\.eq\('user_id', user\.id\)/)
+    expect(page).toContain('youPendingIds,')
   })
 
   it('counts only receipts that stay in community figures', () => {

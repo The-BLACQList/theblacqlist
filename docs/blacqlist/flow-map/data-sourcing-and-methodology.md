@@ -151,6 +151,8 @@ Three properties worth stating plainly, because each one is a way a reader could
 
 **What the threshold gates:** every figure that pairs a *name* with a *number* — the business tables, the city tables, and the edges.
 
+**Lines on The Collective (ticket 250, founder 2026-11-21).** `/flow-map` draws a business's connection line from `LINK_MIN_TRANSACTIONS = 1` counted receipt, so a shopper sees their connection without waiting for four strangers. A line carries no amount and no count, and every linked business under the threshold is drawn at one size, so nothing drawn encodes a sub-threshold amount. `buildSiloBusinesses` zeroes `amountCents` and `transactionCount` (and drops amount ordering) for any business under `AGGREGATE_MIN_TRANSACTIONS` before the rows leave the server; the card says "Receipts are counted here. The total shows once 5 are in." What a 1-receipt line does disclose: that someone had a receipt approved at that business, and the ticker shows the business name with the day. No other surface (summary API, exports, community-spend) reads at the line bar; `tests/aggregate-privacy.test.ts` pins that. The reader's own receipts still in `pending_review` draw a dashed line on their own page only.
+
 **What it deliberately does not gate:** the community-wide totals. Those are one sum across everything reported and name no one; suppressing them would cost the headline figures and buy no privacy. That absence is pinned by a test so a future change cannot quietly "harden" it to zero.
 
 ### RLS posture

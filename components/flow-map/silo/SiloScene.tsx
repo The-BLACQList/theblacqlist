@@ -69,6 +69,8 @@ const BG = new THREE.Color(BG_HEX)
 const FOG_DENSITY = 0.0092
 const DRAG_THRESHOLD_PX = 5
 const LINK_SEGMENTS = 20
+/** Every linked business under the total bar draws at this one size (ticket 250). */
+const LINKED_UNCOUNTED_SIZE = 0.3
 const ATLAS_CELLS = 8
 const CELL = 128
 const GAP_HEX = '#ff8ccf'
@@ -240,11 +242,16 @@ function SceneContents(props: Inner) {
       counts.set(key, (counts.get(key) ?? 0) + 1)
     }
 
-    // Linked businesses grow with what was spent there. The rest share one
-    // size, small enough that a busy wedge doesn't pile up.
-    const max = Math.max(1, ...rows.filter((r) => r.b.linked).map((r) => r.b.amountCents))
+    // Businesses with a total showing grow with what was spent there. Linked
+    // ones under the total bar all share one size (ticket 250), so a dot never
+    // hints at one shopper's amount. The rest share a size small enough that a
+    // busy wedge doesn't pile up.
+    const max = Math.max(1, ...rows.filter((r) => r.b.figuresShown).map((r) => r.b.amountCents))
     const sized: Shown[] = rows.map((r) => {
-      if (r.b.linked) return { ...r, size: 0.22 + 0.72 * Math.sqrt(r.b.amountCents / max) }
+      if (r.b.figuresShown) {
+        return { ...r, size: 0.22 + 0.72 * Math.sqrt(r.b.amountCents / max) }
+      }
+      if (r.b.linked) return { ...r, size: LINKED_UNCOUNTED_SIZE }
       const n = counts.get(`${r.b.familyIndex}:${r.b.floorIndex}`) ?? 1
       const spacing = clusterRadius(n) * Math.sqrt(Math.PI / n)
       return { ...r, size: THREE.MathUtils.clamp(spacing * 0.55, 0.16, 0.42) }
@@ -277,6 +284,7 @@ function SceneContents(props: Inner) {
         textures={textures}
       />
       <Links shown={shown} colorBy={props.colorBy} selectedId={props.selectedId} />
+      <PendingLinks shown={shown} />
       {motion && active && <Pulses shown={shown} dot={textures.dot} />}
       <Nodes {...props} shown={shown} textures={textures} />
       <Gaps
@@ -1197,6 +1205,45 @@ function Links({
   }, [shown, colorBy, selectedId])
   useEffect(() => () => disposeAll([line]), [line])
   return <primitive object={line} />
+}
+
+/**
+ * The reader's own receipts still in review (ticket 250): a dashed gold line
+ * from their family's crowd to the business, so they see their connection the
+ * moment they send a receipt. Only the reader's own page carries `youPending`,
+ * so no one else ever sees these.
+ */
+function PendingLinks({ shown }: { shown: readonly Shown[] }) {
+  const line = useMemo(() => {
+    const pending = shown.filter((s) => s.on && s.b.youPending && !s.b.linked)
+    if (pending.length === 0) return null
+    const pos: number[] = []
+    for (const s of pending) {
+      const pts = linkCurve(s).getPoints(LINK_SEGMENTS)
+      for (let i = 0; i < LINK_SEGMENTS; i++) {
+        const p0 = pts[i]!
+        const p1 = pts[i + 1]!
+        pos.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z)
+      }
+    }
+    const obj = new THREE.LineSegments(
+      lineGeometry(pos),
+      new THREE.LineDashedMaterial({
+        color: GOLD_BRIGHT,
+        dashSize: 0.6,
+        gapSize: 0.45,
+        transparent: true,
+        opacity: 0.85,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+    )
+    obj.computeLineDistances()
+    obj.frustumCulled = false
+    return obj
+  }, [shown])
+  useEffect(() => () => (line ? disposeAll([line]) : undefined), [line])
+  return line ? <primitive object={line} /> : null
 }
 
 /** One gold pulse per link every one to two minutes (silo-layout pulseSchedule). */

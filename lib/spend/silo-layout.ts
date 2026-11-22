@@ -12,17 +12,22 @@
  *   never shows an invented amount.
  * - Shoppers are one group. No shopper is ever a dot.
  * - Every published business is a node, so the spread of businesses shows
- *   before any receipt does (ticket 171). A business is only `linked`, with a
- *   connection and a total, once AGGREGATE_MIN_TRANSACTIONS receipts are
- *   behind it.
+ *   before any receipt does (ticket 171). A business is `linked`, with a
+ *   connection, from LINK_MIN_TRANSACTIONS (1) counted receipt (ticket 250).
+ *   Its total and count only show once AGGREGATE_MIN_TRANSACTIONS receipts
+ *   are behind it (`figuresShown`). Below that, every linked dot is the same
+ *   size, so nothing drawn points back at one shopper's amount.
  * - Names show for every business (founder, 2026-10-31, ticket 171b): a
- *   published listing is already public. Lines and figures stay hidden below
- *   the threshold, because those are what could point back at one shopper.
+ *   published listing is already public.
  * - A gap is a category family with no business yet on a business floor. It
  *   is drawn as a pink dashed square and never claims dollars leave.
  */
 
-import { meetsAggregateThreshold } from './aggregate-privacy'
+import {
+  AGGREGATE_MIN_TRANSACTIONS,
+  meetsAggregateThreshold,
+  meetsLinkThreshold,
+} from './aggregate-privacy'
 import { BUSINESS_LEVELS, isBusinessLevel, type BusinessLevel } from '@/lib/listings/levels'
 
 // ─── Floors ──────────────────────────────────────────────────────────────────
@@ -98,8 +103,13 @@ export function floorSpokenLabel(floor: SiloFloor, businessCount: number): strin
 }
 
 /** The card's line about the money. Totals only show past the receipt gate. */
-export function businessFiguresText(b: SiloBusiness): string {
-  if (!b.linked) return 'Not enough receipts counted here yet to show a total.'
+export function businessFiguresText(
+  b: Pick<SiloBusiness, 'linked' | 'figuresShown' | 'amountCents' | 'transactionCount'>
+): string {
+  if (!b.linked) return 'No receipts counted here yet.'
+  if (!b.figuresShown) {
+    return `Receipts are counted here. The total shows once ${AGGREGATE_MIN_TRANSACTIONS} are in.`
+  }
   const receipts = b.transactionCount === 1 ? 'receipt' : 'receipts'
   return `${formatDollars(b.amountCents)} spent here, from ${b.transactionCount} ${receipts}.`
 }
@@ -238,16 +248,27 @@ export interface SiloBusiness {
   floorIndex: number
   familyIndex: number
   /**
-   * True once enough receipts are behind this business to show a connection
-   * and a total. False businesses are still drawn, with no link and no amount.
+   * True once a counted receipt is behind this business, so it shows a
+   * connection (ticket 250: from LINK_MIN_TRANSACTIONS). False businesses are
+   * still drawn, with no line and no amount.
    */
   linked: boolean
-  /** Zero unless linked. */
+  /**
+   * True once AGGREGATE_MIN_TRANSACTIONS receipts are behind it, so its total
+   * and count can show. Always false when `linked` is false.
+   */
+  figuresShown: boolean
+  /** Zero unless figuresShown. */
   transactionCount: number
-  /** Zero unless linked. Kept for the ordering and the list view. */
+  /** Zero unless figuresShown. Kept for the ordering, sizing and list view. */
   amountCents: number
   optedIn: boolean
   isYou: boolean
+  /**
+   * The reader has a receipt here that is still in review (ticket 250). Only
+   * ever set for that reader's own page; it draws their dashed pending line.
+   */
+  youPending: boolean
 }
 
 export interface BuildBusinessesInput {
@@ -258,6 +279,8 @@ export interface BuildBusinessesInput {
   isNameOptedIn?: (listingId: string) => boolean
   /** Listing ids the signed-in reader has a counted (approved) receipt at. */
   youIds?: ReadonlySet<string>
+  /** Listing ids the signed-in reader has a receipt in review at (ticket 250). */
+  youPendingIds?: ReadonlySet<string>
 }
 
 export function buildSiloBusinesses({
@@ -265,13 +288,15 @@ export function buildSiloBusinesses({
   listings,
   isNameOptedIn,
   youIds,
+  youPendingIds,
 }: BuildBusinessesInput): SiloBusiness[] {
   const counted = new Map<string, BusinessNodeRow>()
-  for (const n of nodes) if (meetsAggregateThreshold(n)) counted.set(n.entity_id, n)
+  for (const n of nodes) if (meetsLinkThreshold(n)) counted.set(n.entity_id, n)
 
   return Object.entries(listings)
     .map(([id, meta]) => {
       const node = counted.get(id)
+      const figuresShown = node !== undefined && meetsAggregateThreshold(node)
       const optedIn = isNameOptedIn?.(id) ?? false
       const isYou = youIds?.has(id) ?? false
       const level: BusinessLevel = isBusinessLevel(meta.level) ? meta.level : 'local'
@@ -284,16 +309,21 @@ export function buildSiloBusinesses({
         floorIndex: floorIndexForLevel(level),
         familyIndex: familyIndexForCategorySlug(meta.categorySlug),
         linked: node !== undefined,
-        // Under the floor, a total could point back at one shopper, so none is kept.
-        transactionCount: node?.transaction_count ?? 0,
-        amountCents: node?.total_amount_cents ?? 0,
+        figuresShown,
+        // Under the aggregate bar, a total could point back at one shopper, so
+        // none is kept: not the amount, not the count, not even the order.
+        transactionCount: figuresShown ? node.transaction_count : 0,
+        amountCents: figuresShown ? node.total_amount_cents : 0,
         optedIn,
         isYou,
+        // A receipt already counted draws the solid line, never the dashed one.
+        youPending: !isYou && (youPendingIds?.has(id) ?? false),
       }
     })
     .sort(
       (a, b) =>
         Number(b.linked) - Number(a.linked) ||
+        Number(b.figuresShown) - Number(a.figuresShown) ||
         b.amountCents - a.amountCents ||
         a.id.localeCompare(b.id)
     )

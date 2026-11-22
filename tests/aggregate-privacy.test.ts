@@ -146,9 +146,23 @@ describe('per-entity aggregate queries are gated at the threshold', () => {
     // on all four surfaces, so the count is the check: a dropped .gte shows up
     // as 1 instead of 2.
     const nodeQueries = src.match(/\.from\('flow_nodes'\)/g) ?? []
-    const gated = src.match(/\.gte\('transaction_count', AGGREGATE_MIN_TRANSACTIONS\)/g) ?? []
+    // /flow-map reads business nodes at LINK_MIN_TRANSACTIONS (ticket 250) to
+    // draw lines, and zeroes every figure under the aggregate bar in
+    // buildSiloBusinesses. No other surface may use the line bar.
+    const bar =
+      file === 'app/(public)/flow-map/page.tsx'
+        ? /\.gte\('transaction_count', (AGGREGATE|LINK)_MIN_TRANSACTIONS\)/g
+        : /\.gte\('transaction_count', AGGREGATE_MIN_TRANSACTIONS\)/g
+    const gated = src.match(bar) ?? []
     expect(nodeQueries.length).toBeGreaterThan(0)
     expect(gated.length).toBeGreaterThanOrEqual(nodeQueries.length)
+  })
+
+  it('only /flow-map reads at the line bar, never an API, export or account surface', () => {
+    for (const file of SURFACES) {
+      if (file === 'app/(public)/flow-map/page.tsx') continue
+      expect(source(file)).not.toContain('LINK_MIN_TRANSACTIONS')
+    }
   })
 
   it('no surface hardcodes the threshold value in a query', () => {
@@ -283,7 +297,6 @@ describe('RLS on the community-aggregate tables', () => {
       }
     }
   })
-
 })
 
 // ── The opt-out reaches the flow graph ──────────────────────────────────────
@@ -368,8 +381,10 @@ describe('opted-out spend never enters the flow graph', () => {
     expect(guardStart, 'the flow-graph writes are not inside an if').toBeGreaterThan(-1)
 
     const guard = src.slice(guardStart, firstWrite)
-    expect(guard, `the guard before the flow-graph writes must exclude opted-out spend: ${guard}`)
-      .toContain('!receipt.aggregate_opt_out')
+    expect(
+      guard,
+      `the guard before the flow-graph writes must exclude opted-out spend: ${guard}`
+    ).toContain('!receipt.aggregate_opt_out')
   })
 
   it('spend_events still records the flag, so a recompute can tell rows apart', () => {

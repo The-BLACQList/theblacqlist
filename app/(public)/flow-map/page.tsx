@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { buildEntityUrl } from '@/lib/listings/url'
-import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
+import { AGGREGATE_MIN_TRANSACTIONS, LINK_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 import {
   businessDisplayName,
   buildSiloBusinesses,
@@ -64,10 +64,13 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
   // ── Collective businesses (tickets 167 and 171) ──────────────────────────────
   //
   // Every published business is a dot, so the spread of the list shows before
-  // any receipt is counted (ticket 171). Spend totals are a separate read, gated
-  // at the threshold the methodology page promises: below the bar a business
-  // total approaches publishing one person's receipt, so it never leaves the
-  // server. Events and jobs are listings but not places money is spent.
+  // any receipt is counted (ticket 171). Spend totals are a separate read. A
+  // business gets its line from LINK_MIN_TRANSACTIONS counted receipt (ticket
+  // 250), but its total stays gated at the threshold the methodology page
+  // promises: below AGGREGATE_MIN_TRANSACTIONS a business total approaches
+  // publishing one person's receipt, so buildSiloBusinesses zeroes it and it
+  // never leaves the server. Events and jobs are listings but not places money
+  // is spent.
 
   const LISTING_SELECT =
     'id, name, slug, entity_type, primary_level, category_id, cities!listings_city_id_fkey(slug)'
@@ -77,7 +80,7 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
     .from('flow_nodes')
     .select('entity_id, total_amount_cents, transaction_count')
     .eq('node_type', 'business')
-    .gte('transaction_count', AGGREGATE_MIN_TRANSACTIONS)
+    .gte('transaction_count', LINK_MIN_TRANSACTIONS)
     .order('total_amount_cents', { ascending: false })
     .limit(500)
 
@@ -170,6 +173,9 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
   // that counts toward community figures. A receipt kept out of the figures
   // never marks a dot, because that dot's total doesn't include it.
   const youIds = new Set<string>()
+  // Ticket 250: businesses where the reader has a receipt still in review. Only
+  // this reader's page gets them, as a dashed line that says "on its way".
+  const youPendingIds = new Set<string>()
 
   if (user) {
     const { data: receipts, error: receiptsError } = await serviceClient
@@ -183,20 +189,25 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
     for (const r of receipts ?? []) {
       if (r.status === 'approved') countedCents += r.amount_cents
       if (r.status === 'approved' && !r.aggregate_opt_out && r.listing_id) youIds.add(r.listing_id)
+      if (r.status === 'pending_review' && !r.aggregate_opt_out && r.listing_id) {
+        youPendingIds.add(r.listing_id)
+      }
     }
   }
 
   // Every business shows by name: a published listing is already public
-  // (founder, 2026-10-31, ticket 171b). Totals and lines stay server-side
-  // until a business clears the threshold (buildSiloBusinesses).
+  // (founder, 2026-10-31, ticket 171b). Lines show from 1 counted receipt;
+  // totals stay server-side until a business clears the threshold
+  // (buildSiloBusinesses, ticket 250).
   const siloBusinesses = buildSiloBusinesses({
     nodes: businessNodes ?? [],
     listings: listingMeta,
     youIds,
+    youPendingIds,
   })
 
-  // The latest three receipts at businesses that cleared the bar, by name and
-  // the day only.
+  // The latest three receipts at linked businesses (from 1 counted receipt,
+  // ticket 250), by name and the day only. Never an amount.
   const siloById = new Map(siloBusinesses.map((b) => [b.id, b]))
   const ticker: SiloTickerItem[] = spendData
     .filter((r) => r.listing_id && siloById.get(r.listing_id)?.linked)
