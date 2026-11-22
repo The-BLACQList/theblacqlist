@@ -3,13 +3,16 @@
 // =============================================================================
 // popupOffset(): MapLibre zeroes any anchor an offset object omits, so a partial
 // object puts the card on top of the pin when it flips near a viewport edge. The
-// card must also clear the 50px selected tile (standing on its caret above the
-// coordinate, ticket 244) and its name pill, or a selected dot.
+// card must also clear the selected teardrop (standing on its tip above the
+// coordinate, ticket 266) and its name pill, or a selected dot.
 //
 // Ticket 244, Calm Map: no rank numbers. pickTiles decides which claimed pages
 // are squares, trusted first; unclaimed pages stay dots. The plan changes only
 // the look of a square (hasLogoPin, pinImage, pinKey), never who gets one.
 // =============================================================================
+
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 import { describe, it, expect } from 'vitest'
 
@@ -17,6 +20,7 @@ import {
   NAME_PILL_HEIGHT,
   SELECTED_DOT_RADIUS,
   POPUP_ANCHORS,
+  SELECTED_PIN_HEIGHT,
   SELECTED_TILE,
   TILE_CENTER_LIFT,
   TILE_TOP_LIFT,
@@ -84,6 +88,14 @@ describe('popupOffset', () => {
     expect(offset.left[1]).toBe(-TILE_CENTER_LIFT)
     expect(offset.right[1]).toBe(-TILE_CENTER_LIFT)
     expect(offset['top-left'][1]).toBe(-TILE_TOP_LIFT)
+  })
+
+  it('matches the selected logo pin size in globals.css (ticket 266)', () => {
+    const css = readFileSync(join(process.cwd(), 'app/globals.css'), 'utf8')
+    const rule = css.match(/\.blacq-pin-selected\.blacq-pin-paid \.blacq-pin-body \{([^}]*)\}/)
+    expect(rule).not.toBeNull()
+    expect(rule![1]).toContain(`width: ${SELECTED_TILE}px`)
+    expect(rule![1]).toContain(`height: ${SELECTED_PIN_HEIGHT}px`)
   })
 
   it('clears the name pill when the card sits below the pin', () => {

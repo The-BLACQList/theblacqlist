@@ -1,9 +1,9 @@
 // =============================================================================
 // Map popup geometry
 // =============================================================================
-// The preview card is anchored on the selected square or dot. Since ticket 244
-// a claimed page is a rounded-square tile standing on a caret whose tip is the
-// listing coordinate, so the tile sits above the point, not around it. MapLibre zeroes every
+// The preview card is anchored on the selected pin or dot. Since ticket 266 a
+// claimed page is a teardrop whose tip is the listing coordinate, so the pin
+// sits above the point, not around it. MapLibre zeroes every
 // anchor an offset object omits, so all nine keys must be present or the card
 // jumps onto the pin the moment it flips near a viewport edge.
 // Type-only import so this stays unit-testable without a browser.
@@ -26,23 +26,26 @@ export type PopupAnchor = PositionAnchor
 export type OffsetPoint = [number, number]
 export type PopupOffset = Record<PopupAnchor, OffsetPoint>
 
-/** The selected logo tile is 56px square (globals.css `.blacq-pin-selected`). */
-export const SELECTED_TILE = 56
-/** The caret under the tile; its tip is the coordinate. */
-export const PIN_CARET = 6
+/**
+ * The selected logo pin is a 62 by 76 teardrop (globals.css
+ * `.blacq-pin-selected.blacq-pin-paid .blacq-pin-body`); its tip is the
+ * coordinate and its round head is centred 21/54 of the way down.
+ */
+export const SELECTED_TILE = 62
+export const SELECTED_PIN_HEIGHT = 76
 /** The dark name pill under the tip, with its 6px gap (phones only). */
 export const NAME_PILL_HEIGHT = 32
 /** A selected dot's radius plus its ring (components/map/mapLayers.ts). */
 export const SELECTED_DOT_RADIUS = 9
 const GAP = 12
 
-/** How far above the coordinate the selected tile's centre and top are. */
-export const TILE_CENTER_LIFT = PIN_CARET + SELECTED_TILE / 2
-export const TILE_TOP_LIFT = PIN_CARET + SELECTED_TILE
+/** How far above the coordinate the selected pin's round head and top are. */
+export const TILE_CENTER_LIFT = Math.round((SELECTED_PIN_HEIGHT * 33) / 54)
+export const TILE_TOP_LIFT = SELECTED_PIN_HEIGHT
 
 /**
  * Offsets, from the coordinate, that keep the card clear of what is selected.
- * A square (a claimed page) stands above its point, so the card sits beside
+ * A teardrop (a claimed page) stands above its point, so the card sits beside
  * the tile, above it, or below the name pill. A dot (any other business) is
  * centred on its point, so the card just clears its ring.
  */

@@ -36,21 +36,26 @@ export interface PinHandlers {
   onHover: (id: string | null) => void
 }
 
+/** The teardrop outline (option B of the map pin workshop), tip at (22, 54). */
+export const PIN_PATH = 'M22 53C17 45 2 34 2 21a20 20 0 0 1 40 0c0 13-15 24-20 32z'
+const SVG_NS = 'http://www.w3.org/2000/svg'
+
 /**
- * Build the DOM for one square (ticket 244, founder's picks 2026-11-21: the
- * tile shape of option C with the name treatment of option A, and the Calm Map
- * rules: no numbers and no trust marks on the map).
+ * Build the DOM for one claimed-page pin (ticket 266, founder 2026-11-21: the
+ * teardrop with a white circle from option B of the map pin workshop, with the
+ * circle a bit larger; ticket 244's name pill and Calm Map rules stay: no
+ * numbers and no trust marks on the map).
  *
- * - Logo square (claimed, Starter and up): white, gold border, the logo never
- *   cropped; else the cover photo; else initials.
- * - Plain square (claimed, Free): smaller and ink, with one initial. No photo,
+ * - Logo pin (claimed, Starter and up): gold teardrop with a white circle
+ *   holding the logo, never cropped; else the cover photo; else initials.
+ * - Plain pin (claimed, Free): smaller ink teardrop with one initial. No photo,
  *   no logo.
  *
- * Both end in a caret whose tip is the listing coordinate. MapLibre owns the
- * root element's transform, so the root is a zero-size anchor and the button
- * sits above it (see `.blacq-pin` in globals.css). Selection shows by size and
- * a gold border, never by color alone. Verified and Certified live on the card
- * and the preview, not on the square.
+ * The teardrop's tip is the listing coordinate. MapLibre owns the root
+ * element's transform, so the root is a zero-size anchor and the button sits
+ * above it (see `.blacq-pin` in globals.css). Selection shows by size and the
+ * edge color, never by color alone. Verified and Certified live on the card
+ * and the preview, not on the pin.
  */
 export function buildPinElement(spec: PinSpec, handlers: PinHandlers): HTMLElement {
   const { listing, selected, named } = spec
@@ -71,9 +76,21 @@ export function buildPinElement(spec: PinSpec, handlers: PinHandlers): HTMLEleme
   button.setAttribute('aria-label', listing.name)
   button.setAttribute('aria-pressed', String(selected))
 
-  const tile = document.createElement('span')
-  tile.className = 'blacq-pin-tile'
+  const body = document.createElement('span')
+  body.className = 'blacq-pin-body'
+
+  const svg = document.createElementNS(SVG_NS, 'svg')
+  svg.setAttribute('class', 'blacq-pin-shape')
+  svg.setAttribute('viewBox', '0 0 44 54')
+  svg.setAttribute('aria-hidden', 'true')
+  const path = document.createElementNS(SVG_NS, 'path')
+  path.setAttribute('d', PIN_PATH)
+  svg.appendChild(path)
+  body.appendChild(svg)
+
   const initials = pinInitials(listing.name)
+  const face = document.createElement('span')
+  face.className = paid ? 'blacq-pin-disc' : 'blacq-pin-initial'
 
   if (paid && image && raw) {
     const img = document.createElement('img')
@@ -83,19 +100,15 @@ export function buildPinElement(spec: PinSpec, handlers: PinHandlers): HTMLEleme
     img.className = raw.kind === 'logo' ? 'blacq-pin-logo' : 'blacq-pin-photo'
     img.addEventListener('error', () => {
       img.remove()
-      tile.textContent = initials
+      face.textContent = initials
     })
-    tile.appendChild(img)
+    face.appendChild(img)
   } else {
-    tile.textContent = paid ? initials : initials.slice(0, 1)
+    face.textContent = paid ? initials : initials.slice(0, 1)
   }
 
-  const caret = document.createElement('span')
-  caret.className = 'blacq-pin-caret'
-  caret.setAttribute('aria-hidden', 'true')
-
-  button.appendChild(tile)
-  button.appendChild(caret)
+  body.appendChild(face)
+  button.appendChild(body)
 
   if (selected && named) {
     const name = document.createElement('span')
