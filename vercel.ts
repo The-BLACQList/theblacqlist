@@ -18,6 +18,10 @@ export const config: VercelConfig = {
     // unpublish events that are over.
     // See lib/services/expiry/sweeps.ts.
     { path: '/api/cron/expiry', schedule: '0 8 * * *' },
+    // 07:00 UTC, roughly 3am ET: embed listings that are new or changed for
+    // meaning search (ticket 259). Does nothing while FEATURE_SEMANTIC_SEARCH
+    // is off. See lib/services/listingEmbeddings.ts.
+    { path: '/api/cron/embeddings', schedule: '0 7 * * *' },
     // 09:00 UTC Monday, roughly 5am ET: award the weekly Featured badge for
     // the week that just ended. See lib/featured/award.ts.
     { path: '/api/cron/featured', schedule: '0 9 * * 1' },

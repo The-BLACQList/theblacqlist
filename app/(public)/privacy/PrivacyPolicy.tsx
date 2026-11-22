@@ -9,12 +9,18 @@ interface PrivacyPolicyProps {
   version: PolicyVersion
   /** Shown under the title, for the "update coming" or "preview" note. */
   notice?: ReactNode
+  /**
+   * Meaning search is on (ticket 259, FEATURE_SEMANTIC_SEARCH). Adds the
+   * Voyage AI paragraph and provider row, so the page names Voyage exactly
+   * while we send it anything, and never before.
+   */
+  meaningSearch?: boolean
 }
 
 // [Needs professional review] Everything inside an `isNext` block is the
 // October 2026 update from docs/blacqlist/legal/ai-and-site-import-policy-update-2026-10.md.
 // Counsel reviews it before the notice email goes out.
-export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
+export function PrivacyPolicy({ version, notice, meaningSearch = false }: PrivacyPolicyProps) {
   const isNext = version === 'next'
   return (
     <>
@@ -278,6 +284,24 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                   </Link>{' '}
                   works without it.
                 </p>
+
+                {/* [Needs professional review] Meaning search (ticket 259). Shown only
+                    while FEATURE_SEMANTIC_SEARCH is on. Founder OKs the wording first. */}
+                {meaningSearch && (
+                  <p id="meaning-search" className="scroll-mt-24">
+                    <strong>Finding businesses by meaning.</strong> So that a search like
+                    &ldquo;bathroom products&rdquo; can find a soap maker even when the words
+                    don&apos;t match, we use Voyage AI to turn text into numbers that capture what it
+                    means. We send Voyage the public text of each business page (its name, tagline,
+                    category, description, service area, city and tags), which anyone can already
+                    see on our site. When Cue or our quick answer looks for businesses related to what
+                    you searched, we send Voyage the words you searched, with nothing that says who
+                    you are, and no account, location or IP address. We keep the numbers for business
+                    pages so we don&apos;t have to ask again; we don&apos;t keep the ones made from
+                    what you searched beyond a short time in our server&apos;s memory. Voyage handles
+                    this text for us as a service provider.
+                  </p>
+                )}
 
                 {/* [Needs professional review] Owner Cue (ticket 203).
                     docs/blacqlist/legal/owner-cue-policy-update-2026-11.md */}
@@ -615,6 +639,25 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                           </a>
                         </td>
                       </tr>
+                      {/* [VERIFY BEFORE POSTING] Voyage is part of MongoDB now; confirm this
+                          is still the policy URL Voyage points API customers to. */}
+                      {meaningSearch && (
+                        <tr>
+                          <td className="border-b border-gray-200 p-3">Voyage AI</td>
+                          <td className="border-b border-gray-200 p-3">Turns the public text of business pages, and the words you search, into numbers that capture their meaning, so search can find related businesses when the words don&apos;t match. Gets no account, location or IP address</td>
+                          <td className="border-b border-gray-200 p-3">
+                            <a
+                              href="https://www.voyageai.com/privacy"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label="Voyage AI privacy policy (opens in new window)"
+                              className="text-amber hover:underline"
+                            >
+                              voyageai.com/privacy
+                            </a>
+                          </td>
+                        </tr>
+                      )}
                       <tr>
                         <td className="p-3">Cloudflare Turnstile</td>
                         <td className="p-3">Checks that a person, not a bot, is using our sign-up, sign-in, password reset, claim, review, correction, and waitlist forms</td>

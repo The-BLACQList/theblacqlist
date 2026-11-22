@@ -264,3 +264,50 @@ Carried forward into the implementation PR as review criteria:
 ---
 
 **Related:** `docs/blacqlist/ai/ai-safety-and-approval-plan.md` · `docs/blacqlist/ai/ai-agent-roadmap.md` (Phase 2 → 3 gates) · `board-checkpoints.md` ledger `4.3` · `.claude/rules/data-privacy.md`
+
+---
+
+## 11 · Addendum (2026-11-21): Voyage AI for meaning search (ticket 259)
+
+A second AI provider. It makes embeddings (meaning as 1024 numbers) and writes
+no text. Nothing is sent until `FEATURE_SEMANTIC_SEARCH` is on, and that flag is
+closed by default on every deployment.
+
+**What goes to Voyage:**
+
+- **Documents (daily cron):** each searchable listing's public text, built in
+  SQL by `listing_embedding_text()`. That is the name, tagline, category and
+  group, description (first 1,500 characters), service area, place words and
+  active tags. There are no owner details, contact fields, reviews or account
+  data. Only `published`, not deleted, `flag_status = 'none'` listings.
+- **Queries (ticket 260):** the words a visitor searched. Nothing else is sent:
+  no account, IP or location. Query vectors are held only in a per-instance,
+  200-entry in-memory cache (`lib/search/voyage.ts`).
+
+**What we keep:**
+
+- `listing_embeddings`: the vector, model, a content hash and a timestamp. RLS is
+  on with no policies. EXECUTE and table rights go to `service_role` only.
+- Rows for listings that stop being shown are pruned on each run. Deleted
+  listings cascade.
+
+**Logging:**
+
+- A failed call logs only its status code or "timed out". The response body is
+  never logged, because it can echo the input.
+- The cron's JSON reports counts and tokens only.
+
+**Fails soft:**
+
+- A missing key, timeout, bad status or malformed reply (wrong count or wrong
+  dimension) returns `null`. Keyword search carries on.
+
+**Policy:**
+
+- The Privacy Policy paragraph `#meaning-search` and the Voyage row in the
+  provider table render only while the flag is on. They are marked
+  [Needs professional review]. The founder OKs the wording before 260 turns the
+  flag on in prod (GATE-PUBLISH, GATE-DEPLOY).
+- Voyage's public API docs don't state a training or retention policy for API
+  inputs. Check Voyage's terms and dashboard settings before the prod flag
+  flip.

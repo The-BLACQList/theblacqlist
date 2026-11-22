@@ -84,6 +84,7 @@ export type FeatureFlag =
   | 'paidPostings'
   | 'postingSubmissions'
   | 'receiptRead'
+  | 'semanticSearch'
   | 'siteImport'
   | 'testerTour'
 
@@ -202,6 +203,14 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // live privacy policy says receipt details are visible only to the shopper.
   // Opens with the policy update that says otherwise (GATE-PUBLISH).
   ownerReceiptReview: 'FEATURE_OWNER_RECEIPT_REVIEW',
+  // Gates meaning search (tickets 259/260): the daily embeddings cron that sends
+  // public listing text to Voyage AI, and (260) Cue and the quick answer adding
+  // related listings found by meaning. Never the strict grid. Off, nothing goes
+  // to Voyage and search is keyword-only, as before. Closed by default on EVERY
+  // deployment (see CLOSED_BY_DEFAULT), because it sends text to a new provider;
+  // production also waits for the Privacy Policy line that names Voyage
+  // (GATE-PUBLISH) and the 20261206000000 migration (GATE-DATA).
+  semanticSearch: 'FEATURE_SEMANTIC_SEARCH',
   // Gates the chapters layout on real business pages (ticket 231). Closed by
   // default on every deployment, so existing listing e2e keeps testing today's
   // page. On a Preview or in local dev, `?layout=chapters` opts one request in
@@ -247,6 +256,7 @@ const CLOSED_BY_DEFAULT: ReadonlySet<FeatureFlag> = new Set<FeatureFlag>([
   'ownerCue',
   'ownerReceiptReview',
   'receiptRead',
+  'semanticSearch',
 ])
 
 // `undefined` means "this env var said nothing usable" — unset, blank, or a
