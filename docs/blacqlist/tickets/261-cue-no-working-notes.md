@@ -1,6 +1,6 @@
 # Ticket 261: Cue Never Shows Its Working Notes
 
-**Status:** PR open. Merge needs the founder's OK.
+**Status:** Merged #388 (8a4bfce) 2026-11-21. Live in prod; a live "lawyer in atlanta" gave one answer with cards and no notes.
 
 ## Why
 Founder, 2026-11-21: a Cue reply began with "Dropping the owner wording". That is the model talking to itself between tool calls. People should only see the answer.
