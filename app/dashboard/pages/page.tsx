@@ -24,7 +24,9 @@ export default async function DashboardPagesPage() {
     <div className="max-w-2xl space-y-6">
       <div>
         <h1 className="font-headline text-2xl text-brand-black">My Pages</h1>
-        <p className="font-body text-sm text-charcoal-soft mt-0.5">Your BLACQList business pages.</p>
+        <p className="font-body text-sm text-charcoal-soft mt-0.5">
+          Your business pages on The BLACQList.
+        </p>
       </div>
 
       {!listings || listings.length === 0 ? (

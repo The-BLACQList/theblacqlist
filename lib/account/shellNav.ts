@@ -3,9 +3,10 @@
 // the founder found the owner tools "buried" in My Account and the two areas
 // "so separate". Mockup A, Dark Rail, picked 2026-11-21.
 //
-// Owners see their business first: Your Business (Home, Edit Page, Insights,
-// Messages, Plan), then the page's tools, then the personal groups. Members
-// see You and Account, and an "Own a Business?" card. Every /account and
+// Owners see You, then Your Business (Home, Edit Page, Insights, Messages,
+// Plan), then the page's tools by job (What You Offer, Photos and Updates,
+// Hours and Trust), then Account. Members see You and Account, and an "Own a
+// Business?" card. Every /account and
 // /dashboard address stays the same.
 
 import type { RailGroup, RailItem } from '@/lib/nav/rail'
@@ -52,8 +53,13 @@ export interface ShellNavInput {
 /** localStorage key for which groups are open. */
 export const SHELL_NAV_PREF_KEY = 'blacq-account-nav-groups'
 
-/** Open on a first visit. The group holding the current page is always open too. */
+/**
+ * Open on a first visit. The group holding the current page is always open
+ * too. Owners start with You closed so it does not push the business tools
+ * off the screen now that You comes first.
+ */
 export const SHELL_DEFAULT_OPEN = ['business', 'you']
+export const SHELL_DEFAULT_OPEN_OWNER = ['business']
 
 /** Cookie holding the owner's chosen page, so Home and the menu agree (ticket 253 reads it). */
 export const PAGE_COOKIE = 'blacq-page'
@@ -97,39 +103,63 @@ export function pickPageId(
   return owned(pageIdFromPath(pathname)) ?? owned(cookieId) ?? pages[0]?.id ?? null
 }
 
-/** The tools used most, in the order the mockup gave them. */
-export function pageToolItems(pageId: string, counts: ShellCounts, flags: ShellFlags): RailItem[] {
+/**
+ * The page's tools, grouped by the job the owner came to do (founder
+ * 2026-11-21: "something better than Page Tools and More Page Tools"; picked
+ * "By job").
+ */
+export function pageToolGroups(
+  pageId: string,
+  counts: ShellCounts,
+  flags: ShellFlags
+): RailGroup[] {
   return [
-    { href: '/dashboard/products', label: 'Products' },
-    { href: '/dashboard/services', label: 'Services' },
-    { href: `/dashboard/pages/${pageId}/events`, label: 'Events' },
-    { href: `/dashboard/pages/${pageId}/media`, label: 'Photos and Media' },
-    ...(flags.posts ? [{ href: `/dashboard/pages/${pageId}/posts`, label: 'Happening Now' }] : []),
-    { href: `/dashboard/pages/${pageId}/offerings`, label: 'Offerings' },
-    { href: `/dashboard/pages/${pageId}/team`, label: 'Team' },
-    ...(flags.ownerReceipts
-      ? [
-          {
-            href: '/dashboard/receipts',
-            label: 'Receipts to Verify',
-            badge: counts.receiptsToVerify,
-            badgeLabel: 'waiting',
-          },
-        ]
-      : []),
-    { href: `/dashboard/pages/${pageId}/verification`, label: 'Get Verified' },
-  ]
-}
-
-/** Set-once details, kept in their own group so Page Tools stays short. */
-export function morePageToolItems(pageId: string, flags: ShellFlags): RailItem[] {
-  return [
-    { href: `/dashboard/pages/${pageId}/highlights`, label: 'Highlights' },
-    { href: `/dashboard/pages/${pageId}/special-hours`, label: 'Special Hours' },
-    { href: `/dashboard/pages/${pageId}/locations`, label: 'Locations' },
-    ...(flags.bookings ? [{ href: `/dashboard/pages/${pageId}/bookings`, label: 'Bookings' }] : []),
-    { href: `/dashboard/pages/${pageId}/credentials`, label: 'Credentials' },
-    { href: `/dashboard/pages/${pageId}/documents`, label: 'Documents' },
+    {
+      slug: 'offer',
+      label: 'What You Offer',
+      items: [
+        { href: '/dashboard/products', label: 'Products' },
+        { href: '/dashboard/services', label: 'Services' },
+        { href: `/dashboard/pages/${pageId}/offerings`, label: 'Offerings' },
+        { href: `/dashboard/pages/${pageId}/events`, label: 'Events' },
+        ...(flags.bookings
+          ? [{ href: `/dashboard/pages/${pageId}/bookings`, label: 'Bookings' }]
+          : []),
+      ],
+    },
+    {
+      slug: 'show',
+      label: 'Photos and Updates',
+      items: [
+        { href: `/dashboard/pages/${pageId}/media`, label: 'Photos and Media' },
+        ...(flags.posts
+          ? [{ href: `/dashboard/pages/${pageId}/posts`, label: 'Happening Now' }]
+          : []),
+        { href: `/dashboard/pages/${pageId}/highlights`, label: 'Highlights' },
+        { href: `/dashboard/pages/${pageId}/team`, label: 'Team' },
+      ],
+    },
+    {
+      slug: 'trust',
+      label: 'Hours and Trust',
+      items: [
+        { href: `/dashboard/pages/${pageId}/special-hours`, label: 'Special Hours' },
+        { href: `/dashboard/pages/${pageId}/locations`, label: 'Locations' },
+        { href: `/dashboard/pages/${pageId}/verification`, label: 'Get Verified' },
+        { href: `/dashboard/pages/${pageId}/credentials`, label: 'Credentials' },
+        { href: `/dashboard/pages/${pageId}/documents`, label: 'Documents' },
+        ...(flags.ownerReceipts
+          ? [
+              {
+                href: '/dashboard/receipts',
+                label: 'Receipts to Verify',
+                badge: counts.receiptsToVerify,
+                badgeLabel: 'waiting',
+              },
+            ]
+          : []),
+      ],
+    },
   ]
 }
 
@@ -158,25 +188,13 @@ export function buildShellGroups(input: ShellNavInput): RailGroup[] {
             { href: '/dashboard/upgrade', label: 'Plan' },
           ],
         },
-        ...(pageId
-          ? [
-              {
-                slug: 'page-tools',
-                label: 'Page Tools',
-                items: pageToolItems(pageId, counts, flags),
-              },
-              {
-                slug: 'more-tools',
-                label: 'More Page Tools',
-                items: morePageToolItems(pageId, flags),
-              },
-            ]
-          : []),
+        ...(pageId ? pageToolGroups(pageId, counts, flags) : []),
       ]
     : []
 
+  // You first, then the business (founder 2026-11-21: "Put the you section
+  // before the your business section").
   return [
-    ...business,
     {
       slug: 'you',
       label: 'You',
@@ -197,6 +215,7 @@ export function buildShellGroups(input: ShellNavInput): RailGroup[] {
         ...collectiveItems(counts.receipts, flags.collectiveSoon),
       ],
     },
+    ...business,
     {
       slug: 'account',
       label: 'Account',

@@ -180,7 +180,9 @@ test.describe('signed in with no listing', () => {
   test('the dashboard offers both ways in: claim or create', async ({ page }) => {
     for (const path of ['/dashboard', '/dashboard/pages']) {
       await page.goto(path)
-      await expect(page.getByRole('heading', { name: 'Create your BLACQList page' })).toBeVisible()
+      await expect(
+        page.getByRole('heading', { name: 'Create Your Page on The BLACQList' })
+      ).toBeVisible()
       await expect(page.getByRole('link', { name: 'Find my business to claim' })).toHaveAttribute(
         'href',
         '/claim'
@@ -204,7 +206,7 @@ test.describe('signed in with no listing', () => {
   })
 })
 
-test('an owner sees their business first, with the page tools one tap away', async ({ page }) => {
+test('an owner sees You, their business and the tools by job', async ({ page }) => {
   await loginAsOwner(page)
   await page.goto('/dashboard')
   const nav = page.getByRole('navigation', { name: 'Account Navigation' })
@@ -212,7 +214,7 @@ test('an owner sees their business first, with the page tools one tap away', asy
     await expect(nav.getByRole('link', { name, exact: true })).toBeVisible()
   }
   await expect(page.getByTestId('page-switcher')).toBeVisible()
-  const tools = page.getByTestId('account-nav-group-page-tools')
+  const tools = page.getByTestId('account-nav-group-offer')
   if ((await tools.getAttribute('aria-expanded')) !== 'true') await tools.click()
   for (const name of ['Products', 'Services']) {
     await expect(nav.getByRole('link', { name, exact: true })).toBeVisible()

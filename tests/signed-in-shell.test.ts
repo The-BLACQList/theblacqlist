@@ -42,14 +42,37 @@ describe('buildShellGroups', () => {
     expect(labels(groups, 'account')).toEqual(['Settings'])
   })
 
-  it('puts an owner’s business first, with the page’s tools', () => {
+  it('puts You first, then the business, then its tools by job', () => {
     const groups = buildShellGroups({ isOwner: true, isAdmin: false, pageId: 'p1', counts, flags })
     expect(groups.map((g) => g.slug)).toEqual([
-      'business',
-      'page-tools',
-      'more-tools',
       'you',
+      'business',
+      'offer',
+      'show',
+      'trust',
       'account',
+    ])
+    expect(groups.map((g) => g.label)).not.toContain('Page Tools')
+    expect(labels(groups, 'offer')).toEqual([
+      'Products',
+      'Services',
+      'Offerings',
+      'Events',
+      'Bookings',
+    ])
+    expect(labels(groups, 'show')).toEqual([
+      'Photos and Media',
+      'Happening Now',
+      'Highlights',
+      'Team',
+    ])
+    expect(labels(groups, 'trust')).toEqual([
+      'Special Hours',
+      'Locations',
+      'Get Verified',
+      'Credentials',
+      'Documents',
+      'Receipts to Verify',
     ])
     expect(labels(groups, 'business')).toEqual([
       'Home',
@@ -59,12 +82,13 @@ describe('buildShellGroups', () => {
       'Plan',
     ])
     expect(labels(groups, 'you')).not.toContain('Messages')
-    const business = groups[0]!.items
+    const business = groups.find((g) => g.slug === 'business')!.items
     expect(business.find((i) => i.label === 'Insights')?.href).toBe('/dashboard/pages/p1/analytics')
     expect(business.find((i) => i.label === 'Messages')?.badge).toBe(3)
-    const tools = groups.find((g) => g.slug === 'page-tools')!.items
-    expect(tools.find((i) => i.label === 'Receipts to Verify')?.badge).toBe(2)
-    expect(tools.find((i) => i.label === 'Team')?.href).toBe('/dashboard/pages/p1/team')
+    const trust = groups.find((g) => g.slug === 'trust')!.items
+    expect(trust.find((i) => i.label === 'Receipts to Verify')?.badge).toBe(2)
+    const show = groups.find((g) => g.slug === 'show')!.items
+    expect(show.find((i) => i.label === 'Team')?.href).toBe('/dashboard/pages/p1/team')
   })
 
   it('hides flagged tools when their flags are off', () => {
@@ -84,7 +108,7 @@ describe('buildShellGroups', () => {
 
   it('keeps Home and Plan for an owner whose pages could not be read', () => {
     const groups = buildShellGroups({ isOwner: true, isAdmin: false, pageId: null, counts, flags })
-    expect(groups.map((g) => g.slug)).toEqual(['business', 'you', 'account'])
+    expect(groups.map((g) => g.slug)).toEqual(['you', 'business', 'account'])
     expect(labels(groups, 'business')).toEqual(['Home', 'Messages', 'Plan'])
   })
 
@@ -155,7 +179,8 @@ describe('the shared rail helpers', () => {
   })
 
   it('opens the group holding the current page', () => {
-    expect(activeGroupSlug('/dashboard/pages/p1/documents', groups)).toBe('more-tools')
+    expect(activeGroupSlug('/dashboard/pages/p1/documents', groups)).toBe('trust')
+    expect(activeGroupSlug('/dashboard/products', groups)).toBe('offer')
     expect(activeGroupSlug('/account/claims', groups)).toBe('you')
   })
 
@@ -179,7 +204,9 @@ describe('signed-in shell source', () => {
     'components/account/PageSwitcher.tsx',
   ].map((f) => readFileSync(path.join(REPO_ROOT, f), 'utf8'))
 
-  it('uses the shared rail with account test ids', () => {
+  it('uses the shared rail with account test ids, under the gold mark', () => {
+    expect(files[1]).toContain('<RailTitle>')
+    expect(files[1]).not.toMatch(/BLACQ<span/)
     expect(files[1]).toContain('<NavRail')
     expect(files[1]).toContain('testIdPrefix="account-nav"')
   })

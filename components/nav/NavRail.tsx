@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { ChevronRight, Menu, X } from 'lucide-react'
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
 import { SoonPill } from '@/components/ui/soon-pill'
+import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import {
   activeGroupSlug,
   activeHref,
@@ -31,15 +32,17 @@ export interface NavRailProps {
   storageKey: string
   /** Groups open on a first visit. */
   defaultOpen: string[]
-  /** Top of the panel: wordmark and a short label. */
+  /** Top of the panel: the gold mark and where you are (RailTitle). */
   brand: ReactNode
-  /** Left side of the phone bar. */
+  /** Left side of the phone bar (no mark: the site header right above has it). */
   barTitle: ReactNode
   /** Screen-reader name and description of the phone drawer. */
   drawerTitle: string
   drawerDescription: string
-  /** Under the brand, above the groups (the owner's page switcher). */
+  /** Under the brand, above the groups. */
   top?: ReactNode
+  /** Shown under one group's heading, open or closed (the owner's page switcher). */
+  groupTop?: { slug: string; node: ReactNode }
   /** Under the groups (the "Own a Business?" card). */
   afterGroups?: ReactNode
   /** Pinned to the bottom of the panel. */
@@ -109,14 +112,21 @@ function RailLink({
     <Link
       href={item.href}
       className={cn(
-        'flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 font-subhead text-[15px] transition-colors',
+        'group/link flex min-h-11 items-center gap-3 rounded-md px-3 py-2 font-subhead text-[15px] transition-colors',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold',
-        active
-          ? 'bg-white/10 font-semibold text-white shadow-[inset_3px_0_0_var(--color-gold)]'
-          : 'text-ink-soft hover:bg-white/5 hover:text-white'
+        active ? 'font-medium text-white' : 'text-ink-soft hover:text-white'
       )}
       aria-current={active ? 'page' : undefined}
     >
+      {/* The current page gets the node from the gold Q, not a box or a bar
+          (founder 2026-11-21: the bracket highlight read "too AI"). */}
+      <span
+        aria-hidden="true"
+        className={cn(
+          'size-1.5 shrink-0 rounded-full transition-colors',
+          active ? 'bg-gold' : 'bg-transparent group-hover/link:bg-white/30'
+        )}
+      />
       <span className="flex-1">{item.label}</span>
       {item.soon ? (
         <SoonPill />
@@ -142,6 +152,22 @@ function RailLink({
   )
 }
 
+/**
+ * The panel's title: the gold Q and where you are ("My Business", "Admin") in
+ * Jost tracked caps. The site header right above already carries THE
+ * BLACQLIST, so the rail does not repeat the wordmark.
+ */
+export function RailTitle({ children, mark = true }: { children: ReactNode; mark?: boolean }) {
+  return (
+    <span className="flex min-w-0 items-center gap-2.5">
+      {mark && <GoldBrandMark className="h-6 w-6 shrink-0" />}
+      <span className="truncate font-headline text-[15px] font-medium uppercase tracking-[0.16em] text-white">
+        {children}
+      </span>
+    </span>
+  )
+}
+
 /** The menu itself. Drawn in the desktop rail and inside the phone drawer. */
 function RailPanel(props: NavRailProps) {
   const { navLabel, testIdPrefix, groups, lead, storageKey, defaultOpen } = props
@@ -153,13 +179,19 @@ function RailPanel(props: NavRailProps) {
   )
   const current = activeHref(pathname, allItems(groups, lead))
   const activeGroup = activeGroupSlug(pathname, groups, lead)
+  const navRef = useRef<HTMLElement>(null)
+
+  // A long menu can leave the current page below the fold; bring it into view.
+  useEffect(() => {
+    navRef.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: 'nearest' })
+  }, [pathname])
 
   return (
     <div className="flex h-full flex-col">
       <div className="px-5 pt-5 pb-3">{props.brand}</div>
       {props.top && <div className="px-3 pb-2">{props.top}</div>}
 
-      <nav aria-label={navLabel} className="flex-1 overflow-y-auto px-3 pb-4">
+      <nav ref={navRef} aria-label={navLabel} className="flex-1 overflow-y-auto px-3 pb-4">
         {lead && (
           <RailLink item={lead} active={current === lead.href} testIdPrefix={testIdPrefix} />
         )}
@@ -174,7 +206,7 @@ function RailPanel(props: NavRailProps) {
           return (
             <div
               key={group.slug}
-              className="mt-1 border-t border-white/10 pt-1 first:mt-0 first:border-t-0 first:pt-0"
+              className="mt-2 border-t border-white/10 pt-1 first:mt-0 first:border-t-0 first:pt-0"
             >
               <button
                 type="button"
@@ -186,10 +218,11 @@ function RailPanel(props: NavRailProps) {
                   if (!isActive) toggle(group.slug)
                 }}
                 className={cn(
-                  'flex min-h-11 w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left',
-                  'font-subhead text-sm font-semibold uppercase tracking-[0.06em] text-ink-soft',
+                  'flex min-h-11 w-full items-center gap-2 rounded-md px-3 pt-3 pb-1.5 text-left',
+                  // Jost, tracked caps: the same voice as the header wordmark.
+                  'font-headline text-sm font-medium uppercase tracking-[0.16em]',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold',
-                  isActive ? 'cursor-default' : 'hover:text-white'
+                  isActive ? 'cursor-default text-gold' : 'text-ink-soft hover:text-white'
                 )}
               >
                 <span className="flex-1">{group.label}</span>
@@ -210,6 +243,9 @@ function RailPanel(props: NavRailProps) {
                   )}
                 />
               </button>
+              {props.groupTop?.slug === group.slug && (
+                <div className="pb-1">{props.groupTop.node}</div>
+              )}
               {isOpen && (
                 <ul id={listId} className="space-y-0.5 pb-1">
                   {group.items.map((item) => (
@@ -257,11 +293,11 @@ export function NavRail(props: NavRailProps) {
     <>
       {/* The site header is fixed above this (h-14 phones, h-16 md+), so the
           rail and the phone bar pin just below it. */}
-      <aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] w-68 shrink-0 bg-brand-black lg:block">
+      <aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] w-68 shrink-0 border-t border-r border-white/10 bg-deep-bg lg:block">
         <RailPanel {...props} />
       </aside>
 
-      <div className="sticky top-14 z-40 flex h-15 items-center gap-3 border-t border-white/10 bg-brand-black px-4 md:top-16 lg:hidden">
+      <div className="sticky top-14 z-40 flex h-15 items-center gap-3 border-t border-white/10 bg-deep-bg px-4 md:top-16 lg:hidden">
         <div className="min-w-0 flex-1 truncate">{props.barTitle}</div>
         <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
           <button
@@ -282,7 +318,7 @@ export function NavRail(props: NavRailProps) {
           </button>
           <SheetContent
             side="left"
-            className="w-80 max-w-[85vw] border-r-0 bg-brand-black p-0 [&>button:last-child]:hidden"
+            className="w-80 max-w-[85vw] border-r-0 bg-deep-bg p-0 [&>button:last-child]:hidden"
           >
             <SheetTitle className="sr-only">{props.drawerTitle}</SheetTitle>
             <SheetDescription className="sr-only">{props.drawerDescription}</SheetDescription>

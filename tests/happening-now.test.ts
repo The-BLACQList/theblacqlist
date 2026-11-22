@@ -456,7 +456,7 @@ describe('wiring', () => {
   it('the sidebar link, the Basics card and the analytics counts are behind the flag', () => {
     // The signed-in shell (ticket 252) reads the flag once for the menu.
     expect(read('lib/account/shellData.ts')).toContain("posts: isFeatureEnabled('happeningNow')")
-    expect(read('lib/account/shellNav.ts')).toContain('...(flags.posts ?')
+    expect(read('lib/account/shellNav.ts')).toMatch(/\.\.\.\(flags\.posts\s*\?/)
     expect(read('lib/listings/editTabs.ts')).toContain("'happening-now'")
     const analytics = read('app/dashboard/pages/[entityId]/analytics/page.tsx')
     expect(analytics).toContain("isFeatureEnabled('happeningNow')")

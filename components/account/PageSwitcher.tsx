@@ -73,11 +73,11 @@ export function PageSwitcher({ pages, selectedId }: { pages: ShellPage[]; select
         aria-controls={listId}
         aria-label={`${selected.name}, ${planName(selected.tier)} Plan. Switch Business Page`}
         data-testid="page-switcher"
-        className="flex min-h-14 w-full items-center gap-3 rounded-xl border border-white/20 bg-white/5 px-3 py-2 text-left text-white hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+        className="flex min-h-14 w-full items-center gap-3 rounded-lg border border-white/15 px-3 py-2 text-left text-white transition-colors hover:border-white/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold"
       >
         <span
           aria-hidden="true"
-          className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-gold font-subhead text-sm font-bold text-brand-black"
+          className="flex size-9 shrink-0 items-center justify-center rounded-md border border-gold/70 font-headline text-sm font-medium tracking-[0.08em] text-gold"
         >
           {pageInitials(selected.name)}
         </span>
@@ -101,7 +101,7 @@ export function PageSwitcher({ pages, selectedId }: { pages: ShellPage[]; select
       {open && (
         <div
           id={listId}
-          className="mt-2 flex flex-col gap-0.5 rounded-xl bg-white p-2 text-brand-black shadow-[0_12px_32px_rgba(0,0,0,0.35)]"
+          className="mt-2 flex flex-col gap-0.5 rounded-lg bg-off-white p-2 text-brand-black"
         >
           {others.map((p) => (
             <button

@@ -26,11 +26,14 @@ The founder chose "One shell, business first" (AskUserQuestion), then picked moc
   - Admin now uses it too (`AdminSidebar` is a thin wrapper), so both sides look and behave the same.
   - Admin's breakpoint moves from md to lg to match.
 - **`lib/account/shellNav.ts`** (new): what the signed-in menu holds.
-  - **Owners:**
-    - **Your Business:** Home, Edit Page, Insights, Messages, Plan.
-    - **Page Tools:** Products, Services, Events, Photos and Media, Happening Now, Offerings, Team, Receipts to Verify, Get Verified.
-    - **More Page Tools:** Highlights, Special Hours, Locations, Bookings, Credentials, Documents.
-    - Then You and Account.
+  - **Owners** (order and names from the founder's second pass, below):
+    - **You** first. It starts closed for owners so it does not push the business tools down.
+    - **Your Business:** the page switcher, then Home, Edit Page, Insights, Messages, Plan.
+    - The page's tools, grouped by job:
+      - **What You Offer:** Products, Services, Offerings, Events, Bookings.
+      - **Photos and Updates:** Photos and Media, Happening Now, Highlights, Team.
+      - **Hours and Trust:** Special Hours, Locations, Get Verified, Credentials, Documents, Receipts to Verify.
+    - Then Account.
   - **Members:** You (Overview, Messages, Saved, Reviews, Claims, Recently Viewed, Recommended, The Collective), then Account (Settings, Admin for admins).
   - Flagged tools (Happening Now, Bookings, Receipts to Verify, Messages) still follow their flags.
 - **`components/account/SignedInShell.tsx`** and **`PageSwitcher.tsx`** (new):
@@ -41,9 +44,28 @@ The founder chose "One shell, business first" (AskUserQuestion), then picked moc
 - **`lib/account/shellData.ts`** (new): one set of parallel reads for the menu, used by both layouts.
 - **`app/account/layout.tsx`** and **`app/dashboard/layout.tsx`** both render `SignedInFrame`, the same menu on both. Every address is unchanged.
 - **Sign-in:** owners land on `/dashboard`; members still land on `/account`. A `next=` address still wins.
-- **Header:** owners get a "My Business" link (desktop and phone menu), next to My Account.
+- **Header:** one **My Account** menu (a button that opens a list; Esc or a click outside closes it). It holds My Business (owners only), Account Overview, Saved, Messages and Settings. Sign Out and Admin stay outside it. In the phone menu the same links sit under a "My Account" heading. Saved moved into this menu (it was its own header link, M1, 2026-10-15).
 - **Report a Problem button:** on /account and /dashboard at lg and up it sits just past the rail (`lg:left-72`) instead of over Sign Out.
 - **Removed:** `components/account/AccountNav.tsx` and `components/dashboard/DashboardSidebar.tsx`.
+
+### Second Pass (founder, 2026-11-21)
+
+The founder, on the first Preview:
+- "Not just BLACQList. Always The BLACQList."
+- "Put the you section before the your business section."
+- "we need something better than "Page Tools" and "More Page Tools"." Picked "By job" (AskUserQuestion).
+- "In the menu, have My Business as a dropdown under My account." Picked the top header (AskUserQuestion).
+- "the side bar panel needs to be more on brand. the bracket highlight looks too AI design for my taste and the text words look terrible."
+
+What changed:
+- **Rail look** (`components/nav/NavRail.tsx`, admin too):
+  - **Current page:** a small gold dot, the node from the gold Q, and white text. This replaces the grey box and gold side bar.
+  - **Group names:** Jost tracked caps, like the header wordmark. The group you are in turns gold.
+  - **Rail top:** the gold Q and where you are ("My Business", "My Account", "Admin"), set the same way. The header right above already reads THE BLACQLIST, so the rail no longer repeats a mixed-weight "BLACQList". The phone bar shows the words without a second Q.
+  - **Ground:** the header's near-black with a hairline edge, instead of pure black.
+- **Page switcher:** moved under the Your Business heading. It has an outline only, with gold initials in a gold outline (no filled tile, no glass).
+- **The current item scrolls into view** when the menu is long.
+- **Signed-in copy says "The BLACQList":** /dashboard and /dashboard/pages subtitles, the empty state ("Create Your Page on The BLACQList"), the product and service forms, the spending pages, and the dashboard tab titles. A site-wide sweep is its own ticket.
 
 ## Tests
 
@@ -60,7 +82,8 @@ The founder chose "One shell, business first" (AskUserQuestion), then picked moc
 - **`e2e/owner-dashboard.spec.ts`:**
   - Stale editor selectors fixed while here: the save bar reads "Publish Changes" (Title Case, 205), and Contact sits under the "Contact & Buttons" tab.
   - A member sees no business tools and gets the claim card.
-  - An owner sees Home, Edit Page, Insights, Plan and the page switcher, and Products and Services under Page Tools.
+  - An owner sees Home, Edit Page, Insights, Plan and the page switcher, and Products and Services under What You Offer.
+- **`tests/saved-way-back.test.ts`:** the My Account menu (owner and member lists, Messages off, which inbox).
 
 ## Verification
 
@@ -77,6 +100,8 @@ Local, staging data, 2026-11-21:
   - No sideways scroll anywhere.
   - Owners land on /dashboard after sign-in.
   - At 1024 the header uses its phone menu, so the extra "My Business" link does not crowd it.
+
+Second pass, 2026-11-21: unit tests 5559 passed; typecheck and lint clean. Playwright (same specs): 48 passed. The three failures existed before this change: TA-11 and TA-12 (above), and TA-24, where the listing page has no "Save this business" button for the test. TA-24 fails the same way with this change stashed. Logged as a follow-up. Screenshots: owner on Products at 1280 (What You Offer open, Products marked with the dot), the header menu, the phone bar and drawer, the phone site menu, and admin.
 
 ## Not in This Ticket
 

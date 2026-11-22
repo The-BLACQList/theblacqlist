@@ -3,30 +3,18 @@
 import { useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { NavRail } from '@/components/nav/NavRail'
+import { NavRail, RailTitle } from '@/components/nav/NavRail'
 import { PageSwitcher, rememberPage } from '@/components/account/PageSwitcher'
 import { signOutAction } from '@/lib/actions/auth/signOut'
 import {
   SHELL_DEFAULT_OPEN,
+  SHELL_DEFAULT_OPEN_OWNER,
   SHELL_NAV_PREF_KEY,
   buildShellGroups,
   pageIdFromPath,
   pickPageId,
 } from '@/lib/account/shellNav'
 import type { ShellData } from '@/lib/account/shellData'
-
-function Wordmark({ label }: { label?: string }) {
-  return (
-    <span className="flex items-baseline gap-2">
-      <span className="font-headline text-xl font-semibold text-white">
-        BLACQ<span className="text-gold">List</span>
-      </span>
-      {label && (
-        <span className="truncate font-subhead text-sm font-semibold text-ink-soft">{label}</span>
-      )}
-    </span>
-  )
-}
 
 /** Members only: where their business tools would be (mockup A). */
 function OwnBusinessCard() {
@@ -80,7 +68,8 @@ function Footer({ displayName }: { displayName: string }) {
 
 /**
  * The one signed-in menu (ticket 252), on every /account and /dashboard page.
- * Owners: page switcher, Your Business, Page Tools, More Page Tools, You,
+ * Owners: page switcher, You, Your Business, What You Offer, Photos and
+ * Updates, Hours and Trust,
  * Account. Members: You, Account and an "Own a Business?" card.
  */
 export function SignedInShell({ data }: { data: ShellData }) {
@@ -112,15 +101,15 @@ export function SignedInShell({ data }: { data: ShellData }) {
       testIdPrefix="account-nav"
       groups={groups}
       storageKey={SHELL_NAV_PREF_KEY}
-      defaultOpen={SHELL_DEFAULT_OPEN}
-      brand={<Wordmark />}
-      barTitle={<Wordmark label={context} />}
+      defaultOpen={data.isOwner ? SHELL_DEFAULT_OPEN_OWNER : SHELL_DEFAULT_OPEN}
+      brand={<RailTitle>{context}</RailTitle>}
+      barTitle={<RailTitle mark={false}>{context}</RailTitle>}
       drawerTitle={`${context} Menu`}
       drawerDescription="Your business and account pages, grouped. Groups with something waiting show a count."
-      top={
-        data.isOwner && pageId && data.pages.length > 0 ? (
-          <PageSwitcher pages={data.pages} selectedId={pageId} />
-        ) : undefined
+      groupTop={
+        data.isOwner && pageId && data.pages.length > 0
+          ? { slug: 'business', node: <PageSwitcher pages={data.pages} selectedId={pageId} /> }
+          : undefined
       }
       afterGroups={data.isOwner ? undefined : <OwnBusinessCard />}
       footer={<Footer displayName={data.displayName} />}

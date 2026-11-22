@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { CheckCircle } from 'lucide-react'
 import { requireOwner } from '@/lib/dashboard/guard'
 
-export const metadata: Metadata = { title: 'Upgrade Successful | BLACQList Dashboard' }
+export const metadata: Metadata = { title: 'Upgrade Successful | The BLACQList' }
 
 interface Props {
   searchParams: Promise<{ renews?: string }>
@@ -27,8 +27,8 @@ export default async function UpgradeSuccessPage({ searchParams }: Props) {
         {/* Ticket 144: confirm the renewal terms and how to cancel after purchase. */}
         {renews && (
           <p className="font-body text-sm text-charcoal-soft mb-8 max-w-sm mx-auto">
-            Your plan renews automatically until you cancel. To cancel or change it, open Upgrade
-            in your dashboard and choose Manage subscription.
+            Your plan renews automatically until you cancel. To cancel or change it, open Upgrade in
+            your dashboard and choose Manage subscription.
           </p>
         )}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">

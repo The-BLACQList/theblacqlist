@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { NavRail } from '@/components/nav/NavRail'
+import { NavRail, RailTitle } from '@/components/nav/NavRail'
 import {
   ADMIN_NAV_PREF_KEY,
   ADMIN_OVERVIEW,
@@ -20,17 +20,6 @@ interface Props {
   counts?: Record<string, number>
 }
 
-function Wordmark({ label }: { label: string }) {
-  return (
-    <span className="flex items-baseline gap-2">
-      <span className="font-headline text-xl font-semibold text-white">
-        BLACQ<span className="text-gold">List</span>
-      </span>
-      <span className="font-subhead text-sm font-semibold text-ink-soft">{label}</span>
-    </span>
-  )
-}
-
 /**
  * Admin navigation (ticket 251): Overview, then the founder's groups, in the
  * shared black rail (components/nav/NavRail.tsx). Below lg, a Menu button
@@ -46,8 +35,8 @@ export function AdminSidebar({ role, counts }: Props) {
       groups={adminRailGroups(counts)}
       storageKey={ADMIN_NAV_PREF_KEY}
       defaultOpen={DEFAULT_OPEN_GROUPS}
-      brand={<Wordmark label={roleLabel} />}
-      barTitle={<Wordmark label="Admin" />}
+      brand={<RailTitle>{roleLabel}</RailTitle>}
+      barTitle={<RailTitle mark={false}>{roleLabel}</RailTitle>}
       drawerTitle="Admin Menu"
       drawerDescription="Every admin page, grouped. Groups with waiting work show a count."
       footer={
