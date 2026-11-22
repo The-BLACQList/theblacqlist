@@ -96,7 +96,9 @@ vi.mock('@/lib/supabase/server', () => ({
         return {
           select: () => ({
             single: async () =>
-              h.insertFails ? { data: null, error: { message: 'down' } } : { data: { id: 'req-1' }, error: null },
+              h.insertFails
+                ? { data: null, error: { message: 'down' } }
+                : { data: { id: 'req-1' }, error: null },
           }),
         }
       },
@@ -173,12 +175,22 @@ describe('POST /api/cue', () => {
     expect(done.text).toBe('Here are 2 places that match.')
 
     expect(h.inserts).toHaveLength(1)
-    expect(h.inserts[0]).toMatchObject({ agent_type: 'visitor_assistant', prompt_version: 'CUE_CHAT@4', status: 'pending' })
-    expect(h.updates).toEqual([{ status: 'completed', error_message: null, request_tokens: 0, response_tokens: 0 }])
+    expect(h.inserts[0]).toMatchObject({
+      agent_type: 'visitor_assistant',
+      prompt_version: 'CUE_CHAT@4',
+      status: 'pending',
+    })
+    expect(h.updates).toEqual([
+      { status: 'completed', error_message: null, request_tokens: 0, response_tokens: 0 },
+    ])
   })
 
   it('stores nothing the visitor typed', async () => {
-    await events(await POST(ask({ message: 'lawyer in atlanta', history: [{ role: 'user', text: 'my secret' }] })))
+    await events(
+      await POST(
+        ask({ message: 'lawyer in atlanta', history: [{ role: 'user', text: 'my secret' }] })
+      )
+    )
     const audit = JSON.stringify([h.inserts, h.updates])
     expect(audit).not.toContain('lawyer')
     expect(audit).not.toContain('secret')
@@ -223,18 +235,25 @@ describe('POST /api/cue', () => {
   })
 
   it('refuses another site', async () => {
-    const fb = onlyFallback(await events(await POST(ask({ message: 'hi' }, { origin: 'https://evil.example' }))))
+    const fb = onlyFallback(
+      await events(await POST(ask({ message: 'hi' }, { origin: 'https://evil.example' })))
+    )
     expect(fb.reason).toBe('error')
     expect(h.inserts).toHaveLength(0)
   })
 
   it('accepts its own origin', async () => {
-    const list = await events(await POST(ask({ message: 'lawyer in atlanta' }, { origin: 'http://localhost:3000' })))
+    const list = await events(
+      await POST(ask({ message: 'lawyer in atlanta' }, { origin: 'http://localhost:3000' }))
+    )
     expect(list.at(-1)?.type).toBe('done')
   })
 
   it.each([
-    ['a non-JSON content type', ask('message=hi', { 'content-type': 'application/x-www-form-urlencoded' })],
+    [
+      'a non-JSON content type',
+      ask('message=hi', { 'content-type': 'application/x-www-form-urlencoded' }),
+    ],
     ['a body that is not JSON', ask('{not json')],
     ['an unknown field', ask({ message: 'hi', admin: true })],
     ['an empty message', ask({ message: '   ' })],
@@ -267,7 +286,8 @@ describe('POST /api/cue', () => {
 
 describe('POST /api/cue from the /search strip', () => {
   const FOUNDER = 'How do I switch to Black Owned bathroom products'
-  const search = (body: Record<string, unknown> = {}) => ask({ message: FOUNDER, surface: 'search', ...body })
+  const search = (body: Record<string, unknown> = {}) =>
+    ask({ message: FOUNDER, surface: 'search', ...body })
 
   function basicDone(list: CueEvent[]) {
     const done = list.at(-1) as Extract<CueEvent, { type: 'done' }>
@@ -293,7 +313,15 @@ describe('POST /api/cue from the /search strip', () => {
     expect(h.analytics).toEqual([
       {
         event_name: 'search_answer_served',
-        properties: { mode: 'basic', reason, exact_bucket: '1-2', related_used: false },
+        properties: {
+          mode: 'basic',
+          reason,
+          exact_bucket: '1-2',
+          related_used: false,
+          related_checked: false,
+          related_best: null,
+          related_hits: 0,
+        },
       },
     ])
   })
@@ -332,7 +360,18 @@ describe('POST /api/cue from the /search strip', () => {
     const done = list.at(-1) as Extract<CueEvent, { type: 'done' }>
     expect(done.mode).toBe('ai')
     expect(h.analytics).toEqual([
-      { event_name: 'search_answer_served', properties: { mode: 'ai', reason: null, exact_bucket: null, related_used: false } },
+      {
+        event_name: 'search_answer_served',
+        properties: {
+          mode: 'ai',
+          reason: null,
+          exact_bucket: null,
+          related_used: false,
+          related_checked: false,
+          related_best: null,
+          related_hits: 0,
+        },
+      },
     ])
     expect(JSON.stringify(h.analytics)).not.toMatch(/lawyer|atlanta|203\.0\.113/i)
   })

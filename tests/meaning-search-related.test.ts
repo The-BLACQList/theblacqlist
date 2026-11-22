@@ -48,7 +48,12 @@ import {
 } from '@/lib/search/hybrid'
 import { understandQuery } from '@/lib/search/understand'
 import { clearVoyageQueryCache } from '@/lib/search/voyage'
-import { findRelatedListings, meaningSearchOn, voyageRelatedDeps, withinReach } from '@/lib/services/relatedListings'
+import {
+  findRelatedListings,
+  meaningSearchOn,
+  voyageRelatedDeps,
+  withinReach,
+} from '@/lib/services/relatedListings'
 
 import { ctx, deps, entity, ID } from './fixtures/cue'
 
@@ -112,13 +117,15 @@ describe('findRelatedIds', () => {
     expect(ids).toEqual([ID(1)])
     expect(d.embed).toHaveBeenCalledWith('bathroom')
     expect(d.nearest).toHaveBeenCalledWith(
-      expect.objectContaining({ embedding: VECTOR, minSimilarity: 0.45, cityId: 'atl' })
+      expect.objectContaining({ embedding: VECTOR, minSimilarity: 0.25, cityId: 'atl' })
     )
   })
 
   it('is empty with no words, no numbers, or a failing read', async () => {
     expect(await findRelatedIds({ text: '  ' }, fakeDeps([hit(1, 0.9)]))).toEqual([])
-    expect(await findRelatedIds({ text: 'soap' }, fakeDeps([hit(1, 0.9)], { embed: async () => null }))).toEqual([])
+    expect(
+      await findRelatedIds({ text: 'soap' }, fakeDeps([hit(1, 0.9)], { embed: async () => null }))
+    ).toEqual([])
     const broken = fakeDeps([], {
       nearest: async () => {
         throw new Error('down')
@@ -148,8 +155,14 @@ describe('findRelatedListings', () => {
 
   it('loads the public rows in the order found', async () => {
     on()
-    const load = vi.fn(async (ids: readonly string[]) => ids.map((id) => entity(Number(id.slice(-3)))))
-    const found = await findRelatedListings({ text: 'soap' }, load, fakeDeps([hit(2, 0.6), hit(1, 0.9)]))
+    const load = vi.fn(async (ids: readonly string[]) =>
+      ids.map((id) => entity(Number(id.slice(-3))))
+    )
+    const found = await findRelatedListings(
+      { text: 'soap' },
+      load,
+      fakeDeps([hit(2, 0.6), hit(1, 0.9)])
+    )
     expect(found.map((e) => e.id)).toEqual([ID(1), ID(2)])
   })
 
@@ -183,7 +196,12 @@ describe('findRelatedListings', () => {
 
   it('calls the service-role search with the model and the bar', async () => {
     h.rpc.mockResolvedValue({ data: [{ listing_id: ID(1), similarity: '0.71' }], error: null })
-    const rows = await voyageRelatedDeps.nearest({ embedding: [0.1, 0.2], limit: 10, minSimilarity: 0.45, cityId: null })
+    const rows = await voyageRelatedDeps.nearest({
+      embedding: [0.1, 0.2],
+      limit: 10,
+      minSimilarity: 0.45,
+      cityId: null,
+    })
     expect(rows).toEqual([{ listingId: ID(1), similarity: 0.71 }])
     expect(h.rpc).toHaveBeenCalledWith('search_listings_semantic', {
       p_embedding: '[0.1,0.2]',
@@ -208,17 +226,31 @@ describe('findRelatedListings', () => {
 // ─── Cue's search tool ────────────────────────────────────────────────────────
 
 describe('Cue search_listings with related businesses', () => {
-  const soap = entity(11, { name: 'Shea Soap Co', category: { name: 'Bath & Body', slug: 'bath-body' } })
+  const soap = entity(11, {
+    name: 'Shea Soap Co',
+    category: { name: 'Bath & Body', slug: 'bath-body' },
+  })
 
   it('adds related businesses when fewer than three match the words', async () => {
     const related = vi.fn(async () => [soap])
     const c = ctx({ deps: deps({ search: vi.fn(async () => [entity(1)]), related }) })
-    const result = await runCueTool('search_listings', { words: ['bathroom products'], city: 'atlanta' }, c)
+    const result = await runCueTool(
+      'search_listings',
+      { words: ['bathroom products'], city: 'atlanta' },
+      c
+    )
     const body = JSON.parse(result.content)
     expect(body.results.map((r: { id: string }) => r.id)).toEqual([ID(1)])
     expect(body.related.results.map((r: { id: string }) => r.id)).toEqual([ID(11)])
     expect(body.related.note).toMatch(/never as exact matches/)
-    expect(related).toHaveBeenCalledWith({ text: 'bathroom products', cityId: 'atl', exclude: [ID(1)], near: null })
+    expect(related).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text: 'bathroom products',
+        cityId: 'atl',
+        exclude: [ID(1)],
+        near: null,
+      })
+    )
     // Found by meaning is not found by the words: Suggest a Business still counts.
     expect(c.state.found).toBe(1)
     expect(c.state.related.has(ID(11))).toBe(true)
@@ -227,7 +259,9 @@ describe('Cue search_listings with related businesses', () => {
 
   it('three or more by the words: no meaning search', async () => {
     const related = vi.fn(async () => [soap])
-    const c = ctx({ deps: deps({ search: vi.fn(async () => [entity(1), entity(2), entity(3)]), related }) })
+    const c = ctx({
+      deps: deps({ search: vi.fn(async () => [entity(1), entity(2), entity(3)]), related }),
+    })
     const body = JSON.parse((await runCueTool('search_listings', { words: ['lawyer'] }, c)).content)
     expect(related).not.toHaveBeenCalled()
     expect(body.related).toBeUndefined()
@@ -243,7 +277,11 @@ describe('Cue search_listings with related businesses', () => {
   it('near me passes the point', async () => {
     const related = vi.fn(async () => [])
     const near = { lat: 33.7, lng: -84.4 }
-    await runCueTool('search_listings', { words: ['soap'], near_me: true }, ctx({ near, deps: deps({ related }) }))
+    await runCueTool(
+      'search_listings',
+      { words: ['soap'], near_me: true },
+      ctx({ near, deps: deps({ related }) })
+    )
     expect(related).toHaveBeenCalledWith(expect.objectContaining({ near }))
   })
 
@@ -302,20 +340,34 @@ function fakeSearch(q: number[], category: number[] = []) {
 describe('quick answer: Related Businesses row', () => {
   it('asks meaning search with the understood words, not the whole question', async () => {
     const related = vi.fn(async () => [card(11)])
-    const answer = await buildBasicAnswer(FOUNDER, null, { search: fakeSearch([1]), categories: CATEGORIES, related })
-    expect(related).toHaveBeenCalledWith({ text: 'bathroom', exclude: [ID(1)], near: null })
+    const answer = await buildBasicAnswer(FOUNDER, null, {
+      search: fakeSearch([1]),
+      categories: CATEGORIES,
+      related,
+    })
+    expect(related).toHaveBeenCalledWith(
+      expect.objectContaining({ text: 'bathroom', exclude: [ID(1)], near: null })
+    )
     expect(answer.cards.map((c) => [c.id, !!c.related])).toEqual([
       [ID(1), false],
       [ID(11), true],
     ])
     expect(answer.related).toBe(1)
-    expect(answer.text).toMatch(/^Here’s the business that matches “.+”\. Related businesses follow\.$/)
+    expect(answer.text).toMatch(
+      /^Here’s the business that matches “.+”\. Related businesses follow\.$/
+    )
   })
 
   it('nothing by the words: says so and shows the related ones', async () => {
     const related = vi.fn(async () => [card(11), card(12)])
-    const answer = await buildBasicAnswer(FOUNDER, null, { search: fakeSearch([]), categories: CATEGORIES, related })
-    expect(answer.text).toBe('Nothing matches “bathroom” word for word yet. Here are related businesses.')
+    const answer = await buildBasicAnswer(FOUNDER, null, {
+      search: fakeSearch([]),
+      categories: CATEGORIES,
+      related,
+    })
+    expect(answer.text).toBe(
+      'Nothing matches “bathroom” word for word yet. Here are related businesses.'
+    )
     expect(answer.cards.every((c) => c.related)).toBe(true)
     expect(answer.exactBucket).toBe('0')
   })
@@ -333,7 +385,11 @@ describe('quick answer: Related Businesses row', () => {
 
   it('browse ("black owned") sends nothing to meaning search', async () => {
     const related = vi.fn(async () => [card(11)])
-    await buildBasicAnswer('black owned', null, { search: fakeSearch([]), categories: CATEGORIES, related })
+    await buildBasicAnswer('black owned', null, {
+      search: fakeSearch([]),
+      categories: CATEGORIES,
+      related,
+    })
     expect(related).not.toHaveBeenCalled()
   })
 
@@ -341,7 +397,11 @@ describe('quick answer: Related Businesses row', () => {
     const related = vi.fn(async () => {
       throw new Error('down')
     })
-    const answer = await buildBasicAnswer(FOUNDER, null, { search: fakeSearch([1]), categories: CATEGORIES, related })
+    const answer = await buildBasicAnswer(FOUNDER, null, {
+      search: fakeSearch([1]),
+      categories: CATEGORIES,
+      related,
+    })
     expect(answer.cards.map((c) => c.id)).toEqual([ID(1)])
     expect(answer.related).toBe(0)
   })
@@ -374,7 +434,9 @@ describe('related cards on screen', () => {
   }
 
   it('shows them under a Related Businesses heading, after the matches', () => {
-    const html = renderToStaticMarkup(createElement(AssistantReply, { ask: 'soap', reply, layout: 'page' }))
+    const html = renderToStaticMarkup(
+      createElement(AssistantReply, { ask: 'soap', reply, layout: 'page' })
+    )
     expect(RELATED_HEADING).toBe('Related Businesses')
     expect(html).toContain('Related Businesses')
     expect(html.indexOf('Business 1<')).toBeLessThan(html.indexOf('Related Businesses'))
@@ -383,7 +445,9 @@ describe('related cards on screen', () => {
 
   it('no related cards: no heading', () => {
     const plain: CueReply = { ...reply, cards: [card(1)] }
-    const html = renderToStaticMarkup(createElement(AssistantReply, { ask: 'soap', reply: plain, layout: 'page' }))
+    const html = renderToStaticMarkup(
+      createElement(AssistantReply, { ask: 'soap', reply: plain, layout: 'page' })
+    )
     expect(html).not.toContain('Related Businesses')
   })
 

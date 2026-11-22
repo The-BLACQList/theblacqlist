@@ -33,6 +33,12 @@ export const RELATED_MAX = 5
 export const RELATED_MIN_SIMILARITY = 0.45
 /** Rows asked of the database: a few spare, since some are already shown. */
 export const RELATED_FETCH = 10
+/**
+ * The database is asked down to this score, so the best score is known even
+ * when nothing reaches RELATED_MIN_SIMILARITY (ticket 263). Only scores at or
+ * above the bar are ever shown; the rest only tune the bar.
+ */
+export const RELATED_SCORE_FLOOR = 0.25
 
 export interface RelatedHit {
   listingId: string
@@ -46,6 +52,28 @@ export interface RelatedQuery {
   cityId?: string | null
   /** Ids already in the answer, never repeated as related. */
   exclude?: Iterable<string>
+  /** Told the scores once the database answers (ticket 263). Numbers only. */
+  onStats?: (stats: RelatedStats) => void
+}
+
+/** What one meaning-search lookup scored: for tuning the bar, never shown. */
+export interface RelatedStats {
+  /** The best score found, from RELATED_SCORE_FLOOR up; null when none. */
+  best: number | null
+  /** How many reached the bar, before repeats were dropped. */
+  hits: number
+}
+
+/** Scores of a lookup's rows. Pure. */
+export function relatedStats(
+  hits: readonly RelatedHit[],
+  minSimilarity: number = RELATED_MIN_SIMILARITY
+): RelatedStats {
+  const scores = hits.map((h) => h.similarity).filter((n) => Number.isFinite(n))
+  return {
+    best: scores.length > 0 ? Math.max(...scores) : null,
+    hits: scores.filter((n) => n >= minSimilarity).length,
+  }
 }
 
 /** The two reads meaning search needs. Injected so tests run without either. */
@@ -53,7 +81,12 @@ export interface RelatedDeps {
   /** The query's numbers, or null when Voyage is off, slow or failing. */
   embed(text: string): Promise<number[] | null>
   /** The closest searchable listings, best first. */
-  nearest(args: { embedding: number[]; limit: number; minSimilarity: number; cityId: string | null }): Promise<RelatedHit[]>
+  nearest(args: {
+    embedding: number[]
+    limit: number
+    minSimilarity: number
+    cityId: string | null
+  }): Promise<RelatedHit[]>
 }
 
 /**
@@ -102,11 +135,29 @@ export async function findRelatedIds(
     const hits = await deps.nearest({
       embedding,
       limit: RELATED_FETCH,
-      minSimilarity: RELATED_MIN_SIMILARITY,
+      minSimilarity: RELATED_SCORE_FLOOR,
       cityId: query.cityId ?? null,
     })
+    try {
+      query.onStats?.(relatedStats(hits))
+    } catch {
+      // Tuning numbers only: never let them cost the answer.
+    }
     return pickRelated(hits, query.exclude, max)
   } catch {
     return []
+  }
+}
+
+/** Meaning search's scores as analytics properties (ticket 263). Pure. */
+export function relatedCheckProps(check: RelatedStats | null): {
+  related_checked: boolean
+  related_best: number | null
+  related_hits: number
+} {
+  return {
+    related_checked: check !== null,
+    related_best: check?.best == null ? null : Math.round(check.best * 100) / 100,
+    related_hits: check?.hits ?? 0,
   }
 }

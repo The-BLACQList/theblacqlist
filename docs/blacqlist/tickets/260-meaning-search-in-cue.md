@@ -1,6 +1,6 @@
 # Ticket 260: Meaning Search in Cue and the Quick Answer
 
-**Status:** PR open. Merge needs the founder's OK. Turning the flag on in prod is GATE-DEPLOY.
+**Status:** Merged #393 (75a1037), 2026-11-21. Staging eval skipped (founder). Flag on in prod 2026-11-21; one cron run embedded 706/706. Follow-up: ticket 263.
 
 ## Why
 Founder, 2026-11-21: "How do I switch to Black Owned bathroom products" found nothing on production. Tickets 254–258 made search understand the question and always answer. Ticket 259 built the meaning-search index, with the flag off.

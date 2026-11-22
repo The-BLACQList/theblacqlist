@@ -18,15 +18,30 @@ import Anthropic, { APIError, APIUserAbortError } from '@anthropic-ai/sdk'
 
 import type { AssistantAction, AssistantCard } from '@/lib/ai/assistant-limits'
 import { SUGGEST_BUSINESS } from '@/lib/search/basicAnswer'
+import type { RelatedStats } from '@/lib/search/hybrid'
 
 import { checkReply, cleanReply, lastFullSentence, SWAP_WITH_CARDS, type CueName } from './guard'
 import { CUE_INPUT_CHAR_CAP, CUE_MAX_CALLS, CUE_MAX_TOKENS, CUE_MAX_TOOLS_PER_CALL } from './limits'
 import { CueCallError, runToolLoop, type CueModelCall, type CueStop, type CueUsage } from './loop'
 import type { CueEvent } from './stream'
-import { CUE_LOOKUP_TOOLS, CUE_MAX_CARDS, CUE_TOOLS, runCueTool, statusFor, turnOutput, type CueToolContext } from './tools'
+import {
+  CUE_LOOKUP_TOOLS,
+  CUE_MAX_CARDS,
+  CUE_TOOLS,
+  runCueTool,
+  statusFor,
+  turnOutput,
+  type CueToolContext,
+} from './tools'
 
 export { CUE_INPUT_CHAR_CAP, CUE_MAX_CALLS, CUE_MAX_TOKENS, CUE_MAX_TOOLS_PER_CALL }
-export { CueCallError, type CueCallErrorCode, type CueModelCall, type CueStop, type CueUsage } from './loop'
+export {
+  CueCallError,
+  type CueCallErrorCode,
+  type CueModelCall,
+  type CueStop,
+  type CueUsage,
+} from './loop'
 
 /** Cards shown when the loop ends early without choosing any. */
 const EARLY_CARDS = 3
@@ -61,7 +76,10 @@ export function anthropicCueCall(): CueModelCall {
  * the spend ceiling (lib/ai/spend.ts) prices Haiku, so a dearer model in
  * production is a GATE-SPEND decision, made with spend.ts updated alongside.
  */
-export function searchModel(base: string, env: Record<string, string | undefined> = process.env): string {
+export function searchModel(
+  base: string,
+  env: Record<string, string | undefined> = process.env
+): string {
   const override = env.CUE_SEARCH_MODEL?.trim()
   if (!override || env.VERCEL_ENV === 'production') return base
   return /^claude-[a-z0-9-]{3,60}$/.test(override) ? override : base
@@ -77,6 +95,8 @@ export interface CueRunResult {
   calls: number
   /** Cards found by meaning, not by the words (ticket 260). */
   related: number
+  /** What meaning search scored this turn, null when it didn't run (ticket 263). */
+  relatedCheck: RelatedStats | null
 }
 
 export async function runCue(args: {
@@ -124,7 +144,11 @@ function finish(args: {
   }
   const { cards, actions } = turnOutput(ctx)
   // Searched and nothing matched the words: offer to suggest one (ticket 256).
-  if (ctx.state.searches > 0 && ctx.state.found === 0 && !actions.some((a) => a.kind === 'link' && a.href === '/add-business')) {
+  if (
+    ctx.state.searches > 0 &&
+    ctx.state.found === 0 &&
+    !actions.some((a) => a.kind === 'link' && a.href === '/add-business')
+  ) {
     actions.push(SUGGEST_BUSINESS)
   }
 
@@ -141,12 +165,28 @@ function finish(args: {
   ]
   let swapped = false
   if (text) {
-    const checked = checkReply({ text, hasCards: cards.length > 0, names: args.names, allowedIds, skipNames })
+    const checked = checkReply({
+      text,
+      hasCards: cards.length > 0,
+      names: args.names,
+      allowedIds,
+      skipNames,
+    })
     text = checked.text
     swapped = checked.swapped
   }
   if (!text && cards.length > 0) text = SWAP_WITH_CARDS
 
   const related = cards.filter((c) => c.related).length
-  return { text, cards, actions, stop, swapped, usage: args.usage, calls: args.calls, related }
+  return {
+    text,
+    cards,
+    actions,
+    stop,
+    swapped,
+    usage: args.usage,
+    calls: args.calls,
+    related,
+    relatedCheck: ctx.state.relatedCheck,
+  }
 }
