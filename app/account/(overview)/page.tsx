@@ -148,11 +148,10 @@ export default async function AccountOverviewPage() {
         .eq('user_id', user.id),
       supabase
         .from('listings')
-        .select('id, name, slug, entity_type, trust_tier, cities!listings_city_id_fkey(slug)')
+        .select('id, name, slug, entity_type, cities!listings_city_id_fkey(slug)')
         .eq('owner_user_id', user.id)
         .is('deleted_at', null)
-        .limit(1)
-        .maybeSingle(),
+        .order('created_at', { ascending: false }),
     ])
 
   const recentSaves: RecentSave[] = (savesRes.data ?? []).map((s) => {
@@ -187,16 +186,14 @@ export default async function AccountOverviewPage() {
     | { id: string; status: string; listings: { name: string } | null }
     | null
   const pendingClaim = latestClaim?.status === 'pending' ? latestClaim : null
-  const ownedListing = ownedRes.data as
-    | {
-        id: string
-        name: string
-        slug: string
-        entity_type: string
-        trust_tier: string
-        cities: { slug: string } | null
-      }
-    | null
+  const ownedPages = (ownedRes.data ?? []) as unknown as Array<{
+    id: string
+    name: string
+    slug: string
+    entity_type: string
+    cities: { slug: string } | null
+  }>
+  const ownedListing = ownedPages[0] ?? null
 
   const spend = receiptsRes.error
     ? null
@@ -508,38 +505,25 @@ export default async function AccountOverviewPage() {
       {ownedRes.error ? (
         <SectionError />
       ) : ownedListing ? (
-        <section
-          aria-labelledby="business-heading"
-          className="rounded-[4px] bg-deep-bg px-5 py-7 md:px-11 md:py-9 flex flex-wrap items-center gap-6"
-        >
-          <div className="min-w-0 flex-[1_1_280px]">
-            <p className="font-subhead text-xs font-bold uppercase tracking-[0.14em] text-gold">
-              Your business
-            </p>
-            <h2
-              id="business-heading"
-              className="mt-2 font-headline font-medium text-[26px] md:text-[30px] text-off-white"
-            >
-              {ownedListing.name}
-            </h2>
-            <p className="mt-1 font-subhead text-sm text-ink-soft">
-              {TRUST_TIER_META[ownedListing.trust_tier as TrustTier]?.label ?? ownedListing.trust_tier}
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <Link
-              href={buildEntityUrl(ownedListing.entity_type, ownedListing.cities?.slug, ownedListing.slug)}
-              className="inline-flex min-h-[46px] items-center justify-center px-[22px] rounded-[3px] border border-charcoal text-off-white font-subhead text-[15px] font-semibold hover:bg-off-white/10 transition-colors duration-150"
-            >
-              View Page
-            </Link>
-            <Link
+        // Business Home and the menu carry the business now (tickets 252, 253),
+        // so this is a short way in, not a second dashboard (ticket 265).
+        <section aria-labelledby="business-heading">
+          <h2 id="business-heading" className="font-headline font-medium text-[22px] text-ink mb-3">
+            Your Business
+          </h2>
+          <ul className="list-none m-0 p-0 border-b border-hairline">
+            <RowLink
               href="/dashboard"
-              className="inline-flex min-h-[46px] items-center justify-center px-[22px] rounded-[3px] bg-gold hover:bg-light-gold text-brand-black font-subhead text-[15px] font-semibold transition-colors duration-150"
-            >
-              Manage My Page
-            </Link>
-          </div>
+              label="Business Home"
+              meta={ownedPages.length > 1 ? `${ownedPages.length} pages` : ownedListing.name}
+            />
+            {ownedPages.length === 1 && (
+              <RowLink
+                href={buildEntityUrl(ownedListing.entity_type, ownedListing.cities?.slug, ownedListing.slug)}
+                label="View My Page"
+              />
+            )}
+          </ul>
         </section>
       ) : (
         <section
