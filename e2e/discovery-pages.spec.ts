@@ -59,6 +59,20 @@ test.describe('TA-07 — Search and discovery', () => {
   })
 })
 
+test.describe('Search answer strip (ticket 255)', () => {
+  test('a question always gets an answer above the grid, labelled by who wrote it', async ({ page }) => {
+    await page.goto(`/search?q=${encodeURIComponent('How do I switch to Black Owned bathroom products')}`)
+    const strip = page.getByTestId('search-answer')
+    await expect(strip).toBeVisible()
+    // Settles on Cue's answer or the quick answer, never on nothing.
+    await expect(strip).toHaveAttribute('data-mode', /^(ai|basic)$/, { timeout: 20_000 })
+    const mode = await strip.getAttribute('data-mode')
+    await expect(
+      strip.getByText(mode === 'basic' ? 'From Our Listings' : 'AI Answer from Our Listings')
+    ).toBeVisible()
+  })
+})
+
 test.describe('TA-08 — City and category landing pages', () => {
   test('step 1 — the city landing page renders at /discover/[citySlug]', async ({ page }) => {
     await page.goto(`/discover/${CITY_SLUG}`)

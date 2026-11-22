@@ -8,7 +8,8 @@
  * spend ceiling prices this worst case (lib/ai/spend.ts), whichever Cue runs.
  *
  * ── Settings ─────────────────────────────────────────────────────────────────
- * Thinking off and low effort: this is a chat, speed matters more than depth.
+ * Thinking off. Effort low by default, speed over depth; the visitor Cue asks
+ * for medium (ticket 256) so it searches again before saying "not listed".
  * No sampling settings and no prefill; the current models reject both.
  *
  * ── What reaches the screen ──────────────────────────────────────────────────
@@ -78,6 +79,8 @@ export interface ToolLoopArgs {
   statusFor: (name: string, input: unknown) => string
   emit: (event: CueProgressEvent) => void
   signal: AbortSignal
+  /** Defaults to 'low'. */
+  effort?: 'low' | 'medium'
   /** Streamed between one call's words and the next's. The visitor Cue runs
    *  them on as one paragraph (' '); the owner Cue starts a new one ('\n\n'). */
   partBreak?: string
@@ -152,7 +155,7 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
           tools: [...args.tools],
           messages: withCacheMark(messages),
           thinking: { type: 'disabled' },
-          output_config: { effort: 'low' },
+          output_config: { effort: args.effort ?? 'low' },
         },
         (delta) => guard.push(delta),
         signal

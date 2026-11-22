@@ -17,6 +17,7 @@
 import Anthropic, { APIError, APIUserAbortError } from '@anthropic-ai/sdk'
 
 import type { AssistantAction, AssistantCard } from '@/lib/ai/assistant-limits'
+import { SUGGEST_BUSINESS } from '@/lib/search/basicAnswer'
 
 import { checkReply, cleanReply, lastFullSentence, SWAP_WITH_CARDS, type CueName } from './guard'
 import { CUE_INPUT_CHAR_CAP, CUE_MAX_CALLS, CUE_MAX_TOKENS, CUE_MAX_TOOLS_PER_CALL } from './limits'
@@ -54,6 +55,18 @@ export function anthropicCueCall(): CueModelCall {
   }
 }
 
+/**
+ * The model for the /search answer (ticket 256). CUE_SEARCH_MODEL can name
+ * another Claude model to compare on the eval set, outside production only:
+ * the spend ceiling (lib/ai/spend.ts) prices Haiku, so a dearer model in
+ * production is a GATE-SPEND decision, made with spend.ts updated alongside.
+ */
+export function searchModel(base: string, env: Record<string, string | undefined> = process.env): string {
+  const override = env.CUE_SEARCH_MODEL?.trim()
+  if (!override || env.VERCEL_ENV === 'production') return base
+  return /^claude-[a-z0-9-]{3,60}$/.test(override) ? override : base
+}
+
 export interface CueRunResult {
   text: string
   cards: AssistantCard[]
@@ -86,6 +99,9 @@ export async function runCue(args: {
     statusFor: (name, input) => statusFor(name, input, ctx),
     emit: args.emit,
     signal: args.signal,
+    // A visitor's question deserves a second search before "not listed"
+    // (ticket 256). The owner Cue keeps the loop's default.
+    effort: 'medium',
   })
   return finish({ ctx, names: args.names, ...loop })
 }
@@ -104,6 +120,10 @@ function finish(args: {
     ctx.state.shown = [...ctx.state.seen.keys()].slice(0, Math.min(EARLY_CARDS, CUE_MAX_CARDS))
   }
   const { cards, actions } = turnOutput(ctx)
+  // Searched and nothing matched the words: offer to suggest one (ticket 256).
+  if (ctx.state.searches > 0 && ctx.state.found === 0 && !actions.some((a) => a.kind === 'link' && a.href === '/add-business')) {
+    actions.push(SUGGEST_BUSINESS)
+  }
 
   let text = cleanReply(args.replyParts.join(' '))
   if (stop === 'refusal') text = ''

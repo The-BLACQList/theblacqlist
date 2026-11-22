@@ -122,7 +122,14 @@ export const CATEGORY_KEYWORDS: Readonly<Record<string, readonly string[]>> = {
   'candles-home-fragrance': ['candle', 'incense', 'fragrance'],
   'handmade-artisan-goods': ['handmade', 'crafts', 'artisan'],
   'cultural-heritage-products': ['kente', 'african print', 'ankara', 'heritage', 'juneteenth'],
-  'health-wellness-products': ['skincare products', 'body butter', 'soap', 'shea butter', 'sea moss', 'supplements'],
+  // Bath & Body (ticket 257) took soap, body butter and shea butter. No
+  // "bathroom" here: it means remodels and plumbing too (its intent family
+  // reaches this category through bath, soap and lotion).
+  'bath-body': [
+    'bath', 'soap', 'body wash', 'bath bomb', 'bath salts', 'lotion', 'body butter',
+    'body oil', 'body scrub', 'toiletries', 'deodorant', 'shower gel', 'shea butter',
+  ],
+  'health-wellness-products': ['skincare products', 'sea moss', 'supplements', 'black seed oil', 'black seed', 'essential oil'],
   bookstores: ['books', 'bookstore', 'book shop'],
   'clothing-boutiques': ['clothes', 'clothing', 'boutique', 'outfit', 'dress'],
   'accessories-jewelry': ['jewelry', 'earrings', 'necklace', 'bracelet', 'rings', 'handbag', 'purse', 'bags'],

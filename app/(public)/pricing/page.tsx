@@ -49,59 +49,59 @@ function faqItems(growthOpen: boolean, aiOn: boolean) {
   const starterAi = aiOn ? `AI writing help with ${aiQuota('starter')} drafts every 30 days, ` : ''
   const growthAi = aiOn ? `${aiQuota('growth')} AI drafts every 30 days, ` : ''
   return [
-  {
-    q: 'Is listing my business really free?',
-    a: 'Yes. A BLACQList Page is free forever: your hours, contact info, website, a short description, up to 3 photos, and community reviews. Claiming it and getting Verified are free too. No credit card required.',
-  },
-  {
-    q: 'What does Starter add?',
-    a: `Starter adds ${starterAi}the full page layout, up to 10 photos, a video, your menu or service list with prices, your full story with no length limit, more details customers filter by, a common questions section, social links, public replies to reviews, and 30 days of views, saves, and taps.${growthOpen ? '' : ' It is the paid plan available today.'}`,
-  },
-  ...(growthOpen
-    ? [
-        {
-          q: 'What does Growth add?',
-          a: `Growth adds ${growthAi}up to 25 photos, a storefront for up to 25 products and services, up to 3 events at a time, 1 job posting every 30 days, and analytics going back 12 months.`,
-        },
-        {
-          q: 'When is Premium available?',
-          a: "Not yet. We'll share what's in Premium when it opens. We are not selling it until everything in it works. Join the waitlist and we will tell you the day it does.",
-        },
-      ]
-    : [
-        {
-          q: 'When are Growth and Premium available?',
-          a: "Not yet. We'll share what's in Growth and Premium when they open. We are not selling either until everything in them works. Join the waitlist and we will tell you the day it does.",
-        },
-      ]),
-  ...(aiOn
-    ? [
-        {
-          q: 'How does AI writing help work?',
-          a: "On Edit content, tap a Write button under your about text, search title, or search description, or ask for an Instagram caption. You get a draft written from what's already on your page. Change any word, and nothing goes live until you save. Explain my numbers gives you a plain read on your last 30 days. Each draft uses one from your plan's monthly allowance.",
-        },
-      ]
-    : []),
-  {
-    q: 'How does annual billing work?',
-    a: 'Choose annual at checkout and you save about 20%, a little more than two months free. You can switch between monthly and annual anytime from your billing portal.',
-  },
-  {
-    q: 'What is a Sponsored Spotlight?',
-    a: 'A high-visibility paid placement on the BLACQList homepage, city pages, and category views, with limited inventory. It is not available for purchase yet — pricing will be published when it opens.',
-  },
-  {
-    q: 'What is BLACQ Boost?',
-    a: 'A short-term boost that surfaces your listing higher in search results and relevant category pages for a focused 30-day window. It is not available for purchase yet — pricing will be published when it opens.',
-  },
-  {
-    q: 'Can I cancel a paid plan anytime?',
-    a: 'Yes. Paid plans renew automatically until you cancel, with no long-term contract. To cancel, open Upgrade in your dashboard and choose Manage subscription.',
-  },
-  {
-    q: 'Do I need a credit card to get started?',
-    a: 'No. The Free plan requires no payment information at all.',
-  },
+    {
+      q: 'Is listing my business really free?',
+      a: 'Yes. A BLACQList Page is free forever: your hours, contact info, website, a short description, up to 3 photos, and community reviews. Claiming it and getting Verified are free too. No credit card required.',
+    },
+    {
+      q: 'What does Starter add?',
+      a: `Starter adds ${starterAi}the full page layout, up to 10 photos, a video, your menu or service list with prices, your full story with no length limit, more details customers filter by, a common questions section, social links, public replies to reviews, and 30 days of views, saves, and taps.${growthOpen ? '' : ' It is the paid plan available today.'}`,
+    },
+    ...(growthOpen
+      ? [
+          {
+            q: 'What does Growth add?',
+            a: `Growth adds ${growthAi}up to 25 photos, a storefront for up to 25 products and services, up to 3 events at a time, 1 job posting every 30 days, and advanced analytics: 12 months of numbers, each compared with the period before, plus your events and jobs.`,
+          },
+          {
+            q: 'When is Premium available?',
+            a: "Not yet. We'll share what's in Premium when it opens. We are not selling it until everything in it works. Join the waitlist and we will tell you the day it does.",
+          },
+        ]
+      : [
+          {
+            q: 'When are Growth and Premium available?',
+            a: "Not yet. We'll share what's in Growth and Premium when they open. We are not selling either until everything in them works. Join the waitlist and we will tell you the day it does.",
+          },
+        ]),
+    ...(aiOn
+      ? [
+          {
+            q: 'How does AI writing help work?',
+            a: "On Edit content, tap a Write button under your about text, search title, or search description, or ask for an Instagram caption. You get a draft written from what's already on your page. Change any word, and nothing goes live until you save. Explain my numbers gives you a plain read on your last 30 days. Each draft uses one from your plan's monthly allowance.",
+          },
+        ]
+      : []),
+    {
+      q: 'How does annual billing work?',
+      a: 'Choose annual at checkout and you save about 20%, a little more than two months free. You can switch between monthly and annual anytime from your billing portal.',
+    },
+    {
+      q: 'What is a Sponsored Spotlight?',
+      a: 'A high-visibility paid placement on the BLACQList homepage, city pages, and category views, with limited inventory. It is not available for purchase yet — pricing will be published when it opens.',
+    },
+    {
+      q: 'What is BLACQ Boost?',
+      a: 'A short-term boost that surfaces your listing higher in search results and relevant category pages for a focused 30-day window. It is not available for purchase yet — pricing will be published when it opens.',
+    },
+    {
+      q: 'Can I cancel a paid plan anytime?',
+      a: 'Yes. Paid plans renew automatically until you cancel, with no long-term contract. To cancel, open Upgrade in your dashboard and choose Manage subscription.',
+    },
+    {
+      q: 'Do I need a credit card to get started?',
+      a: 'No. The Free plan requires no payment information at all.',
+    },
   ]
 }
 
@@ -144,7 +144,7 @@ export default async function PricingPage() {
           title="BLACQList Pricing"
           subtitle={
             growthOpen
-              ? `Getting listed is always free. ${aiLead}Starter adds the full page layout, more photos, review replies, and a simple analytics dashboard. Growth adds a storefront, events, job postings, and 12 months of analytics. Pay monthly or save about 20% with annual billing. Premium is on the way.`
+              ? `Getting listed is always free. ${aiLead}Starter adds the full page layout, more photos, review replies, and a simple analytics dashboard. Growth adds a storefront, events, job postings, and advanced analytics over 12 months. Pay monthly or save about 20% with annual billing. Premium is on the way.`
               : `Getting listed is always free. ${aiLead}Starter adds the full page layout, more photos, review replies, and a simple analytics dashboard. Pay monthly or save about 20% with annual billing. Growth and Premium are on the way.`
           }
         />
