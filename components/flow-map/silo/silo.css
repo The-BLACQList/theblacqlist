@@ -1969,3 +1969,146 @@
     animation: none !important;
   }
 }
+
+/* ── Phone: a preview in the page, full-screen to explore (ticket 248) ───── */
+
+.silo-enter,
+.dock .close {
+  display: none;
+}
+
+/* The map tools are one group so a phone in full-screen can move them off the
+   title row; everywhere else the group is invisible to layout. */
+.dock .tools {
+  display: contents;
+}
+
+/* Full-screen holds the page still underneath. */
+html.silo-full-lock,
+html.silo-full-lock body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+@media (max-width: 759px) and (min-height: 501px), (max-height: 500px) {
+  /* No scroll track on a phone: the page scrolls past the preview. */
+  .silo-track[data-mode='map'] {
+    height: auto;
+  }
+  .silo-track[data-mode='map'] .silo {
+    position: relative;
+    top: auto;
+  }
+
+  /* In the page the map takes no gestures and shows only the strip. */
+  .silo-track[data-mode='map']:not([data-full]) .silo-stage canvas {
+    pointer-events: none;
+  }
+  .silo-track[data-mode='map']:not([data-full]) :is(.gauge, .ctx, .silo-hint),
+  .silo-track[data-mode='map']:not([data-full]) .dock > :not([aria-haspopup]) {
+    display: none;
+  }
+
+  .silo-track[data-mode='map']:not([data-full]) .silo-enter {
+    position: absolute;
+    z-index: 3;
+    left: 50%;
+    bottom: calc(var(--eb) + 20px);
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 50px;
+    padding: 0 26px;
+    border-radius: 999px;
+    border: 0;
+    background: var(--gold-2);
+    color: #1a1405;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    box-shadow:
+      0 0 0 1px rgba(255, 216, 103, 0.35),
+      0 8px 28px rgba(0, 0, 0, 0.55);
+  }
+  .silo-track[data-mode='map']:not([data-full]) .silo-enter:active {
+    transform: translateX(-50%) scale(0.98);
+  }
+
+  /* Full-screen: over the header and the pills, the whole window. */
+  .silo-track[data-full] {
+    --hdr: 0px;
+  }
+  .silo-track[data-full] .silo {
+    position: fixed;
+    inset: 0;
+    z-index: 70;
+    height: 100dvh;
+    /* The HUD scrolls its sheets but never pinch-zooms the page. */
+    touch-action: pan-x pan-y;
+  }
+  .silo-track[data-full] .silo-stage canvas {
+    touch-action: none;
+  }
+  .silo-track[data-full] .dock .close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+  }
+  .silo-track[data-full] .dock .close svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+  }
+  .silo-track[data-full] .fl {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* More and X keep the corner of the strip; the map tools drop to the
+     bottom-left, over the map and clear of the title. */
+  .silo-track[data-full] .dock {
+    position: static;
+  }
+  .silo-track[data-full] .dock > button {
+    position: absolute;
+    z-index: 3;
+    top: 4px;
+  }
+  .silo-track[data-full] .dock > .close {
+    right: var(--er);
+  }
+  .silo-track[data-full] .dock > [aria-haspopup] {
+    right: calc(var(--er) + 50px);
+  }
+  .silo-track[data-full] .dock .tools {
+    position: absolute;
+    z-index: 3;
+    left: var(--el);
+    bottom: calc(var(--silo-sheet-h, 180px) + 12px);
+    display: flex;
+    gap: 6px;
+  }
+  .silo-track[data-full] .dock .tools button:not([aria-pressed='true']) {
+    background: var(--panel-solid);
+  }
+  .silo-track[data-full] .silo-hint {
+    bottom: calc(var(--silo-sheet-h, 180px) + 68px);
+  }
+}
+
+/* Landscape full-screen: the card owns the right edge, the rail the left. */
+@media (max-height: 500px) {
+  .silo-track[data-full] .dock .tools {
+    left: 64px;
+    bottom: var(--eb);
+  }
+  .silo-track[data-full] .silo-hint {
+    bottom: calc(var(--eb) + 56px);
+  }
+}

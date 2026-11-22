@@ -70,7 +70,10 @@ import {
   shellTop,
   stepZoom,
   INTRO,
+  PINCH,
+  PREVIEW_SPIN,
   RECENTER,
+  pinchZoom,
   zoomAmount,
   zoomOrbit,
   type SiloShape,
@@ -160,6 +163,16 @@ export interface SiloSceneProps {
   intro?: boolean
   /** A double-click on empty space recentered the view. */
   onRecenter?: () => void
+  /**
+   * Phone, in the page (ticket 248): the map takes no gestures and turns slowly
+   * on its own, so the page always scrolls.
+   */
+  preview?: boolean
+  /**
+   * Phone full-screen (ticket 248): one finger turns and tilts, two pinch the
+   * zoom, and the page underneath never moves.
+   */
+  full?: boolean
   /** Wedges with no business on the list yet: a pink square each. */
   gaps: readonly SiloGap[]
   selectedGap: SiloGap | null
@@ -608,7 +621,8 @@ function trackT(el: HTMLElement): number | null {
 /** Moves the page to `t` on the track. Instant, so it can't read as a user scroll. */
 function seatTrack(el: HTMLElement, t: number) {
   const parts = trackParts(el)
-  if (!parts) return
+  // Full-screen (ticket 248) locks the page, so the floor moves the camera only.
+  if (!parts || parts.track.hasAttribute('data-full')) return
   const track = parts.track.getBoundingClientRect()
   const stage = parts.stage.getBoundingClientRect()
   const room = track.height - stage.height
@@ -766,6 +780,16 @@ function Controls(
       axis: 'x' | 'y' | null
     } | null = null
     let hovered: string | null = null
+    // Full-screen (ticket 248): every finger on the map, for a two-finger pinch.
+    const fingers = new Map<number, { x: number; y: number }>()
+    let pinch: { gap: number; zoom: number; moving: boolean } | null = null
+    // A pinch ends one finger at a time. Until all are up, nothing is a tap.
+    let pinched = false
+
+    function fingerGap(): number {
+      const [a, b] = [...fingers.values()]
+      return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0
+    }
 
     function pickAt(clientX: number, clientY: number): Pick {
       const rect = el.getBoundingClientRect()
@@ -834,6 +858,21 @@ function Controls(
 
     const onDown = (e: PointerEvent) => {
       if (e.button !== 0) return
+      const full = !!live.current.full && e.pointerType === 'touch'
+      if (full) {
+        fingers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+        if (fingers.size === 2) {
+          // A second finger turns the drag into a pinch.
+          pinch = { gap: fingerGap(), zoom: rig.current.zoom, moving: false }
+          pinched = true
+          down = null
+          rig.current.dragging = false
+          rig.current.spin = 0
+          el.setPointerCapture?.(e.pointerId)
+          return
+        }
+        if (fingers.size > 2) return
+      }
       down = {
         id: e.pointerId,
         x: e.clientX,
@@ -841,7 +880,8 @@ function Controls(
         lastX: e.clientX,
         lastY: e.clientY,
         at: e.timeStamp,
-        mouse: e.pointerType !== 'touch',
+        // Full-screen owns every gesture, so a finger turns and tilts like a mouse.
+        mouse: e.pointerType !== 'touch' || full,
         drag: false,
         axis: null,
       }
@@ -850,6 +890,20 @@ function Controls(
     }
 
     const onMove = (e: PointerEvent) => {
+      if (fingers.has(e.pointerId)) fingers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      if (pinch && fingers.size >= 2) {
+        const gap = fingerGap()
+        if (!pinch.moving && Math.abs(gap - pinch.gap) < PINCH.startPx) return
+        pinch.moving = true
+        const r = rig.current
+        const next = pinchZoom(pinch.zoom, pinch.gap, gap)
+        // Backing out leaves a close-up, as Move Farther does.
+        if (next > pinch.zoom && r.focus) letGo()
+        r.zoom = next
+        r.ease = ORBIT.easeS
+        invalidate()
+        return
+      }
       if (down && e.pointerId === down.id) {
         if (!down.drag && Math.hypot(e.clientX - down.x, e.clientY - down.y) > DRAG_THRESHOLD_PX) {
           down.drag = true
@@ -886,6 +940,14 @@ function Controls(
     }
 
     const onUp = (e: PointerEvent) => {
+      if (fingers.delete(e.pointerId)) {
+        if (fingers.size < 2) pinch = null
+        if (pinched) {
+          if (fingers.size === 0) pinched = false
+          el.releasePointerCapture?.(e.pointerId)
+          return
+        }
+      }
       if (!down || e.pointerId !== down.id) return
       const wasDrag = down.drag
       const r = rig.current
@@ -914,7 +976,10 @@ function Controls(
       }
     }
 
-    const onCancel = () => {
+    const onCancel = (e: PointerEvent) => {
+      fingers.delete(e.pointerId)
+      if (fingers.size < 2) pinch = null
+      if (fingers.size === 0) pinched = false
       down = null
       rig.current.dragging = false
       rig.current.spin = 0
@@ -1084,6 +1149,12 @@ function Controls(
       turn(r, r.spin * dt, 0)
       r.spin *= Math.exp(-4 * dt)
       if (Math.abs(r.spin) < 0.01) r.spin = 0
+    }
+
+    // The phone preview in the page turns slowly on its own (ticket 248).
+    // It waits for the opening glide to land.
+    if (l.preview && l.motion && !l.intro && !r.focus && !r.dragging) {
+      r.az += PREVIEW_SPIN * dt
     }
 
     const { shape } = l

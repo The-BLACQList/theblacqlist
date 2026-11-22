@@ -1,6 +1,6 @@
 # Ticket 250: The Collective Draws a Line From 1 Receipt
 
-**Status:** Built on `feat/250-collective-line-at-one`, 2026-11-21. Not merged.
+**Status:** Merged #374, 2026-11-21.
 
 Part of the Collective tighten-up (246–250). Founder pick, 2026-11-21: **"Line at 1, $ at 5."**
 

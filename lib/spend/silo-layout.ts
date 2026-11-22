@@ -943,6 +943,26 @@ export function stepZoom(zoom: number, dir: 1 | -1): number {
 }
 
 /**
+ * Phone full-screen (ticket 248). Zoom per natural-log unit of finger spread:
+ * pinching the fingers to half their gap backs out about 0.7 of the way.
+ */
+export const PINCH = { perLog: 1, startPx: 8 } as const
+
+/**
+ * A two-finger pinch: `startZoom` when the fingers were `startGap` apart, now
+ * `gap` apart. Fingers together back out toward the whole tower (1); fingers
+ * apart move in, never past ZOOM.min. A gap of 0 (one finger lifted) holds.
+ */
+export function pinchZoom(startZoom: number, startGap: number, gap: number): number {
+  if (startGap <= 0 || gap <= 0) return startZoom
+  const z = startZoom + Math.log(startGap / gap) * PINCH.perLog
+  return Math.min(1, Math.max(ZOOM.min, z))
+}
+
+/** Radians a second the phone preview turns on its own (ticket 248): a lap in about 90 s. */
+export const PREVIEW_SPIN = (Math.PI * 2) / 90
+
+/**
  * Where Recenter goes (ticket 247): the opening heading, tilt and distance,
  * inside the tower, with nothing picked. The level stays where the reader is.
  */

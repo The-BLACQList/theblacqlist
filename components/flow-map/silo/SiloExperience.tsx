@@ -5,7 +5,9 @@
  * 17 workshop. Every published business is on the map; a line shows from one
  * counted receipt, and a dollar figure once enough are counted (ticket 250).
  * Ticket 247 made it the whole page: an opening title over the map that
- * settles into the HUD, and Recenter (button, R, double-click).
+ * settles into the HUD, and Recenter (button, R, double-click). Ticket 248:
+ * on a phone the map is a slow preview in the page, and Enter The Collective
+ * opens it full-screen, where it owns every gesture and Back closes it.
  *
  * The HUD is plain HTML and renders first. The Three.js scene loads on its
  * own chunk after mount, and only when the device can draw it. If it can't
@@ -65,6 +67,7 @@ import {
 } from './SiloPanels'
 import {
   readShortcutsOn,
+  useCompactStage,
   useDocumentVisible,
   usePrefersReducedMotion,
   useSiloSupport,
@@ -144,6 +147,14 @@ const INTRO_SKIP_MS = 320
 /** Once the scene mounts, a beat for its first frames before the opening plays. */
 const INTRO_DRAW_MS = 200
 
+/** The history entry full-screen adds, so the phone's Back closes it (ticket 248). */
+const FULL_STATE = 'siloFull'
+
+function isFullEntry(): boolean {
+  const state: unknown = window.history.state
+  return !!state && typeof state === 'object' && FULL_STATE in state
+}
+
 export function SiloExperience({
   totalSpentCents,
   receiptCount,
@@ -158,6 +169,10 @@ export function SiloExperience({
   const support = useSiloSupport()
   const reducedMotion = usePrefersReducedMotion()
   const docVisible = useDocumentVisible()
+  const compact = useCompactStage()
+  // Phone full-screen (ticket 248). Only a phone stage opens it.
+  const [fullAsked, setFullAsked] = useState(false)
+  const full = fullAsked && compact
 
   const [Scene, setScene] = useState<Scene | null>(null)
   const [chunkFailed, setChunkFailed] = useState(false)
@@ -191,6 +206,7 @@ export function SiloExperience({
   const sectionRef = useRef<HTMLElement>(null)
   const navRef = useRef<SiloNav>(null)
   const moreBtnRef = useRef<HTMLButtonElement>(null)
+  const enterBtnRef = useRef<HTMLButtonElement>(null)
   const keysBtnRef = useRef<HTMLButtonElement>(null)
   const focusAfterSwap = useRef(false)
   const saidFloor = useRef(0)
@@ -351,6 +367,58 @@ export function SiloExperience({
     if (floor > 0) setHintGone(true)
   }
 
+  const enterFull = useCallback(() => {
+    if (!isFullEntry()) {
+      const state: unknown = window.history.state
+      const base = state && typeof state === 'object' ? state : {}
+      window.history.pushState({ ...base, [FULL_STATE]: true }, '')
+    }
+    setFullAsked(true)
+    setStatus('Full screen. Drag to look around, pinch to zoom, Back to close.')
+  }, [setStatus])
+
+  /** The X and Escape step back off the entry, so Back stays in step. */
+  const exitFull = useCallback(() => {
+    if (isFullEntry()) window.history.back()
+    else setFullAsked(false)
+  }, [])
+
+  // Back (or the X, through Back) closes full-screen.
+  useEffect(() => {
+    if (!fullAsked) return
+    const onPop = () => {
+      if (!isFullEntry()) setFullAsked(false)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [fullAsked])
+
+  // Full-screen holds the page still and takes focus; closing hands focus back.
+  const wasFull = useRef(false)
+  useEffect(() => {
+    const root = document.documentElement
+    if (full) {
+      wasFull.current = true
+      root.classList.add('silo-full-lock')
+      sectionRef.current?.focus({ preventScroll: true })
+      return () => root.classList.remove('silo-full-lock')
+    }
+    if (wasFull.current) {
+      wasFull.current = false
+      enterBtnRef.current?.focus({ preventScroll: true })
+      setStatus('Full screen closed.')
+    }
+  }, [full, setStatus])
+
+  // `?you=1` on a phone opens full-screen, where the card can show (ticket 248).
+  const fullForYouOnce = useRef(false)
+  useEffect(() => {
+    if (!focusYou || !you || !compact || fullForYouOnce.current) return
+    fullForYouOnce.current = true
+    const t = window.setTimeout(enterFull, 0)
+    return () => window.clearTimeout(t)
+  }, [focusYou, you, compact, enterFull])
+
   function recenter() {
     navRef.current?.recenter()
     setStatus('Back to the starting view.')
@@ -458,6 +526,7 @@ export function SiloExperience({
       else if (selectedId) selectBusiness(null)
       else if (selectedGap) setSelectedGap(null)
       else if (focusFloor !== null) pickFloor(focusFloor)
+      else if (full) exitFull()
       return
     }
     if (!shortcutsOn) return
@@ -564,7 +633,11 @@ export function SiloExperience({
     const update = () => {
       const edge = window.innerHeight
       const top = sheet.getBoundingClientRect().top
-      const onEdge = top < edge && section.getBoundingClientRect().bottom > edge - SHEET_EDGE_PX
+      // The phone preview hides the sheet (ticket 248): nothing to lift over.
+      const onEdge =
+        sheet.offsetHeight > 0 &&
+        top < edge &&
+        section.getBoundingClientRect().bottom > edge - SHEET_EDGE_PX
       const lift = phone.matches && onEdge ? Math.round(edge - top) : 0
       const side = sideways.matches && onEdge ? sheet.offsetWidth : 0
       const key = `${sheet.offsetHeight}:${lift}:${side}`
@@ -583,7 +656,7 @@ export function SiloExperience({
       window.removeEventListener('resize', update)
       writeSheetLift(section, 0, 0)
     }
-  }, [showList])
+  }, [showList, full])
 
   const currentFloor = showScene ? liveFloor : (focusFloor ?? selected?.floorIndex ?? null)
   const showIntro = intro !== 'done' && !showList
@@ -599,7 +672,11 @@ export function SiloExperience({
 
   return (
     <>
-      <div className="silo-track" data-mode={showList ? 'list' : 'map'}>
+      <div
+        className="silo-track"
+        data-mode={showList ? 'list' : 'map'}
+        data-full={full ? '' : undefined}
+      >
         {!showList && (
           <a className="silo-skip" href="#silo-after">
             Skip Past the Map
@@ -614,8 +691,11 @@ export function SiloExperience({
           ref={sectionRef}
           className={`silo${moreOpen ? ' more-open' : ''}${showIntro ? ` intro-${intro}` : ''}`}
           aria-labelledby="silo-title"
+          role={full ? 'dialog' : undefined}
+          aria-modal={full ? true : undefined}
           tabIndex={-1}
           onKeyDown={onKeyDown}
+          onPointerDown={full ? () => setHintGone(true) : undefined}
         >
           {showList ? (
             <SiloList businesses={businesses} cities={cities} note={listNote} action={listAction} />
@@ -649,6 +729,8 @@ export function SiloExperience({
                     onWholeTowerChange={setWholeTower}
                     onZoomChange={setZoom}
                     intro={intro === 'wait' || intro === 'play'}
+                    preview={compact && !full}
+                    full={full}
                     onRecenter={() => setStatus('Back to the starting view.')}
                     shape={shape}
                     labelsRef={labelsRef}
@@ -703,72 +785,87 @@ export function SiloExperience({
             </div>
           )}
 
-          {showHint && <p className="silo-hint">Keep scrolling to see every floor</p>}
+          {showHint && (
+            <p className="silo-hint">
+              {full
+                ? 'Drag to look around. Pinch to see the whole tower.'
+                : 'Keep scrolling to see every floor'}
+            </p>
+          )}
+
+          {/* Phone only (silo.css): the preview opens full-screen. */}
+          {showScene && !full && (
+            <button ref={enterBtnRef} type="button" className="silo-enter" onClick={enterFull}>
+              Enter The Collective
+            </button>
+          )}
 
           <div className="hud-bg" aria-hidden="true" />
 
           <div className="dock" role="toolbar" aria-label="Map controls">
-            {you && (
-              <button type="button" className="find" aria-label="Find Me" onClick={findMe}>
-                <svg viewBox="0 0 20 20" aria-hidden="true">
-                  <circle cx="10" cy="7" r="3" />
-                  <path d="M4 17c1-3.5 3.4-5 6-5s5 1.5 6 5" />
-                </svg>
-                <span className="lbl">Find Me</span>
-              </button>
-            )}
-            {showScene && (
-              <>
-                <button
-                  type="button"
-                  className="zoom"
-                  aria-label="Move Closer"
-                  title="Move Closer (+)"
-                  disabled={zoom <= ZOOM.min}
-                  onClick={() => navRef.current?.zoomStep(-1)}
-                >
-                  <span aria-hidden="true">+</span>
-                </button>
-                <button
-                  type="button"
-                  className="tower"
-                  aria-pressed={wholeTower}
-                  aria-label={wholeTower ? 'Go Inside' : 'Whole Tower'}
-                  title={wholeTower ? 'Go Inside (W)' : 'Whole Tower (W)'}
-                  onClick={() => navRef.current?.wholeTower()}
-                >
+            <div className="tools">
+              {you && (
+                <button type="button" className="find" aria-label="Find Me" onClick={findMe}>
                   <svg viewBox="0 0 20 20" aria-hidden="true">
-                    <ellipse cx="10" cy="4" rx="6" ry="2" />
-                    <ellipse cx="10" cy="10" rx="6" ry="2" />
-                    <ellipse cx="10" cy="16" rx="6" ry="2" />
+                    <circle cx="10" cy="7" r="3" />
+                    <path d="M4 17c1-3.5 3.4-5 6-5s5 1.5 6 5" />
                   </svg>
-                  <span className="lbl">{wholeTower ? 'Go Inside' : 'Whole Tower'}</span>
+                  <span className="lbl">Find Me</span>
                 </button>
-                <button
-                  type="button"
-                  className="zoom"
-                  aria-label="Move Farther"
-                  title="Move Farther (−)"
-                  disabled={zoom >= 1}
-                  onClick={() => navRef.current?.zoomStep(1)}
-                >
-                  <span aria-hidden="true">−</span>
-                </button>
-                <button
-                  type="button"
-                  className="recenter"
-                  aria-label="Recenter"
-                  title="Recenter (R)"
-                  onClick={recenter}
-                >
-                  <svg viewBox="0 0 20 20" aria-hidden="true">
-                    <circle cx="10" cy="10" r="5.5" />
-                    <path d="M10 1.5v4M10 14.5v4M1.5 10h4M14.5 10h4" />
-                  </svg>
-                  <span className="lbl">Recenter</span>
-                </button>
-              </>
-            )}
+              )}
+              {showScene && (
+                <>
+                  <button
+                    type="button"
+                    className="zoom"
+                    aria-label="Move Closer"
+                    title="Move Closer (+)"
+                    disabled={zoom <= ZOOM.min}
+                    onClick={() => navRef.current?.zoomStep(-1)}
+                  >
+                    <span aria-hidden="true">+</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="tower"
+                    aria-pressed={wholeTower}
+                    aria-label={wholeTower ? 'Go Inside' : 'Whole Tower'}
+                    title={wholeTower ? 'Go Inside (W)' : 'Whole Tower (W)'}
+                    onClick={() => navRef.current?.wholeTower()}
+                  >
+                    <svg viewBox="0 0 20 20" aria-hidden="true">
+                      <ellipse cx="10" cy="4" rx="6" ry="2" />
+                      <ellipse cx="10" cy="10" rx="6" ry="2" />
+                      <ellipse cx="10" cy="16" rx="6" ry="2" />
+                    </svg>
+                    <span className="lbl">{wholeTower ? 'Go Inside' : 'Whole Tower'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="zoom"
+                    aria-label="Move Farther"
+                    title="Move Farther (−)"
+                    disabled={zoom >= 1}
+                    onClick={() => navRef.current?.zoomStep(1)}
+                  >
+                    <span aria-hidden="true">−</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="recenter"
+                    aria-label="Recenter"
+                    title="Recenter (R)"
+                    onClick={recenter}
+                  >
+                    <svg viewBox="0 0 20 20" aria-hidden="true">
+                      <circle cx="10" cy="10" r="5.5" />
+                      <path d="M10 1.5v4M10 14.5v4M1.5 10h4M14.5 10h4" />
+                    </svg>
+                    <span className="lbl">Recenter</span>
+                  </button>
+                </>
+              )}
+            </div>
             <button
               ref={moreBtnRef}
               type="button"
@@ -789,6 +886,18 @@ export function SiloExperience({
             >
               ?
             </button>
+            {full && (
+              <button
+                type="button"
+                className="close"
+                aria-label="Close Full Screen"
+                onClick={exitFull}
+              >
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <path d="M5 5l10 10M15 5L5 15" />
+                </svg>
+              </button>
+            )}
           </div>
 
           {keysOpen && (

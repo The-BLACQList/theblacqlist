@@ -44,6 +44,9 @@ import {
   stepZoom,
   INTRO,
   RECENTER,
+  PINCH,
+  PREVIEW_SPIN,
+  pinchZoom,
   introPlays,
   zoomOrbit,
   zoomAmount,
@@ -847,5 +850,30 @@ describe('the opening', () => {
     expect(INTRO.glideS * 3 * 1000).toBeLessThanOrEqual(INTRO.endMs + 500)
     // Worst case, a slow scene load: the wait, then the opening.
     expect(INTRO.waitMs + INTRO.endMs).toBeLessThanOrEqual(5000)
+  })
+})
+
+// Ticket 248: pinch on a phone in full-screen, a slow turn in the page.
+describe('phone pinch and preview (ticket 248)', () => {
+  it('spreading fingers moves closer, pinching moves out, each in a clamp', () => {
+    expect(pinchZoom(0, 100, 200)).toBeLessThan(0)
+    expect(pinchZoom(0, 200, 100)).toBeGreaterThan(0)
+    expect(pinchZoom(0, 100, 100)).toBe(0)
+    expect(pinchZoom(0, 300, 10)).toBe(1)
+    expect(pinchZoom(0, 10, 300)).toBe(ZOOM.min)
+  })
+
+  it('ignores a pinch with no gap', () => {
+    expect(pinchZoom(0.3, 0, 120)).toBe(0.3)
+    expect(pinchZoom(0.3, 120, 0)).toBe(0.3)
+  })
+
+  it('needs a real movement before it counts as a pinch', () => {
+    expect(PINCH.startPx).toBeGreaterThanOrEqual(6)
+  })
+
+  it('turns the preview slowly, about one lap a minute and a half', () => {
+    expect((Math.PI * 2) / PREVIEW_SPIN).toBeGreaterThanOrEqual(60)
+    expect((Math.PI * 2) / PREVIEW_SPIN).toBeLessThanOrEqual(120)
   })
 })
