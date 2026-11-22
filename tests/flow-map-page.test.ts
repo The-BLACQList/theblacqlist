@@ -285,3 +285,45 @@ describe('/flow-map phone full-screen (ticket 248)', () => {
     expect(css).toMatch(/\[data-full\] \.silo-stage \{\s*bottom: auto;\s*height: calc\(100lvh/)
   })
 })
+
+// Ticket 249: a sample map while real activity is thin, with a Demo / Live switch.
+describe('/flow-map demo mode (ticket 249)', () => {
+  const page = read(PAGE)
+  const experience = read(EXPERIENCE)
+  const scene = read(SCENE)
+  const css = read(`${SILO}/silo.css`)
+
+  it('picks the opening view on the server from ?view, the cookie and the real count', () => {
+    expect(page).toContain('const initialView = pickView({')
+    expect(page).toContain('.get(VIEW_COOKIE)?.value')
+    expect(page).toContain('initialView={initialView}')
+  })
+
+  it('shows a Demo / Live switch and remembers the choice', () => {
+    expect(experience).toContain("aria-pressed={view === 'demo'}")
+    expect(experience).toContain("aria-pressed={view === 'live'}")
+    expect(experience).toContain('rememberView(next)')
+  })
+
+  it('labels the sample for as long as Demo is on', () => {
+    expect(experience).toContain('<b>{SAMPLE_BADGE}</b>')
+    expect(experience).toContain('{SAMPLE_NOTE}')
+    expect(experience).toContain('DEMO_INTRO_LINE')
+  })
+
+  it('builds the sample in the browser and never writes it anywhere', () => {
+    expect(experience).toContain('buildDemoCollective()')
+    expect(withoutComments(experience)).not.toMatch(/\bfetch\(|\.from\('|\.insert\(|\.rpc\(/)
+  })
+
+  it('grows a new sample line every few seconds', () => {
+    expect(experience).toContain('arrivals={arriving}')
+    expect(scene).toContain('demoArrivalAt(Date.now(), links.length)')
+  })
+
+  it('lets the sideways preview map reach the right edge', () => {
+    expect(css).toMatch(
+      /\.silo-track\[data-mode='map'\]:not\(\[data-full\]\) \.silo-stage \{\s*right: 0;/
+    )
+  })
+})

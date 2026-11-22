@@ -89,6 +89,7 @@ import {
   type SiloBusiness,
   type SiloGap,
 } from '@/lib/spend/silo-layout'
+import { demoArrivalAt } from '@/lib/spend/collective-demo'
 import { FLOOR_ICON_PATHS } from './floor-icons'
 
 const BG_HEX = '#0a0907'
@@ -176,6 +177,11 @@ export interface SiloSceneProps {
    * sideways to turn; two fingers pinch the zoom and tilt. The page never moves.
    */
   full?: boolean
+  /**
+   * Demo mode (ticket 249): a sample receipt arrives every few seconds, its
+   * line growing from the family's crowd to the business. Off with the motion.
+   */
+  arrivals?: boolean
   /** Wedges with no business on the list yet: a pink square each. */
   gaps: readonly SiloGap[]
   selectedGap: SiloGap | null
@@ -375,6 +381,7 @@ function SceneContents(props: Inner) {
       <Links shown={shown} colorBy={props.colorBy} selectedId={props.selectedId} />
       <PendingLinks shown={shown} />
       {motion && active && <Pulses shown={shown} dot={textures.dot} />}
+      {props.arrivals && motion && active && <Arrivals shown={shown} dot={textures.dot} />}
       <Nodes {...props} shown={shown} textures={textures} glass={glass} />
       <Gaps
         shape={shape}
@@ -1850,6 +1857,108 @@ function Pulses({ shown, dot }: { shown: readonly Shown[]; dot: THREE.Texture })
 
   if (links.length === 0) return null
   return <primitive object={points} />
+}
+
+/** An arriving line is a little wider than a resting one, so it reads as new. */
+const ARRIVAL_WIDTH_PX = 2.6
+
+/**
+ * Demo mode (ticket 249): the sample's newest receipt. Its line grows along the
+ * same curve as the resting link, a bright head leading, then fades back into
+ * the map before the next one. One line, filled in place: nothing rebuilds.
+ * The pick follows demoArrivalAt over every linked business, the same list the
+ * ticker reads, so the line and the ticker always name the same business.
+ */
+function Arrivals({ shown, dot }: { shown: readonly Shown[]; dot: THREE.Texture }) {
+  const links = useMemo(() => shown.filter((s) => s.b.linked), [shown])
+  const line = useMemo(() => {
+    const geo = new LineSegmentsGeometry()
+    geo.setPositions(new Float32Array(LINK_SEGMENTS * 6))
+    const mat = new LineMaterial({
+      color: GOLD_BRIGHT,
+      linewidth: ARRIVAL_WIDTH_PX,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
+    mat.fog = true
+    const obj = new LineSegments2(geo, mat)
+    obj.frustumCulled = false
+    obj.visible = false
+    return obj
+  }, [])
+  const head = useMemo(() => {
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(3), 3))
+    const obj = new THREE.Points(
+      geo,
+      new THREE.PointsMaterial({
+        size: 4.2,
+        map: dot,
+        color: GOLD_BRIGHT,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+    )
+    obj.frustumCulled = false
+    obj.visible = false
+    return obj
+  }, [dot])
+  useLinkResolution(line)
+  useEffect(() => () => disposeLine(line), [line])
+  useEffect(() => () => disposeAll([head]), [head])
+
+  const flying = useRef<{ seq: number; curve: THREE.CubicBezierCurve3 | null }>({
+    seq: -1,
+    curve: null,
+  })
+  const at = useMemo(() => new THREE.Vector3(), [])
+  // Written each frame through refs, the way three objects are meant to be.
+  const lineRef = useRef<LineSegments2>(null)
+  const headRef = useRef<THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial>>(null)
+  useFrame(() => {
+    const ln = lineRef.current
+    const hd = headRef.current
+    if (!ln || !hd) return
+    const a = demoArrivalAt(Date.now(), links.length)
+    const s = a ? links[a.index] : undefined
+    if (!a || !s || !s.on) {
+      ln.visible = false
+      hd.visible = false
+      return
+    }
+    const f = flying.current
+    if (a.seq !== f.seq || !f.curve) {
+      f.seq = a.seq
+      f.curve = linkCurve(s)
+      const pts = f.curve.getPoints(LINK_SEGMENTS)
+      const start = ln.geometry.getAttribute('instanceStart') as THREE.InterleavedBufferAttribute
+      const arr = start.data.array as Float32Array
+      for (let i = 0; i < LINK_SEGMENTS; i++) {
+        const p0 = pts[i]!
+        const p1 = pts[i + 1]!
+        arr.set([p0.x, p0.y, p0.z, p1.x, p1.y, p1.z], i * 6)
+      }
+      start.data.needsUpdate = true
+    }
+    ln.visible = true
+    ln.geometry.instanceCount = Math.max(1, Math.round(a.grow * LINK_SEGMENTS))
+    ln.material.opacity = 0.9 * a.glow
+    f.curve.getPoint(a.grow, at)
+    const hp = hd.geometry.getAttribute('position') as THREE.BufferAttribute
+    hp.setXYZ(0, at.x, at.y, at.z)
+    hp.needsUpdate = true
+    hd.material.opacity = a.grow < 1 ? 1 : a.glow
+    hd.visible = true
+  })
+
+  return (
+    <>
+      <primitive ref={lineRef} object={line} />
+      <primitive ref={headRef} object={head} />
+    </>
+  )
 }
 
 // ─── Business nodes ──────────────────────────────────────────────────────────

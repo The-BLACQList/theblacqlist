@@ -8,6 +8,8 @@
  * settles into the HUD, and Recenter (button, R, double-click). Ticket 248:
  * on a phone the map is a slow preview in the page, and Enter The Collective
  * opens it full-screen, where it owns every gesture and Back closes it.
+ * Ticket 249: while real activity is thin it opens on sample data, with a
+ * Demo / Live switch and a Sample Data badge always on screen.
  *
  * The HUD is plain HTML and renders first. The Three.js scene loads on its
  * own chunk after mount, and only when the device can draw it. If it can't
@@ -30,6 +32,17 @@ import Link from 'next/link'
 
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
+import {
+  DEMO_ARRIVAL,
+  DEMO_INTRO_LINE,
+  SAMPLE_BADGE,
+  SAMPLE_NOTE,
+  VIEW_COOKIE,
+  VIEW_COOKIE_MAX_AGE,
+  buildDemoCollective,
+  recentDemoArrivals,
+  type CollectiveView,
+} from '@/lib/spend/collective-demo'
 
 import {
   CATEGORY_FAMILIES,
@@ -127,6 +140,8 @@ interface Props {
   ticker: readonly SiloTickerItem[]
   /** `?you=1`: open focused on the reader's own business. */
   focusYou: boolean
+  /** Sample data or the real map, picked on the server (ticket 249). */
+  initialView: CollectiveView
   /** The page's headline, shown as the opening title over the map (ticket 247). */
   headline: string
   /** Add a Receipt (or Sign In), in the HUD and the opening title. */
@@ -155,13 +170,24 @@ function isFullEntry(): boolean {
   return !!state && typeof state === 'object' && FULL_STATE in state
 }
 
+/** Remembers the Demo / Live choice, and keeps a `?view=` in the URL in step. */
+function rememberView(view: CollectiveView) {
+  document.cookie = `${VIEW_COOKIE}=${view}; Max-Age=${VIEW_COOKIE_MAX_AGE}; Path=/flow-map; SameSite=Lax`
+  const url = new URL(window.location.href)
+  if (url.searchParams.has('view')) {
+    url.searchParams.set('view', view)
+    window.history.replaceState(window.history.state, '', url)
+  }
+}
+
 export function SiloExperience({
-  totalSpentCents,
-  receiptCount,
-  businesses,
-  cities,
-  ticker,
+  totalSpentCents: realSpentCents,
+  receiptCount: realReceiptCount,
+  businesses: realBusinesses,
+  cities: realCities,
+  ticker: realTicker,
   focusYou,
+  initialView,
   headline,
   cta,
   steps,
@@ -173,6 +199,16 @@ export function SiloExperience({
   // Phone full-screen (ticket 248). Only a phone stage opens it.
   const [fullAsked, setFullAsked] = useState(false)
   const full = fullAsked && compact
+
+  // Demo or Live (ticket 249). The sample is built here, not sent by the server.
+  const [view, setView] = useState<CollectiveView>(initialView)
+  const demo = useMemo(() => (view === 'demo' ? buildDemoCollective() : null), [view])
+  const businesses = demo?.businesses ?? realBusinesses
+  const totalSpentCents = demo?.totalSpentCents ?? realSpentCents
+  const receiptCount = demo?.receiptCount ?? realReceiptCount
+  const cities = demo ? [] : realCities
+  // The sample's newest arrival, counted in DEMO_ARRIVAL.everyMs steps.
+  const [arrivalSeq, setArrivalSeq] = useState<number | null>(null)
 
   const [Scene, setScene] = useState<Scene | null>(null)
   const [chunkFailed, setChunkFailed] = useState(false)
@@ -240,6 +276,16 @@ export function SiloExperience({
   const gaps = useMemo(() => siloGaps(businesses), [businesses])
   const gapCounts = useMemo(() => gapsPerFloor(gaps), [gaps])
   const linkedCount = useMemo(() => businesses.filter((b) => b.linked).length, [businesses])
+  const demoLinked = useMemo(() => (demo ? demo.businesses.filter((b) => b.linked) : []), [demo])
+  const ticker: readonly SiloTickerItem[] = useMemo(() => {
+    if (!demo) return realTicker
+    if (arrivalSeq === null) return []
+    return recentDemoArrivals(arrivalSeq, demoLinked.length, 2).map((i, k) => ({
+      id: `demo-${arrivalSeq - k}`,
+      label: businessDisplayName(demoLinked[i]!),
+      when: k === 0 ? 'just now' : 'moments ago',
+    }))
+  }, [demo, demoLinked, arrivalSeq, realTicker])
   const youList = useMemo(() => businesses.filter((b) => b.isYou), [businesses])
   const youFloors = useMemo(() => new Set(youList.map((b) => b.floorIndex)), [youList])
   const selected = businesses.find((b) => b.id === selectedId) ?? null
@@ -251,6 +297,16 @@ export function SiloExperience({
   const wantMap = canMap && !listChosen && !contextLost && !chunkFailed
   const motion = !paused && !reducedMotion
   const active = inView && docVisible && !moreOpen
+
+  // The sample's ticker follows its arrivals, and rests with the motion.
+  const arriving = !!demo && motion && active
+  useEffect(() => {
+    if (!arriving) return
+    const tick = () => setArrivalSeq(Math.floor(Date.now() / DEMO_ARRIVAL.everyMs))
+    tick()
+    const id = window.setInterval(tick, DEMO_ARRIVAL.everyMs / 4)
+    return () => window.clearInterval(id)
+  }, [arriving])
 
   useEffect(() => {
     if (!wantMap || Scene) return
@@ -422,6 +478,22 @@ export function SiloExperience({
   function recenter() {
     navRef.current?.recenter()
     setStatus('Back to the starting view.')
+  }
+
+  function switchView(next: CollectiveView) {
+    if (next === view) return
+    setView(next)
+    setSelectedId(null)
+    setSelectedGap(null)
+    setHoveredId(null)
+    setFocusFloor(null)
+    setFilter(new Set())
+    rememberView(next)
+    setStatus(
+      next === 'demo'
+        ? `Showing sample data. ${SAMPLE_NOTE}`
+        : 'Showing live data from The BLACQList.'
+    )
   }
 
   function leaveFloor() {
@@ -731,6 +803,7 @@ export function SiloExperience({
                     intro={intro === 'wait' || intro === 'play'}
                     preview={compact && !full}
                     full={full}
+                    arrivals={arriving}
                     onRecenter={() => setStatus('Back to the starting view.')}
                     shape={shape}
                     labelsRef={labelsRef}
@@ -780,7 +853,14 @@ export function SiloExperience({
             // the page's h1, so this layer is hidden from readers and tabbing.
             <div className="silo-intro" aria-hidden="true" inert>
               <p className="silo-intro-kicker">The Collective</p>
-              <p className="silo-intro-line">{headline}</p>
+              {/* Demo (ticket 249): the real total would sit oddly over a sample
+                  map, so the opening names the sample instead. */}
+              <p className="silo-intro-line">{demo ? DEMO_INTRO_LINE : headline}</p>
+              {demo && (
+                <p className="silo-intro-sample">
+                  This preview uses {SAMPLE_BADGE.toLowerCase()}. {SAMPLE_NOTE}
+                </p>
+              )}
               {cta && <div className="silo-intro-cta">{cta}</div>}
             </div>
           )}
@@ -918,6 +998,30 @@ export function SiloExperience({
               <p>
                 Every business on the list, floor by floor. A line means a member shopped there.
               </p>
+              <div className="silo-view">
+                <div className="switch" role="group" aria-label="Map data">
+                  <button
+                    type="button"
+                    aria-pressed={view === 'demo'}
+                    onClick={() => switchView('demo')}
+                  >
+                    Demo
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={view === 'live'}
+                    onClick={() => switchView('live')}
+                  >
+                    Live
+                  </button>
+                </div>
+                {demo && (
+                  <div className="sample">
+                    <b>{SAMPLE_BADGE}</b>
+                    <span>{SAMPLE_NOTE}</span>
+                  </div>
+                )}
+              </div>
               {cta && <div className="brand-cta">{cta}</div>}
             </div>
 

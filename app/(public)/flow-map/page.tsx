@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { cookies } from 'next/headers'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { buildEntityUrl } from '@/lib/listings/url'
@@ -17,6 +18,7 @@ import {
 import { SiloExperience } from '@/components/flow-map/silo/SiloExperience'
 import type { SiloTickerItem } from '@/components/flow-map/silo/SiloPanels'
 import { pickFirstLookState } from '@/lib/spend/collective-first-look'
+import { pickView, VIEW_COOKIE } from '@/lib/spend/collective-demo'
 
 export const metadata: Metadata = {
   title: 'The Collective | The BLACQList',
@@ -45,7 +47,7 @@ function dayLabel(iso: string) {
 }
 
 interface FlowMapPageProps {
-  searchParams: Promise<{ you?: string }>
+  searchParams: Promise<{ you?: string; view?: string }>
 }
 
 export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
@@ -229,6 +231,16 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
 
   const hasAnyData = totalAmountCents > 0
 
+  // Ticket 249: while few businesses have a line, the map opens on sample data,
+  // with a Demo / Live switch. A reader with a line of their own opens on Live.
+  const initialView = pickView({
+    param: params.view,
+    stored: (await cookies()).get(VIEW_COOKIE)?.value,
+    realLinked: siloBusinesses.filter((b) => b.linked).length,
+    hasOwnLines: youIds.size > 0 || youPendingIds.size > 0,
+    focusYou: params.you === '1',
+  })
+
   const firstLookState = pickFirstLookState({
     signedIn: Boolean(user),
     receiptCount,
@@ -282,6 +294,7 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
           cities={topCities}
           ticker={ticker}
           focusYou={params.you === '1'}
+          initialView={initialView}
           headline={headline}
           cta={<FirstLookButton state={firstLookState} size="sm" />}
           steps={<FirstLookSteps layout="sheet" />}
