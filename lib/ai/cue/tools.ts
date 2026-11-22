@@ -309,6 +309,24 @@ function reduceTerm(raw: string): string | null {
 }
 
 /**
+ * Rejoins single words that make a curated phrase: ["body", "wash"] is "body
+ * wash", not "wash" once the lone "body" goes (ticket 257).
+ */
+function joinCuratedPairs(words: readonly string[]): string[] {
+  const out: string[] = []
+  for (let i = 0; i < words.length; i++) {
+    const pair = i + 1 < words.length ? cleanTerm(`${words[i]} ${words[i + 1]}`) : ''
+    if (pair && CURATED_PHRASES.has(pair)) {
+      out.push(pair)
+      i++
+    } else {
+      out.push(words[i]!)
+    }
+  }
+  return out
+}
+
+/**
  * Words that point at two trades when searched alone: "body" is body butter
  * and auto body. Searched only inside a phrase, or when nothing else is left.
  */
@@ -351,7 +369,8 @@ export function buildSearchQuery(args: {
   categories: readonly AssistantCategory[]
   withName?: boolean
 }): BuiltQuery {
-  const { words, category, categories } = args
+  const { category, categories } = args
+  const words = joinCuratedPairs(args.words)
   const cleaned = [...new Set(words.map(cleanTerm).filter((t) => t && !FILLER_WORDS.has(t)))]
   const reduced = [...new Set(words.map(reduceTerm).filter(isSet))]
   // Nothing meaningful left: search what was sent rather than nothing.
