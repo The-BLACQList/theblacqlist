@@ -2,8 +2,10 @@
 
 /**
  * The Collective (tickets 167 and 171): concept D, layout B from the round
- * 17 workshop. Every published business is on the map; lines only appear
- * once enough receipts are counted at a business.
+ * 17 workshop. Every published business is on the map; a line shows from one
+ * counted receipt, and a dollar figure once enough are counted (ticket 250).
+ * Ticket 247 made it the whole page: an opening title over the map that
+ * settles into the HUD, and Recenter (button, R, double-click).
  *
  * The HUD is plain HTML and renders first. The Three.js scene loads on its
  * own chunk after mount, and only when the device can draw it. If it can't
@@ -39,6 +41,8 @@ import {
   gapLabel,
   gapsPerFloor,
   placeBusinesses,
+  INTRO,
+  introPlays,
   SILO,
   siloGaps,
   ZOOM,
@@ -120,7 +124,25 @@ interface Props {
   ticker: readonly SiloTickerItem[]
   /** `?you=1`: open focused on the reader's own business. */
   focusYou: boolean
+  /** The page's headline, shown as the opening title over the map (ticket 247). */
+  headline: string
+  /** Add a Receipt (or Sign In), in the HUD and the opening title. */
+  cta?: ReactNode
+  /** How It Works, for the More sheet. */
+  steps?: ReactNode
 }
+
+/**
+ * The opening: holding the title until the scene draws, playing, cut short by
+ * the reader, or over.
+ */
+type IntroState = 'wait' | 'play' | 'skip' | 'done'
+
+/** How long a cut-short opening takes to fade. Matches silo.css. */
+const INTRO_SKIP_MS = 320
+
+/** Once the scene mounts, a beat for its first frames before the opening plays. */
+const INTRO_DRAW_MS = 200
 
 export function SiloExperience({
   totalSpentCents,
@@ -129,6 +151,9 @@ export function SiloExperience({
   cities,
   ticker,
   focusYou,
+  headline,
+  cta,
+  steps,
 }: Props) {
   const support = useSiloSupport()
   const reducedMotion = usePrefersReducedMotion()
@@ -172,6 +197,9 @@ export function SiloExperience({
   const hoverTagRef = useRef<HTMLDivElement>(null)
   const youTagRef = useRef<HTMLDivElement>(null)
   const [wholeTower, setWholeTower] = useState(false)
+  // The server can't know the reader's motion setting or scroll, so the opening
+  // starts as waiting and the first effect decides (ticket 247).
+  const [intro, setIntro] = useState<IntroState>('wait')
   const [zoom, setZoom] = useState(0)
   const shape = SILO
   const labelsRef = useRef<HTMLDivElement>(null)
@@ -230,6 +258,36 @@ export function SiloExperience({
     io.observe(el)
     return () => io.disconnect()
   }, [])
+
+  // The opening: decide once, then listen for the reader's first move.
+  useEffect(() => {
+    const section = sectionRef.current
+    const plays = introPlays({
+      reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+      scrolled: window.scrollY > 10,
+      focusYou,
+    })
+    if (!plays) {
+      const t = window.setTimeout(() => setIntro('done'), 0)
+      return () => window.clearTimeout(t)
+    }
+    const skip = () => {
+      setIntro((v) => (v === 'wait' || v === 'play' ? 'skip' : v))
+      off()
+    }
+    const opts = { passive: true } as const
+    function off() {
+      section?.removeEventListener('pointerdown', skip)
+      section?.removeEventListener('wheel', skip)
+      section?.removeEventListener('keydown', skip)
+      window.removeEventListener('scroll', skip)
+    }
+    section?.addEventListener('pointerdown', skip, opts)
+    section?.addEventListener('wheel', skip, opts)
+    section?.addEventListener('keydown', skip)
+    window.addEventListener('scroll', skip, opts)
+    return off
+  }, [focusYou])
 
   // ── Actions ──
   const selectBusiness = useCallback(
@@ -291,6 +349,11 @@ export function SiloExperience({
   function changeLiveFloor(floor: number) {
     setLiveFloor(floor)
     if (floor > 0) setHintGone(true)
+  }
+
+  function recenter() {
+    navRef.current?.recenter()
+    setStatus('Back to the starting view.')
   }
 
   function leaveFloor() {
@@ -403,6 +466,7 @@ export function SiloExperience({
     else if (k === 'c') toggleColor()
     else if (k === 't') toggleList()
     else if (k === 'w' && showScene) navRef.current?.wholeTower()
+    else if (k === 'r' && showScene) recenter()
     else if ((k === '-' || k === '_') && showScene) navRef.current?.zoomStep(1)
     else if ((k === '=' || k === '+') && showScene) navRef.current?.zoomStep(-1)
     else if (k === 'p') togglePause()
@@ -441,6 +505,22 @@ export function SiloExperience({
     }
   }
   const showList = !showScene && support !== 'pending' && !(wantMap && !Scene)
+
+  // The opening's steps. The title holds until the scene is up (or INTRO.waitMs
+  // passes), plays for INTRO.endMs, and a cut-short opening fades out quickly.
+  useEffect(() => {
+    let next: IntroState | null = null
+    let ms = 0
+    if (intro === 'wait') {
+      if (showList) [next, ms] = ['done', 0]
+      else [next, ms] = ['play', showScene ? INTRO_DRAW_MS : INTRO.waitMs]
+    } else if (intro === 'play') [next, ms] = ['done', INTRO.endMs]
+    else if (intro === 'skip') [next, ms] = ['done', INTRO_SKIP_MS]
+    if (!next) return
+    const to = next
+    const t = window.setTimeout(() => setIntro((v) => (v === intro ? to : v)), ms)
+    return () => window.clearTimeout(t)
+  }, [intro, showScene, showList])
 
   // The list collapses the track, which can leave the reader below the section.
   useEffect(() => {
@@ -506,8 +586,10 @@ export function SiloExperience({
   }, [showList])
 
   const currentFloor = showScene ? liveFloor : (focusFloor ?? selected?.floorIndex ?? null)
+  const showIntro = intro !== 'done' && !showList
   const showHint =
     showScene &&
+    intro === 'done' &&
     !hintGone &&
     !selected &&
     !selectedGap &&
@@ -530,7 +612,7 @@ export function SiloExperience({
         )}
         <section
           ref={sectionRef}
-          className={`silo${moreOpen ? ' more-open' : ''}`}
+          className={`silo${moreOpen ? ' more-open' : ''}${showIntro ? ` intro-${intro}` : ''}`}
           aria-labelledby="silo-title"
           tabIndex={-1}
           onKeyDown={onKeyDown}
@@ -566,6 +648,8 @@ export function SiloExperience({
                     youTagRef={youTagRef}
                     onWholeTowerChange={setWholeTower}
                     onZoomChange={setZoom}
+                    intro={intro === 'wait' || intro === 'play'}
+                    onRecenter={() => setStatus('Back to the starting view.')}
                     shape={shape}
                     labelsRef={labelsRef}
                     gapLabelsRef={gapLabelsRef}
@@ -609,14 +693,28 @@ export function SiloExperience({
             </div>
           )}
 
+          {showIntro && (
+            // Decoration: the same title, figure and button are in the HUD and
+            // the page's h1, so this layer is hidden from readers and tabbing.
+            <div className="silo-intro" aria-hidden="true" inert>
+              <p className="silo-intro-kicker">The Collective</p>
+              <p className="silo-intro-line">{headline}</p>
+              {cta && <div className="silo-intro-cta">{cta}</div>}
+            </div>
+          )}
+
           {showHint && <p className="silo-hint">Keep scrolling to see every floor</p>}
 
           <div className="hud-bg" aria-hidden="true" />
 
           <div className="dock" role="toolbar" aria-label="Map controls">
             {you && (
-              <button type="button" className="find" onClick={findMe}>
-                Find Me
+              <button type="button" className="find" aria-label="Find Me" onClick={findMe}>
+                <svg viewBox="0 0 20 20" aria-hidden="true">
+                  <circle cx="10" cy="7" r="3" />
+                  <path d="M4 17c1-3.5 3.4-5 6-5s5 1.5 6 5" />
+                </svg>
+                <span className="lbl">Find Me</span>
               </button>
             )}
             {showScene && (
@@ -633,10 +731,18 @@ export function SiloExperience({
                 </button>
                 <button
                   type="button"
+                  className="tower"
                   aria-pressed={wholeTower}
+                  aria-label={wholeTower ? 'Go Inside' : 'Whole Tower'}
+                  title={wholeTower ? 'Go Inside (W)' : 'Whole Tower (W)'}
                   onClick={() => navRef.current?.wholeTower()}
                 >
-                  {wholeTower ? 'Go Inside' : 'Whole Tower'}
+                  <svg viewBox="0 0 20 20" aria-hidden="true">
+                    <ellipse cx="10" cy="4" rx="6" ry="2" />
+                    <ellipse cx="10" cy="10" rx="6" ry="2" />
+                    <ellipse cx="10" cy="16" rx="6" ry="2" />
+                  </svg>
+                  <span className="lbl">{wholeTower ? 'Go Inside' : 'Whole Tower'}</span>
                 </button>
                 <button
                   type="button"
@@ -647,6 +753,19 @@ export function SiloExperience({
                   onClick={() => navRef.current?.zoomStep(1)}
                 >
                   <span aria-hidden="true">−</span>
+                </button>
+                <button
+                  type="button"
+                  className="recenter"
+                  aria-label="Recenter"
+                  title="Recenter (R)"
+                  onClick={recenter}
+                >
+                  <svg viewBox="0 0 20 20" aria-hidden="true">
+                    <circle cx="10" cy="10" r="5.5" />
+                    <path d="M10 1.5v4M10 14.5v4M1.5 10h4M14.5 10h4" />
+                  </svg>
+                  <span className="lbl">Recenter</span>
                 </button>
               </>
             )}
@@ -685,11 +804,12 @@ export function SiloExperience({
               <h2 id="silo-title">
                 <GoldBrandMark className="brand-mark" />
                 The Collective
+                <span className="beta">Beta</span>
               </h2>
               <p>
-                Every business on the list, floor by floor. Lines show money spent once enough
-                receipts are counted.
+                Every business on the list, floor by floor. A line means a member shopped there.
               </p>
+              {cta && <div className="brand-cta">{cta}</div>}
             </div>
 
             <dl className="kpis">
@@ -787,14 +907,21 @@ export function SiloExperience({
               <h4>Keys</h4>
               <ShortcutsToggle on={shortcutsOn} onChange={changeShortcuts} />
             </div>
+            {steps && (
+              <div className="more-group more-steps">
+                <h4>How It Works</h4>
+                {steps}
+              </div>
+            )}
             <div className="more-group">
               <h4>How We Count</h4>
               <p>
-                Every published business is on the map. A line appears once a business has at least{' '}
-                {AGGREGATE_MIN_TRANSACTIONS} counted receipts, so no total can point back at one
-                shopper. We only count the first stop: a shopper&apos;s receipt at a business on the
-                list. The floors below say &quot;Not tracked yet&quot; until we can count them
-                honestly. <Link href="/flow-map/methodology">Read the method</Link>
+                Every published business is on the map. A line appears once a business has one
+                counted receipt. Its dollar total waits for at least {AGGREGATE_MIN_TRANSACTIONS}{' '}
+                receipts, so no total can point back at one shopper. We only count the first stop: a
+                shopper&apos;s receipt at a business on the list. The floors below say &quot;Not
+                tracked yet&quot; until we can count them honestly.{' '}
+                <Link href="/flow-map/methodology">Read the method</Link>
               </p>
             </div>
           </SiloMore>

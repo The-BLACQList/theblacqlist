@@ -42,6 +42,9 @@ import {
   ZOOM,
   clusterSpacing,
   stepZoom,
+  INTRO,
+  RECENTER,
+  introPlays,
   zoomOrbit,
   zoomAmount,
   fogForZoom,
@@ -814,5 +817,35 @@ describe('room between businesses', () => {
   it('gives a small group more room per business than a busy one, never none', () => {
     expect(clusterSpacing(10)).toBeGreaterThan(clusterSpacing(100))
     expect(clusterSpacing(400)).toBeGreaterThan(0.5)
+  })
+})
+
+// Ticket 247: Recenter and the opening.
+describe('recenter', () => {
+  it('goes back inside, at the opening heading and tilt', () => {
+    expect(RECENTER.zoom).toBe(0)
+    expect(RECENTER.az).toBe(0)
+    expect(RECENTER.el).toBe(ORBIT.el)
+  })
+})
+
+describe('the opening', () => {
+  const base = { reducedMotion: false, scrolled: false, focusYou: false }
+
+  it('plays for a reader arriving at the top', () => {
+    expect(introPlays(base)).toBe(true)
+  })
+
+  it('never plays for reduced motion, a reload partway down, or ?you=1', () => {
+    expect(introPlays({ ...base, reducedMotion: true })).toBe(false)
+    expect(introPlays({ ...base, scrolled: true })).toBe(false)
+    expect(introPlays({ ...base, focusYou: true })).toBe(false)
+  })
+
+  it('stays short: over in a few seconds', () => {
+    expect(INTRO.endMs).toBeLessThanOrEqual(4000)
+    expect(INTRO.glideS * 3 * 1000).toBeLessThanOrEqual(INTRO.endMs + 500)
+    // Worst case, a slow scene load: the wait, then the opening.
+    expect(INTRO.waitMs + INTRO.endMs).toBeLessThanOrEqual(5000)
   })
 })

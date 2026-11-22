@@ -479,6 +479,14 @@ export const SiloKeyMap = forwardRef<HTMLDivElement, KeyMapProps>(function SiloK
         </dt>
         <dd>Whole tower, or back inside</dd>
         <dt>
+          <kbd>R</kbd>
+        </dt>
+        <dd>Recenter</dd>
+        <dt>
+          <kbd>Double-click</kbd>
+        </dt>
+        <dd>Recenter, on empty space</dd>
+        <dt>
           <kbd>+</kbd> <kbd>−</kbd>
         </dt>
         <dd>Zoom in or out a step</dd>
