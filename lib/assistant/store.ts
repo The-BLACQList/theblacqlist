@@ -47,6 +47,7 @@ export const cardSchema = z.object({
   rating: z.number().nullable(),
   reviewCount: z.number(),
   imageSrc: imageSrc.nullable(),
+  related: z.boolean().optional(),
 })
 
 // tel: links hold only digits and an optional leading +.

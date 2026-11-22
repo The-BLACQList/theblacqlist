@@ -11,6 +11,8 @@
 //     understood form from ticket 254
 //   * fewer than three: close matches from the category the words point to,
 //     or from its group when that category has no one in it yet (ticket 257)
+//   * fewer than three: a Related Businesses row, found by meaning, when
+//     meaning search is on (ticket 260). Strict matches stay first.
 //   * a Browse {Category} link, and Suggest a Business when we came up short
 //
 // No remark on ownership (#299). No text the visitor typed is stored or
@@ -27,6 +29,7 @@ import type { ListingsParams, ListingsResult } from '@/lib/listings/query'
 import { categoryFilterHref } from '@/lib/listings/url'
 import { matchCategories, normalizeQuery, stem } from '@/lib/search/assist'
 import { CATEGORY_KEYWORDS } from '@/lib/search/categoryKeywords'
+import { RELATED_MAX, wantsRelated } from '@/lib/search/hybrid'
 import { echoWords, INTENT_FAMILIES, understandQuery, type UnderstoodQuery } from '@/lib/search/understand'
 
 /** Below this many strict matches, close matches from the category are added. */
@@ -48,6 +51,8 @@ export interface BasicAnswer {
   cards: AssistantCard[]
   actions: AssistantAction[]
   exactBucket: ExactBucket
+  /** Cards in the Related Businesses row (ticket 260). */
+  related: number
 }
 
 export interface BasicAnswerParts {
@@ -55,6 +60,8 @@ export interface BasicAnswerParts {
   understood: UnderstoodQuery
   exact: readonly AssistantCard[]
   close: readonly AssistantCard[]
+  /** Found by meaning, best first (ticket 260). Shown after the matches. */
+  related?: readonly AssistantCard[]
   category: { name: string; slug: string } | null
   near: boolean
   /**
@@ -88,8 +95,17 @@ export function composeBasicAnswer(parts: BasicAnswerParts): BasicAnswer {
   const label = labelFor(parts.query, understood, parts.rescued)
   const exactIds = new Set(parts.exact.map((c) => c.id))
   const exact = parts.exact.slice(0, CUE_MAX_CARDS)
-  const close = parts.close.filter((c) => !exactIds.has(c.id)).slice(0, CUE_MAX_CARDS - exact.length)
-  const cards = [...exact, ...close]
+  // Related ones take their room first: they are about the words, close
+  // matches are only the category (ticket 260).
+  const related = (parts.related ?? [])
+    .filter((c) => !exactIds.has(c.id))
+    .slice(0, Math.min(RELATED_MAX, CUE_MAX_CARDS - exact.length))
+    .map((c) => ({ ...c, related: true }))
+  const relatedIds = new Set(related.map((c) => c.id))
+  const close = parts.close
+    .filter((c) => !exactIds.has(c.id) && !relatedIds.has(c.id))
+    .slice(0, CUE_MAX_CARDS - exact.length - related.length)
+  const cards = [...exact, ...close, ...related]
   const where = near ? ' near you' : ''
 
   let text: string
@@ -102,6 +118,10 @@ export function composeBasicAnswer(parts: BasicAnswerParts): BasicAnswer {
     const match = exact.length === 1 ? 'matches' : 'match'
     text = `${lead}${where} that ${match} “${label}”.`
     if (close.length > 0 && category) text += ` A few more in ${category.name} follow.`
+    else if (related.length > 0) text += ' Related businesses follow.'
+  } else if (related.length > 0) {
+    text = `Nothing${where} matches “${label}” word for word yet. Here are related businesses.`
+    if (close.length > 0 && category) text += ` More in ${category.name} too.`
   } else if (close.length > 0 && category) {
     text = `Nothing${where} matches “${label}” yet, so here are the closest: businesses in ${category.name}.`
   } else {
@@ -113,7 +133,7 @@ export function composeBasicAnswer(parts: BasicAnswerParts): BasicAnswer {
   if (category && categoryHref) actions.push({ kind: 'link', href: categoryHref, label: `Browse ${category.name}` })
   if (understood.mode !== 'browse' && exact.length < CLOSE_MATCH_BELOW) actions.push(SUGGEST_BUSINESS)
 
-  return { text, cards, actions, exactBucket: bucket(parts.exact.length) }
+  return { text, cards, actions, exactBucket: bucket(parts.exact.length), related: related.length }
 }
 
 export interface BasicAnswerDeps {
@@ -124,6 +144,15 @@ export interface BasicAnswerDeps {
   search: (params: ListingsParams) => Promise<Pick<ListingsResult, 'entities' | 'understood'>>
   /** Active categories, or null when they could not be read. */
   categories: readonly AssistantCategory[] | null
+  /**
+   * Businesses close in meaning to the words, best first (ticket 260). Unset
+   * or empty when meaning search is off.
+   */
+  related?: (request: {
+    text: string
+    exclude: readonly string[]
+    near: { lat: number; lng: number } | null
+  }) => Promise<AssistantCard[]>
 }
 
 /** The words that point to a category: what carried the search, plus intent words. */
@@ -186,11 +215,30 @@ export async function buildBasicAnswer(
     }
   }
 
+  // Meaning search on the understood words: "bathroom", not "how do I switch
+  // to Black Owned". Browse mode has none, so nothing is looked up; with
+  // nothing to understand, the words as typed.
+  let related: AssistantCard[] = []
+  const relatedText =
+    understood.mode === 'browse'
+      ? ''
+      : understood.mode === 'search' && understood.words.length > 0
+        ? understood.words.join(' ')
+        : normalizeQuery(query)
+  if (deps.related && relatedText && wantsRelated(exact.cards.length)) {
+    try {
+      related = await deps.related({ text: relatedText, exclude: exact.cards.map((c) => c.id), near })
+    } catch {
+      related = []
+    }
+  }
+
   return composeBasicAnswer({
     query,
     understood,
     exact: exact.cards,
     close,
+    related,
     category,
     near: near !== null,
     // Only meaningful when something was found; an empty search echoes as before.

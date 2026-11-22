@@ -14,6 +14,7 @@ import { parseWeeklyHours } from '@/lib/listings/hours'
 import { mapRow, NESTED_SELECT, queryListings, type RawRow } from '@/lib/listings/query'
 import type { AssistCity } from '@/lib/search/assist'
 import { lookupPlace } from '@/lib/search/placeLookup'
+import { findRelatedListings } from '@/lib/services/relatedListings'
 import { checkRateLimit } from '@/lib/security/rate-limit'
 import { createClient } from '@/lib/supabase/server'
 import type { DiscoveryEntity } from '@/types'
@@ -51,6 +52,9 @@ export const cueDeps: CueToolDeps = {
   },
 
   loadByIds,
+
+  // Meaning search (ticket 260): empty unless the flag is on and the key set.
+  related: (request) => findRelatedListings(request, loadByIds),
 
   async loadDetails(id) {
     const supabase = await createClient()

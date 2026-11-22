@@ -23,6 +23,9 @@
  *
  * Output: a line per question, a summary, and
  *         docs/blacqlist/ops/reports/search-evals-YYYYMMDD-HHMM.txt
+ * Meaning search (ticket 260): cards found by meaning are marked "(related)"
+ * and counted. Run once with the flag off and once on to compare.
+ *
  * Exits 1 when a question is unanswered or mentions ownership, or fewer than
  * 90% have cards.
  */
@@ -55,6 +58,8 @@ interface Streamed {
   mode: string
   text: string
   cards: string[]
+  /** Cards under Related Businesses, found by meaning (ticket 260). */
+  related: number
   links: string[]
   error: string | null
 }
@@ -77,7 +82,7 @@ async function ask(query: string): Promise<string> {
 }
 
 function read(ndjson: string): Streamed {
-  const out: Streamed = { mode: 'none', text: '', cards: [], links: [], error: null }
+  const out: Streamed = { mode: 'none', text: '', cards: [], related: 0, links: [], error: null }
   for (const line of ndjson.split('\n')) {
     if (!line.trim()) continue
     let event: Record<string, unknown>
@@ -87,7 +92,11 @@ function read(ndjson: string): Streamed {
       out.error = 'not NDJSON'
       continue
     }
-    if (event.type === 'cards') out.cards = (event.cards as Array<{ name: string }>).map((c) => c.name)
+    if (event.type === 'cards') {
+      const cards = event.cards as Array<{ name: string; related?: boolean }>
+      out.cards = cards.map((c) => (c.related ? `${c.name} (related)` : c.name))
+      out.related = cards.filter((c) => c.related).length
+    }
     if (event.type === 'actions') {
       out.links = (event.actions as Array<{ kind: string; label: string }>)
         .filter((a) => a.kind === 'link')
@@ -119,6 +128,7 @@ async function main() {
   let withCards = 0
   let ownership = 0
   let ai = 0
+  let withRelated = 0
   const evals = SEARCH_EVALS.slice(0, only)
   for (const [i, ev] of evals.entries()) {
     if (i > 0) await sleep(delayMs)
@@ -126,7 +136,7 @@ async function main() {
     try {
       r = read(await ask(ev.query))
     } catch (err) {
-      r = { mode: 'none', text: '', cards: [], links: [], error: err instanceof Error ? err.message.slice(0, 80) : 'failed' }
+      r = { mode: 'none', text: '', cards: [], related: 0, links: [], error: err instanceof Error ? err.message.slice(0, 80) : 'failed' }
     }
     const ok = r.text.trim() !== '' && (r.cards.length > 0 || r.links.length > 0)
     const owns = OWNERSHIP.test(r.text)
@@ -134,9 +144,10 @@ async function main() {
     if (r.cards.length > 0) withCards++
     if (owns) ownership++
     if (r.mode === 'ai') ai++
+    if (r.related > 0) withRelated++
     const flag = !ok ? 'UNANSWERED' : owns ? 'OWNERSHIP' : r.cards.length === 0 ? 'no cards' : 'ok'
     log(`\n${String(i + 1).padStart(2)}. ${ev.query}`)
-    log(`    [${flag}] mode=${r.mode} cards=${r.cards.length}${r.error ? ` error=${r.error}` : ''}`)
+    log(`    [${flag}] mode=${r.mode} cards=${r.cards.length} related=${r.related}${r.error ? ` error=${r.error}` : ''}`)
     log(`    ${r.text.replace(/\s+/g, ' ').slice(0, 240)}`)
     if (r.cards.length > 0) log(`    cards: ${r.cards.join(' · ')}`)
     if (r.links.length > 0) log(`    links: ${r.links.join(' · ')}`)
@@ -149,6 +160,9 @@ async function main() {
   log(`With cards: ${withCards}/${n} (${Math.round(cardsShare * 100)}%, bar ${CARDS_BAR * 100}%)`)
   log(`Ownership remarks: ${ownership}`)
   log(`AI answers: ${ai}/${n} (the rest were quick answers)`)
+  // Meaning search (ticket 260): run once with FEATURE_SEMANTIC_SEARCH off and
+  // once on, and compare this line and "With cards".
+  log(`With related businesses: ${withRelated}/${n}`)
   const pass = answered === n && ownership === 0 && cardsShare >= CARDS_BAR
   log(pass ? 'PASS' : 'FAIL')
 

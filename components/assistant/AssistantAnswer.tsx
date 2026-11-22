@@ -288,7 +288,28 @@ function ActionRow({ actions, handlers }: { actions: AssistantAction[]; handlers
   )
 }
 
+/** The heading over cards found by meaning, not by the words (ticket 260). */
+export const RELATED_HEADING = 'Related Businesses'
+
+/** Matches first; cards found by meaning after them, under their own heading. */
 function CardList({ cards, layout }: { cards: AssistantCard[]; layout: AnswerLayout }) {
+  const matched = cards.filter((c) => !c.related)
+  const related = cards.filter((c) => c.related)
+  if (related.length === 0) return <CardGrid cards={cards} layout={layout} />
+  return (
+    <div className="flex flex-col gap-3">
+      {matched.length > 0 && <CardGrid cards={matched} layout={layout} />}
+      <section aria-label={RELATED_HEADING}>
+        <h3 className="mb-2 font-body text-sm font-semibold text-off-white">
+          {RELATED_HEADING}
+        </h3>
+        <CardGrid cards={related} layout={layout} />
+      </section>
+    </div>
+  )
+}
+
+function CardGrid({ cards, layout }: { cards: AssistantCard[]; layout: AnswerLayout }) {
   return (
     <ul
       className={cn(

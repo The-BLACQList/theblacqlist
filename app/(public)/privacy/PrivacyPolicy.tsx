@@ -285,8 +285,9 @@ export function PrivacyPolicy({ version, notice, meaningSearch = false }: Privac
                   works without it.
                 </p>
 
-                {/* [Needs professional review] Meaning search (ticket 259). Shown only
-                    while FEATURE_SEMANTIC_SEARCH is on. Founder OKs the wording first. */}
+                {/* [Needs professional review] Meaning search (tickets 259, 260). Shown
+                    only while FEATURE_SEMANTIC_SEARCH is on. Founder OK'd the wording
+                    2026-11-21 and opted out of Voyage data training in its dashboard. */}
                 {meaningSearch && (
                   <p id="meaning-search" className="scroll-mt-24">
                     <strong>Finding businesses by meaning.</strong> So that a search like

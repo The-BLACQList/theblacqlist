@@ -293,7 +293,7 @@ describe('POST /api/cue from the /search strip', () => {
     expect(h.analytics).toEqual([
       {
         event_name: 'search_answer_served',
-        properties: { mode: 'basic', reason, exact_bucket: '1-2' },
+        properties: { mode: 'basic', reason, exact_bucket: '1-2', related_used: false },
       },
     ])
   })
@@ -332,7 +332,7 @@ describe('POST /api/cue from the /search strip', () => {
     const done = list.at(-1) as Extract<CueEvent, { type: 'done' }>
     expect(done.mode).toBe('ai')
     expect(h.analytics).toEqual([
-      { event_name: 'search_answer_served', properties: { mode: 'ai', reason: null, exact_bucket: null } },
+      { event_name: 'search_answer_served', properties: { mode: 'ai', reason: null, exact_bucket: null, related_used: false } },
     ])
     expect(JSON.stringify(h.analytics)).not.toMatch(/lawyer|atlanta|203\.0\.113/i)
   })
