@@ -510,7 +510,8 @@ INSERT INTO categories (id, name, slug, parent_id, display_order, is_active) VAL
   ('c0000002-0022-0000-0000-000000000004', 'Cultural & Heritage Products','cultural-heritage-products', 'c0000001-0000-0000-0000-000000000022', 4, true),
   ('c0000002-0022-0000-0000-000000000005', 'Books & Media',               'books-media-retail',         'c0000001-0000-0000-0000-000000000022', 5, true),
   ('c0000002-0022-0000-0000-000000000006', 'Health & Wellness Products',  'health-wellness-products',   'c0000001-0000-0000-0000-000000000022', 6, true),
-  ('c0000002-0022-0000-0000-000000000007', 'Bike Shops',                  'bike-shops',                 'c0000001-0000-0000-0000-000000000022', 7, true)
+  ('c0000002-0022-0000-0000-000000000007', 'Bike Shops',                  'bike-shops',                 'c0000001-0000-0000-0000-000000000022', 7, true),
+  ('c0000002-0022-0000-0000-000000000008', 'Bath & Body',                 'bath-body',                  'c0000001-0000-0000-0000-000000000022', 8, true)
 ON CONFLICT (slug) DO NOTHING;
 
 

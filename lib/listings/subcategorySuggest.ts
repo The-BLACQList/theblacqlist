@@ -115,3 +115,73 @@ export function suggestSubcategory(
     tied: [],
   }
 }
+
+// ─── Into one new category (ticket 257) ──────────────────────────────────────
+//
+// suggestSubcategory only looks inside a listing's own group. A new category
+// like Bath & Body takes listings from anywhere: soap makers sit under Health
+// & Wellness Products, Handmade & Artisan Goods, or a group with no child at
+// all. suggestInto asks one question of every listing: does it belong in this
+// one category? It is stricter than suggestSubcategory, because a wrong move
+// takes a business out of the place it was found.
+
+export interface IntoRule {
+  /** In the name, one of these is enough ("Lather & Light Soap Co."). */
+  strong: readonly string[]
+  /** Anywhere in the name, tagline or description: two different ones are enough. */
+  words: readonly string[]
+  /** In the name or tagline, another trade that shares the words. */
+  excludeHead: readonly string[]
+  /** Anywhere: a trade that never makes bath goods (auto body, remodels). */
+  excludeAnywhere: readonly string[]
+}
+
+export const INTO_RULES: Readonly<Record<string, IntoRule>> = {
+  'bath-body': {
+    strong: ['soap', 'bath', 'body butter', 'bath bomb', 'lotion', 'toiletries', 'body wash', 'deodorant'],
+    words: [
+      ...(CATEGORY_KEYWORDS['bath-body'] ?? []),
+      'bar soap', 'body care', 'bodycare', 'skin care', 'skincare', 'whipped butter', 'scrub',
+    ],
+    excludeHead: ['massage', 'spa services', 'day spa', 'hair', 'salon', 'barber', 'braids', 'nails', 'esthetician'],
+    excludeAnywhere: [
+      'auto', 'automotive', 'collision', 'body shop', 'body work', 'bodywork', 'remodel', 'remodeling',
+      'renovation', 'plumbing', 'plumber', 'contractor', 'tile',
+    ],
+  },
+}
+
+export interface IntoSuggestion {
+  /**
+   * `name`: a strong word in the name. `several`: two or more different
+   * words. `excluded`: one of those, but another trade's word ruled it out
+   * (listed for review, never suggested). `none`: no match.
+   */
+  confidence: 'name' | 'several' | 'excluded' | 'none'
+  /** The words that matched, as stemmed phrases. */
+  matched: string[]
+  /** The exclusion that ruled it out, when one did. */
+  excludedBy: string | null
+}
+
+const terms = (list: readonly string[]) => [...new Set(list.map(stemmed).filter(Boolean))]
+
+/** Whether a listing belongs in the rule's category. Rule-based, no AI. */
+export function suggestInto(listing: SuggestInput, rule: IntoRule): IntoSuggestion {
+  const name = stemmed(listing.name)
+  const head = stemmed(`${listing.name} ${listing.tagline ?? ''}`)
+  const all = `${head} ${stemmed(listing.description ?? '')}`
+
+  const matched = terms([...rule.strong, ...rule.words]).filter((t) => hasPhrase(all, t))
+  // "bath bomb" and "bath" are one hit, not two.
+  const distinct = matched.filter((t) => !matched.some((o) => o !== t && hasPhrase(o, t)))
+  const byName = terms(rule.strong).some((t) => hasPhrase(name, t))
+  if (!byName && distinct.length < 2) return { confidence: 'none', matched: [], excludedBy: null }
+
+  const excludedBy =
+    terms(rule.excludeAnywhere).find((t) => hasPhrase(all, t)) ??
+    terms(rule.excludeHead).find((t) => hasPhrase(head, t)) ??
+    null
+  if (excludedBy) return { confidence: 'excluded', matched: distinct, excludedBy }
+  return { confidence: byName ? 'name' : 'several', matched: distinct, excludedBy: null }
+}

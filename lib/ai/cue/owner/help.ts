@@ -90,6 +90,7 @@ const STATIC: Record<Exclude<OwnerHelpTopic, 'plans'>, string> = {
   ].join(' '),
   analytics: [
     'Analytics (under This page) shows your views, saves and taps over the last 30 days. It comes with Starter and up.',
+    'Growth and Premium add advanced analytics: up to 12 months, each number compared with the period before, and views and taps for the events and jobs you post.',
     'More photos, hours, a main button and a full About usually bring more views and taps.',
   ].join(' '),
   writing_help: [

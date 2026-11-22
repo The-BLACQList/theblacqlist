@@ -16,11 +16,18 @@
  *      40% of the monthly call budget. One visitor message counts as one call,
  *      and spend.ts prices it at the loop's worst case.
  *
- * Then Cue runs (lib/ai/cue/agent.ts): up to four model calls with tools that
+ * Then Cue runs (lib/ai/cue/agent.ts): up to five model calls with tools that
  * read published listings only. The response is newline-delimited JSON
  * (lib/ai/cue/stream.ts): `status` and `text` while Cue works, then `cards`,
  * `actions` and `done`. A reply with no words and no cards becomes a
  * `fallback` instead.
+ *
+ * On /search (`surface: 'search'`, ticket 255) no "no" after the input check
+ * ends in a fallback. The route sends the quick answer from our listings
+ * instead (lib/search/basicAnswer.ts): no model, its own rate limit (bucket
+ * 'search_answer', 30 a minute per IP), and `done.mode` 'basic'. The strip
+ * logs `search_answer_served` with the mode, the reason and how many strict
+ * matches there were, never the words.
  *
  * Nothing the visitor typed is stored or logged. The audit row keeps the
  * agent, the model, token counts and an outcome code only: `completed` when
@@ -31,7 +38,8 @@
 
 import { ASSISTANT_AGENT, GUIDE_AGENT } from '@/lib/ai/agents'
 import { ASSISTANT_PER_DAY, ASSISTANT_PER_MINUTE, visitorCallsUsed } from '@/lib/ai/assistant'
-import { anthropicCueCall, runCue, type CueRunResult } from '@/lib/ai/cue/agent'
+import { anthropicCueCall, runCue, searchModel, type CueRunResult } from '@/lib/ai/cue/agent'
+import { SERVER_ONLY_EVENTS } from '@/lib/analytics/constants'
 import { cueAskSchema, CUE_MESSAGE_MAX, CUE_TURN_MAX_CHARS } from '@/lib/ai/cue/ask'
 import { cueDeps, listingNames, loadLists, loadPage } from '@/lib/ai/cue/data'
 import { createMockCueCall } from '@/lib/ai/cue/mock'
@@ -48,11 +56,14 @@ import {
   withinMonthlyCeiling,
 } from '@/lib/ai/spend'
 import { parsePagePath } from '@/lib/assistant/page'
+import { queryListings } from '@/lib/listings/query'
 import { isFeatureEnabled } from '@/lib/env'
+import { buildBasicAnswer, type ExactBucket } from '@/lib/search/basicAnswer'
+import type { AssistantCategory } from '@/lib/ai/assistant'
 import { checkRateLimit, getClientIp } from '@/lib/security/rate-limit'
 import { createServiceClient } from '@/lib/supabase/server'
 
-/** Four model calls and their tools fit well inside this. */
+/** Five model calls and their tools fit inside this in practice. */
 export const maxDuration = 60
 
 /** Bodies bigger than this are not a chat message. */
@@ -70,6 +81,68 @@ function respond(events: CueEvent[]): Response {
 
 function fallback(text: string, reason: 'limited' | 'error'): Response {
   return respond([{ type: 'fallback', href: fallbackHref(text), reason }])
+}
+
+/** Quick answers per IP per minute. No model call, so far looser than Cue's 8. */
+export const SEARCH_ANSWER_PER_MINUTE = 30
+
+/** Why the strip got the quick answer instead of Cue. Logged, never shown. */
+type BasicReason =
+  | 'flag_off'
+  | 'kill_switch'
+  | 'limited'
+  | 'ceiling'
+  | 'budget'
+  | 'unavailable'
+  | 'empty'
+  | 'error'
+
+/**
+ * One `search_answer_served` row. Awaited, and any failure dropped: analytics
+ * never costs the visitor their answer. Properties only, no words, no IP.
+ */
+async function logAnswer(props: { mode: 'ai' | 'basic'; reason: BasicReason | null; exact_bucket: ExactBucket | null }) {
+  try {
+    await createServiceClient()
+      .from('analytics_events')
+      .insert({ event_name: SERVER_ONLY_EVENTS.SEARCH_ANSWER_SERVED, properties: props })
+  } catch {
+    // best effort
+  }
+}
+
+/**
+ * The quick answer's events: cards, actions and a `done` marked 'basic'.
+ * Null when its own rate limit says no or it fails outright; the caller then
+ * sends the plain fallback.
+ */
+async function basicAnswerEvents(args: {
+  message: string
+  near: { lat: number; lng: number } | null
+  ip: string
+  reason: BasicReason
+  categories?: readonly AssistantCategory[] | null
+}): Promise<CueEvent[] | null> {
+  const allowed = await checkRateLimit({
+    bucket: 'search_answer',
+    identifier: `min:${args.ip}`,
+    limit: SEARCH_ANSWER_PER_MINUTE,
+    windowSeconds: 60,
+  })
+  if (!allowed) return null
+  try {
+    const categories =
+      args.categories !== undefined ? args.categories : ((await loadLists().catch(() => null))?.categories ?? null)
+    const answer = await buildBasicAnswer(args.message, args.near, { search: queryListings, categories })
+    await logAnswer({ mode: 'basic', reason: args.reason, exact_bucket: answer.exactBucket })
+    const events: CueEvent[] = []
+    if (answer.cards.length > 0) events.push({ type: 'cards', cards: answer.cards })
+    if (answer.actions.length > 0) events.push({ type: 'actions', actions: answer.actions })
+    events.push({ type: 'done', text: answer.text, mode: 'basic' })
+    return events
+  } catch {
+    return null
+  }
 }
 
 function rawMessage(input: unknown): string {
@@ -115,14 +188,32 @@ export async function POST(request: Request): Promise<Response> {
   }
   const parsed = cueAskSchema.safeParse(body)
   if (!parsed.success) return fallback(rawMessage(body), 'error')
-  const { message, history, near, page: pagePath, cards: priorCards } = parsed.data
+  const { message, history, near, page: pagePath, cards: priorCards, surface } = parsed.data
+  const ip = getClientIp(request.headers)
+
+  // Every "no" from here on. The chat panel gets the fallback; the /search
+  // strip gets the quick answer, or the fallback if even that can't run.
+  let lists: Awaited<ReturnType<typeof loadLists>> | undefined
+  const cannot = async (
+    wire: 'limited' | 'error',
+    reason: BasicReason
+  ): Promise<Response> => {
+    if (surface !== 'search') return fallback(message, wire)
+    const events = await basicAnswerEvents({
+      message,
+      near,
+      ip,
+      reason,
+      ...(lists !== undefined ? { categories: lists?.categories ?? null } : {}),
+    })
+    return events ? respond(events) : fallback(message, wire)
+  }
 
   // 2. Flag. 3. Kill switch.
-  if (!isFeatureEnabled('aiAssistant')) return fallback(message, 'error')
-  if (aiKillSwitchOn()) return fallback(message, 'error')
+  if (!isFeatureEnabled('aiAssistant')) return cannot('error', 'flag_off')
+  if (aiKillSwitchOn()) return cannot('error', 'kill_switch')
 
   // 4. Rate limit per IP. Both windows are charged on every message.
-  const ip = getClientIp(request.headers)
   const [minuteOk, dayOk] = await Promise.all([
     checkRateLimit({
       bucket: 'ai_assistant',
@@ -137,50 +228,55 @@ export async function POST(request: Request): Promise<Response> {
       windowSeconds: 86_400,
     }),
   ])
-  if (!minuteOk || !dayOk) return fallback(message, 'limited')
+  if (!minuteOk || !dayOk) return cannot('limited', 'limited')
 
   let requestId: string
   let run: (emit: (event: CueEvent) => void, signal: AbortSignal) => Promise<CueRunResult>
   const supabase = createServiceClient()
   try {
     // 5. Lists and names. No reply goes out unchecked.
-    const [lists, names] = await Promise.all([loadLists(), listingNames()])
-    if (!lists || !names) return fallback(message, 'error')
+    const [loaded, names] = await Promise.all([loadLists(), listingNames()])
+    lists = loaded
+    if (!loaded || !names) return await cannot('error', 'unavailable')
+    const cueLists = loaded
 
     // Throws PromptRedactionError when redaction fails; the catch falls back.
     const words = cleanTurnText(message, CUE_MESSAGE_MAX)
-    if (!words) return fallback(message, 'error')
+    if (!words) return await cannot('error', 'error')
     const earlier = history
       .map((t) => ({ role: t.role, text: cleanTurnText(t.text, CUE_TURN_MAX_CHARS) }))
       .filter((t) => t.text !== '')
 
     // 6. and 7. Paid calls only.
-    const { provider, model } = resolveProvider(ASSISTANT_AGENT)
+    const resolved = resolveProvider(ASSISTANT_AGENT)
+    const { provider } = resolved
+    const model =
+      provider === 'anthropic' && surface === 'search' ? searchModel(resolved.model) : resolved.model
     if (provider === 'anthropic') {
-      if (!(await withinMonthlyCeiling())) return fallback(message, 'limited')
+      if (!(await withinMonthlyCeiling())) return await cannot('limited', 'ceiling')
       const ceiling = monthlyCeilingUsd()
-      if (ceiling === null) return fallback(message, 'limited')
+      if (ceiling === null) return await cannot('limited', 'ceiling')
       const [guideUsed, assistantUsed] = await Promise.all([
         countAgentAttemptsThisMonth(GUIDE_AGENT.agentType),
         countAgentAttemptsThisMonth(ASSISTANT_AGENT.agentType),
       ])
       if (!withinGuideBudget(visitorCallsUsed(guideUsed, assistantUsed * cueMessageUnits()), monthlyCallBudget(ceiling))) {
-        return fallback(message, 'limited')
+        return await cannot('limited', 'budget')
       }
     }
 
     const page = await loadPage(parsePagePath(pagePath))
     const cards = priorCards.map((c) => ({ id: c.id, name: cleanTurnText(c.name, 200) }))
     const ctx: CueToolContext = {
-      categories: lists.categories,
-      cities: lists.cities,
+      categories: cueLists.categories,
+      cities: cueLists.cities,
       near,
       page,
       priorIds: new Set(cards.map((c) => c.id)),
       state: newTurnState(),
       deps: cueDeps,
     }
-    const system = cueSystem(lists.categories, lists.cities)
+    const system = cueSystem(cueLists.categories, cueLists.cities)
     const messages = buildCueMessages({
       history: earlier,
       message: words,
@@ -188,7 +284,7 @@ export async function POST(request: Request): Promise<Response> {
       nearShared: near !== null,
       priorCards: cards,
     })
-    const call = provider === 'mock' ? createMockCueCall({ cities: lists.cities }) : anthropicCueCall()
+    const call = provider === 'mock' ? createMockCueCall({ cities: cueLists.cities }) : anthropicCueCall()
     run = (emit, signal) => runCue({ call, model, system, messages, ctx, names, emit, signal })
 
     const { data: row, error: rowError } = await supabase
@@ -204,12 +300,12 @@ export async function POST(request: Request): Promise<Response> {
       })
       .select('id')
       .single()
-    if (rowError || !row) return fallback(message, 'error')
+    if (rowError || !row) return await cannot('error', 'error')
     requestId = row.id
   } catch {
     // A database outage or a redaction failure. Deliberately drops the error:
     // it could carry the message.
-    return fallback(message, 'error')
+    return cannot('error', 'error')
   }
 
   const encoder = new TextEncoder()
@@ -239,9 +335,23 @@ export async function POST(request: Request): Promise<Response> {
       if (result && replied) {
         if (result.cards.length > 0) emit({ type: 'cards', cards: result.cards })
         if (result.actions.length > 0) emit({ type: 'actions', actions: result.actions })
-        emit({ type: 'done', text: result.text })
+        emit({ type: 'done', text: result.text, ...(surface === 'search' ? { mode: 'ai' as const } : {}) })
+        if (surface === 'search') await logAnswer({ mode: 'ai', reason: null, exact_bucket: null })
       } else {
-        emit({ type: 'fallback', href: fallbackHref(message), reason: 'error' })
+        // Cue ran and had nothing to say, or failed. Stopped by the visitor:
+        // nobody is listening, so nothing more is sent.
+        const basic =
+          surface === 'search' && !signal.aborted
+            ? await basicAnswerEvents({
+                message,
+                near,
+                ip,
+                reason: result?.stop === 'end' ? 'empty' : 'error',
+                categories: lists?.categories ?? null,
+              })
+            : null
+        if (basic) basic.forEach(emit)
+        else emit({ type: 'fallback', href: fallbackHref(message), reason: 'error' })
       }
 
       const { failed, code } = result ? outcome(result, replied) : { failed: true, code: 'provider_error' }

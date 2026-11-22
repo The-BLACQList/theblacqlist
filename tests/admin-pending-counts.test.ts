@@ -26,6 +26,7 @@ const HELPER = 'lib/admin/pendingCounts.ts'
 const LAYOUT = 'app/admin/layout.tsx'
 const PAGE = 'app/admin/page.tsx'
 const SIDEBAR = 'components/admin/AdminSidebar.tsx'
+const NAV_GROUPS = 'lib/admin/navGroups.ts'
 const ALERT = 'components/admin/AdminPendingAlert.tsx'
 
 // Every action that moves a row out of one of the counted "pending" states.
@@ -48,7 +49,10 @@ describe('lib/admin/pendingCounts.ts', () => {
   it('counts pending listings the way /admin/entities lists them (no soft-deleted rows)', () => {
     // The queue page applies `.is('deleted_at', null)`; a count that skips it
     // can say "3" above a page that shows two.
-    const listingsQuery = src.slice(src.indexOf(".from('listings')"), src.indexOf(".from('claims')"))
+    const listingsQuery = src.slice(
+      src.indexOf(".from('listings')"),
+      src.indexOf(".from('claims')")
+    )
     expect(listingsQuery).toContain(".eq('status', 'pending')")
     expect(listingsQuery).toContain(".is('deleted_at', null)")
   })
@@ -64,13 +68,13 @@ describe('lib/admin/pendingCounts.ts', () => {
     expect(src).toContain(".eq('status', 'intake')")
   })
 
-  it('maps every count onto a sidebar href that exists in NAV_ITEMS', () => {
-    const sidebar = read(SIDEBAR)
+  it('maps every count onto a sidebar href that exists in the nav config', () => {
+    const sidebar = read(NAV_GROUPS)
     const mapping = src.slice(src.indexOf('export function toSidebarCounts'))
     const hrefs = [...mapping.matchAll(/'(\/admin\/[a-z-]+)':/g)].map((m) => m[1])
     expect(hrefs.length).toBeGreaterThanOrEqual(2)
     for (const href of hrefs) {
-      expect(sidebar, `${href} is not a NAV_ITEMS href`).toContain(`href: '${href}'`)
+      expect(sidebar, `${href} is not a nav config href`).toContain(`href: '${href}'`)
     }
   })
 })

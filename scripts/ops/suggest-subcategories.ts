@@ -10,6 +10,16 @@
  *
  * Usage:
  *   DATABASE_URL=postgres://... npx tsx scripts/ops/suggest-subcategories.ts
+ *   DATABASE_URL=postgres://... npx tsx scripts/ops/suggest-subcategories.ts --into=bath-body
+ *
+ * --into=<slug> (ticket 257): every published listing, in any category, that
+ * belongs in this one subcategory by the rule in INTO_RULES
+ * (lib/listings/subcategorySuggest.ts). For a new category that takes
+ * listings from several places. Writes subcategory-suggest-<slug>-<date>.csv
+ * with the same columns. Rows whose words matched but that another trade's
+ * word ruled out are listed last as `excluded`, for a look, never suggested.
+ * Mark the rows to move MOVE (APPLY works only for a listing filed under the
+ * target's own group; the note says which).
  *
  * Point it at staging first. Reading production needs the founder's word
  * (plan approval is not prod-read permission). The target is printed before
@@ -29,7 +39,13 @@ import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import { Client } from 'pg'
 import { describeConnectionTarget } from '../../lib/listings/locationTypeAudit'
-import { suggestSubcategory, type SubcategorySuggestion } from '../../lib/listings/subcategorySuggest'
+import {
+  INTO_RULES,
+  suggestInto,
+  suggestSubcategory,
+  type IntoSuggestion,
+  type SubcategorySuggestion,
+} from '../../lib/listings/subcategorySuggest'
 import type { AssistCategory } from '../../lib/search/assist'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -69,12 +85,123 @@ interface ListingRow {
 
 // Most sure first, so the rows worth a quick yes sit at the top of the sheet.
 const ORDER: Record<SubcategorySuggestion['confidence'], number> = { several: 0, one: 1, tie: 2, none: 3 }
+const INTO_ORDER: Record<IntoSuggestion['confidence'], number> = { name: 0, several: 1, excluded: 2, none: 3 }
+
+const HEADER = [
+  'listing_id',
+  'name',
+  'current_category',
+  'current_category_id',
+  'suggested_subcategory',
+  'suggested_category_id',
+  'matched_words',
+  'confidence',
+  'note',
+  'DECISION',
+].join(',')
+
+function arg(name: string): string | undefined {
+  const prefix = `--${name}=`
+  return process.argv.find((a) => a.startsWith(prefix))?.slice(prefix.length)
+}
+
+interface IntoListingRow {
+  id: string
+  name: string
+  tagline: string | null
+  description: string | null
+  category_id: string
+}
+
+/** --into=<slug>: every published listing that belongs in one subcategory. */
+async function into(url: string, slug: string) {
+  const rule = INTO_RULES[slug]
+  if (!rule) throw new Error(`No rule for "${slug}". Rules exist for: ${Object.keys(INTO_RULES).join(', ')}`)
+
+  const db = new Client({ connectionString: url })
+  await db.connect()
+  const { rows: categoryRows } = await db.query<CategoryRow>(
+    `SELECT id, name, slug, parent_id FROM categories ORDER BY name`
+  )
+  const target = categoryRows.find((c) => c.slug === slug)
+  if (!target || !target.parent_id) {
+    await db.end()
+    throw new Error(
+      `"${slug}" is not a subcategory on this database. Run its migration first ` +
+        '(for bath-body: 20261205000000_bath_body_subcategory.sql).'
+    )
+  }
+  const { rows: listingRows } = await db.query<IntoListingRow>(
+    `
+    SELECT l.id, l.name, l.tagline, d.description, l.category_id
+    FROM listings l
+    LEFT JOIN listing_details_business d ON d.listing_id = l.id
+    WHERE l.status = 'published'
+      AND l.deleted_at IS NULL
+      AND l.category_id <> $1
+    ORDER BY l.name
+  `,
+    [target.id]
+  )
+  await db.end()
+
+  const byId = new Map(categoryRows.map((c) => [c.id, c]))
+  const results = listingRows
+    .map((l) => ({ listing: l, suggestion: suggestInto(l, rule) }))
+    .filter((r) => r.suggestion.confidence !== 'none')
+    .sort(
+      (a, b) =>
+        INTO_ORDER[a.suggestion.confidence] - INTO_ORDER[b.suggestion.confidence] ||
+        a.listing.name.localeCompare(b.listing.name)
+    )
+
+  const body = results.map(({ listing, suggestion }) => {
+    const excluded = suggestion.confidence === 'excluded'
+    const from = byId.get(listing.category_id)
+    const note = excluded
+      ? `excluded by "${suggestion.excludedBy}": check by hand, MOVE only if it really sells bath goods`
+      : listing.category_id === target.parent_id
+        ? 'APPLY (filed under the group itself)'
+        : `MOVE (now in ${from?.name ?? 'another category'})`
+    return [
+      csvCell(listing.id),
+      csvCell(listing.name),
+      csvCell(from?.name ?? ''),
+      csvCell(listing.category_id),
+      csvCell(target.name),
+      csvCell(target.id),
+      csvCell(suggestion.matched.join('; ')),
+      csvCell(suggestion.confidence),
+      csvCell(note),
+      csvCell(''),
+    ].join(',')
+  })
+
+  const date = new Date().toISOString().slice(0, 10)
+  const outFile = join(outDir, `subcategory-suggest-${slug}-${date}.csv`)
+  mkdirSync(outDir, { recursive: true })
+  writeFileSync(outFile, [HEADER, ...body].join('\n') + '\n', 'utf8')
+
+  const count = (c: IntoSuggestion['confidence']) => results.filter((r) => r.suggestion.confidence === c).length
+  console.log(`Published listings checked: ${listingRows.length} (not already in ${target.name})`)
+  console.log(`  strong word in the name: ${count('name')}`)
+  console.log(`  two or more words:       ${count('several')}`)
+  console.log(`  excluded, for a look:    ${count('excluded')}`)
+  console.log(`\nWrote: ${outFile}`)
+  console.log(
+    '\nNext: put MOVE (or APPLY, as the note says) or SKIP in DECISION on every row, then run\n' +
+      `scripts/ops/apply-subcategories.ts ${outFile} (a dry run unless you pass --apply --yes).`
+  )
+}
 
 async function main() {
   const url = process.env.DATABASE_URL
   if (!url) throw new Error('DATABASE_URL is required')
 
   announceTarget(url)
+
+  const intoSlug = arg('into')
+  if (intoSlug) return into(url, intoSlug)
 
   const db = new Client({ connectionString: url })
   await db.connect()
@@ -127,19 +254,6 @@ async function main() {
         a.listing.name.localeCompare(b.listing.name)
     )
 
-  const header = [
-    'listing_id',
-    'name',
-    'current_category',
-    'current_category_id',
-    'suggested_subcategory',
-    'suggested_category_id',
-    'matched_words',
-    'confidence',
-    'note',
-    'DECISION',
-  ].join(',')
-
   const body = results.map(({ listing, suggestion }) => {
     const notes: string[] = []
     if (suggestion.confidence === 'tie') {
@@ -163,7 +277,7 @@ async function main() {
   const date = new Date().toISOString().slice(0, 10)
   const outFile = join(outDir, `subcategory-suggest-${date}.csv`)
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(outFile, [header, ...body].join('\n') + '\n', 'utf8')
+  writeFileSync(outFile, [HEADER, ...body].join('\n') + '\n', 'utf8')
 
   const count = (c: SubcategorySuggestion['confidence']) => results.filter((r) => r.suggestion.confidence === c).length
   console.log(`Published listings filed only under a group: ${results.length}`)

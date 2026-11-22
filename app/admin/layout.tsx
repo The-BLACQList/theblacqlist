@@ -24,10 +24,13 @@ export default async function AdminLayout({ children }: Props) {
   const pending = await getPendingCounts()
 
   return (
-    <div className="min-h-screen flex bg-[#f5f5f7]">
+    // Phones: the sidebar renders a sticky top bar + drawer and the page flows
+    // below it. md and up: rail on the left, page beside it.
+    <div className="min-h-screen bg-[#f5f5f7] md:flex">
       <AdminSidebar role={role} counts={toSidebarCounts(pending)} />
-      <div className="flex-1 min-w-0 overflow-auto">
-        <main className="p-6 md:p-8 max-w-[1200px]">{children}</main>
+      {/* Wide admin tables scroll inside this column, not the whole page. */}
+      <div className="min-w-0 flex-1 overflow-x-auto">
+        <main className="max-w-[1200px] p-4 sm:p-6 md:p-8">{children}</main>
       </div>
     </div>
   )

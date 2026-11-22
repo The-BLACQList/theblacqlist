@@ -37,6 +37,13 @@ describe('buildSearchQuery', () => {
     expect(q).not.toMatch(/ or /)
   })
 
+  it('rejoins single words that make a curated phrase (ticket 257)', () => {
+    const { q, terms } = buildSearchQuery({ words: ['body', 'wash'], category: null, categories: CATEGORIES })
+    expect(terms[0]).toBe('body wash')
+    expect(q).toContain('"body wash"')
+    expect(terms).toContain('soap')
+  })
+
   it('finds the law words from the typed word alone when no category is set', () => {
     const { terms } = buildSearchQuery({ words: ['lawyer'], category: null, categories: CATEGORIES })
     expect(terms).toEqual(expect.arrayContaining(['lawyer', 'attorney', 'law firm']))
@@ -79,8 +86,62 @@ describe('buildSearchQuery', () => {
   })
 
   it('cleans words so they cannot change the query', () => {
-    const { q } = buildSearchQuery({ words: ['"lawyer" -cheap OR'], category: null, categories: CATEGORIES })
-    expect(q).toBe('"lawyer cheap"')
+    const { q, terms } = buildSearchQuery({ words: ['"lawyer" -cheap OR'], category: null, categories: CATEGORIES })
+    expect(terms[0]).toBe('lawyer')
+    // Only curated phrases are quoted; no minus and no stray OR survive.
+    const bare = q.replace(/"(law firm|law office|legal services|criminal defense)"/g, '')
+    expect(bare).not.toMatch(/["-]| or /)
+  })
+
+  // ── Ticket 256: phrases, filler and intent words ──
+  it("reduces the founder's question to the bathroom words", () => {
+    const { q, terms } = buildSearchQuery({
+      words: ['How do I switch to Black Owned bathroom products', 'bathroom products', 'switch'],
+      category: null,
+      categories: CATEGORIES,
+    })
+    expect(terms.slice(0, 5)).toEqual(['bathroom', 'bath', 'soap', 'lotion', 'toiletries'])
+    expect(q).not.toMatch(/switch|black|owned/)
+  })
+
+  it('searches an uncurated phrase as words that must all appear, not a quoted phrase', () => {
+    const { q, terms } = buildSearchQuery({ words: ['natural deodorant', 'deodorant'], category: null, categories: CATEGORIES })
+    expect(terms.slice(0, 2)).toEqual(['natural deodorant', 'deodorant'])
+    expect(q.startsWith('natural deodorant OR deodorant')).toBe(true)
+    expect(q).not.toContain('"natural deodorant"')
+  })
+
+  it('keeps a curated category phrase quoted', () => {
+    const { q } = buildSearchQuery({ words: ['law firm'], category: null, categories: CATEGORIES })
+    expect(q.startsWith('"law firm"')).toBe(true)
+  })
+
+  it('drops identity phrases and lone generic objects when something else is left', () => {
+    const { terms } = buildSearchQuery({ words: ['black owned', 'products', 'candles'], category: null, categories: CATEGORIES })
+    expect(terms[0]).toBe('candles')
+    expect(terms).not.toContain('products')
+    expect(terms.join(' ')).not.toMatch(/black|owned/)
+  })
+
+  it('never searches "body" alone next to other words: auto body is not body butter', () => {
+    const { terms } = buildSearchQuery({ words: ['auto', 'body'], category: null, categories: CATEGORIES })
+    expect(terms).not.toContain('body')
+    expect(buildSearchQuery({ words: ['auto body'], category: null, categories: CATEGORIES }).terms[0]).toBe('auto body')
+  })
+
+  it('keeps a lone "black" that names a thing', () => {
+    const { terms } = buildSearchQuery({ words: ['black seed oil'], category: null, categories: CATEGORIES })
+    expect(terms[0]).toBe('black seed oil')
+  })
+
+  it('takes occasion words out of an uncurated phrase outside events', () => {
+    const { terms } = buildSearchQuery({ words: ['birthday cake'], category: cat('bakeries-pastry-shops'), categories: CATEGORIES })
+    expect(terms[0]).toBe('cake')
+  })
+
+  it('searches what was sent when nothing meaningful is left', () => {
+    const { terms } = buildSearchQuery({ words: ['options'], category: null, categories: CATEGORIES })
+    expect(terms).toEqual(['options'])
   })
 
   it('caps the terms', () => {
@@ -154,10 +215,35 @@ describe('search_listings', () => {
   })
 
   it('says to try again when nothing is found', async () => {
-    const r = await runCueTool('search_listings', { words: ['zebra'] }, ctx())
+    const c = ctx()
+    const r = await runCueTool('search_listings', { words: ['zebra'] }, c)
     const body = JSON.parse(r.content)
     expect(body.results).toEqual([])
     expect(body.next).toMatch(/other words/)
+    expect(body.next).toMatch(/tip/)
+    expect(c.state.found).toBe(0)
+  })
+
+  it('offers close matches from the nearest category when the words match nothing (ticket 256)', async () => {
+    const search = vi.fn(async (p: { q?: string; category?: string }) => (p.q ? [] : [entity(7), entity(8)]))
+    const c = ctx({ deps: deps({ search }) })
+    const r = await runCueTool('search_listings', { words: ['attorney'] }, c)
+    const body = JSON.parse(r.content)
+    expect(body.results).toEqual([])
+    expect(body.nearestCategories[0]).toBe('Law & Legal Services')
+    expect(body.closeMatches.category).toBe('Law & Legal Services')
+    expect(body.closeMatches.results.map((x: { id: string }) => x.id)).toEqual([ID(7), ID(8)])
+    expect(body.next).toMatch(/Never reply only that it is not listed/)
+    expect(search).toHaveBeenLastCalledWith(expect.objectContaining({ category: 'law-legal-services', q: undefined }))
+    // Close matches can be shown, but they are not counted as found.
+    expect(c.state.seen.has(ID(7))).toBe(true)
+    expect(c.state.found).toBe(0)
+  })
+
+  it('counts what matched the words', async () => {
+    const c = ctx({ deps: deps({ search: vi.fn(async () => [entity(1), entity(2)]) }) })
+    await runCueTool('search_listings', { words: ['lawyer'] }, c)
+    expect(c.state.found).toBe(2)
   })
 
   it('sends a city we do not cover to find_place', async () => {

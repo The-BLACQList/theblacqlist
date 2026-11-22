@@ -13,6 +13,9 @@ const h = vi.hoisted(() => ({
   killSwitch: false,
   provider: 'mock' as 'mock' | 'anthropic',
   rateAllowed: true,
+  denied: new Set<string>(),
+  modelFails: false,
+  analytics: [] as Array<Record<string, unknown>>,
   withinCeiling: true,
   used: 0,
   listsFail: false,
@@ -34,7 +37,7 @@ vi.mock('@/lib/ai/provider', () => ({
 }))
 vi.mock('@/lib/security/rate-limit', () => ({
   getClientIp: (headers: Headers) => headers.get('x-forwarded-for') ?? 'unknown',
-  checkRateLimit: async () => h.rateAllowed,
+  checkRateLimit: async ({ bucket }: { bucket: string }) => h.rateAllowed && !h.denied.has(bucket),
 }))
 vi.mock('@/lib/ai/spend', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/ai/spend')>()),
@@ -42,6 +45,19 @@ vi.mock('@/lib/ai/spend', async (importOriginal) => ({
   monthlyCeilingUsd: () => 10,
   countAgentAttemptsThisMonth: async () => h.used,
 }))
+vi.mock('@/lib/ai/cue/mock', async (importOriginal) => {
+  const real = await importOriginal<typeof import('@/lib/ai/cue/mock')>()
+  return {
+    ...real,
+    createMockCueCall: (args: Parameters<typeof real.createMockCueCall>[0]) => {
+      const call = real.createMockCueCall(args)
+      return (async (...rest: Parameters<typeof call>) => {
+        if (h.modelFails) throw new Error('model down')
+        return call(...rest)
+      }) as typeof call
+    },
+  }
+})
 vi.mock('@/lib/ai/cue/data', async () => {
   const { NO_PAGE } = await import('@/lib/assistant/page')
   const { CATEGORIES, CITIES, ID } = await import('./fixtures/cue')
@@ -58,10 +74,24 @@ vi.mock('@/lib/ai/cue/data', async () => {
     loadPage: async () => NO_PAGE,
   }
 })
+// The quick answer calls queryListings itself (ticket 257); it answers from
+// the same fake search Cue's tool uses.
+vi.mock('@/lib/listings/query', () => ({
+  // A keyword search counts as the understood form, as the founder's
+  // question is on the real database.
+  queryListings: async (p: { q?: string }) => ({
+    entities: await h.deps!.search(p as never),
+    ...(p.q ? { understood: { mode: 'search' as const, words: [] } } : {}),
+  }),
+}))
 vi.mock('@/lib/supabase/server', () => ({
   createServiceClient: () => ({
-    from: () => ({
+    from: (table: string) => ({
       insert: (row: Record<string, unknown>) => {
+        if (table === 'analytics_events') {
+          h.analytics.push(row)
+          return Promise.resolve({ error: null })
+        }
         h.inserts.push(row)
         return {
           select: () => ({
@@ -113,6 +143,9 @@ beforeEach(() => {
   h.killSwitch = false
   h.provider = 'mock'
   h.rateAllowed = true
+  h.denied = new Set()
+  h.modelFails = false
+  h.analytics = []
   h.withinCeiling = true
   h.used = 0
   h.listsFail = false
@@ -140,7 +173,7 @@ describe('POST /api/cue', () => {
     expect(done.text).toBe('Here are 2 places that match.')
 
     expect(h.inserts).toHaveLength(1)
-    expect(h.inserts[0]).toMatchObject({ agent_type: 'visitor_assistant', prompt_version: 'CUE_CHAT@2', status: 'pending' })
+    expect(h.inserts[0]).toMatchObject({ agent_type: 'visitor_assistant', prompt_version: 'CUE_CHAT@3', status: 'pending' })
     expect(h.updates).toEqual([{ status: 'completed', error_message: null, request_tokens: 0, response_tokens: 0 }])
   })
 
@@ -157,7 +190,12 @@ describe('POST /api/cue', () => {
     expect(list.some((e) => e.type === 'cards')).toBe(false)
     const done = list.at(-1) as Extract<CueEvent, { type: 'done' }>
     expect(done.type).toBe('done')
-    expect(done.text).toMatch(/not on The BLACQList yet/)
+    expect(done.text).toMatch(/Nothing matches that on The BLACQList yet/)
+    // Searched and found nothing: Suggest a Business (ticket 256).
+    expect(list).toContainEqual({
+      type: 'actions',
+      actions: [{ kind: 'link', href: '/add-business', label: 'Suggest a Business' }],
+    })
   })
 
   it.each([
@@ -222,5 +260,96 @@ describe('POST /api/cue', () => {
       )
     )
     expect(list.at(-1)?.type).toBe('done')
+  })
+})
+
+// ─── The /search strip (ticket 255) ───────────────────────────────────────────
+
+describe('POST /api/cue from the /search strip', () => {
+  const FOUNDER = 'How do I switch to Black Owned bathroom products'
+  const search = (body: Record<string, unknown> = {}) => ask({ message: FOUNDER, surface: 'search', ...body })
+
+  function basicDone(list: CueEvent[]) {
+    const done = list.at(-1) as Extract<CueEvent, { type: 'done' }>
+    expect(done.type).toBe('done')
+    expect(done.mode).toBe('basic')
+    expect(list.some((e) => e.type === 'fallback')).toBe(false)
+    return done
+  }
+
+  it.each([
+    ['the flag is off', () => (h.flag = false), 'flag_off'],
+    ['the kill switch is on', () => (h.killSwitch = true), 'kill_switch'],
+    ["the visitor's Cue allowance is used up", () => h.denied.add('ai_assistant'), 'limited'],
+    ['the lists fail', () => (h.listsFail = true), 'unavailable'],
+    ['the audit row fails', () => (h.insertFails = true), 'error'],
+  ])('answers from our listings when %s', async (_label, arrange, reason) => {
+    arrange()
+    const list = await events(await POST(search()))
+    const done = basicDone(list)
+    expect(done.text).toBe('Here are businesses that match “bathroom”.')
+    const cards = list.find((e) => e.type === 'cards') as Extract<CueEvent, { type: 'cards' }>
+    expect(cards.cards.map((c) => c.id)).toEqual([ID(1), ID(2)])
+    expect(h.analytics).toEqual([
+      {
+        event_name: 'search_answer_served',
+        properties: { mode: 'basic', reason, exact_bucket: '1-2' },
+      },
+    ])
+  })
+
+  it('answers from our listings when the monthly ceiling is reached', async () => {
+    h.provider = 'anthropic'
+    h.withinCeiling = false
+    basicDone(await events(await POST(search())))
+    expect(h.analytics[0]?.properties).toMatchObject({ mode: 'basic', reason: 'ceiling' })
+  })
+
+  it('answers from our listings when Cue runs and fails, inside the stream', async () => {
+    h.modelFails = true
+    const list = await events(await POST(search()))
+    basicDone(list)
+    expect(h.analytics[0]?.properties).toMatchObject({ mode: 'basic', reason: 'error' })
+    // The audit row still records Cue's failure.
+    expect(h.updates.at(-1)).toMatchObject({ status: 'failed' })
+  })
+
+  it('the chat panel still gets the fallback when Cue fails inside the stream', async () => {
+    h.modelFails = true
+    const list = await events(await POST(ask({ message: FOUNDER })))
+    expect(list.at(-1)?.type).toBe('fallback')
+  })
+
+  it('sends the plain fallback only when the quick answer is limited too', async () => {
+    h.denied.add('ai_assistant')
+    h.denied.add('search_answer')
+    expect(onlyFallback(await events(await POST(search()))).reason).toBe('limited')
+    expect(h.analytics).toEqual([])
+  })
+
+  it("marks Cue's own answer and logs it without the words", async () => {
+    const list = await events(await POST(search({ message: 'lawyer in atlanta' })))
+    const done = list.at(-1) as Extract<CueEvent, { type: 'done' }>
+    expect(done.mode).toBe('ai')
+    expect(h.analytics).toEqual([
+      { event_name: 'search_answer_served', properties: { mode: 'ai', reason: null, exact_bucket: null } },
+    ])
+    expect(JSON.stringify(h.analytics)).not.toMatch(/lawyer|atlanta|203\.0\.113/i)
+  })
+
+  it('never logs what the visitor typed', async () => {
+    h.flag = false
+    await POST(search())
+    expect(JSON.stringify(h.analytics)).not.toMatch(/bathroom|switch|owned|203\.0\.113/i)
+  })
+
+  it('leaves the chat panel on the fallback it always had', async () => {
+    h.flag = false
+    expect(onlyFallback(await events(await POST(ask({ message: FOUNDER })))).reason).toBe('error')
+    expect(h.analytics).toEqual([])
+  })
+
+  it('refuses a surface it does not know', async () => {
+    onlyFallback(await events(await POST(ask({ message: FOUNDER, surface: 'admin' }))))
   })
 })

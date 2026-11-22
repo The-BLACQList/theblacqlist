@@ -21,7 +21,8 @@ const read = (rel: string) => readFileSync(path.join(REPO_ROOT, rel), 'utf8')
 
 const PAGE = 'app/admin/testers/page.tsx'
 const HELPER = 'lib/admin/pendingCounts.ts'
-const SIDEBAR = 'components/admin/AdminSidebar.tsx'
+// The menu rows live in the nav config since ticket 251.
+const SIDEBAR = 'lib/admin/navGroups.ts'
 
 describe('app/admin/testers/page.tsx', () => {
   const src = read(PAGE)
