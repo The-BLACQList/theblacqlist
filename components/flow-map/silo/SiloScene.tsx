@@ -78,6 +78,7 @@ import {
   pinchZoom,
   swipeLanding,
   swipeTravel,
+  swipeTurnRate,
   zoomAmount,
   zoomOrbit,
   type SiloShape,
@@ -822,6 +823,12 @@ function Controls(
       mouse: boolean
       drag: boolean
       axis: 'x' | 'y' | null
+      /** The swipe has gone far enough that its direction is final (ticket 268). */
+      settled: boolean
+      /** Where the swipe started, so a change of mind can undo the first stretch. */
+      t0: number
+      turned: { az: number }
+      az0: number
     } | null = null
     let hovered: string | null = null
     // Full-screen (ticket 248): every finger on the map, for a two-finger pinch.
@@ -923,6 +930,7 @@ function Controls(
         }
         if (fingers.size > 2) return
       }
+      const turned = rig.current.focus?.orbit ?? rig.current
       down = {
         id: e.pointerId,
         x: e.clientX,
@@ -935,6 +943,10 @@ function Controls(
         mouse: e.pointerType !== 'touch',
         drag: false,
         axis: null,
+        settled: false,
+        t0: rig.current.t,
+        turned,
+        az0: turned.az,
       }
       rig.current.spin = 0
       rig.current.glide = 0
@@ -968,16 +980,34 @@ function Controls(
         }
         if (down.drag) {
           const r = rig.current
+          // A swipe keeps one direction: sideways turns, up and down is the
+          // browser's own page scroll, or in full-screen the floors. It waits
+          // for a clear direction (ticket 268), and over its first stretch it
+          // can still change its mind, because a thumb's swipe starts on an arc.
+          // A change undoes the other direction and counts the whole move.
+          if (!down.mouse && !down.settled) {
+            const ax = e.clientX - down.x
+            const ay = e.clientY - down.y
+            const far = Math.hypot(ax, ay)
+            if (far < SWIPE.lockPx) return
+            const axis = Math.abs(ax) >= Math.abs(ay) ? 'x' : 'y'
+            if (axis !== down.axis) {
+              if (down.axis === 'x') down.turned.az = down.az0
+              if (down.axis === 'y') r.t = down.t0
+              r.spin = 0
+              r.glide = 0
+              down.axis = axis
+              down.lastX = down.x
+              down.lastY = down.y
+            }
+            if (far >= SWIPE.settlePx) down.settled = true
+          }
           const dx = e.clientX - down.lastX
           const dy = e.clientY - down.lastY
-          // A swipe keeps one direction: sideways turns, up and down is the
-          // browser's own page scroll, or in full-screen the floors.
-          if (!down.mouse) {
-            down.axis ??= Math.abs(e.clientX - down.x) >= Math.abs(e.clientY - down.y) ? 'x' : 'y'
-          }
           const secs = Math.max((e.timeStamp - down.at) / 1000, 0.001)
           if (down.mouse || down.axis === 'x') {
-            const dAz = -dx * DRAG_TURN
+            const rate = down.mouse ? DRAG_TURN : swipeTurnRate(el.clientWidth, DRAG_TURN)
+            const dAz = -dx * rate
             turn(r, dAz, down.mouse ? dy * DRAG_TILT : 0)
             r.dragging = true
             r.ease = ORBIT.easeS

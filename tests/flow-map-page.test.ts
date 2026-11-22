@@ -278,7 +278,26 @@ describe('/flow-map phone full-screen (ticket 248)', () => {
   it('swipes up and down the floors in full-screen and settles on one', () => {
     expect(scene).toContain('swipeTravel(dy, el.clientHeight)')
     expect(scene).toContain('swipeLanding(r.t, r.glide, l.shape)')
-    expect(experience).toContain('Swipe up or down for floors.')
+    expect(experience).toContain('Swipe sideways to turn, up or down for floors.')
+  })
+
+  // Ticket 268: turning was hard on an iPhone. The top of the screen took the
+  // finger, and a thumb's arcing start often picked floors instead of turning.
+  it('lets a finger through the title, figures and ticker to the map', () => {
+    expect(css).toMatch(
+      /\[data-full\] \.hud > :is\(\.brand, \.kpis, \.ticker\) \{\s*pointer-events: none;/
+    )
+    expect(css).toMatch(
+      /\[data-full\] \.hud > :is\(\.brand, \.kpis, \.ticker\) :is\(a, button\) \{\s*pointer-events: auto;/
+    )
+  })
+
+  it('lets an arcing swipe change its mind and undoes the first stretch', () => {
+    expect(scene).toContain('if (far < SWIPE.lockPx) return')
+    expect(scene).toContain('if (far >= SWIPE.settlePx) down.settled = true')
+    expect(scene).toContain("if (down.axis === 'x') down.turned.az = down.az0")
+    expect(scene).toContain("if (down.axis === 'y') r.t = down.t0")
+    expect(scene).toContain('swipeTurnRate(el.clientWidth, DRAG_TURN)')
   })
 
   it("never resizes the canvas when Safari's bars come and go", () => {

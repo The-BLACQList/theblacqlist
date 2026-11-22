@@ -966,8 +966,30 @@ export function pinchZoom(startZoom: number, startGap: number, gap: number): num
  * scroll do on a desktop. On release the view settles on a floor; a flick
  * carries it at most half a floor further.
  * Sideways turns, with a softer coast than a mouse, so a flick can't jump.
+ *
+ * Ticket 268: a finger moves `lockPx` before the swipe picks turning or floors,
+ * so a thumb's first wobble doesn't decide it. Until `settlePx` the swipe can
+ * still change direction, since a thumb starts on an arc. A swipe across the
+ * whole screen turns the view half way round (`turnPerScreen`).
  */
-export const SWIPE = { screens: 2, glideMax: 0.5, spinMax: 1.2, flingS: 0.2 } as const
+export const SWIPE = {
+  screens: 2,
+  glideMax: 0.5,
+  spinMax: 2,
+  flingS: 0.2,
+  lockPx: 12,
+  settlePx: 64,
+  turnPerScreen: Math.PI,
+} as const
+
+/**
+ * Radians a phone swipe turns per pixel on a stage `width` px wide. Never
+ * slower than a mouse drag (`mouseRate`), so a wide sideways phone keeps it.
+ */
+export function swipeTurnRate(width: number, mouseRate: number): number {
+  if (width <= 0) return mouseRate
+  return Math.max(mouseRate, SWIPE.turnPerScreen / width)
+}
 
 /** Track travel for a finger moving `dy` px on a stage `height` px tall. Up goes down. */
 export function swipeTravel(dy: number, height: number): number {

@@ -1794,7 +1794,10 @@
     left: var(--el);
     bottom: calc(var(--silo-sheet-h, 180px) + 68px);
     transform: none;
+    /* Wraps on the narrowest phones rather than running off the edge. */
+    max-width: calc(100% - var(--el) - var(--er));
     font-size: 12px;
+    white-space: normal;
   }
 }
 
@@ -2075,6 +2078,14 @@ html.silo-full-lock body {
   }
   .silo-track[data-full] .ctx {
     overscroll-behavior: contain;
+  }
+  /* Ticket 268: the title, figures and ticker let a finger through to the map.
+     Only their buttons and links take a touch. */
+  .silo-track[data-full] .hud > :is(.brand, .kpis, .ticker) {
+    pointer-events: none;
+  }
+  .silo-track[data-full] .hud > :is(.brand, .kpis, .ticker) :is(a, button) {
+    pointer-events: auto;
   }
   .silo-track[data-full] .dock .close {
     display: inline-flex;

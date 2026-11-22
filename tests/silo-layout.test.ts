@@ -50,6 +50,7 @@ import {
   SWIPE,
   swipeLanding,
   swipeTravel,
+  swipeTurnRate,
   introPlays,
   zoomOrbit,
   zoomAmount,
@@ -909,5 +910,21 @@ describe('phone swipe through the floors (ticket 248)', () => {
 
   it('coasts a sideways flick less than a mouse, so it cannot jump', () => {
     expect(SWIPE.spinMax).toBeLessThan(3)
+  })
+
+  // Ticket 268: turning on a phone was too hard to start and too slow.
+  it('turns half way round for a swipe across an upright phone', () => {
+    expect(swipeTurnRate(390, 0.006) * 390).toBeCloseTo(Math.PI)
+    expect(swipeTurnRate(390, 0.006)).toBeGreaterThan(0.006)
+  })
+
+  it('never turns slower than a mouse, even on a wide sideways phone', () => {
+    expect(swipeTurnRate(844, 0.006)).toBe(0.006)
+    expect(swipeTurnRate(0, 0.006)).toBe(0.006)
+  })
+
+  it("waits past a thumb's first wobble, then leaves room to change its mind", () => {
+    expect(SWIPE.lockPx).toBeGreaterThanOrEqual(10)
+    expect(SWIPE.settlePx).toBeGreaterThan(SWIPE.lockPx * 4)
   })
 })
