@@ -348,3 +348,23 @@ describe('/flow-map demo mode (ticket 249)', () => {
     )
   })
 })
+
+describe('/flow-map no black hole while moving (ticket 267)', () => {
+  const scene = read(SCENE)
+
+  it('clamps every shader pow base, so Apple GPUs never get a NaN', () => {
+    const pows = scene.match(/\bpow\((?!\s*clamp\()[^\n]*/g) ?? []
+    expect(pows).toEqual([])
+    expect(scene).toContain(
+      'pow(clamp(1.0 - dot(safeNormalize(vN), safeNormalize(vV)), 0.0, 1.0), 2.2)'
+    )
+    expect(scene).toContain('return v / max(length(v), 1e-6);')
+  })
+
+  it('stops a bad pixel before the glow can spread it', () => {
+    expect(scene).toMatch(
+      /addPass\(new RenderPass\(scene, camera\)\)[\s\S]*?addPass\(new ShaderPass\(NAN_GUARD\)\)[\s\S]*?addPass\(bloom\)/
+    )
+    expect(scene).toContain('any(isnan(c)) || any(isinf(c))')
+  })
+})

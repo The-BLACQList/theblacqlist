@@ -22,6 +22,7 @@ import * as THREE from 'three'
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
 import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
@@ -1334,6 +1335,19 @@ void main() {
 }
 `
 
+/**
+ * Normals and view rays are normalized here, not in the vertex shader: after
+ * interpolation a "unit" vector can be a hair long, a dot product a hair over
+ * 1, and `pow` of the negative base that follows is NaN on Apple GPUs. One NaN
+ * pixel on the core became a black hole once the glow spread it (ticket 267),
+ * so every `pow` base is clamped too.
+ */
+const SAFE_GLSL = /* glsl */ `
+vec3 safeNormalize(vec3 v) {
+  return v / max(length(v), 1e-6);
+}
+`
+
 /** The glass wall: almost clear, a band of light at each floor, brighter at the edges. */
 const SHELL_VERT = /* glsl */ `
 varying float vY;
@@ -1345,8 +1359,9 @@ void main() {
   vY = wp.y;
   vec4 mv = viewMatrix * wp;
   vD = -mv.z;
-  vN = normalize(normalMatrix * normal);
-  vV = normalize(-mv.xyz);
+  // Left unnormalized: the fragment shader normalizes them safely.
+  vN = normalMatrix * normal;
+  vV = -mv.xyz;
   gl_Position = projectionMatrix * mv;
 }
 `
@@ -1360,13 +1375,14 @@ varying float vD;
 varying vec3 vN;
 varying vec3 vV;
 ${FOG_GLSL}
+${SAFE_GLSL}
 void main() {
   float bands = 0.0;
   for (int i = 0; i < ${SILO_FLOORS.length}; i++) {
     float d = (vY - uLevels[i]) / 2.6;
     bands += exp(-d * d);
   }
-  float rim = pow(1.0 - abs(dot(vN, vV)), 3.0);
+  float rim = pow(clamp(1.0 - abs(dot(safeNormalize(vN), safeNormalize(vV))), 0.0, 1.0), 3.0);
   float a = (bands * 0.022 + rim * 0.005) * fogF(vD);
   gl_FragColor = vec4(uTint * a, 1.0);
   #include <colorspace_fragment>
@@ -1391,8 +1407,8 @@ varying vec3 vN;
 varying vec3 vV;
 void main() {
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
-  vN = normalize(normalMatrix * normal);
-  vV = normalize(-mv.xyz);
+  vN = normalMatrix * normal;
+  vV = -mv.xyz;
   gl_Position = projectionMatrix * mv;
 }
 `
@@ -1405,8 +1421,9 @@ const SPHERE_FRAG = /* glsl */ `
 uniform float uTime;
 varying vec3 vN;
 varying vec3 vV;
+${SAFE_GLSL}
 void main() {
-  float fr = pow(1.0 - max(dot(vN, vV), 0.0), 2.2);
+  float fr = pow(clamp(1.0 - dot(safeNormalize(vN), safeNormalize(vV)), 0.0, 1.0), 2.2);
   float breathe = 0.94 + 0.06 * sin(uTime * 0.9);
   vec3 c = mix(vec3(0.26, 0.2, 0.11), vec3(0.17, 0.11, 0.04), fr) * (0.8 + fr * 0.5) * breathe;
   gl_FragColor = vec4(c, 1.0);
@@ -1611,6 +1628,29 @@ function Core({
   )
 }
 
+/** Replaces NaN or Inf with the background, so a bad pixel stays one pixel. */
+const NAN_GUARD = {
+  name: 'NanGuard',
+  uniforms: { tDiffuse: { value: null }, uBg: { value: BG_FOR_COMPOSER } },
+  vertexShader: /* glsl */ `
+varying vec2 vUv;
+void main() {
+  vUv = uv;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`,
+  fragmentShader: /* glsl */ `
+uniform sampler2D tDiffuse;
+uniform vec3 uBg;
+varying vec2 vUv;
+void main() {
+  vec4 c = texture2D(tDiffuse, vUv);
+  bool bad = any(isnan(c)) || any(isinf(c));
+  gl_FragColor = bad ? vec4(uBg, 1.0) : c;
+}
+`,
+}
+
 /**
  * The real glow (desktop only; phones keep the baked sprites). three's own
  * composer, so there's no new package. Takes over drawing the frame.
@@ -1625,6 +1665,10 @@ function Bloom() {
     const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 })
     const composer = new EffectComposer(gl, target)
     composer.addPass(new RenderPass(scene, camera))
+    // The glow's blur spreads a bad pixel across its coarse levels: one NaN
+    // turned into a black block hundreds of pixels wide (ticket 267). This
+    // pass swaps any NaN or Inf for the background before the glow sees it.
+    composer.addPass(new ShaderPass(NAN_GUARD))
     // A high threshold and a short reach: only the bright bits glow, so the
     // dark between them stays clear (founder 2026-11-21: no haze).
     const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.55, 0.25, 0.4)
