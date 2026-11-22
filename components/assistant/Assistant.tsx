@@ -22,7 +22,7 @@ import {
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { findSection, jumpToSection } from '@/lib/assistant/scroll'
 import { cn } from '@/lib/utils'
-import { AssistantReply, CueStreaming, CUE_LOOKING, replyStatus, type ReplyHandlers } from './AssistantAnswer'
+import { AskBubble, AssistantReply, CueStreaming, CUE_LOOKING, replyStatus, type ReplyHandlers } from './AssistantAnswer'
 import { useExample, useExamples } from './useExample'
 
 const DESKTOP = '(min-width: 48rem)'
@@ -438,15 +438,6 @@ function AssistantPanel({
         </Link>
       </p>
     </DialogPrimitive.Content>
-  )
-}
-
-function AskBubble({ ask }: { ask: string }) {
-  return (
-    <p className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-gold/15 px-3 py-2 font-body text-[15px] text-off-white break-words">
-      <span className="sr-only">You asked: </span>
-      {ask}
-    </p>
   )
 }
 

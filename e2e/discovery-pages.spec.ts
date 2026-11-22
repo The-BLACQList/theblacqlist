@@ -71,6 +71,25 @@ test.describe('Search answer strip (ticket 255)', () => {
       strip.getByText(mode === 'basic' ? 'From Our Listings' : 'AI Answer from Our Listings')
     ).toBeVisible()
   })
+
+  test('a follow-up asks on inside the strip, under the first answer (ticket 258)', async ({ page }) => {
+    await page.goto(`/search?q=${encodeURIComponent('bath bombs')}`)
+    const strip = page.getByTestId('search-answer')
+    await expect(strip).toHaveAttribute('data-mode', /^(ai|basic)$/, { timeout: 20_000 })
+    await expect(strip).toHaveAttribute('data-turns', '1')
+
+    const box = strip.getByPlaceholder('Ask a Follow-Up')
+    await box.fill('What about lotion?')
+    await box.press('Enter')
+
+    // Still on the same search: the thread grows, the page doesn't navigate.
+    await expect(strip).toHaveAttribute('data-turns', '2', { timeout: 20_000 })
+    await expect(page).toHaveURL(/q=bath(\+|%20)bombs/)
+    await expect(strip.getByText('What about lotion?')).toBeVisible()
+    // The first answer folds; the new one has focus.
+    await expect(strip.getByRole('button', { name: /Show Answer/ })).toHaveCount(1)
+    await expect(strip.getByTestId('search-answer-turn').last()).toBeFocused()
+  })
 })
 
 test.describe('TA-08 — City and category landing pages', () => {

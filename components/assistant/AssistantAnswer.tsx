@@ -64,6 +64,16 @@ export function AssistantReply({
   return <TextReply ask={ask} reply={reply} layout={layout} handlers={handlers} />
 }
 
+/** The visitor's words, in a gold bubble on the right (the chat panel and the /search thread). */
+export function AskBubble({ ask }: { ask: string }) {
+  return (
+    <p className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-sm bg-gold/15 px-3 py-2 font-body text-[15px] text-off-white break-words">
+      <span className="sr-only">You asked: </span>
+      {ask}
+    </p>
+  )
+}
+
 /** Cue couldn't answer: say so plainly, offer the same ask again, and plain search. */
 function FallbackReply({ ask, reply, onAsk }: { ask: string; reply: Fallback; onAsk?: (text: string) => void }) {
   return (
