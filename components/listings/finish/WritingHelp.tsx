@@ -529,7 +529,7 @@ export function WritingHelpStrip() {
       <div className="flex items-start gap-3 rounded-xl border border-charcoal/10 bg-pale-lavender px-4 py-3">
         <Lock className="mt-0.5 size-4 shrink-0 text-charcoal-soft" aria-hidden="true" />
         <p className="font-body text-sm text-charcoal">
-          Writing help comes with Starter.{' '}
+          AI help comes with Starter.{' '}
           <Link
             href="/dashboard/upgrade"
             className="font-subhead font-bold text-brand-black underline decoration-amber-gold underline-offset-4 hover:decoration-brand-black"
@@ -552,7 +552,7 @@ export function WritingHelpStrip() {
     <div className="rounded-xl border border-charcoal/10 bg-white px-4 py-3">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
         <p className="font-body text-sm text-brand-black">
-          <span className="font-subhead font-semibold">Writing help</span>
+          <span className="font-subhead font-semibold">AI Help</span>
           <span aria-hidden="true"> · </span>
           <span className="sr-only">: </span>
           <span className={allowance.left === 0 ? 'text-charcoal-soft' : undefined}>{count}</span>
@@ -578,8 +578,8 @@ export function WritingHelpStrip() {
           reaches your page until you save that section.
         </p>
         <p className="font-body text-sm leading-relaxed text-charcoal">
-          Each suggestion uses one draft from your monthly allowance. Not this throws it away, and
-          telling us why helps us write better ones.
+          Each suggestion counts once toward your plan&apos;s monthly amount. Not this throws it
+          away, and telling us why helps us write better ones.
         </p>
       </div>
     </div>

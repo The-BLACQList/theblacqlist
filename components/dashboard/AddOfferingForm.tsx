@@ -3,14 +3,19 @@
 import { useActionState, useRef, useEffect } from 'react'
 import { Loader2, Plus, AlertCircle } from 'lucide-react'
 import { addServiceAction } from '@/lib/actions/dashboard/addService'
+import { ItemWriteHelp } from '@/components/ai/ItemWriteHelp'
+import { offeringFromForm, type ItemHelp } from '@/lib/ai/itemHelp'
 
 interface Props {
   listingId: string
+  /** Ticket 242: AI help under the description. Null hides it. */
+  aiHelp?: ItemHelp
 }
 
-export function AddOfferingForm({ listingId }: Props) {
+export function AddOfferingForm({ listingId, aiHelp = null }: Props) {
   const [state, formAction, isPending] = useActionState(addServiceAction, null)
   const formRef = useRef<HTMLFormElement>(null)
+  const descRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     if (state && 'success' in state) {
@@ -52,12 +57,26 @@ export function AddOfferingForm({ listingId }: Props) {
             Description <span className="font-normal text-charcoal-faint">(optional)</span>
           </label>
           <textarea
+            ref={descRef}
             id="svc-desc"
             name="description"
             rows={2}
             placeholder="Brief description of this service…"
             className="w-full px-3 py-2 rounded-lg border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
           />
+          <div className="mt-2">
+            <ItemWriteHelp
+              listingId={listingId}
+              agentType="offering_description"
+              help={aiHelp}
+              getItem={() => offeringFromForm(formRef.current)}
+              missing="Add a name first, then ask."
+              getValue={() => descRef.current?.value ?? ''}
+              setValue={(text) => {
+                if (descRef.current) descRef.current.value = text
+              }}
+            />
+          </div>
         </div>
 
         <div>

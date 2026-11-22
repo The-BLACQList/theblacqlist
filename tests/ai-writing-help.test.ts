@@ -93,10 +93,10 @@ describe('fieldHelpReducer', () => {
   it('a limit failure is a note, not an error', () => {
     const state = fieldHelpReducer(initialFieldHelp(''), {
       type: 'failed',
-      message: 'No drafts left this month.',
+      message: "You've used this month's AI help for this page.",
       limit: true,
     })
-    expect(state.card).toEqual({ kind: 'error', message: 'No drafts left this month.', limit: true })
+    expect(state.card).toEqual({ kind: 'error', message: "You've used this month's AI help for this page.", limit: true })
   })
 })
 
@@ -160,13 +160,13 @@ describe('writeBlockedReason', () => {
       oldestCountedAt: '2026-10-04T00:00:00.000Z',
       dailyUsed: 0,
     })
-    expect(writeBlockedReason(out)).toBe('No drafts left this month. More on November 3.')
+    expect(writeBlockedReason(out)).toBe("You've used this month's AI help for this page. More on November 3.")
   })
 
   it('names the daily limit and what is left this month', () => {
     const day = allowanceFrom({ quota: 10, used: 4, oldestCountedAt: null, dailyUsed: 10 })
     expect(writeBlockedReason(day)).toBe(
-      `That's ${RATE_LIMIT_PER_LISTING_24H} drafts for this page today. You can ask again tomorrow. You still have 6 left this month.`
+      `That's ${RATE_LIMIT_PER_LISTING_24H} AI requests for this page today. You can ask again tomorrow. You still have 6 left this month.`
     )
   })
 })

@@ -7,7 +7,8 @@
  * limiter would refuse. The counts come from the same table and the same rules
  * as the limiter:
  *
- * - **Monthly:** completed paid generations in the last 30 days, against
+ * - **Monthly:** completed paid generations in the last 30 days, except the
+ *   /add-business drafts, against
  *   `aiQuota(tier)`. Mock rows cost nothing and do not count, so in mock mode the
  *   strip always shows the full allowance.
  * - **Daily:** every attempt in the last 24 hours, against
@@ -20,6 +21,7 @@
 import { isFeatureEnabled } from '@/lib/env'
 import { aiQuota, canAccess } from '@/lib/stripe/features'
 import { createServiceClient } from '@/lib/supabase/server'
+import { ONBOARDING_AGENT } from './agents'
 import { countRecentRequests, RATE_LIMIT_PER_LISTING_24H } from './provider'
 import type { WritingAllowance } from './writingHelp'
 
@@ -50,7 +52,7 @@ export function allowanceFrom(input: {
   return { state: 'ready', limit: quota, left, resetsOn, perDay, dailyHit }
 }
 
-/** Completed paid drafts in the window, plus the oldest one's timestamp. */
+/** Completed paid requests in the window, plus the oldest one's timestamp. */
 async function readMonthlyUse(
   listingId: string
 ): Promise<{ used: number; oldestCountedAt: string | null }> {
@@ -62,6 +64,10 @@ async function readMonthlyUse(
     .eq('listing_id', listingId)
     .eq('status', 'completed')
     .eq('provider', 'anthropic')
+    // Same rule as the limiter (countSuccessfulLast30Days): the /add-business
+    // drafts never use up the plan's allowance, so they are not shown as used
+    // either (ticket 242).
+    .neq('agent_type', ONBOARDING_AGENT.agentType)
     .gte('created_at', since)
     .order('created_at', { ascending: true })
     .limit(1)

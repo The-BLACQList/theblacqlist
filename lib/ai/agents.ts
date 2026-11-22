@@ -23,6 +23,9 @@
  * edit that the spending ceiling's price table (`spend.ts`) has to follow.
  */
 
+import type { GatedFeature } from '@/lib/stripe/features'
+
+import type { ItemKind } from './itemFacts'
 import { AGENT_PROMPT_MAP, type PromptTemplateKey } from './prompts'
 
 /** How much model the task needs. Mapped to a model id in `MODEL_BY_TIER`. */
@@ -49,14 +52,26 @@ export interface AgentDefinition {
   applyTarget: ApplyTarget
   /** Hard ceiling on accepted output, in characters. */
   maxOutputChars: number
+  /**
+   * Ticket 242: the plan feature this agent needs. Absent means
+   * `ai_suggestions` (Starter and up). Product, service, event and job
+   * write-ups need `ai_item_writeups` (Growth and up).
+   */
+  gate?: Extract<GatedFeature, 'ai_suggestions' | 'ai_item_writeups'>
+  /**
+   * Ticket 242: the one thing this agent writes about. A request for it is
+   * refused without an item of this kind (lib/ai/requestSuggestion.ts).
+   * Absent for page-level help.
+   */
+  item?: ItemKind
 }
 
 /**
  * The agents active in mock mode, in the order they are offered to an owner.
  *
- * This is five of the thirteen agents in `docs/blacqlist/ai/ai-agent-roadmap.md`,
- * matching that document's V2 Mock set. The other eight are not disabled — they
- * are not built. Adding one means adding a row here, a mock response, and a test;
+ * The first five match the V2 Mock set in `docs/blacqlist/ai/ai-agent-roadmap.md`.
+ * Ticket 242 added review replies, Happening Now posts and write-ups for
+ * products, services, events and jobs. Adding one means adding a row here, a mock response, and a test;
  * it does not mean touching the provider.
  */
 export const AI_AGENTS: readonly AgentDefinition[] = [
@@ -111,6 +126,67 @@ export const AI_AGENTS: readonly AgentDefinition[] = [
     // A reading of your own data. Nothing to apply.
     applyTarget: null,
     maxOutputChars: 800,
+  },
+  // ── Ticket 242: AI help for one thing on the page ──────────────────────────
+  // None of these has an apply target: "Use this" puts the text in the form
+  // and the owner's own Send or Save stores it. Nothing posts by itself.
+  {
+    agentType: 'review_response',
+    templateKey: 'REVIEW_RESPONSE',
+    suggestionType: 'review_response',
+    label: 'Review reply',
+    blurb: 'A warm reply to one review. It is sent only when you press Send.',
+    modelTier: 'fast',
+    applyTarget: null,
+    maxOutputChars: 600,
+    item: 'review',
+  },
+  {
+    agentType: 'happening_now_post',
+    templateKey: 'HAPPENING_NOW_POST',
+    suggestionType: 'post_text',
+    label: 'Happening Now post',
+    blurb: 'A headline and one more line for your news.',
+    modelTier: 'fast',
+    applyTarget: null,
+    maxOutputChars: 320,
+    item: 'post',
+  },
+  {
+    agentType: 'offering_description',
+    templateKey: 'OFFERING_DESCRIPTION',
+    suggestionType: 'product_description',
+    label: 'Product or service description',
+    blurb: 'A short description of one thing you sell.',
+    modelTier: 'fast',
+    applyTarget: null,
+    maxOutputChars: 600,
+    gate: 'ai_item_writeups',
+    item: 'offering',
+  },
+  {
+    agentType: 'event_description',
+    templateKey: 'EVENT_DESCRIPTION',
+    suggestionType: 'event_description',
+    label: 'Event description',
+    blurb: 'What your event is and why to come.',
+    modelTier: 'fast',
+    applyTarget: null,
+    maxOutputChars: 1200,
+    gate: 'ai_item_writeups',
+    item: 'event',
+  },
+  {
+    agentType: 'job_description',
+    templateKey: 'JOB_DESCRIPTION',
+    suggestionType: 'job_description',
+    label: 'Job description',
+    blurb: 'What the role is and who would fit.',
+    modelTier: 'fast',
+    applyTarget: null,
+    maxOutputChars: 1500,
+    gate: 'ai_item_writeups',
+    item: 'job',
   },
 ] as const
 
@@ -212,6 +288,11 @@ export function findAgent(agentType: string): AgentDefinition | undefined {
   return AI_AGENTS.find((a) => a.agentType === agentType)
 }
 
+/** The plan feature an agent needs (ticket 242). Starter's `ai_suggestions` unless it says otherwise. */
+export function agentGate(agent: AgentDefinition): 'ai_suggestions' | 'ai_item_writeups' {
+  return agent.gate ?? 'ai_suggestions'
+}
+
 /**
  * Tier → model id. Founder decision at GATE-SPEND, 2026-10-15: Claude Haiku 5.5
  * for every tier. These are short, tightly specified copy tasks, and Haiku 5.5
@@ -242,10 +323,12 @@ export function promptVersionOf(agent: AgentDefinition): string {
 /**
  * Templates changed since @3. LISTING_DESCRIPTION@4 (2026-11-13): paragraphs,
  * search words, services, attributes and the owner's website text, and no
- * longer refuses a thin page.
+ * longer refuses a thin page. REVIEW_RESPONSE@4 (ticket 242, 2026-11-21): first
+ * used, with the review treated as information and no em dashes.
  */
 const PROMPT_VERSION_OVERRIDES: Partial<Record<AgentDefinition['templateKey'], number>> = {
   LISTING_DESCRIPTION: 4,
+  REVIEW_RESPONSE: 4,
 }
 
 // Fails the build (via the test suite) if an agent names a template that the

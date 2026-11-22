@@ -202,9 +202,10 @@ describe('the ladder is monotonic and actually differentiated', () => {
 describe('aiQuota — cost guardrail and pricing lever', () => {
   it('scales with tier and is never unlimited', () => {
     expect(aiQuota('free')).toBe(0)
-    expect(aiQuota('starter')).toBe(10)
-    expect(aiQuota('growth')).toBe(100)
-    expect(aiQuota('premium')).toBe(500)
+    // Ticket 242 (founder, 2026-11-21): 20 / 50 / 100 per page per 30 days.
+    expect(aiQuota('starter')).toBe(20)
+    expect(aiQuota('growth')).toBe(50)
+    expect(aiQuota('premium')).toBe(100)
   })
 
   it('is bounded at every tier — an unlimited quota is an unbounded LLM bill', () => {

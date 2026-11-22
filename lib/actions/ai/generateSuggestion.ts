@@ -29,13 +29,16 @@ export type GenerateSuggestionState =
  * `site_text` (optional, About only): visible text from the owner's website,
  * sent by the edit page's "Import from my website" so the About can be drafted
  * from it.
+ *
+ * `item` (optional, ticket 242): JSON naming what a review reply, post or
+ * write-up is about. requestSuggestion checks it with parseItemInput.
  */
 export async function generateSuggestionAction(
   _prev: GenerateSuggestionState,
   formData: FormData
 ): Promise<GenerateSuggestionState> {
   if (!isFeatureEnabled('aiBeta')) {
-    return { error: "Writing help isn't available yet.", code: 'off' }
+    return { error: "AI help isn't available yet.", code: 'off' }
   }
 
   const owner = await getOwnerSession()
@@ -47,5 +50,16 @@ export async function generateSuggestionAction(
     listingId: formData.get('listing_id')?.toString().trim() ?? '',
     agentType: formData.get('agent_type')?.toString().trim() ?? '',
     siteText: formData.get('site_text')?.toString() ?? null,
+    item: parseItemField(formData.get('item')),
   })
+}
+
+/** The `item` form field as JSON, or null. Never throws on bad input. */
+function parseItemField(value: FormDataEntryValue | null): unknown {
+  if (typeof value !== 'string' || !value || value.length > 8000) return null
+  try {
+    return JSON.parse(value)
+  } catch {
+    return null
+  }
 }

@@ -33,9 +33,9 @@ function CompletenessItem({ done, label }: { done: boolean; label: string }) {
   )
 }
 
-// Ticket 146: owners see AI writing help first. Shown only while
-// FEATURE_AI_BETA is on and the page's plan includes drafts; the allowance
-// itself is read and enforced on Edit content, not here.
+// Ticket 146: owners see AI help first. Shown only while FEATURE_AI_BETA is
+// on and the page's plan includes it; the allowance itself is read and
+// enforced on Edit content, not here. Ticket 242: never "drafts".
 function WriteWithAi({
   listingId,
   listingName,
@@ -52,9 +52,9 @@ function WriteWithAi({
         <div className="min-w-0">
           <h3 className="font-subhead text-sm font-semibold text-brand-black">Write with AI</h3>
           <p className="font-body text-sm text-charcoal mt-0.5">
-            Get a draft of your about text, search title and summary, or an Instagram caption,
-            written from your page.
-            {quota !== null && ` Your plan includes ${quota} drafts every 30 days.`}
+            AI help with your about text, search title and summary, Instagram captions, review
+            replies, and Happening now posts, written from your page.
+            {quota !== null && ` Up to ${quota} times a month for this page.`}
           </p>
         </div>
       </div>

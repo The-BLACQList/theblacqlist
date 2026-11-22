@@ -30,6 +30,7 @@
  */
 
 import type { AgentDefinition } from './agents'
+import type { ItemFacts } from './itemFacts'
 
 export interface MockContext {
   listingName: string
@@ -40,6 +41,17 @@ export interface MockContext {
   pageViews30d: number
   ctaClicks30d: number
   saves30d: number
+  /**
+   * Ticket 242: the item a review reply, post or write-up is about, already
+   * cleaned by the provider. Absent for page-level help.
+   */
+  item?: ItemFacts | null
+}
+
+/** First sentence-ish of a note, for a headline. */
+function firstWords(text: string, max: number): string {
+  const line = text.split(/[.!?\n]/)[0]?.trim() ?? ''
+  return clampTitle(line || text, max).replace(/[.,;:]+$/, '')
 }
 
 /** Trims a title to a search-safe length without cutting a word in half. */
@@ -99,6 +111,52 @@ export function mockResponseFor(agent: AgentDefinition, ctx: MockContext): strin
           ? 'Your contact clicks are the quietest number here — a clearer call to action and a current phone or booking link usually move it first.'
           : 'Saves are the quietest number here — a strong cover photo is what makes someone keep you for later.'
       return `Over the last 30 days your strongest signal was ${strongest}. ${weakest}`
+    }
+
+    // ── Ticket 242. Each works with or without the item, so the registry
+    //    tests (which pass no item) still get valid text.
+
+    case 'review_response': {
+      const item = ctx.item?.kind === 'review' ? ctx.item : null
+      const rating = item?.rating ?? 5
+      if (rating >= 4) {
+        return `Thank you so much for the kind words and for choosing ${listingName}. We are glad you had a good visit and hope to see you again soon.`
+      }
+      if (rating === 3) {
+        return `Thank you for visiting ${listingName} and for the honest feedback. We are taking it on board and hope you will give us another try.`
+      }
+      return `We are sorry your visit fell short. We would like to make it right, so please get in touch through our page and we will follow up.`
+    }
+
+    case 'happening_now_post': {
+      const notes = ctx.item?.kind === 'post' ? ctx.item.notes : ''
+      const headline = notes ? firstWords(notes, 70) : `New at ${listingName}`
+      const more = notes
+        ? clampTitle(`${notes} Come see us in ${cityName}.`, 180)
+        : `Come see what is new at ${listingName} in ${cityName}.`
+      return `${headline}\n${more}`
+    }
+
+    case 'offering_description': {
+      const item = ctx.item?.kind === 'offering' ? ctx.item : null
+      if (!item) return `A ${categoryName.toLowerCase()} favourite at ${listingName} in ${cityName}.`
+      const kind = item.offeringType === 'service' ? 'service' : 'pick'
+      const notes = item.notes ? ` ${clampTitle(item.notes, 180)}` : ''
+      return clampTitle(`A ${kind} from ${listingName} in ${cityName}.${notes}`, 300)
+    }
+
+    case 'event_description': {
+      const item = ctx.item?.kind === 'event' ? ctx.item : null
+      const name = item?.name ?? `An event at ${listingName}`
+      const notes = item?.notes ? `\n\n${clampTitle(item.notes, 400)}` : ''
+      return `${name} is hosted by ${listingName} in ${cityName}. Bring a friend and come be part of it.${notes}`
+    }
+
+    case 'job_description': {
+      const item = ctx.item?.kind === 'job' ? ctx.item : null
+      const title = item?.title ?? 'This role'
+      const notes = item?.notes ? `\n\n${clampTitle(item.notes, 500)}` : ''
+      return `${listingName} is hiring for ${title.toLowerCase() === 'this role' ? 'a new role' : title} in ${cityName}.${notes}\n\nIf you take pride in good work and care about the people you serve, we would like to hear from you.`
     }
 
     default:
