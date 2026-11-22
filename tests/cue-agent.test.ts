@@ -267,16 +267,33 @@ describe('runCue', () => {
     expect(JSON.stringify(t.events)).not.toMatch(/owner wording/)
   })
 
-  it('keeps text written next to show_businesses and puts a space before the next call', async () => {
+  // Seen on the 261 Preview: a full answer next to the cards, then the same
+  // answer again at the end. The final call's text is the whole reply.
+  it('says the answer once when the model writes it next to the cards and again at the end', async () => {
+    const answer = 'Peach Law Group and Midtown Legal both handle family law.'
     const { call } = scripted([
       use('search_listings', { words: ['lawyer'], city: 'atlanta' }),
-      withTool('Here are two firms.', 'show_businesses', { ids: [ID(1), ID(2)] }),
-      say('Both handle family law.'),
+      withTool(answer, 'show_businesses', { ids: [ID(1), ID(2)] }),
+      say(answer),
     ])
     const t = setup()
     const out = await t.run(call)
-    expect(out.text).toBe('Here are two firms. Both handle family law.')
+    expect(out.text).toBe(answer)
+    expect(streamedText(t.events)).toBe(answer)
+    expect(out.cards).toHaveLength(2)
+  })
+
+  it('keeps text written next to the cards when the final call writes nothing', async () => {
+    const { call } = scripted([
+      use('search_listings', { words: ['lawyer'], city: 'atlanta' }),
+      withTool('Peach Law Group handles family law.', 'show_businesses', { ids: [ID(1)] }),
+      () => msg([], 'end_turn'),
+    ])
+    const t = setup()
+    const out = await t.run(call)
+    expect(out.text).toBe('Peach Law Group handles family law.')
     expect(streamedText(t.events)).toBe(out.text)
+    expect(out.cards).toHaveLength(1)
   })
 
   it('hides text written next to cards that failed, since the model writes again', async () => {

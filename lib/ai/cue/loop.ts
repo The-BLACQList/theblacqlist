@@ -17,12 +17,12 @@
  * Each call's text is held until the call ends (ticket 261). Text from a call
  * that looks something up (`lookupTools`) is a working note ("Dropping the
  * owner wording", "Let me check your page") and never reaches the screen or
- * the reply, even though both prompts already say not to narrate. Text from a
- * call that only shows cards or buttons is the answer once those tools work;
- * once any tool fails, the model writes again ("The cards failed, I'll
- * retry"), so from then on that text is a note too. Text from the call that
- * ends the turn is the answer. If a turn has no answer text at all, the last
- * held note is used rather than an empty reply.
+ * the reply, even though both prompts already say not to narrate. The text of
+ * the call that ends the turn is the whole reply: the model often writes a
+ * full answer next to the cards and then writes it again at the end. If the
+ * last call writes nothing, the last text written next to cards or buttons is
+ * used, unless a tool had failed by then ("The cards failed, I'll retry"),
+ * and failing that the last working note, rather than an empty reply.
  * What the caller does with the finished reply (checks, cards, drafts) is the
  * caller's own; this loop only gathers the words.
  *
@@ -99,7 +99,7 @@ export interface ToolLoopArgs {
 }
 
 export interface ToolLoopResult {
-  /** The answer text of each shown call, trimmed, in order. Empty after a refusal. */
+  /** The reply text (one part: the final call's, or a held fallback), trimmed. Empty after a refusal. */
   replyParts: string[]
   stop: CueStop
   usage: CueUsage
@@ -130,7 +130,9 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
   const usage: CueUsage = { inputTokens: 0, outputTokens: 0, cacheReadTokens: 0 }
   const replyParts: string[] = []
   let streamedAny = false
-  // The last working note, used only if the turn ends with no answer text.
+  // Held text, used only if the final call writes nothing: the last text
+  // written next to cards or buttons that worked, else the last working note.
+  let early: { pieces: string[]; text: string } | null = null
   let note: { pieces: string[]; text: string } | null = null
   const show = (pieces: readonly string[]) => {
     if (pieces.length === 0) return
@@ -214,6 +216,8 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
     if (text && working) note = { pieces, text }
     else if (text && toolTurn) pending = { pieces, text }
     else if (text) {
+      // The final call's text is the whole reply. The model often writes a
+      // full answer next to the cards and then writes it again here.
       show(pieces)
       replyParts.push(text)
     }
@@ -257,19 +261,17 @@ export async function runToolLoop(args: ToolLoopArgs): Promise<ToolLoopResult> {
     if (results.some((r) => r.is_error)) recovering = true
     if (pending) {
       if (recovering) note = pending
-      else {
-        show(pending.pieces)
-        replyParts.push(pending.text)
-      }
+      else early = pending
     }
     messages.push({ role: 'assistant', content: asParams(message.content) })
     messages.push({ role: 'user', content: results })
   }
 
   const ended = stop ?? 'end'
-  if (ended !== 'refusal' && replyParts.length === 0 && note) {
-    if (ended !== 'aborted') show(note.pieces)
-    replyParts.push(note.text)
+  const fallback = early ?? note
+  if (ended !== 'refusal' && replyParts.length === 0 && fallback) {
+    if (ended !== 'aborted') show(fallback.pieces)
+    replyParts.push(fallback.text)
   }
   return { replyParts, stop: ended, usage, calls }
 }

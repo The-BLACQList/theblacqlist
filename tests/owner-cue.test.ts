@@ -515,10 +515,12 @@ describe('replies read easily', () => {
     return { result, streamed }
   }
 
-  it('words from separate model calls become separate paragraphs', async () => {
+  // Ticket 261: the final call's text is the whole reply, so an answer
+  // written next to a button and again at the end is said once.
+  it('the final call\'s words are the reply', async () => {
     const { result, streamed } = await twoCalls('Your page is close.', 'go_to', { section: 'hours' })
-    expect(result.text).toBe('Your page is close.\n\nAdd your hours first.')
-    expect(streamed).toBe('Your page is close.\n\nAdd your hours first.')
+    expect(result.text).toBe('Add your hours first.')
+    expect(streamed).toBe('Add your hours first.')
   })
 
   // Ticket 261: text next to get_my_page or get_help is a working note.
