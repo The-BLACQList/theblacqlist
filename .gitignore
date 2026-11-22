@@ -73,3 +73,6 @@ testassets/
 # into public/ for a second selection pass, it cannot be committed by accident.
 public/images/BL-image-sourcing/
 public/images/city-images/
+
+# Throwaway scripts run from the worktree (never commit)
+/.*.tmp.*
