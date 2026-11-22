@@ -1,6 +1,6 @@
 # Ticket 249: Demo Mode for The Collective
 
-**Status:** Built on `feat/249-collective-demo-mode`, 2026-11-21. Not merged.
+**Status:** Merged #392 (`c407c6b`), 2026-11-22. Black hole while moving fixed in 267.
 
 Part of the Collective tighten-up (246–250). Founder picks (2026-11-21):
 

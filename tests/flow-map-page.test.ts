@@ -278,7 +278,26 @@ describe('/flow-map phone full-screen (ticket 248)', () => {
   it('swipes up and down the floors in full-screen and settles on one', () => {
     expect(scene).toContain('swipeTravel(dy, el.clientHeight)')
     expect(scene).toContain('swipeLanding(r.t, r.glide, l.shape)')
-    expect(experience).toContain('Swipe up or down for floors.')
+    expect(experience).toContain('Swipe sideways to turn, up or down for floors.')
+  })
+
+  // Ticket 268: turning was hard on an iPhone. The top of the screen took the
+  // finger, and a thumb's arcing start often picked floors instead of turning.
+  it('lets a finger through the title, figures and ticker to the map', () => {
+    expect(css).toMatch(
+      /\[data-full\] \.hud > :is\(\.brand, \.kpis, \.ticker\) \{\s*pointer-events: none;/
+    )
+    expect(css).toMatch(
+      /\[data-full\] \.hud > :is\(\.brand, \.kpis, \.ticker\) :is\(a, button\) \{\s*pointer-events: auto;/
+    )
+  })
+
+  it('lets an arcing swipe change its mind and undoes the first stretch', () => {
+    expect(scene).toContain('if (far < SWIPE.lockPx) return')
+    expect(scene).toContain('if (far >= SWIPE.settlePx) down.settled = true')
+    expect(scene).toContain("if (down.axis === 'x') down.turned.az = down.az0")
+    expect(scene).toContain("if (down.axis === 'y') r.t = down.t0")
+    expect(scene).toContain('swipeTurnRate(el.clientWidth, DRAG_TURN)')
   })
 
   it("never resizes the canvas when Safari's bars come and go", () => {
@@ -346,5 +365,25 @@ describe('/flow-map demo mode (ticket 249)', () => {
     expect(css).toMatch(
       /\.silo-track\[data-mode='map'\]:not\(\[data-full\]\) \.silo-stage \{\s*right: 0;/
     )
+  })
+})
+
+describe('/flow-map no black hole while moving (ticket 267)', () => {
+  const scene = read(SCENE)
+
+  it('clamps every shader pow base, so Apple GPUs never get a NaN', () => {
+    const pows = scene.match(/\bpow\((?!\s*clamp\()[^\n]*/g) ?? []
+    expect(pows).toEqual([])
+    expect(scene).toContain(
+      'pow(clamp(1.0 - dot(safeNormalize(vN), safeNormalize(vV)), 0.0, 1.0), 2.2)'
+    )
+    expect(scene).toContain('return v / max(length(v), 1e-6);')
+  })
+
+  it('stops a bad pixel before the glow can spread it', () => {
+    expect(scene).toMatch(
+      /addPass\(new RenderPass\(scene, camera\)\)[\s\S]*?addPass\(new ShaderPass\(NAN_GUARD\)\)[\s\S]*?addPass\(bloom\)/
+    )
+    expect(scene).toContain('any(isnan(c)) || any(isinf(c))')
   })
 })

@@ -956,7 +956,7 @@ export function SiloExperience({
           {showHint && (
             <p className="silo-hint">
               {full
-                ? 'Swipe up or down for floors. Pinch to see the whole tower.'
+                ? 'Swipe sideways to turn, up or down for floors.'
                 : 'Keep scrolling to see every floor'}
             </p>
           )}
