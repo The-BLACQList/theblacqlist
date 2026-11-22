@@ -25,9 +25,7 @@ export default async function NewServicePage() {
     .order('name', { ascending: true })
 
   const owned = listings ?? []
-  const allowances = await marketplaceAllowances(
-    owned.map((l) => ({ id: l.id, tier: l.tier }))
-  )
+  const allowances = await marketplaceAllowances(owned.map((l) => ({ id: l.id, tier: l.tier })))
   const names = Object.fromEntries(owned.map((l) => [l.id, l.name]))
   // Read only when some page has no storefront, the one case the notice
   // points at a plan.
@@ -53,7 +51,7 @@ export default async function NewServicePage() {
         </Link>
         <h1 className="font-headline text-2xl text-brand-black">Add Service</h1>
         <p className="font-body text-sm text-charcoal-soft mt-0.5">
-          List a new service in the BLACQList Marketplace.
+          List a new service in The BLACQList Marketplace.
         </p>
       </div>
 

@@ -19,7 +19,9 @@ import type { User } from '@supabase/supabase-js'
  */
 export const ONBOARDING_COMPLETED_KEY = 'onboarding_completed_at'
 
-export function hasCompletedOnboarding(user: Pick<User, 'user_metadata'> | null | undefined): boolean {
+export function hasCompletedOnboarding(
+  user: Pick<User, 'user_metadata'> | null | undefined
+): boolean {
   const value = user?.user_metadata?.[ONBOARDING_COMPLETED_KEY]
   return typeof value === 'string' && value.length > 0
 }
@@ -31,12 +33,15 @@ function isSafeRedirect(value: string | null | undefined): value is string {
 /**
  * An explicit `next` wins — the person was going somewhere and the guard sent
  * them through sign-in on the way. Without one, an account that has not been
- * onboarded goes to /onboarding; everyone else goes to /account.
+ * onboarded goes to /onboarding; a page owner goes to Business Home
+ * (/dashboard, ticket 252: business first); everyone else goes to /account.
  */
 export function postSignInDestination(
   next: string | null | undefined,
-  user: Pick<User, 'user_metadata'> | null | undefined
+  user: Pick<User, 'user_metadata'> | null | undefined,
+  ownsPages = false
 ): string {
   if (isSafeRedirect(next)) return next
-  return hasCompletedOnboarding(user) ? '/account' : '/onboarding'
+  if (!hasCompletedOnboarding(user)) return '/onboarding'
+  return ownsPages ? '/dashboard' : '/account'
 }

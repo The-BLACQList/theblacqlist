@@ -36,7 +36,7 @@ export const FILLER_WORDS: ReadonlySet<string> = new Set([
   'companies', 'service', 'services', 'shop', 'shops', 'store', 'stores', 'owner',
   'owners', 'help', 'recommend', 'is', 'are', 'there', 'get', 'go', 'you', 'your', 'it',
   'this', 'that', 'from', 'by', 'please', 'should', 'would', 'could', 'will', 'just',
-  'really', 'very', 'like', 'about', 'into', 'up', 'out', 'all', 'one', 'someone',
+  'really', 'very', 'like', 'about', 'into', 'up', 'out', 'all', 'one', 'someone', 'else',
 ])
 
 // Category-name words that say nothing about the category on their own:

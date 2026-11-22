@@ -282,7 +282,10 @@ describe('linkLocationAction', () => {
     ])
     expect(h.state.tables.listings!.find((r) => r.id === B)!.tier).toBe('free')
     expect(h.writes.filter((w) => w.table === 'listings')).toHaveLength(0)
-    expect(h.audits[0]).toMatchObject({ action: 'location_linked', afterState: { primary_listing_id: A } })
+    expect(h.audits[0]).toMatchObject({
+      action: 'location_linked',
+      afterState: { primary_listing_id: A },
+    })
   })
 
   it('needs Premium on the owner’s plan', async () => {
@@ -408,6 +411,6 @@ describe('wiring', () => {
 
   it('the dashboard page and sidebar link exist', () => {
     expect(read('app/dashboard/pages/[entityId]/locations/page.tsx')).toContain('LocationsManager')
-    expect(read('components/dashboard/DashboardSidebar.tsx')).toContain('/locations`')
+    expect(read('lib/account/shellNav.ts')).toContain('/locations`')
   })
 })

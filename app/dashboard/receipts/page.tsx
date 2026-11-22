@@ -7,7 +7,7 @@ import { listReceiptsToVerify, ownedListingIds } from '@/lib/dashboard/receiptsT
 import { ADMIN_FALLBACK_DAYS } from '@/lib/spend/owner-receipts'
 import { ReceiptReviewRow } from '@/components/dashboard/ReceiptReviewRow'
 
-export const metadata: Metadata = { title: 'Receipts to Verify | BLACQList Dashboard' }
+export const metadata: Metadata = { title: 'Receipts to Verify | The BLACQList' }
 
 // =============================================================================
 // /dashboard/receipts — the business verifies its own receipts (ticket 183)

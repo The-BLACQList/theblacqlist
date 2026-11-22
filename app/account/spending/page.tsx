@@ -167,8 +167,8 @@ export default async function MySpendingPage() {
                   No spending tracked yet
                 </p>
                 <p className="font-body text-xs text-charcoal-soft mt-1 mb-4 max-w-[38ch] mx-auto">
-                  Add a receipt from a Black-owned business and it shows up here, by month and
-                  by category, once it&rsquo;s verified.
+                  Add a receipt from a Black-owned business and it shows up here, by month and by
+                  category, once it&rsquo;s verified.
                 </p>
                 <Link
                   href="/account/receipts/new"
@@ -204,7 +204,7 @@ export default async function MySpendingPage() {
                   {totals.businessCount}
                 </p>
                 <p className="font-body text-xs text-charcoal-soft mt-0.5">
-                  Matched to a BLACQList listing
+                  Matched to a listing on The BLACQList
                 </p>
               </div>
               <div className="rounded-xl bg-white border border-charcoal/10 p-5">
@@ -349,9 +349,9 @@ export default async function MySpendingPage() {
                 })}
               </ul>
               <p className="font-body text-xs text-charcoal-soft mt-4 pt-3 border-t border-charcoal/5">
-                Receipts you entered by business name, without picking a BLACQList listing, are
-                grouped under &ldquo;Not matched to a business.&rdquo; They still count toward your
-                total.
+                Receipts you entered by business name, without picking a listing on The BLACQList,
+                are grouped under &ldquo;Not matched to a business.&rdquo; They still count toward
+                your total.
               </p>
             </section>
 
@@ -365,7 +365,7 @@ export default async function MySpendingPage() {
                   See the community total
                 </span>
                 <span className="block font-body text-xs text-charcoal-soft">
-                  How BLACQList spending adds up across everyone
+                  How spending on The BLACQList adds up across everyone
                 </span>
               </span>
             </Link>
