@@ -63,7 +63,6 @@ import {
   ZOOM,
   floorGap,
   fogForZoom,
-  sectorBounds,
   shellBottom,
   shellTop,
   stepZoom,
@@ -114,7 +113,7 @@ export interface SiloNav {
 }
 
 export interface SiloSceneProps {
-  /** Which look, and its sizes (ticket 246): the Glass Tower or Open Terraces. */
+  /** The tower's sizes (ticket 246). */
   shape: SiloShape
   businesses: readonly SiloBusiness[]
   placed: ReadonlyMap<string, PlacedBusiness>
@@ -255,8 +254,6 @@ interface Halo {
   /** Ring radius in scene units. */
   radius: number
   familyIndex: number
-  /** A family's whole slice of a floor (terraces), not a round cluster. */
-  sector: boolean
 }
 
 type Inner = SiloSceneProps & { phone: boolean }
@@ -303,24 +300,21 @@ function SceneContents(props: Inner) {
     // hints at one shopper's amount. The rest share a size small enough that a
     // busy wedge doesn't pile up.
     const max = Math.max(1, ...rows.filter((r) => r.b.figuresShown).map((r) => r.b.amountCents))
-    const k = shape.dotScale
     const sized: Shown[] = rows.map((r) => {
       if (r.b.figuresShown) {
-        return { ...r, size: (0.5 + 1.1 * Math.sqrt(r.b.amountCents / max)) * k }
+        return { ...r, size: 0.5 + 1.1 * Math.sqrt(r.b.amountCents / max) }
       }
-      if (r.b.linked) return { ...r, size: LINKED_UNCOUNTED_SIZE * k }
+      if (r.b.linked) return { ...r, size: LINKED_UNCOUNTED_SIZE }
       const n = counts.get(`${r.b.familyIndex}:${r.b.floorIndex}`) ?? 1
       const spacing = clusterSpacing(n, shape)
-      return { ...r, size: THREE.MathUtils.clamp(spacing * 0.3, 0.32, 0.6) * k }
+      return { ...r, size: THREE.MathUtils.clamp(spacing * 0.3, 0.32, 0.6) }
     })
 
-    const sector = shape.spread === 'sector'
     const rings: Halo[] = CATEGORY_FAMILIES.map((_, fi) => ({
       floor: 0,
       center: crowdAnchor(fi, shape),
       radius: shape.crowdR,
       familyIndex: fi,
-      sector: false,
     }))
     for (const [key, n] of counts) {
       const [fi, k] = key.split(':').map(Number) as [number, number]
@@ -328,9 +322,8 @@ function SceneContents(props: Inner) {
       rings.push({
         floor: k,
         center: wedgePoint(fi, k, 0, DOT_LIFT * 0.5, 0, shape),
-        radius: sector ? (shape.band[1] - shape.band[0]) / 2 : clusterRadius(n, shape),
+        radius: clusterRadius(n, shape),
         familyIndex: fi,
-        sector,
       })
     }
     return { shown: sized, halos: rings }
@@ -1199,25 +1192,6 @@ void main() {
 }
 `
 
-/** A terrace's lit edge: a thin band of light round its rim, brightest in the middle. */
-const BAND_FRAG = /* glsl */ `
-uniform vec3 uTint;
-uniform float uIdx;
-uniform float uFloor;
-uniform float uOut;
-uniform float uDensity;
-varying vec2 vUv;
-varying float vD;
-${FOG_GLSL}
-void main() {
-  float lit = max(0.0, 1.0 - abs(uFloor - uIdx));
-  float dim = mix(mix(0.35, 1.0, lit), 0.85, uOut);
-  float a = 0.16 * pow(1.0 - abs(vUv.y - 0.5) * 2.0, 1.6) * dim * fogF(vD);
-  gl_FragColor = vec4(uTint * a, 1.0);
-  #include <colorspace_fragment>
-}
-`
-
 /** The light that rises from the core up through every floor. */
 const COLUMN_FRAG = /* glsl */ `
 uniform float uDensity;
@@ -1265,19 +1239,14 @@ const glassBlend = {
   blending: THREE.AdditiveBlending,
 } as const
 
-/**
- * One plate per floor, and the glass wall for the tower; the terraces get a
- * lit band round each rim instead (ticket 246). Nothing in here is a label.
- */
+/** One glass plate per floor and the glass wall (ticket 246). Nothing in here is a label. */
 function GlassTower({ glass, shape }: { glass: Glass; shape: SiloShape }) {
   const objects = useMemo(() => {
-    const terraces = !shape.wall
     const out: THREE.Mesh[] = []
     shape.y.forEach((y, k) => {
-      const rad = k === 0 ? shape.topR : shape.R
       const tint = new THREE.Color(PLATE_TINTS[k] ?? PLATE_TINTS[0])
       const m = new THREE.Mesh(
-        new THREE.CircleGeometry(rad, 160),
+        new THREE.CircleGeometry(shape.R, 160),
         new THREE.ShaderMaterial({
           ...glassBlend,
           side: THREE.DoubleSide,
@@ -1289,9 +1258,8 @@ function GlassTower({ glass, shape }: { glass: Glass; shape: SiloShape }) {
             uFloor: glass.floor,
             uOut: glass.out,
             uDensity: glass.fog,
-            // Terraces stand on their own, so their floors read a touch stronger.
-            uEdge: { value: terraces ? 0.26 : 0.2 },
-            uFill: { value: terraces ? 0.004 : 0.0015 },
+            uEdge: { value: 0.2 },
+            uFill: { value: 0.0015 },
           },
         })
       )
@@ -1299,28 +1267,7 @@ function GlassTower({ glass, shape }: { glass: Glass; shape: SiloShape }) {
       m.position.y = y
       m.renderOrder = -1
       out.push(m)
-      if (!terraces) return
-      const band = new THREE.Mesh(
-        new THREE.CylinderGeometry(rad, rad, 2.4, 160, 1, true),
-        new THREE.ShaderMaterial({
-          ...glassBlend,
-          side: THREE.DoubleSide,
-          vertexShader: GLASS_VERT,
-          fragmentShader: BAND_FRAG,
-          uniforms: {
-            uTint: { value: tint },
-            uIdx: { value: k },
-            uFloor: glass.floor,
-            uOut: glass.out,
-            uDensity: glass.fog,
-          },
-        })
-      )
-      band.position.y = y - 1.2
-      band.renderOrder = -1
-      out.push(band)
     })
-    if (terraces) return out
     const top = shellTop(shape)
     const bottom = shellBottom(shape)
     const shell = new THREE.Mesh(
@@ -1518,53 +1465,7 @@ function Bloom() {
 
 /** How far a ring reaches from its center along the wall, for picking. */
 function haloReach(h: Halo): number {
-  if (h.sector) return h.radius
   return h.floor === 0 ? h.radius + 1.5 : h.radius * CLUSTER_WIDE + 1.5
-}
-
-/** Recolors a line, kept out of hook bodies. */
-function paintLine(line: THREE.Line, color: string, opacity: number) {
-  const m = line.material as THREE.LineBasicMaterial
-  m.color.set(color)
-  m.opacity = opacity
-}
-
-/** A family's slice of a terrace, as a thin outline in its color. */
-function SectorOutline({
-  h,
-  color,
-  lit,
-  shape,
-}: {
-  h: Halo
-  color: string
-  lit: boolean
-  shape: SiloShape
-}) {
-  const line = useMemo(() => {
-    const { start, length, r0, r1 } = sectorBounds(h.familyIndex, h.floor, shape)
-    const y = (shape.y[h.floor] ?? 0) + 0.15
-    const steps = 40
-    const pts: number[] = []
-    const at = (r: number, a: number) => pts.push(r * Math.cos(a), y, r * Math.sin(a))
-    for (let i = 0; i <= steps; i++) at(r1, start + (length * i) / steps)
-    for (let i = steps; i >= 0; i--) at(r0, start + (length * i) / steps)
-    const obj = new THREE.LineLoop(
-      lineGeometry(pts),
-      new THREE.LineBasicMaterial({
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      })
-    )
-    obj.renderOrder = 1
-    return obj
-  }, [h, shape])
-  useEffect(() => {
-    paintLine(line, color, lit ? 0.55 : 0.22)
-  }, [line, color, lit])
-  useEffect(() => () => disposeAll([line]), [line])
-  return <primitive object={line} />
 }
 
 function Halos({
@@ -1585,17 +1486,6 @@ function Halos({
       {halos.map((h) => {
         const color = haloColor(h, colorBy)
         const lit = focusFloor === h.floor
-        if (h.sector) {
-          return (
-            <SectorOutline
-              key={`${h.familyIndex}:${h.floor}`}
-              h={h}
-              color={color}
-              lit={lit}
-              shape={shape}
-            />
-          )
-        }
         return (
           <group
             key={`${h.familyIndex}:${h.floor}`}
@@ -2082,7 +1972,7 @@ const LABEL_MAX = { desk: 10, phone: 7 }
 const LABEL_MIN_PX = { desk: 9, phone: 8 }
 /** Gap labels show once the camera is this close to the square. */
 const GAP_LABEL_DIST = 150
-/** The plate radius GAP_LABEL_DIST was tuned on; a wider look reaches further. */
+/** The plate radius GAP_LABEL_DIST was tuned on; a wider tower reaches further. */
 const GAP_LABEL_R = 42
 const HUD_SELECTORS = '.hud > *, .ctx, .dock, .silo-tag, .silo-hint'
 

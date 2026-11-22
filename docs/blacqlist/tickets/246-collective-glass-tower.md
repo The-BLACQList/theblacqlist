@@ -130,36 +130,19 @@ The empty background measured about (30, 24, 17) against the brand ground (10, 9
 - Floors are 40 apart, up from 36.
 - Groups grow 1.4 per square root of their count, up to 14 wide, where they used to cap at 9.
 
-### Open Terraces Preview
+### Open Terraces Preview (Removed)
 
-`/flow-map?look=terraces` shows the same data and controls with the open-terraces look:
-
-- no glass wall;
-- a small top terrace for shoppers;
-- wide terraces 50 apart;
-- each family fills its whole slice of a terrace, with a thin outline in its colour and a lane between slices;
-- dots 1.25× larger.
-
-The dock says **Whole View** in this look.
-
-Both looks share one `SiloShape` (`SILO`, `TERRACES` in `lib/spend/silo-layout.ts`). The tower stays the default. The founder picks one, and the other is deleted before merge.
+A `?look=terraces` preview, with open terraces and each family filling its slice, was built for comparison on the same data. The founder picked **Tower** (2026-11-21), so the terraces code was removed. Its one lasting change is that the tower's sizes now live in a single `SiloShape` (`SILO`).
 
 ### Tests
 
 - New: zoom steps (even, clamped, land on the next mark, at least 4 presses out).
-- Terraces:
-  - chosen only by name;
-  - placement is stable;
-  - every dot sits inside its own slice and terrace;
-  - more room than the tower;
-  - lanes between slices;
-  - whole view fits.
-- Results: full vitest 5,514 passed, tsc clean, eslint clean, Title Case guard clean.
-- Screenshots of both looks at desktop, phone and landscape, including every zoom step out and back in. No console errors.
+- Room between businesses: a small group gets more room per business than a busy one.
+- Results (after removing terraces): full vitest 5,509 passed, tsc clean, eslint clean, Title Case guard clean.
+- Screenshots of the tower at desktop, phone and landscape, including every zoom step out and back in. No console errors.
 
 ## Still To Do Before Merge
 
-- Founder picks Tower or Terraces; remove the other look.
 - Founder look on Preview.
 - Frame rate on a real phone, since the plates and wall add fill.
 - Bloom frame rate on a mid-range laptop.

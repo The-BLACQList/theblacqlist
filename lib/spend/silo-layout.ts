@@ -587,29 +587,17 @@ export function hashString(s: string): number {
 }
 
 /**
- * Ticket 246. Two looks share one layout, so they can be compared on the same
- * data: the Glass Tower (picked 2026-11-21), one lit tower with a glass plate
- * per floor, and Open Terraces, wide open levels with no wall. Floors stack top
- * to bottom (Shoppers up top), and each category family owns one slice of
- * every floor, turning a little floor by floor so the groups spiral down. The
- * glowing core sits under the last floor. All in scene units.
+ * Ticket 246: the Glass Tower (picked 2026-11-21), one lit tower with a glass
+ * plate per floor. Floors stack top to bottom (Shoppers up top), and each
+ * category family owns one slice of every floor, turning a little floor by
+ * floor so the groups spiral down. The glowing core sits under the last floor.
+ * All in scene units, kept together in one shape.
  */
-export type SiloLook = 'tower' | 'terraces'
-
-export const SILO_LOOKS: readonly SiloLook[] = ['tower', 'terraces']
-
 export interface SiloShape {
-  look: SiloLook
-  /** Plate radius. In the tower, the glass wall. */
+  /** Plate radius: the glass wall. */
   R: number
-  /** The top floor's plate radius. */
-  topR: number
   /** Where the middle of a family's slice sits: cluster centers and gap squares. */
   rA: number
-  /** Inner and outer edge of the band a family's slice fills, for `sector`. */
-  band: readonly [number, number]
-  /** Round clusters around `rA` (tower), or spread over the whole slice (terraces). */
-  spread: 'cluster' | 'sector'
   /** Smallest cluster radius. */
   cr: number
   /** Largest cluster radius. */
@@ -628,13 +616,9 @@ export interface SiloShape {
   hubR: number
   /** Glass reaches this far above the top floor and below the last one. */
   shellPad: number
-  /** A glass wall round the floors. */
-  wall: boolean
-  /** Business discs are drawn this much larger, for a look seen from further off. */
-  dotScale: number
   /** Camera distance for the view inside. */
   orbitR: number
-  /** Camera distance for the whole look from outside. */
+  /** Camera distance for the whole tower from outside. */
   zoomR: number
   /** Fog inside, and at the whole view. */
   fogNear: number
@@ -643,12 +627,8 @@ export interface SiloShape {
 
 /** The Glass Tower. Wide enough that a busy wedge has room between its dots. */
 export const SILO: SiloShape = {
-  look: 'tower',
   R: 56,
-  topR: 56,
   rA: 40,
-  band: [24, 54],
-  spread: 'cluster',
   cr: 5.5,
   clusterMax: 14,
   clusterGrow: 1.4,
@@ -660,46 +640,10 @@ export const SILO: SiloShape = {
   hub: { x: 0, y: -112, z: 0 },
   hubR: 5.5,
   shellPad: 14,
-  wall: true,
-  dotScale: 1,
   orbitR: 46,
   zoomR: 250,
   fogNear: 0.0034,
   fogFar: 0.0009,
-}
-
-/**
- * Open Terraces, from the sketch: wide levels with no wall, each family's
- * businesses spread across its whole slice, and a smaller top terrace for the
- * shoppers.
- */
-export const TERRACES: SiloShape = {
-  look: 'terraces',
-  R: 74,
-  topR: 34,
-  rA: 41,
-  band: [14, 68],
-  spread: 'sector',
-  cr: 5.5,
-  clusterMax: 14,
-  clusterGrow: 1.4,
-  crowdR: 9,
-  crowdA: 20,
-  twist: 0.52,
-  y: [100, 50, 0, -50, -100],
-  hub: { x: 0, y: -135, z: 0 },
-  hubR: 7,
-  shellPad: 14,
-  wall: false,
-  dotScale: 1.25,
-  orbitR: 66,
-  zoomR: 320,
-  fogNear: 0.0028,
-  fogFar: 0.0008,
-}
-
-export function shapeForLook(look: string | null | undefined): SiloShape {
-  return look === 'terraces' ? TERRACES : SILO
 }
 
 /** How high a business sits above its plate, so the disc never cuts the glass. */
@@ -741,9 +685,6 @@ export const CLUSTER_MAX_R = SILO.clusterMax
 /** A cluster is this much wider along the wall than it is deep. */
 export const CLUSTER_WIDE = 1.3
 
-/** Share of a family's slice its businesses fill, leaving a lane between slices. */
-export const SECTOR_SHARE = 0.84
-
 /** Cluster radius grows with the crowd so busy wedges don't pile up. */
 export function clusterRadius(count: number, shape = SILO): number {
   return Math.max(shape.cr, Math.min(shape.clusterMax, shape.clusterGrow * Math.sqrt(count)))
@@ -752,27 +693,7 @@ export function clusterRadius(count: number, shape = SILO): number {
 /** About how far apart neighbours sit in a group of `count`, in scene units. */
 export function clusterSpacing(count: number, shape = SILO): number {
   const n = Math.max(1, count)
-  if (shape.spread === 'sector') {
-    const [r0, r1] = shape.band
-    const area = ((SECTOR_SHARE * Math.PI) / CATEGORY_FAMILIES.length) * (r1 * r1 - r0 * r0)
-    return Math.sqrt(area / n)
-  }
   return clusterRadius(n, shape) * Math.sqrt((Math.PI * CLUSTER_WIDE) / n)
-}
-
-/** Angle and inner and outer edge of a family's slice on a floor, for drawing it. */
-export function sectorBounds(
-  familyIndex: number,
-  floorIndex: number,
-  shape = SILO
-): { start: number; length: number; r0: number; r1: number } {
-  const length = ((Math.PI * 2) / CATEGORY_FAMILIES.length) * SECTOR_SHARE
-  return {
-    start: wedgeAngle(familyIndex, floorIndex, shape) - length / 2,
-    length,
-    r0: shape.band[0],
-    r1: shape.band[1],
-  }
 }
 
 export interface PlacedBusiness extends Point3 {
@@ -780,14 +701,10 @@ export interface PlacedBusiness extends Point3 {
 }
 
 const GOLDEN_ANGLE = 2.39996
-/** The plastic number's steps: an even 2D fill at any count. */
-const R2_U = 0.7548776662
-const R2_V = 0.5698402909
 
 /**
- * Places each business flat on its floor, in its family's slice. The tower
- * packs a round sunflower cluster; the terraces fill the whole slice. Same
- * input, same picture.
+ * Places each business flat on its floor, in its family's slice, packed as a
+ * round sunflower cluster. Same input, same picture.
  */
 export function placeBusinesses(
   businesses: readonly SiloBusiness[],
@@ -809,21 +726,6 @@ export function placeBusinesses(
     ordered.forEach((b, j) => {
       // A little seeded height, so a busy group doesn't read as a flat sheet.
       const lift = DOT_LIFT + mulberry32(hashString(b.id))() * 0.8
-      if (shape.spread === 'sector') {
-        const { start, length, r0, r1 } = sectorBounds(b.familyIndex, b.floorIndex, shape)
-        const u = (0.5 + j * R2_U) % 1
-        const v = (0.5 + j * R2_V) % 1
-        // Even by area, so the outer edge isn't sparser than the inner one.
-        const r = Math.sqrt(r0 * r0 + (r1 * r1 - r0 * r0) * v)
-        const a = start + length * u
-        placed.push({
-          id: b.id,
-          x: r * Math.cos(a),
-          y: (shape.y[b.floorIndex] ?? 0) + lift,
-          z: r * Math.sin(a),
-        })
-        return
-      }
       const rad = radius * Math.sqrt((j + 0.5) / n)
       const ang = j * GOLDEN_ANGLE + b.familyIndex
       // In toward the core (+) or out toward the glass (-).
@@ -933,7 +835,7 @@ export const ORBIT = {
    * below read as layers.
    */
   el: degrees(40),
-  /** The tower's distance; each look has its own `orbitR`. */
+  /** Camera distance inside the tower. */
   R: SILO.orbitR,
   /** Lower than the default, so a wedge's dots sit inside the frame. */
   floorEl: degrees(30),
@@ -990,7 +892,7 @@ export function orbitForScroll(t: number, az: number, el: number, shape = SILO):
 
 /**
  * Zoom runs from a little closer than the default (ZOOM.min) out to the whole
- * look seen from outside (1), the sketch's opening shot. Ticket 246.
+ * tower seen from outside (1), the sketch's opening shot. Ticket 246.
  */
 export const ZOOM = {
   min: -0.4,
@@ -1006,12 +908,12 @@ export const ZOOM = {
   step: 0.2,
 } as const
 
-/** Middle of a look, from the top of its glass down to the core. */
+/** Middle of the tower, from the top of its glass down to the core. */
 export function zoomCenterY(shape: SiloShape): number {
   return (shellTop(shape) + shape.hub.y - shape.hubR) / 2
 }
 
-/** The view at a zoom level: 0 is the view as given, 1 the whole look. */
+/** The view at a zoom level: 0 is the view as given, 1 the whole tower. */
 export function zoomOrbit(o: Orbit, zoom: number, shape = SILO): Orbit {
   const z = Math.min(1, Math.max(ZOOM.min, zoom))
   if (z <= 0) return { ...o, R: o.R * (1 + z) }
@@ -1022,7 +924,7 @@ export function zoomOrbit(o: Orbit, zoom: number, shape = SILO): Orbit {
   return { x: lerp(o.x, 0), y: lerp(o.y, zoomCenterY(shape)), z: lerp(o.z, 0), az: o.az, el, R }
 }
 
-/** How far out the camera is, 0 inside to 1 at the whole look, from its distance. */
+/** How far out the camera is, 0 inside to 1 at the whole tower, from its distance. */
 export function zoomAmount(R: number, shape = SILO): number {
   return Math.min(1, Math.max(0, Math.log(R / shape.orbitR) / Math.log(shape.zoomR / shape.orbitR)))
 }

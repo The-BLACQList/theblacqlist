@@ -39,11 +39,10 @@ import {
   gapLabel,
   gapsPerFloor,
   placeBusinesses,
-  shapeForLook,
+  SILO,
   siloGaps,
   ZOOM,
   type ColorBy,
-  type SiloLook,
   type SiloBusiness,
   type SiloGap,
 } from '@/lib/spend/silo-layout'
@@ -121,8 +120,6 @@ interface Props {
   ticker: readonly SiloTickerItem[]
   /** `?you=1`: open focused on the reader's own business. */
   focusYou: boolean
-  /** `?look=terraces`: the Open Terraces look, to compare with the tower (ticket 246). */
-  look?: SiloLook
 }
 
 export function SiloExperience({
@@ -132,7 +129,6 @@ export function SiloExperience({
   cities,
   ticker,
   focusYou,
-  look = 'tower',
 }: Props) {
   const support = useSiloSupport()
   const reducedMotion = usePrefersReducedMotion()
@@ -177,8 +173,7 @@ export function SiloExperience({
   const youTagRef = useRef<HTMLDivElement>(null)
   const [wholeTower, setWholeTower] = useState(false)
   const [zoom, setZoom] = useState(0)
-  const shape = shapeForLook(look)
-  const towerWord = shape.wall ? 'Tower' : 'View'
+  const shape = SILO
   const labelsRef = useRef<HTMLDivElement>(null)
   const gapLabelsRef = useRef<HTMLDivElement>(null)
 
@@ -641,7 +636,7 @@ export function SiloExperience({
                   aria-pressed={wholeTower}
                   onClick={() => navRef.current?.wholeTower()}
                 >
-                  {wholeTower ? 'Go Inside' : `Whole ${towerWord}`}
+                  {wholeTower ? 'Go Inside' : 'Whole Tower'}
                 </button>
                 <button
                   type="button"

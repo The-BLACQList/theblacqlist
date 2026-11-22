@@ -41,7 +41,7 @@ function dayLabel(iso: string) {
 }
 
 interface FlowMapPageProps {
-  searchParams: Promise<{ you?: string; look?: string }>
+  searchParams: Promise<{ you?: string }>
 }
 
 export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
@@ -289,7 +289,6 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
           cities={topCities}
           ticker={ticker}
           focusYou={params.you === '1'}
-          look={params.look === 'terraces' ? 'terraces' : 'tower'}
         />
       )}
     </div>
