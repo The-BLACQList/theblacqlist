@@ -49,5 +49,7 @@ export type CueReply =
       near: boolean
       /** The visitor pressed Stop before Cue finished. */
       stopped?: boolean
+      /** 'basic': the quick answer from our listings, no model (ticket 255). */
+      mode?: 'ai' | 'basic'
     }
   | { kind: 'fallback'; href: string; reason: 'limited' | 'error' }

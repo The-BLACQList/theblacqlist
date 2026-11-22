@@ -3,13 +3,16 @@
  * whole chat (tools, cards, streaming, guards) without a key or any spend.
  * `resolveProvider` picks it exactly as it picks the mock for the other agents.
  *
- * The script: search the words typed in the city named, show the first three
- * results, then say how many. It reads nothing but the messages it is given.
+ * The script: search the words typed in the city named (with filler and
+ * identity phrases taken out, as the grid does), show the first three results,
+ * then say how many. When nothing matches, show the close matches the tool
+ * offered (ticket 256). It reads nothing but the messages it is given.
  */
 
 import type Anthropic from '@anthropic-ai/sdk'
 
 import { findPlaces, meaningfulWords, type AssistCity } from '@/lib/search/assist'
+import { queryWords } from '@/lib/search/understand'
 
 import type { CueModelCall } from './agent'
 
@@ -51,13 +54,21 @@ function lastTool(
   return { name: use.name, input: use.input, result: content }
 }
 
-function resultIds(json: string): string[] {
+interface SearchOutput {
+  results?: Array<{ id?: unknown }>
+  closeMatches?: { category?: unknown; results?: Array<{ id?: unknown }> }
+}
+
+function parseSearch(json: string): SearchOutput {
   try {
-    const parsed = JSON.parse(json) as { results?: Array<{ id?: unknown }> }
-    return (parsed.results ?? []).map((r) => r.id).filter((id): id is string => typeof id === 'string')
+    return JSON.parse(json) as SearchOutput
   } catch {
-    return []
+    return {}
   }
+}
+
+function idsOf(rows: Array<{ id?: unknown }> | undefined): string[] {
+  return (rows ?? []).map((r) => r.id).filter((id): id is string => typeof id === 'string')
 }
 
 function message(
@@ -79,6 +90,8 @@ function message(
 
 export function createMockCueCall(args: { cities: readonly AssistCity[] }): CueModelCall {
   let n = 0
+  /** The category close matches came from, once the search offered them. */
+  let closeFrom: string | null = null
   const toolUse = (model: string, name: string, input: Record<string, unknown>) =>
     message(model, [{ type: 'tool_use', id: `toolu_mock_${++n}`, name, input } as Anthropic.ContentBlock], 'tool_use')
 
@@ -93,18 +106,34 @@ export function createMockCueCall(args: { cities: readonly AssistCity[] }): CueM
     const tool = lastTool(params.messages)
 
     if (tool?.name === 'search_listings') {
-      const ids = resultIds(tool.result).slice(0, SHOW_COUNT)
+      const out = parseSearch(tool.result)
+      const ids = idsOf(out.results).slice(0, SHOW_COUNT)
       if (ids.length > 0) return toolUse(model, 'show_businesses', { ids })
-      return say(model, "That's not on The BLACQList yet. Try other words, or another city.", onText)
+      const close = idsOf(out.closeMatches?.results).slice(0, SHOW_COUNT)
+      if (close.length > 0) {
+        closeFrom = typeof out.closeMatches?.category === 'string' ? out.closeMatches.category : null
+        return toolUse(model, 'show_businesses', { ids: close })
+      }
+      return say(
+        model,
+        'Nothing matches that on The BLACQList yet. Try a broader word, or another city.',
+        onText
+      )
     }
     if (tool?.name === 'show_businesses') {
       const count = (tool.input as { ids?: unknown[] }).ids?.length ?? 0
+      if (closeFrom) {
+        return say(model, `Nothing matches exactly yet. These are close matches from ${closeFrom}.`, onText)
+      }
       return say(model, `Here ${count === 1 ? 'is 1 place' : `are ${count} places`} that match.`, onText)
     }
     if (tool) return say(model, "Here's what I found.", onText)
 
     const { places, rest } = findPlaces(visitorText(params.messages), args.cities)
-    const words = meaningfulWords(rest).slice(0, 8)
+    const understood = queryWords(rest)
+    const words = (
+      understood.words.length > 0 || understood.identityRemoved ? understood.words : meaningfulWords(rest)
+    ).slice(0, 8)
     if (words.length === 0) return say(model, 'What are you looking for, and in which city?', onText)
     const city = places[0]?.activeCities[0]?.slug
     return toolUse(model, 'search_listings', { words, ...(city ? { city } : {}) })

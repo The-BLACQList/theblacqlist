@@ -43,6 +43,7 @@ export type RateLimitBucket =
   | 'place_nearest'
   | 'ai_guide'
   | 'ai_assistant'
+  | 'search_answer'
   | 'owner_cue'
   | 'message_start'
   | 'message_send'

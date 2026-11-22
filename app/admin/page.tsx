@@ -53,9 +53,7 @@ export default async function AdminOverviewPage() {
         <h1 className="font-headline text-2xl text-brand-black">Overview</h1>
         <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
           Signed in as {user.email} ·{' '}
-          <span className="text-amber">
-            {role === 'super_admin' ? 'Super Admin' : 'Admin'}
-          </span>
+          <span className="text-amber">{role === 'super_admin' ? 'Super Admin' : 'Admin'}</span>
         </p>
       </div>
 
@@ -64,32 +62,51 @@ export default async function AdminOverviewPage() {
       <AdminPendingAlert count={pending.entities} />
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <AdminStatCard
-          label="Pending Entities"
-          count={pending.entities}
-          href="/admin/entities"
-          urgent
-        />
-        <AdminStatCard
-          label="Pending Claims"
-          count={pending.claims}
-          href="/admin/claims"
-          urgent
-        />
-        <AdminStatCard
-          label="Pending Verification"
-          count={pending.verifications}
-          href="/admin/verification"
-        />
-        <AdminStatCard label="Reports & Flags" count={pending.reports} href="/admin/reports" />
-        <AdminStatCard
-          label="Pending Receipts"
-          count={pending.receipts}
-          href="/admin/receipts"
-          urgent
-        />
-      </div>
+      {/* Every queue that needs a decision, the same numbers the side menu
+          shows (ticket 251 mockup "Waiting for You"). */}
+      <section aria-labelledby="waiting-heading">
+        <h2 id="waiting-heading" className="font-headline text-lg text-brand-black mb-4">
+          Waiting for You
+        </h2>
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+          <AdminStatCard
+            label="Pending Entities"
+            count={pending.entities}
+            href="/admin/entities"
+            urgent
+          />
+          <AdminStatCard
+            label="Pending Claims"
+            count={pending.claims}
+            href="/admin/claims"
+            urgent
+          />
+          <AdminStatCard
+            label="Pending Verification"
+            count={pending.verifications}
+            href="/admin/verification"
+          />
+          <AdminStatCard label="Pending Reviews" count={pending.reviews} href="/admin/reviews" />
+          <AdminStatCard label="Reports & Flags" count={pending.reports} href="/admin/reports" />
+          <AdminStatCard
+            label="Pending Receipts"
+            count={pending.receipts}
+            href="/admin/receipts"
+            urgent
+          />
+          <AdminStatCard
+            label="Category Requests"
+            count={pending.categoryRequests}
+            href="/admin/category-requests"
+          />
+          <AdminStatCard label="New Feedback" count={pending.feedback} href="/admin/feedback" />
+          <AdminStatCard
+            label="New Tester Notes"
+            count={pending.reflections}
+            href="/admin/testers"
+          />
+        </div>
+      </section>
 
       {/* Recent queue */}
       <div>

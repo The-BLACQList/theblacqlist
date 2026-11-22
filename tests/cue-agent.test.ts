@@ -14,6 +14,7 @@ import {
   CUE_MAX_CALLS,
   CueCallError,
   runCue,
+  searchModel,
   type CueModelCall,
 } from '@/lib/ai/cue/agent'
 import { SWAP_WITH_CARDS } from '@/lib/ai/cue/guard'
@@ -106,8 +107,8 @@ describe('runCue', () => {
     expect(out.text).toBe('Peach Law Group and Midtown Legal both handle family law.')
     expect(streamedText(t.events)).toBe(out.text)
     expect(t.events.filter((e) => e.type === 'status').map((e) => e.type === 'status' && e.text)[0]).toMatch(/Atlanta/)
-    // Low effort, no thinking, frozen tools, and a cache mark on the last message.
-    expect(params[0]).toMatchObject({ thinking: { type: 'disabled' }, output_config: { effort: 'low' } })
+    // Medium effort (ticket 256), no thinking, frozen tools, and a cache mark on the last message.
+    expect(params[0]).toMatchObject({ thinking: { type: 'disabled' }, output_config: { effort: 'medium' } })
     const lastBlocks = params[2]!.messages.at(-1)!.content as Array<{ cache_control?: unknown }>
     expect(lastBlocks.at(-1)!.cache_control).toEqual({ type: 'ephemeral' })
     expect(out.usage).toEqual({ inputTokens: 30, outputTokens: 15, cacheReadTokens: 0 })
@@ -122,17 +123,17 @@ describe('runCue', () => {
   })
 
   it('answers extra tools in one call with an error, all in one message', async () => {
-    const five: Step = () =>
+    const seven: Step = () =>
       msg(
-        Array.from({ length: 5 }, (_, i) => ({ type: 'tool_use', id: `t${i}`, name: 'find_place', input: { place: 'Atlanta' } })),
+        Array.from({ length: 7 }, (_, i) => ({ type: 'tool_use', id: `t${i}`, name: 'find_place', input: { place: 'Atlanta' } })),
         'tool_use'
       )
-    const { call, params } = scripted([five, say('Atlanta is covered.')])
+    const { call, params } = scripted([seven, say('Atlanta is covered.')])
     await setup().run(call)
     const results = params[1]!.messages.at(-1)!.content as Anthropic.ToolResultBlockParam[]
-    expect(results).toHaveLength(5)
-    expect(results.slice(0, 4).every((r) => !r.is_error)).toBe(true)
-    expect(results[4]!.is_error).toBe(true)
+    expect(results).toHaveLength(7)
+    expect(results.slice(0, 6).every((r) => !r.is_error)).toBe(true)
+    expect(results[6]!.is_error).toBe(true)
   })
 
   it('drops the text of a refusal', async () => {
@@ -269,11 +270,24 @@ describe('the mock provider', () => {
     expect(t.ctx.deps.search).toHaveBeenCalledWith(expect.objectContaining({ city: 'atlanta' }))
   })
 
-  it('says not listed yet when nothing comes back', async () => {
+  it('says nothing matches yet, and offers Suggest a Business, when nothing comes back', async () => {
     const t = setup({ deps: deps({ search: vi.fn(async () => []) }) })
     const out = await t.run(createMockCueCall({ cities: CITIES }))
-    expect(out.text).toMatch(/not on The BLACQList yet/)
+    expect(out.text).toMatch(/Nothing matches that on The BLACQList yet/)
     expect(out.cards).toEqual([])
+    expect(out.actions).toContainEqual({ kind: 'link', href: '/add-business', label: 'Suggest a Business' })
+  })
+
+  it('shows close matches from the nearest category when the words match nothing (ticket 256)', async () => {
+    const search = vi.fn(async (p: { q?: string; category?: string }) =>
+      p.q ? [] : [entity(7), entity(8)]
+    )
+    const t = setup({ deps: deps({ search }) })
+    const out = await t.run(createMockCueCall({ cities: CITIES }))
+    expect(out.cards.map((c) => c.id)).toEqual([ID(7), ID(8)])
+    expect(out.text).toMatch(/^Nothing matches exactly yet\. These are close matches from /)
+    // Close matches are not exact: Suggest a Business is still offered.
+    expect(out.actions).toContainEqual({ kind: 'link', href: '/add-business', label: 'Suggest a Business' })
   })
 
   it('asks what and where when there are no words to search', async () => {
@@ -281,5 +295,21 @@ describe('the mock provider', () => {
     const out = await t.run(createMockCueCall({ cities: CITIES }))
     expect(out.text).toBe('What are you looking for, and in which city?')
     expect(t.ctx.deps.search).not.toHaveBeenCalled()
+  })
+})
+
+describe('searchModel (ticket 256)', () => {
+  const base = 'claude-haiku-5-5'
+  it('keeps the base model when no override is set', () => {
+    expect(searchModel(base, {})).toBe(base)
+  })
+  it('uses a valid override outside production', () => {
+    expect(searchModel(base, { CUE_SEARCH_MODEL: 'claude-sonnet-5-5', VERCEL_ENV: 'preview' })).toBe('claude-sonnet-5-5')
+  })
+  it('ignores the override in production, where spend is priced for Haiku', () => {
+    expect(searchModel(base, { CUE_SEARCH_MODEL: 'claude-sonnet-5-5', VERCEL_ENV: 'production' })).toBe(base)
+  })
+  it('ignores an override that is not a Claude model id', () => {
+    expect(searchModel(base, { CUE_SEARCH_MODEL: 'gpt-4; rm -rf' })).toBe(base)
   })
 })
