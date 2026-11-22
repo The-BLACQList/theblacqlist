@@ -23,11 +23,13 @@ interface Props {
   isSignedIn: boolean
   /** Resolved server-side in PublicHeader. Gates the link only — /admin still guards itself. */
   isAdmin: boolean
+  /** Owns a page: shows My Business (ticket 252). */
+  isOwner?: boolean
   /** The Collective isn't open yet (ticket 122). Its link stays, with a "Soon" pill. */
   collectiveSoon: boolean
 }
 
-export function MobileNav({ isSignedIn, isAdmin, collectiveSoon }: Props) {
+export function MobileNav({ isSignedIn, isAdmin, isOwner = false, collectiveSoon }: Props) {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   const prevPathname = useRef(pathname)
@@ -131,6 +133,17 @@ export function MobileNav({ isSignedIn, isAdmin, collectiveSoon }: Props) {
                     {SAVED_LINK.label}
                   </Link>
                 </Button>
+                {isOwner && (
+                  <Button
+                    variant="outline"
+                    className="w-full h-12 border-cream/50 text-cream bg-transparent hover:bg-white/5 hover:text-cream font-subhead"
+                    asChild
+                  >
+                    <Link href="/dashboard" onClick={() => setIsOpen(false)}>
+                      My Business
+                    </Link>
+                  </Button>
+                )}
                 <Button
                   variant="outline"
                   className="w-full h-12 border-cream/50 text-cream bg-transparent hover:bg-white/5 hover:text-cream font-subhead"

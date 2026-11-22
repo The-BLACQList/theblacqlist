@@ -26,7 +26,7 @@ export default async function AdminLayout({ children }: Props) {
   return (
     // Phones: the sidebar renders a sticky top bar + drawer and the page flows
     // below it. md and up: rail on the left, page beside it.
-    <div className="min-h-screen bg-[#f5f5f7] md:flex">
+    <div className="min-h-screen bg-[#f5f5f7] lg:flex">
       <AdminSidebar role={role} counts={toSidebarCounts(pending)} />
       {/* Wide admin tables scroll inside this column, not the whole page. */}
       <div className="min-w-0 flex-1 overflow-x-auto">

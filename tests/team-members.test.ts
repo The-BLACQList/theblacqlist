@@ -595,8 +595,8 @@ describe('wiring', () => {
   })
 
   it('the dashboard has a Team page and link, and photos upload with media_role=team', () => {
-    expect(read('components/dashboard/DashboardSidebar.tsx')).toContain(
-      "{ href: `/dashboard/pages/${entityId}/team`, label: 'Team' }"
+    expect(read('lib/account/shellNav.ts')).toContain(
+      "{ href: `/dashboard/pages/${pageId}/team`, label: 'Team' }"
     )
     expect(read('app/dashboard/pages/[entityId]/team/page.tsx')).toContain('<TeamManager')
     expect(read('components/dashboard/TeamManager.tsx')).toContain(

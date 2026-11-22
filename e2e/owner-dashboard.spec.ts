@@ -53,9 +53,9 @@ test.describe('owner dashboard', () => {
   })
 
   // The editor has one save bar for the whole page (ticket 140). It reads
-  // "Save changes" on a draft and "Publish changes" on a live page, and its
-  // result line confirms once for every card it saved.
-  const saveBar = (page: Page) => page.getByRole('button', { name: /^(Save|Publish) changes$/ })
+  // "Save Changes" on a draft and "Publish Changes" on a live page (Title Case,
+  // ticket 205), and its result line confirms once for every card it saved.
+  const saveBar = (page: Page) => page.getByRole('button', { name: /^(Save|Publish) Changes$/ })
   const SAVED = /^(Saved\.|Published\. Your changes are on your page now\.)$/
 
   test('TA-11 — basic info saves, and the required name is enforced', async ({ page }) => {
@@ -79,6 +79,8 @@ test.describe('owner dashboard', () => {
 
   test('TA-12 — contact section rejects a non-https website server-side', async ({ page }) => {
     await page.goto(`/dashboard/pages/${FIXTURE_OWNED_ID}/edit`)
+    // The editor is in tabs; Contact sits under "Contact & Buttons".
+    await page.getByRole('tab', { name: 'Contact & Buttons' }).click()
     const contact = page.locator('form').filter({ has: page.locator('#c-website') })
 
     // #c-website is a plain text input — nothing client-side stops this value.
@@ -86,7 +88,7 @@ test.describe('owner dashboard', () => {
     await page.locator('#c-website').fill('http://insecure.example.com')
     await saveBar(page).click()
     await expect(contact.getByRole('alert')).toContainText('must start with https://')
-    await expect(page.getByText(/^Couldn't save Contact\./)).toBeVisible()
+    await expect(page.getByText(/^Couldn't save Contact/)).toBeVisible()
 
     await page.locator('#c-website').fill('https://fixture.example.com')
     await saveBar(page).click()
@@ -190,20 +192,29 @@ test.describe('signed in with no listing', () => {
     }
   })
 
-  test('the sidebar hides the tools that need a listing', async ({ page }) => {
+  test('the menu hides the tools that need a listing', async ({ page }) => {
     await page.goto('/dashboard')
-    const nav = page.getByRole('navigation', { name: 'Dashboard navigation' })
-    await expect(nav.getByRole('link', { name: 'My Pages' })).toBeVisible()
-    for (const name of ['Products', 'Services', 'Upgrade']) {
-      await expect(nav.getByRole('link', { name })).toHaveCount(0)
+    // One signed-in menu for members and owners (ticket 252).
+    const nav = page.getByRole('navigation', { name: 'Account Navigation' })
+    await expect(nav.getByRole('link', { name: 'Overview' })).toBeVisible()
+    for (const name of ['Home', 'Edit Page', 'Insights', 'Products', 'Services', 'Plan']) {
+      await expect(nav.getByRole('link', { name, exact: true })).toHaveCount(0)
     }
+    await expect(page.getByRole('link', { name: 'Claim My Business' })).toBeVisible()
   })
 })
 
-test('an owner still sees every sidebar tool', async ({ page }) => {
+test('an owner sees their business first, with the page tools one tap away', async ({ page }) => {
   await loginAsOwner(page)
-  const nav = page.getByRole('navigation', { name: 'Dashboard navigation' })
-  for (const name of ['My Pages', 'Products', 'Services', 'Upgrade']) {
-    await expect(nav.getByRole('link', { name })).toBeVisible()
+  await page.goto('/dashboard')
+  const nav = page.getByRole('navigation', { name: 'Account Navigation' })
+  for (const name of ['Home', 'Edit Page', 'Insights', 'Plan']) {
+    await expect(nav.getByRole('link', { name, exact: true })).toBeVisible()
+  }
+  await expect(page.getByTestId('page-switcher')).toBeVisible()
+  const tools = page.getByTestId('account-nav-group-page-tools')
+  if ((await tools.getAttribute('aria-expanded')) !== 'true') await tools.click()
+  for (const name of ['Products', 'Services']) {
+    await expect(nav.getByRole('link', { name, exact: true })).toBeVisible()
   }
 })

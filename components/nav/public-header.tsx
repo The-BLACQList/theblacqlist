@@ -32,7 +32,8 @@ export async function PublicHeader() {
     ? await Promise.all([
         getAdminRole(user.id),
         messagingOn ? getUnreadMessageCount(supabase) : Promise.resolve(undefined),
-        messagingOn ? ownsAnyPage(supabase, user.id) : Promise.resolve(false),
+        // Also drives "My Business" (ticket 252), so it runs with messaging off too.
+        ownsAnyPage(supabase, user.id),
       ])
     : [null, undefined, false]
   const isAdmin = adminRole !== null
@@ -96,7 +97,9 @@ export async function PublicHeader() {
                     Admin
                   </Link>
                 )}
-                {messagesUnread !== undefined && <MessagesNavLink unread={messagesUnread} owner={ownsPages} />}
+                {messagesUnread !== undefined && (
+                  <MessagesNavLink unread={messagesUnread} owner={ownsPages} />
+                )}
                 <Link
                   href={SAVED_LINK.href}
                   className="inline-flex items-center gap-1.5 font-subhead text-sm text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm px-2 py-1"
@@ -104,6 +107,14 @@ export async function PublicHeader() {
                   <Bookmark className="h-4 w-4" aria-hidden="true" />
                   {SAVED_LINK.label}
                 </Link>
+                {ownsPages && (
+                  <Link
+                    href="/dashboard"
+                    className="font-subhead text-sm text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm px-2 py-1"
+                  >
+                    My Business
+                  </Link>
+                )}
                 <Link
                   href="/account"
                   className="font-subhead text-sm text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm px-2 py-1"
@@ -140,8 +151,15 @@ export async function PublicHeader() {
           {/* Mobile right zone */}
           <div className={`${showCompact} items-center gap-1`}>
             <HeaderSearch cue={cue} size="mobile" />
-            {messagesUnread !== undefined && <MessagesNavLink unread={messagesUnread} owner={ownsPages} />}
-            <MobileNav isSignedIn={isSignedIn} isAdmin={isAdmin} collectiveSoon={collectiveSoon} />
+            {messagesUnread !== undefined && (
+              <MessagesNavLink unread={messagesUnread} owner={ownsPages} />
+            )}
+            <MobileNav
+              isSignedIn={isSignedIn}
+              isAdmin={isAdmin}
+              isOwner={ownsPages}
+              collectiveSoon={collectiveSoon}
+            />
           </div>
         </nav>
       </Container>

@@ -13,6 +13,7 @@ import {
   ADMIN_NAV_GROUPS,
   ADMIN_OVERVIEW,
   DEFAULT_OPEN_GROUPS,
+  adminRailGroups,
   groupCount,
   groupForPath,
   isUnder,
@@ -154,32 +155,44 @@ describe('parseOpenGroups', () => {
   })
 })
 
-describe('components/admin/AdminSidebar.tsx', () => {
-  const src = readFileSync(path.join(REPO_ROOT, 'components/admin/AdminSidebar.tsx'), 'utf8')
+describe('the admin menu in the shared rail', () => {
+  const sidebar = readFileSync(path.join(REPO_ROOT, 'components/admin/AdminSidebar.tsx'), 'utf8')
+  const rail = readFileSync(path.join(REPO_ROOT, 'components/nav/NavRail.tsx'), 'utf8')
 
-  it('renders from the shared config, with group test ids and aria-expanded', () => {
-    expect(src).toContain("from '@/lib/admin/navGroups'")
-    expect(src).toContain('data-testid={`admin-nav-group-${group.slug}`}')
-    expect(src).toContain('aria-expanded={isOpen}')
+  it('renders the shared config in the shared rail, with admin test ids', () => {
+    expect(sidebar).toContain("from '@/lib/admin/navGroups'")
+    expect(sidebar).toContain('<NavRail')
+    expect(sidebar).toContain('testIdPrefix="admin-nav"')
+    expect(rail).toContain('data-testid={`${testIdPrefix}-group-${group.slug}`}')
+    expect(rail).toContain('aria-expanded={isOpen}')
   })
 
   it('keeps the active group open', () => {
-    expect(src).toMatch(/const isOpen = isActive \|\| openGroups\.includes\(group\.slug\)/)
+    expect(rail).toMatch(/const isOpen = isActive \|\| openGroups\.includes\(group\.slug\)/)
   })
 
   it('shows a closed group’s total only when closed and above zero', () => {
-    expect(src).toContain('{!isOpen && total > 0 && (')
+    expect(rail).toContain('{!isOpen && total > 0 && (')
   })
 
   it('has a phone Menu button that opens a drawer and closes it on route change', () => {
-    expect(src).toContain('md:hidden')
-    expect(src).toContain('<Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>')
-    expect(src).toContain('setDrawerOpen(false)')
-    expect(src).toContain('aria-label="Close Menu"')
+    expect(rail).toContain('lg:hidden')
+    expect(rail).toContain('<Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>')
+    expect(rail).toContain('setDrawerOpen(false)')
+    expect(rail).toContain('aria-label="Close Menu"')
+  })
+
+  it('turns each waiting count into its item’s badge', () => {
+    const groups = adminRailGroups({ '/admin/claims': 3 })
+    const claims = groups[0]!.items.find((i) => i.label === 'Claims')
+    expect(claims?.badge).toBe(3)
+    expect(groups[0]!.items.find((i) => i.label === 'Reviews')?.badge).toBe(0)
   })
 
   it('carries no em dash in its copy', () => {
-    const withoutComments = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
-    expect(withoutComments).not.toContain('—')
+    for (const src of [sidebar, rail]) {
+      const withoutComments = src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '')
+      expect(withoutComments).not.toContain('—')
+    }
   })
 })

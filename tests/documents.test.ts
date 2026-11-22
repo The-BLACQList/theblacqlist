@@ -562,7 +562,7 @@ describe('wiring', () => {
       "gate: { feature: 'documents', limit: 'documents' }"
     )
     expect(read('app/dashboard/pages/[entityId]/documents/page.tsx')).toContain('DocumentsManager')
-    expect(read('components/dashboard/DashboardSidebar.tsx')).toContain('/documents`')
+    expect(read('lib/account/shellNav.ts')).toContain('/documents`')
   })
 
   it('every offerings heading carries the row', () => {

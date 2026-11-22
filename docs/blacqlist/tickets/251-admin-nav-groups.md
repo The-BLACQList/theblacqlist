@@ -1,6 +1,6 @@
 # Ticket 251: Admin Menu in Groups, With a Phone Menu
 
-**Status:** PR open, 2026-11-21. Waiting on the founder's OK to merge.
+**Status:** Merged 2026-11-21 (#376, `276644e`), on the founder's OK.
 
 ## Why
 
