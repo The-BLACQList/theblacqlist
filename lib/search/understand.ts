@@ -133,6 +133,11 @@ function lookup(map: Readonly<Record<string, readonly string[]>>, word: string) 
   return map[word] ?? map[stem(word)] ?? null
 }
 
+/** The intent family for one word ("bathroom" → bath, soap…), or none. */
+export function intentWords(word: string): readonly string[] {
+  return lookup(INTENT_FAMILIES, word) ?? []
+}
+
 /** Takes the identity phrases out of a token list. */
 function withoutIdentity(tokens: string[]): { rest: string[]; removed: boolean } {
   const rest: string[] = []
@@ -162,16 +167,20 @@ function combine(options: string[][]): string[][] | null {
   return combos
 }
 
-/**
- * The understood form of a search, for queryListings to run when the search as
- * typed found nothing. See the file header for the rules.
- */
-export function understandQuery(raw: string | null | undefined): UnderstoodQuery {
-  const trimmed = (raw ?? '').trim()
-  // Quotes, a minus or OR: the visitor (or Cue) wrote search syntax. Leave it.
-  if (!trimmed || /"|(^|\s)-\S|\sor\s/i.test(trimmed)) return NONE
+export interface QueryWords {
+  /** The words that carry the search, in the order typed, at most six. */
+  words: string[]
+  /** True when an identity phrase was taken out. */
+  identityRemoved: boolean
+}
 
-  const tokens = normalizeQuery(trimmed).split(' ').filter(Boolean)
+/**
+ * The words that carry a search: identity phrases, filler, "where can I get
+ * it" verbs and (when something else is left) generic objects taken out.
+ * Shared by the grid's rescue below and Cue's any-word query (ticket 256).
+ */
+export function queryWords(text: string): QueryWords {
+  const tokens = normalizeQuery(text).split(' ').filter(Boolean)
   const { rest, removed: identityRemoved } = withoutIdentity(tokens)
 
   const kept: string[] = []
@@ -191,7 +200,24 @@ export function understandQuery(raw: string | null | undefined): UnderstoodQuery
   })
 
   const specific = kept.filter((w) => !GENERIC_OBJECTS.has(w))
-  const words = (specific.length > 0 ? specific : kept).slice(0, MAX_WORDS)
+  return { words: (specific.length > 0 ? specific : kept).slice(0, MAX_WORDS), identityRemoved }
+}
+
+/** True for a word that names no particular thing ("products", "stuff"). */
+export function isGenericObject(word: string): boolean {
+  return GENERIC_OBJECTS.has(word)
+}
+
+/**
+ * The understood form of a search, for queryListings to run when the search as
+ * typed found nothing. See the file header for the rules.
+ */
+export function understandQuery(raw: string | null | undefined): UnderstoodQuery {
+  const trimmed = (raw ?? '').trim()
+  // Quotes, a minus or OR: the visitor (or Cue) wrote search syntax. Leave it.
+  if (!trimmed || /"|(^|\s)-\S|\sor\s/i.test(trimmed)) return NONE
+
+  const { words, identityRemoved } = queryWords(trimmed)
 
   if (words.length === 0) {
     return identityRemoved ? { mode: 'browse', tsQuery: null, words: [], identityRemoved } : NONE
@@ -201,7 +227,7 @@ export function understandQuery(raw: string | null | undefined): UnderstoodQuery
   // combinations run past the cap, drop the intent families first, then the
   // word families, rather than give up on the rescue.
   const family = (w: string) => [...(lookup(WORD_FAMILIES, w) ?? [])]
-  const intent = (w: string) => [...(lookup(INTENT_FAMILIES, w) ?? [])]
+  const intent = (w: string) => [...intentWords(w)]
   const unique = (list: string[]) => [...new Set(list)]
   const combos =
     combine(words.map((w) => unique([w, ...family(w), ...intent(w)]))) ??

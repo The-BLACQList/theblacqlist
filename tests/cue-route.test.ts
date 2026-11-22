@@ -163,7 +163,7 @@ describe('POST /api/cue', () => {
     expect(done.text).toBe('Here are 2 places that match.')
 
     expect(h.inserts).toHaveLength(1)
-    expect(h.inserts[0]).toMatchObject({ agent_type: 'visitor_assistant', prompt_version: 'CUE_CHAT@2', status: 'pending' })
+    expect(h.inserts[0]).toMatchObject({ agent_type: 'visitor_assistant', prompt_version: 'CUE_CHAT@3', status: 'pending' })
     expect(h.updates).toEqual([{ status: 'completed', error_message: null, request_tokens: 0, response_tokens: 0 }])
   })
 
@@ -180,7 +180,12 @@ describe('POST /api/cue', () => {
     expect(list.some((e) => e.type === 'cards')).toBe(false)
     const done = list.at(-1) as Extract<CueEvent, { type: 'done' }>
     expect(done.type).toBe('done')
-    expect(done.text).toMatch(/not on The BLACQList yet/)
+    expect(done.text).toMatch(/Nothing matches that on The BLACQList yet/)
+    // Searched and found nothing: Suggest a Business (ticket 256).
+    expect(list).toContainEqual({
+      type: 'actions',
+      actions: [{ kind: 'link', href: '/add-business', label: 'Suggest a Business' }],
+    })
   })
 
   it.each([
