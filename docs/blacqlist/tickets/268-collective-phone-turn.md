@@ -1,6 +1,6 @@
 # Ticket 268: Turning The Collective on an iPhone
 
-**Status:** Built on `fix/267-collective-core-nan` (with 267, PR #398), 2026-11-22. Not merged.
+**Status:** Merged #398 (`bb76303`), 2026-11-22. Founder checked it on desktop and iPhone.
 
 Founder (2026-11-22, after the 267 fix): "On iPhone, I can't seem to rotate the camera effectively."
 

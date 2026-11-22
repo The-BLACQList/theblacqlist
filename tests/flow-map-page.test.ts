@@ -300,6 +300,18 @@ describe('/flow-map phone full-screen (ticket 248)', () => {
     expect(scene).toContain('swipeTurnRate(el.clientWidth, DRAG_TURN)')
   })
 
+  // Ticket 269: with nothing picked, the full-screen sheet is only the key.
+  it('shrinks the idle full-screen sheet to the colour key', () => {
+    const panels = read(`${SILO}/SiloPanels.tsx`)
+    expect(panels).toContain('<aside className="ctx ctx-idle" aria-labelledby="silo-ctx-title">')
+    expect(css).toMatch(/\[data-full\] \.ctx-idle \.ctx-tip \{\s*display: none;/)
+    // The heading is hidden from sight only, so the sheet keeps its name.
+    expect(css).toMatch(
+      /\[data-full\] \.ctx-idle :is\(\.ctx-eyebrow, h3\) \{\s*position: absolute;[^}]*clip: rect\(0, 0, 0, 0\);/
+    )
+    expect(css).not.toMatch(/\[data-full\] \.ctx-idle[^{]*h3[^{]*\{\s*display: none/)
+  })
+
   it("never resizes the canvas when Safari's bars come and go", () => {
     expect(css).toMatch(/\[data-full\] \.silo-stage \{\s*bottom: auto;\s*height: calc\(100lvh/)
   })
