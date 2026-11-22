@@ -37,8 +37,9 @@ import { DEFAULT_RADIUS_MILES } from '@/lib/listings/location-params'
 import type { ListingsParams } from '@/lib/listings/query'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { distanceMiles, type LatLng } from '@/lib/map/distance'
-import { FILLER_WORDS, findPlaces, type AssistCity } from '@/lib/search/assist'
+import { FILLER_WORDS, findPlaces, matchCategories, type AssistCity } from '@/lib/search/assist'
 import { CATEGORY_KEYWORDS } from '@/lib/search/categoryKeywords'
+import { intentWords, isGenericObject, queryWords } from '@/lib/search/understand'
 import type { DiscoveryEntity, WeeklyHours } from '@/types'
 
 // ─── Limits ──────────────────────────────────────────────────────────────────
@@ -51,6 +52,8 @@ export const CUE_MAX_CARDS = 6
 export const CUE_MAX_TERMS = 12
 /** Nearest covered cities offered for a place we do not cover. */
 const NEAREST_CITY_COUNT = 3
+/** Close matches offered when a search finds nothing (ticket 256). */
+export const CUE_CLOSE_RESULTS = 5
 const SNIPPET_CHARS = 160
 const DETAIL_CHARS = 600
 
@@ -147,7 +150,7 @@ export const CUE_TOOLS: readonly Anthropic.Tool[] = Object.freeze([
   {
     name: 'search_listings',
     description:
-      'Search The BLACQList for businesses. Matches any of the words against names, descriptions, tags and categories. Returns up to 8 results. If it finds nothing, try again with other words or a broader category before telling the visitor.',
+      'Search The BLACQList for businesses. Matches any of the words or phrases against names, descriptions and categories; a phrase needs all its words. Returns up to 8 results. When nothing matches, returns close matches from the nearest category, if any.',
     input_schema: jsonSchema(searchInput),
     eager_input_streaming: true,
   },
@@ -208,10 +211,12 @@ export interface CueTurnState {
   actionCodes: string[]
   /** Searches run this turn, for the status line and the audit count. */
   searches: number
+  /** Results that matched the words this turn, close matches not counted. */
+  found: number
 }
 
 export function newTurnState(): CueTurnState {
-  return { seen: new Map(), shown: [], actionCodes: [], searches: 0 }
+  return { seen: new Map(), shown: [], actionCodes: [], searches: 0, found: 0 }
 }
 
 export interface CueToolContext {
@@ -277,16 +282,68 @@ export interface BuiltQuery {
 }
 
 /**
+ * Every curated phrase people use for a category ("law firm", "baby shower").
+ * Only these are searched as exact phrases (ticket 256).
+ */
+const CURATED_PHRASES: ReadonlySet<string> = new Set(
+  Object.values(CATEGORY_KEYWORDS)
+    .flat()
+    .map(cleanTerm)
+    .filter((t) => t.includes(' '))
+)
+
+/**
+ * One of the model's words or phrases as a query term, or null when nothing
+ * in it names a thing ("switch", "black owned", "products near me").
+ *
+ * A curated phrase stays a phrase. Any other phrase becomes its meaningful
+ * words, which must all appear but not side by side: "natural deodorant"
+ * finds "deodorant made with natural oils", which the quoted phrase missed.
+ */
+function reduceTerm(raw: string): string | null {
+  const term = cleanTerm(raw)
+  if (!term) return null
+  if (CURATED_PHRASES.has(term)) return term
+  const { words } = queryWords(term)
+  return words.length > 0 ? words.join(' ') : null
+}
+
+/**
+ * Words that point at two trades when searched alone: "body" is body butter
+ * and auto body. Searched only inside a phrase, or when nothing else is left.
+ */
+const NEVER_ALONE: ReadonlySet<string> = new Set(['body'])
+
+/** A term without its occasion words, or null when that is all it was. */
+function withoutOccasionWords(term: string): string | null {
+  if (CURATED_PHRASES.has(term)) return term
+  const rest = term.split(' ').filter((w) => !OCCASION_WORDS.has(w))
+  return rest.length > 0 ? rest.join(' ') : null
+}
+
+function isSet<T>(v: T | null): v is T {
+  return v !== null
+}
+
+/**
  * The model's words, plus the words people use for the category, as one
  * any-word query.
  *
+ * - Each word or phrase is reduced first (reduceTerm): filler, "where can I
+ *   get it" verbs and identity phrases go, the same rules as the grid's
+ *   rescue (lib/search/understand.ts). A phrase that is only generic objects
+ *   ("products"), or a lone "body", goes when another term is left.
  * - Occasion words ("party") stay when the category is an events one, or when
  *   they are all there is. Elsewhere "birthday cake" searches cake.
+ * - Each single word gains its intent family: "bathroom" also searches bath,
+ *   soap, lotion, toiletries.
  * - `withName` adds the category's own name words. Used when the category is
  *   also the filter: inside it, a listing whose text says none of the words
  *   still matches on its category name, so nothing filed there is dropped.
- * - Terms in order: typed, category words, then words of categories the typed
- *   words point at. Capped at CUE_MAX_TERMS.
+ * - Terms in order: typed, intent words, category words, then words of
+ *   categories the typed words point at. Capped at CUE_MAX_TERMS.
+ * - Curated phrases are quoted; any other phrase is left bare, so websearch
+ *   needs all its words (an uppercase OR binds looser than the bare AND).
  */
 export function buildSearchQuery(args: {
   words: readonly string[]
@@ -295,11 +352,16 @@ export function buildSearchQuery(args: {
   withName?: boolean
 }): BuiltQuery {
   const { words, category, categories } = args
-  const typed = [...new Set(words.map(cleanTerm).filter((t) => t && !FILLER_WORDS.has(t)))]
+  const cleaned = [...new Set(words.map(cleanTerm).filter((t) => t && !FILLER_WORDS.has(t)))]
+  const reduced = [...new Set(words.map(reduceTerm).filter(isSet))]
+  // Nothing meaningful left: search what was sent rather than nothing.
+  const all = reduced.length > 0 ? reduced : cleaned
+  const specific = all.filter((t) => !t.split(' ').every(isGenericObject) && !NEVER_ALONE.has(t))
+  const typed = specific.length > 0 ? specific : all
 
   const eventsCategory = isEventsFamily(category, categories)
   const eventsTyped = categoriesForTerms(typed).some((k) => EVENTS_FAMILY.has(k))
-  const withoutOccasions = typed.filter((t) => !OCCASION_WORDS.has(t))
+  const withoutOccasions = [...new Set(typed.map(withoutOccasionWords).filter(isSet))]
   const keepOccasions =
     eventsCategory || (!category && eventsTyped) || withoutOccasions.length === 0
   const kept = keepOccasions ? typed : withoutOccasions
@@ -313,6 +375,8 @@ export function buildSearchQuery(args: {
   }
 
   kept.forEach(add)
+  const intents = kept.filter((t) => !t.includes(' ')).flatMap((t) => [...intentWords(t)])
+  intents.forEach(add)
   if (category) {
     CATEGORY_KEYWORDS[category.slug]?.forEach(add)
     if (args.withName) {
@@ -321,12 +385,12 @@ export function buildSearchQuery(args: {
         .forEach(add)
     }
   }
-  for (const key of categoriesForTerms(kept)) {
+  for (const key of categoriesForTerms([...kept, ...intents])) {
     if (key !== category?.slug) CATEGORY_KEYWORDS[key]?.forEach(add)
   }
 
   const capped = terms.slice(0, CUE_MAX_TERMS)
-  const q = capped.map((t) => (t.includes(' ') ? `"${t}"` : t)).join(' OR ')
+  const q = capped.map((t) => (CURATED_PHRASES.has(t) ? `"${t}"` : t)).join(' OR ')
   return { q, terms: capped }
 }
 
@@ -429,6 +493,23 @@ async function searchListings(input: z.infer<typeof searchInput>, ctx: CueToolCo
 
   const top = items.slice(0, CUE_SEARCH_RESULTS)
   for (const e of top) ctx.state.seen.set(e.id, e)
+  ctx.state.found += top.length
+
+  // Nothing matched: never leave the model with only "not listed". Name the
+  // categories the words point to, and offer the nearest one's businesses as
+  // close matches (ticket 256).
+  let nearest: AssistantCategory[] = []
+  let close: DiscoveryEntity[] = []
+  if (top.length === 0) {
+    const pointed = matchCategories(first.terms.join(' '), ctx.categories, CATEGORY_KEYWORDS, 3)
+    nearest = pointed
+      .map((m) => ctx.categories.find((c) => c.slug === m.category.slug))
+      .filter((c): c is AssistantCategory => !!c && c.slug !== category?.slug)
+    if (nearest[0]) {
+      close = (await run(nearest[0], '')).slice(0, CUE_CLOSE_RESULTS)
+      for (const e of close) ctx.state.seen.set(e.id, e)
+    }
+  }
 
   return ok({
     searched: {
@@ -443,11 +524,17 @@ async function searchListings(input: z.infer<typeof searchInput>, ctx: CueToolCo
         }
       : {}),
     results: top.map(resultFor),
-    ...(top.length === 0
+    ...(top.length === 0 && nearest.length > 0 ? { nearestCategories: nearest.map((c) => c.name) } : {}),
+    ...(close.length > 0
       ? {
-          next: 'Nothing found. Try other words or a broader category, or another city. If still nothing, say it is not listed yet.',
+          closeMatches: { category: nearest[0]!.name, results: close.map(resultFor) },
+          next: `Nothing matched the words. These are close matches from ${nearest[0]!.name}: show them as close matches, or search again with other words. Never reply only that it is not listed.`,
         }
-      : {}),
+      : top.length === 0
+        ? {
+            next: 'Nothing found. Try other words or a broader category, or another city. If still nothing, say it is not on The BLACQList yet, name the nearest category if there is one, and give one short tip on what to look for.',
+          }
+        : {}),
   })
 }
 

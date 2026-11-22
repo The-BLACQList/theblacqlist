@@ -16,7 +16,7 @@
  *      40% of the monthly call budget. One visitor message counts as one call,
  *      and spend.ts prices it at the loop's worst case.
  *
- * Then Cue runs (lib/ai/cue/agent.ts): up to four model calls with tools that
+ * Then Cue runs (lib/ai/cue/agent.ts): up to five model calls with tools that
  * read published listings only. The response is newline-delimited JSON
  * (lib/ai/cue/stream.ts): `status` and `text` while Cue works, then `cards`,
  * `actions` and `done`. A reply with no words and no cards becomes a
@@ -38,7 +38,7 @@
 
 import { ASSISTANT_AGENT, GUIDE_AGENT } from '@/lib/ai/agents'
 import { ASSISTANT_PER_DAY, ASSISTANT_PER_MINUTE, visitorCallsUsed } from '@/lib/ai/assistant'
-import { anthropicCueCall, runCue, type CueRunResult } from '@/lib/ai/cue/agent'
+import { anthropicCueCall, runCue, searchModel, type CueRunResult } from '@/lib/ai/cue/agent'
 import { SERVER_ONLY_EVENTS } from '@/lib/analytics/constants'
 import { cueAskSchema, CUE_MESSAGE_MAX, CUE_TURN_MAX_CHARS } from '@/lib/ai/cue/ask'
 import { cueDeps, listingNames, loadLists, loadPage } from '@/lib/ai/cue/data'
@@ -62,7 +62,7 @@ import type { AssistantCategory } from '@/lib/ai/assistant'
 import { checkRateLimit, getClientIp } from '@/lib/security/rate-limit'
 import { createServiceClient } from '@/lib/supabase/server'
 
-/** Four model calls and their tools fit well inside this. */
+/** Five model calls and their tools fit inside this in practice. */
 export const maxDuration = 60
 
 /** Bodies bigger than this are not a chat message. */
@@ -247,7 +247,10 @@ export async function POST(request: Request): Promise<Response> {
       .filter((t) => t.text !== '')
 
     // 6. and 7. Paid calls only.
-    const { provider, model } = resolveProvider(ASSISTANT_AGENT)
+    const resolved = resolveProvider(ASSISTANT_AGENT)
+    const { provider } = resolved
+    const model =
+      provider === 'anthropic' && surface === 'search' ? searchModel(resolved.model) : resolved.model
     if (provider === 'anthropic') {
       if (!(await withinMonthlyCeiling())) return await cannot('limited', 'ceiling')
       const ceiling = monthlyCeilingUsd()
