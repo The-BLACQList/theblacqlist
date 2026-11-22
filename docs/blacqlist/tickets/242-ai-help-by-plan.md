@@ -1,6 +1,6 @@
 # Ticket 242: AI Help by Plan
 
-**Status:** Built on `feat/242-ai-help-by-plan`, not pushed. Migration `20261204000000_ai_suggestion_types_242.sql` is not applied anywhere yet (staging and prod each need the founder's OK). Privacy wording approved by the founder 2026-11-21 and added (live text, "Last updated" moved to November 21, 2026).
+**Status:** PR #381 open. Migration `20261204000000_ai_suggestion_types_242.sql` applied on staging 2026-11-21; prod waits for merge (founder OK). Privacy wording approved by the founder 2026-11-21 and added (live text, "Last updated" moved to November 21, 2026).
 
 ## Why
 The plan cards said "AI writing help: 10 / 100 / 500 drafts every 30 days". That is a number nobody shops for, and it didn't say what the help does. Founder, 2026-11-21: each plan lists the jobs AI does for you, with smaller and realistic limits. No name for the helper in plan copy (no "Cue"), and never the word "drafts".
@@ -83,9 +83,23 @@ The Terms (`TermsOfService.tsx`, "AI writing help") already cover AI help in gen
   - `ai-writing-help`.
 - Typecheck is clean. Lint has 0 errors (the 2 warnings were already there). Vitest: 5,544 passed.
 
+## Preview Checks (2026-11-21)
+Passed:
+- A Free event page shows "AI help comes with Starter." A Starter event page shows "AI help with this comes with Growth." and no write button.
+- A Starter page's Services tab shows the Growth note.
+- The review on the public page has the "Write a reply for me" button after Respond as Owner. No sideways scroll at 390px.
+- The post and job forms have their write buttons.
+- /pricing shows the 20 / 50 / 100 small print and "review replies", with no "drafts".
+- /privacy shows the new lines and the November 21, 2026 date.
+
+Blocked, not by this ticket:
+- Every AI request on Preview fails with `provider_error` from Anthropic. The forms show "Couldn't write a suggestion right now. Try again." and nothing changes.
+- Other agents fail the same way, and the last successful call on staging was 2026-11-14. This needs a check of the Preview Anthropic key or credit.
+- So write → Use This → Put Mine Back was not seen end to end on Preview. The unit tests cover it with sample text (the card never submits; Put Mine Back restores the owner's text).
+- A local run with sample text couldn't sign in, because the Preview Supabase settings can't be downloaded.
+
+Staging QA data was put back afterwards: the job's and event's owners, the event's tier and the job's hiring page were restored, and the test review was deleted. The failed request rows were left as the audit trail.
+
 ## Still To Do
-- Apply the migration on staging (founder OK), then do the Preview checks:
-  - as Starter: write a review reply (the allowance drops by 1 and nothing posts until Post Response);
-  - write a post;
-  - check that the event and job forms show the Growth note.
 - Prod migration at merge (founder OK).
+- Once the Anthropic key on Preview works, write one review reply and one post, and check that nothing posts until Post Response or Post.
