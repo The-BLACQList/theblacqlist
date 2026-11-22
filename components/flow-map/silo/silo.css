@@ -2087,6 +2087,24 @@ html.silo-full-lock body {
   .silo-track[data-full] .hud > :is(.brand, .kpis, .ticker) :is(a, button) {
     pointer-events: auto;
   }
+  /* Ticket 269: with nothing picked, the full-screen sheet is only the colour
+     key, so the bottom of the phone, where a thumb rests, is map. The heading
+     stays for screen readers; the floor is on the rail. */
+  .silo-track[data-full] .ctx-idle :is(.ctx-eyebrow, h3) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .silo-track[data-full] .ctx-idle .ctx-tip {
+    display: none;
+  }
+  .silo-track[data-full] .ctx-idle .legend-in-card {
+    margin-top: 0;
+  }
   .silo-track[data-full] .dock .close {
     display: inline-flex;
     align-items: center;

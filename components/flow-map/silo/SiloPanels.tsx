@@ -484,8 +484,9 @@ export function SiloCard({
     )
   }
 
+  // Nothing picked. Full-screen on a phone shows only the key (ticket 269).
   return (
-    <aside className="ctx" aria-labelledby="silo-ctx-title">
+    <aside className="ctx ctx-idle" aria-labelledby="silo-ctx-title">
       <p className="ctx-eyebrow">
         <span className="ctx-name">The Collective</span>
         <span className="ctx-floor">
