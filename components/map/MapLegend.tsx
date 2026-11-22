@@ -1,5 +1,7 @@
 import type { ReactElement } from 'react'
 
+import { PIN_PATH } from '@/components/map/photoPin'
+
 export interface LegendMarks {
   squares: boolean
   dots: boolean
@@ -24,7 +26,13 @@ export function MapLegend({ marks }: { marks: LegendMarks }) {
     items.push({
       key: 'square',
       label: 'Claimed Business',
-      swatch: <span className="size-3.5 rounded-[4px] border-2 border-gold bg-white" />,
+      // The teardrop of a claimed page (ticket 266), with its white circle.
+      swatch: (
+        <svg viewBox="0 0 44 54" className="h-[17px] w-[14px] overflow-visible">
+          <path d={PIN_PATH} fill="var(--color-gold)" stroke="#fff" strokeWidth={1.5} />
+          <circle cx={22} cy={21} r={11} fill="#fff" />
+        </svg>
+      ),
     })
   if (marks.dots)
     items.push({ key: 'dot', label: 'Business', swatch: <span className="size-2 rounded-full bg-ink/55" /> })

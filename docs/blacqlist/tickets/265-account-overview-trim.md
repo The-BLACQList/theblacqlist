@@ -1,6 +1,6 @@
 # Ticket 265: Trim the Account Overview's Business Block
 
-**Status:** PR open, 2026-11-21. Follows 252 and 253.
+**Status:** Merged #396 (`613632d`), 2026-11-21. Follows 252 and 253.
 
 ## Why
 
