@@ -10,7 +10,7 @@ import { CUE_MESSAGE_MAX } from '@/lib/ai/cue/ask'
 import { fallbackHref } from '@/lib/ai/guide-limits'
 import { streamCue } from '@/lib/assistant/ask'
 import type { NearPoint } from '@/lib/assistant/near'
-import { addTurn, openAssistantFrom, turnId, type AssistantTurn } from '@/lib/assistant/store'
+import { addTurn, openAssistantFrom, setHomeBarInView, turnId, type AssistantTurn } from '@/lib/assistant/store'
 import {
   canFollowUp,
   hasCueTurn,
@@ -101,6 +101,20 @@ export function CueSearchAnswer({ query, near }: { query: string; near: NearPoin
   const turnRefs = useRef(new Map<string, HTMLLIElement>())
   // The follow-up whose answer just landed: focus goes there once it renders.
   const focusTurn = useRef<string | null>(null)
+  // The follow-up box, while it is drawn.
+  const [form, setForm] = useState<HTMLFormElement | null>(null)
+
+  // One Ask Cue in view: the corner button steps aside while the follow-up
+  // box shows, so on a phone it never sits over the send button.
+  useEffect(() => {
+    if (!form || typeof IntersectionObserver === 'undefined') return
+    const observer = new IntersectionObserver(([entry]) => setHomeBarInView(entry?.isIntersecting ?? false))
+    observer.observe(form)
+    return () => {
+      observer.disconnect()
+      setHomeBarInView(false)
+    }
+  }, [form])
 
   // The search page keys this component on the words and place, so each new
   // search mounts it fresh in the streaming state; the effect never resets it.
@@ -271,6 +285,7 @@ export function CueSearchAnswer({ query, near }: { query: string; near: NearPoin
         draft={draft}
         handlers={handlers}
         inputRef={inputRef}
+        formRef={setForm}
         turnRefs={turnRefs}
         onDraft={setDraft}
         onSubmit={onSubmit}
@@ -314,6 +329,7 @@ export function AnswerThreadView({
   draft,
   handlers,
   inputRef,
+  formRef,
   turnRefs,
   onDraft,
   onSubmit,
@@ -329,6 +345,7 @@ export function AnswerThreadView({
   draft: string
   handlers: ReplyHandlers
   inputRef?: RefObject<HTMLInputElement | null>
+  formRef?: (el: HTMLFormElement | null) => void
   turnRefs?: RefObject<Map<string, HTMLLIElement>>
   onDraft: (text: string) => void
   onSubmit: (event: FormEvent<HTMLFormElement>) => void
@@ -441,7 +458,7 @@ export function AnswerThreadView({
       )}
 
       {showBox && (
-        <form onSubmit={onSubmit} className="mt-5 flex items-center gap-2">
+        <form ref={formRef} onSubmit={onSubmit} className="mt-5 flex items-center gap-2">
           <label htmlFor="search-follow-up" className="sr-only">
             {FOLLOW_UP_LABEL}
           </label>
