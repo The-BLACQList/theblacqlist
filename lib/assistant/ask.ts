@@ -42,6 +42,11 @@ interface StreamCueOptions {
   signal?: AbortSignal
   /** Called with the status line and the reply so far, as they change. */
   onProgress?: (progress: CueProgress) => void
+  /**
+   * 'search': the /search answer strip. The route answers with the quick
+   * answer from our listings when Cue can't (ticket 255).
+   */
+  surface?: 'chat' | 'search'
 }
 
 const cardsSchema = z.array(cardSchema)
@@ -67,10 +72,11 @@ export async function streamCue(words: string, options: StreamCueOptions = {}): 
   const got: {
     text: string
     finalText: string | null
+    mode: 'ai' | 'basic' | null
     cards: AssistantCard[]
     actions: AssistantAction[]
     fallback: CueReply | null
-  } = { text: '', finalText: null, cards: [], actions: [], fallback: null }
+  } = { text: '', finalText: null, mode: null, cards: [], actions: [], fallback: null }
 
   const handle = (event: CueEvent): void => {
     switch (event.type) {
@@ -93,6 +99,7 @@ export async function streamCue(words: string, options: StreamCueOptions = {}): 
       }
       case 'done':
         got.finalText = typeof event.text === 'string' ? event.text : got.text
+        got.mode = event.mode === 'ai' || event.mode === 'basic' ? event.mode : null
         break
       case 'fallback': {
         const parsed = fallbackSchema.safeParse({ kind: 'fallback', href: event.href, reason: event.reason })
@@ -108,6 +115,7 @@ export async function streamCue(words: string, options: StreamCueOptions = {}): 
     cards: cardsFor(turns),
     page: currentPage(),
     near,
+    ...(options.surface === 'search' ? { surface: 'search' as const } : {}),
   }
 
   try {
@@ -140,5 +148,12 @@ export async function streamCue(words: string, options: StreamCueOptions = {}): 
 
   if (got.fallback) return got.fallback
   if (got.finalText === null) return failed
-  return { kind: 'reply', text: got.finalText, cards: got.cards, actions: got.actions, near: near !== null }
+  return {
+    kind: 'reply',
+    text: got.finalText,
+    cards: got.cards,
+    actions: got.actions,
+    near: near !== null,
+    ...(got.mode ? { mode: got.mode } : {}),
+  }
 }

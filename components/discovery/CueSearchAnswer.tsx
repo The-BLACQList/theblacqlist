@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { Route } from 'next'
-import { MessageCircle } from 'lucide-react'
+import { ArrowDown, MessageCircle, RotateCcw } from 'lucide-react'
 import { z } from 'zod'
 
 import type { CueReply } from '@/lib/ai/assistant-limits'
@@ -26,9 +26,12 @@ type Reply = Extract<CueReply, { kind: 'reply' }>
 type Phase =
   | { kind: 'streaming'; status: string; text: string }
   | { kind: 'reply'; reply: Reply }
-  | { kind: 'gone' }
+  | { kind: 'failed'; line: string }
 
-const UNAVAILABLE_STATUS = "Cue isn't available right now. Search results are below."
+/** Neither Cue nor the quick answer came back: the network, or every limit at once. */
+export const ANSWER_FAILED_LINE = "We couldn't load an answer just now. Your search results are below."
+/** Stopped before any words arrived. */
+export const ANSWER_STOPPED_LINE = 'Stopped.'
 
 // ─── This tab's recent answers ───────────────────────────────────────────────
 // Back and Forward remount the page. Keeping the last few finished answers in
@@ -36,7 +39,10 @@ const UNAVAILABLE_STATUS = "Cue isn't available right now. Search results are be
 // a second model call or a second tick on the visitor's daily Cue allowance.
 // Cleared when the tab closes; never sent anywhere.
 
-const CACHE_KEY = 'blq-search-cue-v1'
+// v2: replies carry `mode` (ticket 255). Only Cue's answers are kept; the
+// quick answer is cheap to fetch again and may have stood in for a limit
+// that has since passed.
+const CACHE_KEY = 'blq-search-cue-v2'
 const CACHE_MAX = 10
 
 const cachedSchema = z.array(
@@ -48,6 +54,7 @@ const cachedSchema = z.array(
       cards: z.array(cardSchema),
       actions: z.array(actionSchema),
       near: z.boolean(),
+      mode: z.enum(['ai', 'basic']).optional(),
     }),
   })
 )
@@ -93,9 +100,11 @@ function keepReply(key: string, reply: Reply): void {
  * own location filter or nothing. "Keep chatting with Cue" copies the turn
  * into the chat and opens the corner panel. A follow-up chip runs a new search.
  *
- * Any failure (rate limit, kill switch, spend ceiling, network) removes the
- * strip quietly. The visitor is already on plain search, so there is nowhere
- * to fall back to, and SearchAssist below still offers next steps.
+ * It always answers (ticket 255). When Cue can't (flag off, kill switch,
+ * limits, spend ceiling, an empty run), the route sends the quick answer from
+ * our listings instead, labelled as such. Only when that fails too (the
+ * network, or its own limit) does the strip say so, with Try Again and a jump
+ * to the results below. It never disappears.
  */
 export function CueSearchAnswer({ query, near }: { query: string; near: NearPoint | null }) {
   const router = useRouter()
@@ -107,6 +116,8 @@ export function CueSearchAnswer({ query, near }: { query: string; near: NearPoin
   const [phase, setPhase] = useState<Phase>({ kind: 'streaming', status: CUE_LOOKING, text: '' })
   const [status, setStatus] = useState(CUE_LOOKING)
   const [kept, setKept] = useState(false)
+  // Try Again bumps this, which runs the effect once more.
+  const [attempt, setAttempt] = useState(0)
   const stopRef = useRef<AbortController | null>(null)
   const userStopped = useRef(false)
 
@@ -120,6 +131,7 @@ export function CueSearchAnswer({ query, near }: { query: string; near: NearPoin
     const ask = async (): Promise<CueReply | null> =>
       cachedReply(key) ??
       streamCue(words, {
+        surface: 'search',
         turns: [],
         near: lat !== undefined && lng !== undefined ? { lat, lng } : null,
         locate: false,
@@ -138,29 +150,33 @@ export function CueSearchAnswer({ query, near }: { query: string; near: NearPoin
       // Unmounted or the query changed: this answer belongs to nobody.
       if (stop.signal.aborted && !userStopped.current) return
       stopRef.current = null
-      if (!reply) {
-        setPhase({ kind: 'gone' })
-        setStatus('Stopped.')
+      if (!reply || reply.kind === 'fallback') {
+        const line = reply ? ANSWER_FAILED_LINE : ANSWER_STOPPED_LINE
+        setPhase({ kind: 'failed', line })
+        setStatus(line)
         return
       }
-      if (reply.kind === 'fallback') {
-        setPhase({ kind: 'gone' })
-        setStatus(UNAVAILABLE_STATUS)
-        return
-      }
-      if (!reply.stopped) keepReply(key, reply)
+      if (!reply.stopped && reply.mode !== 'basic') keepReply(key, reply)
       setPhase({ kind: 'reply', reply })
       setStatus(replyStatus(reply))
     })
 
     // Leaving the page or changing the search ends Cue's request, so it stops spending.
     return () => stop.abort()
-  }, [key, words, lat, lng])
+  }, [key, words, lat, lng, attempt])
 
   function onStop() {
     userStopped.current = true
     stopRef.current?.abort()
   }
+
+  function onRetry() {
+    setPhase({ kind: 'streaming', status: CUE_LOOKING, text: '' })
+    setStatus(CUE_LOOKING)
+    setAttempt((n) => n + 1)
+  }
+
+  const basic = phase.kind === 'reply' && phase.reply.mode === 'basic'
 
   return (
     <>
@@ -169,31 +185,48 @@ export function CueSearchAnswer({ query, near }: { query: string; near: NearPoin
         {status}
       </p>
 
-      {phase.kind !== 'gone' && (
-        <section
-          aria-label="Cue's answer"
-          className="mb-8 rounded-2xl border border-gold/30 bg-brand-black p-3 sm:p-4 text-off-white"
-        >
-          <p className="flex items-center gap-2 mb-3 font-subhead text-xs font-semibold uppercase tracking-[0.08em] text-gold">
-            <GoldBrandMark className="size-4" />
-            Cue
-            <span className="font-normal normal-case tracking-normal text-off-white/70">
-              &middot; AI answer from our listings
-            </span>
-          </p>
+      <section
+        aria-label={basic ? 'Quick answer' : "Cue's answer"}
+        data-testid="search-answer"
+        data-mode={phase.kind === 'reply' ? (phase.reply.mode ?? 'ai') : phase.kind}
+        className="mb-8 rounded-2xl border border-gold/30 bg-brand-black p-3 sm:p-4 text-off-white"
+      >
+        <p className="flex items-center gap-2 mb-3 font-subhead text-xs font-semibold uppercase tracking-[0.08em] text-gold">
+          <GoldBrandMark className="size-4" />
+          {basic ? 'Quick Answer' : 'Cue'}
+          <span className="font-normal normal-case tracking-normal text-off-white/70">
+            &middot; {basic ? 'From Our Listings' : 'AI Answer from Our Listings'}
+          </span>
+        </p>
 
-          {phase.kind === 'streaming' ? (
-            <div className="min-h-24">
-              <CueStreaming status={phase.status} text={phase.text} layout="page" onStop={onStop} />
+        {phase.kind === 'streaming' ? (
+          <div className="min-h-24">
+            <CueStreaming status={phase.status} text={phase.text} layout="page" onStop={onStop} />
+          </div>
+        ) : phase.kind === 'failed' ? (
+          <div className="border-l-2 border-gold/60 pl-3">
+            <p className="font-body text-[15px] leading-relaxed text-off-white">{phase.line}</p>
+            <div className="flex flex-wrap items-center gap-x-4">
+              <button type="button" onClick={onRetry} className={ASSISTANT_LINK}>
+                <RotateCcw className="size-4" aria-hidden="true" />
+                Try Again
+              </button>
+              <a href="#search-results" className={ASSISTANT_LINK}>
+                See Results Below
+                <ArrowDown className="size-4" aria-hidden="true" />
+              </a>
             </div>
-          ) : (
-            <>
-              <AssistantReply
-                ask={words}
-                reply={phase.reply}
-                layout="page"
-                handlers={{ onAsk: (next) => router.push(fallbackHref(next) as Route) }}
-              />
+          </div>
+        ) : (
+          <>
+            <AssistantReply
+              ask={words}
+              reply={phase.reply}
+              layout="page"
+              handlers={{ onAsk: (next) => router.push(fallbackHref(next) as Route) }}
+            />
+            {/* The quick answer stood in for Cue, so the chat has nothing to add yet. */}
+            {!basic && (
               <button
                 type="button"
                 onClick={(event) => {
@@ -207,10 +240,10 @@ export function CueSearchAnswer({ query, near }: { query: string; near: NearPoin
                 <MessageCircle className="size-4" aria-hidden="true" />
                 Keep Chatting with Cue
               </button>
-            </>
-          )}
-        </section>
-      )}
+            )}
+          </>
+        )}
+      </section>
     </>
   )
 }

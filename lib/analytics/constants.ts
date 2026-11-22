@@ -70,6 +70,10 @@ export const SERVER_ONLY_EVENTS = {
   // listing id, properties { post_id, surface: 'page' | 'strip' }.
   POST_VIEW: 'post_view',
   POST_CLICK: 'post_click',
+  // The answer strip on /search answered (ticket 255). No entity, properties
+  // { mode: 'ai' | 'basic', reason, exact_bucket: '0' | '1-2' | '3+' }. Never
+  // the words searched, never an IP.
+  SEARCH_ANSWER_SERVED: 'search_answer_served',
 } as const
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENTS)[keyof typeof ANALYTICS_EVENTS]
