@@ -1,94 +1,60 @@
 import Link from 'next/link'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import { ExternalLink, CheckCircle, Circle, Clock, ChevronRight } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { getOwnerSession } from '@/lib/dashboard/guard'
 import { isFeatureEnabled } from '@/lib/env'
 import { aiQuota, canAccess } from '@/lib/stripe/features'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { GetListedEmptyState } from '@/components/dashboard/GetListedEmptyState'
-import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { PostJobCard } from '@/components/dashboard/PostJobCard'
 import { jobQuotaFor } from '@/lib/stripe/jobPostings'
 import { postJobQuotaLine } from '@/lib/listings/jobEntryPoints'
 import { loadOpenClaims, resolvePostingReadiness } from '@/lib/jobs/postingReadiness'
 import { FreeMonthNotice } from './FreeMonthNotice'
-import { PlanStrip, PagePlanTag } from '@/components/dashboard/PlanStrip'
+import { PlanStrip } from '@/components/dashboard/PlanStrip'
 import { getOwnerPlan } from '@/lib/services/billing/ownerPlan'
+import { PAGE_COOKIE, pickPageId } from '@/lib/account/shellNav'
+import { getUnreadMessageCount } from '@/lib/messaging/loaders'
+import { countReceiptsToVerify } from '@/lib/dashboard/receiptsToVerify'
+import { getWritingAllowance } from '@/lib/ai/allowance'
+import { needsYouItems, pageChecklist } from '@/lib/dashboard/home'
+import { countReviewsToAnswer, loadHomeSnapshot } from '@/lib/dashboard/homeData'
+import { BusinessHeader } from '@/components/dashboard/home/BusinessHeader'
+import { NeedsYou } from '@/components/dashboard/home/NeedsYou'
+import { LockedSnapshot, Snapshot } from '@/components/dashboard/home/Snapshot'
+import { FinishYourPage } from '@/components/dashboard/home/FinishYourPage'
+import { QuickActions } from '@/components/dashboard/home/QuickActions'
+import { WriteWithAi } from '@/components/dashboard/home/WriteWithAi'
+import { ExplainNumbers } from './pages/[entityId]/analytics/_components/ExplainNumbers'
 
-function CompletenessItem({ done, label }: { done: boolean; label: string }) {
-  return (
-    <li className="flex items-center gap-2">
-      {done ? (
-        <CheckCircle className="size-4 text-green-500 shrink-0" aria-hidden="true" />
-      ) : (
-        <Circle className="size-4 text-charcoal/25 shrink-0" aria-hidden="true" />
-      )}
-      <span
-        className={`font-body text-sm ${done ? 'text-charcoal-soft line-through' : 'text-charcoal'}`}
-      >
-        {label}
-      </span>
-    </li>
-  )
-}
-
-// Ticket 146: owners see AI help first. Shown only while FEATURE_AI_BETA is
-// on and the page's plan includes it; the allowance itself is read and
-// enforced on Edit content, not here. Ticket 242: never "drafts".
-function WriteWithAi({
-  listingId,
-  listingName,
-  quota,
-}: {
-  listingId: string
-  listingName: string
-  quota: number | null
-}) {
-  return (
-    <div className="px-5 py-4 border-b border-charcoal/8 flex flex-col sm:flex-row sm:items-center gap-3">
-      <div className="flex items-start gap-3 min-w-0">
-        <GoldBrandMark className="size-5 shrink-0 mt-0.5" />
-        <div className="min-w-0">
-          <h3 className="font-subhead text-sm font-semibold text-brand-black">Write with AI</h3>
-          <p className="font-body text-sm text-charcoal mt-0.5">
-            AI help with your about text, search title and summary, Instagram captions, review
-            replies, and Happening now posts, written from your page.
-            {quota !== null && ` Up to ${quota} times a month for this page.`}
-          </p>
-        </div>
-      </div>
-      <Link
-        href={`/dashboard/pages/${listingId}/edit`}
-        aria-label={`Open the writer for ${listingName}`}
-        className="sm:ml-auto shrink-0 inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 rounded-full border border-charcoal/20 bg-white text-brand-black font-subhead text-sm font-semibold hover:bg-off-white transition-colors"
-      >
-        Open the Writer <ChevronRight className="size-4" aria-hidden="true" />
-      </Link>
-    </div>
-  )
-}
-
+// Business Home (ticket 253). The founder, 2026-11-21: "The home page feels
+// useless since I'm switching between pages in the left panel. Make it more
+// useful to a business owner at first glance." Home is now about the one page
+// picked in the menu (same choice as the rail: cookie, else newest) and
+// answers what needs me, how am I doing, and what to do next.
 export default async function DashboardPage() {
   const owner = await getOwnerSession()
   if (!owner) redirect('/sign-in?next=/dashboard')
   const supabase = await createClient()
 
-  const { data: listings } = await supabase
-    .from('listings')
-    .select(
-      `
+  // Newest first, the same order the menu's page switcher uses.
+  const [{ data: listings }, jar] = await Promise.all([
+    supabase
+      .from('listings')
+      .select(
+        `
       id, name, slug, status, entity_type, tier, trust_tier, tagline, meta_title, cover_image_path,
       last_edited_by_owner_at, published_at,
       cities(slug, name),
       listing_details_business(description, phone, website_url, cta_type)
     `
-    )
-    .eq('owner_user_id', owner.user.id)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: true })
-
-  const aiOn = isFeatureEnabled('aiBeta')
+      )
+      .eq('owner_user_id', owner.user.id)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false }),
+    cookies(),
+  ])
 
   // Tickets 154 and 156: the Post a job card shows the owner's step until a
   // business page is live. Claims and the quota are read only when the card can
@@ -101,131 +67,120 @@ export default async function DashboardPage() {
     postingReadiness?.state === 'live' ? await jobQuotaFor(supabase, owner.user.id) : null
   const postJobLine = postJobQuotaLine(quotaRead?.ok ? quotaRead.value : null)
 
-  // Ticket 237: the owner's plan, shown once they have a page.
-  const ownerPlan =
-    listings && listings.length > 0 ? await getOwnerPlan(supabase, owner.user.id, listings) : null
+  if (!listings || listings.length === 0) {
+    return (
+      <div className="max-w-3xl space-y-6">
+        <h1 className="font-headline text-2xl text-brand-black">My Business</h1>
+        <FreeMonthNotice />
+        <PostJobCard readiness={postingReadiness} quotaLine={postJobLine} />
+        <GetListedEmptyState />
+      </div>
+    )
+  }
+
+  const pageId =
+    pickPageId(
+      '/dashboard',
+      listings.map((l) => ({ id: l.id, name: l.name, tier: l.tier })),
+      jar.get(PAGE_COOKIE)?.value
+    ) ?? listings[0]!.id
+  const listing = listings.find((l) => l.id === pageId) ?? listings[0]!
+  const others = listings.length - 1
+
+  const details = listing.listing_details_business as {
+    description: string | null
+    phone: string | null
+    website_url: string | null
+    cta_type: string | null
+  } | null
+  const city = listing.cities as { slug: string; name: string } | null
+  const publicUrl = buildEntityUrl(listing.entity_type, city?.slug, listing.slug)
+
+  const hasNumbers = canAccess(listing.tier, 'analytics')
+  const messagingOn = isFeatureEnabled('messaging')
+  const receiptsOn = isFeatureEnabled('ownerReceiptReview')
+  const quota = aiQuota(listing.tier)
+  const showAi =
+    isFeatureEnabled('aiBeta') &&
+    canAccess(listing.tier, 'ai_suggestions') &&
+    (quota === null || quota > 0)
+
+  // Ticket 237: the owner's plan. Free pages read no analytics at all.
+  const [ownerPlan, snapshot, reviewsToAnswer, messagesUnread, receiptsToVerify, allowance] =
+    await Promise.all([
+      getOwnerPlan(supabase, owner.user.id, listings),
+      hasNumbers ? loadHomeSnapshot(supabase, listing.id) : Promise.resolve(null),
+      listing.status === 'published'
+        ? countReviewsToAnswer(supabase, listing.id)
+        : Promise.resolve(0),
+      messagingOn ? getUnreadMessageCount(supabase) : Promise.resolve(undefined),
+      receiptsOn ? countReceiptsToVerify(owner.user.id, [listing.id]) : Promise.resolve(undefined),
+      hasNumbers ? getWritingAllowance(listing.id, listing.tier) : Promise.resolve(null),
+    ])
+
+  const needs = needsYouItems({
+    pageId: listing.id,
+    messagesUnread,
+    receiptsToVerify,
+    reviewsToAnswer,
+    publicUrl,
+    status: listing.status,
+  })
+  const checklist = pageChecklist({
+    cover: !!listing.cover_image_path,
+    tagline: !!listing.tagline,
+    description: !!details?.description,
+    contact: !!details?.phone || !!details?.website_url,
+    cta: !!details?.cta_type,
+    seoTitle: !!listing.meta_title,
+  })
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div>
-        <h1 className="font-headline text-2xl text-brand-black">Dashboard</h1>
-        <p className="font-body text-sm text-charcoal-soft mt-0.5">
-          Manage your business pages on The BLACQList.
-        </p>
-      </div>
-
-      {ownerPlan && <PlanStrip plan={ownerPlan} />}
+    <div className="max-w-4xl space-y-6" data-testid="business-home" data-page-id={listing.id}>
+      <BusinessHeader
+        pageId={listing.id}
+        name={listing.name}
+        status={listing.status}
+        tier={listing.tier}
+        publicUrl={publicUrl}
+      />
 
       <FreeMonthNotice />
 
+      <NeedsYou items={needs} />
+
+      {snapshot ? (
+        <Snapshot snapshot={snapshot} insightsHref={`/dashboard/pages/${listing.id}/analytics`} />
+      ) : (
+        <LockedSnapshot />
+      )}
+
+      {allowance?.state === 'ready' && (
+        <ExplainNumbers listingId={listing.id} allowance={allowance} />
+      )}
+
+      <FinishYourPage pageId={listing.id} items={checklist} />
+
+      <QuickActions pageId={listing.id} posts={isFeatureEnabled('happeningNow')} />
+
+      {showAi && <WriteWithAi listingId={listing.id} listingName={listing.name} quota={quota} />}
+
       <PostJobCard readiness={postingReadiness} quotaLine={postJobLine} />
 
-      {!listings || listings.length === 0 ? (
-        <GetListedEmptyState />
-      ) : (
-        <div className="space-y-4">
-          {listings.map((listing) => {
-            const details = listing.listing_details_business as {
-              description: string | null
-              phone: string | null
-              website_url: string | null
-              cta_type: string | null
-            } | null
+      {ownerPlan && <PlanStrip plan={ownerPlan} />}
 
-            const city = listing.cities as { slug: string; name: string } | null
-            const publicUrl = buildEntityUrl(listing.entity_type, city?.slug, listing.slug)
-
-            const completeness = [
-              // Cover leads the list deliberately: it is the one field that
-              // changes how the business appears everywhere else on the site,
-              // and the scored version of this check lives in Edit content's
-              // Starter+ writing help, so free-tier owners only ever see it here.
-              { done: !!listing.cover_image_path, label: 'Cover Photo' },
-              { done: !!listing.tagline, label: 'Tagline' },
-              { done: !!details?.description, label: 'Business Description' },
-              { done: !!details?.phone || !!details?.website_url, label: 'Contact Info' },
-              { done: !!details?.cta_type, label: 'Call to Action' },
-              { done: !!listing.meta_title, label: 'SEO Title' },
-            ]
-            const doneCount = completeness.filter((c) => c.done).length
-            const quota = aiQuota(listing.tier)
-            const showAi =
-              aiOn && canAccess(listing.tier, 'ai_suggestions') && (quota === null || quota > 0)
-
-            return (
-              <div key={listing.id} className="rounded-xl border border-charcoal/10 bg-white">
-                {/* Header */}
-                <div className="px-5 py-4 border-b border-charcoal/8 flex items-start justify-between gap-4">
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="font-headline text-lg text-brand-black">{listing.name}</h2>
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded-full font-subhead text-xs font-semibold ${
-                          listing.status === 'published'
-                            ? 'bg-green-100 text-green-700'
-                            : listing.status === 'pending'
-                              ? 'bg-amber-100 text-amber-700'
-                              : 'bg-charcoal/10 text-charcoal-soft'
-                        }`}
-                      >
-                        {listing.status}
-                      </span>
-                      <span
-                        className={`inline-block px-2 py-0.5 rounded-full font-subhead text-xs ${
-                          listing.trust_tier === 'claimed' || listing.trust_tier === 'verified'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-charcoal/8 text-charcoal-soft'
-                        }`}
-                      >
-                        {listing.trust_tier}
-                      </span>
-                      <PagePlanTag tier={listing.tier} />
-                    </div>
-                    {listing.last_edited_by_owner_at && (
-                      <p className="font-body text-xs text-charcoal-faint mt-0.5 flex items-center gap-1">
-                        <Clock className="size-3" aria-hidden="true" />
-                        Last saved {new Date(listing.last_edited_by_owner_at).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                  {publicUrl && (
-                    <Link
-                      href={publicUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0 inline-flex items-center gap-1.5 text-xs font-subhead text-charcoal-soft hover:text-brand-black transition-colors"
-                    >
-                      View Page <ExternalLink className="size-3" aria-hidden="true" />
-                    </Link>
-                  )}
-                </div>
-
-                {showAi && (
-                  <WriteWithAi listingId={listing.id} listingName={listing.name} quota={quota} />
-                )}
-
-                {/* Completeness checklist */}
-                <div className="px-5 py-4">
-                  <p className="font-subhead text-xs font-semibold text-charcoal-soft mb-2 uppercase tracking-wide">
-                    Profile completeness: {doneCount}/{completeness.length}
-                  </p>
-                  <ul className="space-y-1.5 mb-4">
-                    {completeness.map(({ done, label }) => (
-                      <CompletenessItem key={label} done={done} label={label} />
-                    ))}
-                  </ul>
-                  <Link
-                    href={`/dashboard/pages/${listing.id}/edit`}
-                    aria-label={`Edit page for ${listing.name}`}
-                    className="inline-flex items-center gap-1.5 font-subhead text-sm font-semibold text-amber hover:underline"
-                  >
-                    Edit Page <ChevronRight className="size-4" aria-hidden="true" />
-                  </Link>
-                </div>
-              </div>
-            )
-          })}
-        </div>
+      {others > 0 && (
+        <p className="font-body text-sm text-charcoal-soft" data-testid="home-other-pages">
+          You have {others} other {others === 1 ? 'page' : 'pages'}. Switch pages from the menu, or
+          see{' '}
+          <Link
+            href="/dashboard/pages"
+            className="font-semibold text-amber underline-offset-2 hover:underline"
+          >
+            All My Pages
+          </Link>
+          .
+        </p>
       )}
     </div>
   )

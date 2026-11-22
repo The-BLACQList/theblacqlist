@@ -1,6 +1,6 @@
 # Ticket 252: One Signed-In Menu, Business First
 
-**Status:** PR open, 2026-11-21. Builds on 251 (merged #376). Waiting on the founder's OK to merge.
+**Status:** Merged #382 (`614228f`), 2026-11-21, on the founder's "merge both". Builds on 251 (merged #376).
 
 ## Why
 
