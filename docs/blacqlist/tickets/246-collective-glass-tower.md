@@ -97,8 +97,69 @@ The founder said the map looked low-budget. The specific complaints were:
   - the phone whole-tower view.
 - No shader or console errors.
 
+## Round 2 (founder feedback 2026-11-21)
+
+Feedback: zoom in gradually, a haze they don't like, businesses still cramped, and a version in the open terraces style.
+
+### Gradual Zoom
+
+- The dock now reads **+ / Whole Tower / −**.
+  - The buttons are labelled "Move Closer" and "Move Farther".
+  - Each press moves one even step (0.2) between close-up and the whole tower.
+  - The keys **+** and **−** do the same.
+  - Ctrl+wheel and trackpad pinch still zoom smoothly.
+- Zoom now holds while you scroll between floors. It used to snap back.
+- Moving farther lets go of a focused dot.
+- `stepZoom` always lands on the next mark in the pressed direction.
+- The + and − buttons are hidden on phones until 248 brings pinch.
+
+### Haze
+
+The empty background measured about (30, 24, 17) against the brand ground (10, 9, 7). It now measures (10, 9, 7). What changed:
+
+- Bloom is tighter: strength 0.55, radius 0.25, threshold 0.4.
+- Plates no longer have grain. Their rims are thinner and their fill is near zero.
+- The glass wall is fainter.
+- Dust is 120 motes, down from about 520.
+- Dot glow, group rings and the shopper crowd glow are all softer.
+- Stars stay under the bloom threshold.
+
+### More Space
+
+- The tower plate radius goes from 42 to 56, and the group ring from 30 to 40.
+- Floors are 40 apart, up from 36.
+- Groups grow 1.4 per square root of their count, up to 14 wide, where they used to cap at 9.
+
+### Open Terraces Preview
+
+`/flow-map?look=terraces` shows the same data and controls with the open-terraces look:
+
+- no glass wall;
+- a small top terrace for shoppers;
+- wide terraces 50 apart;
+- each family fills its whole slice of a terrace, with a thin outline in its colour and a lane between slices;
+- dots 1.25× larger.
+
+The dock says **Whole View** in this look.
+
+Both looks share one `SiloShape` (`SILO`, `TERRACES` in `lib/spend/silo-layout.ts`). The tower stays the default. The founder picks one, and the other is deleted before merge.
+
+### Tests
+
+- New: zoom steps (even, clamped, land on the next mark, at least 4 presses out).
+- Terraces:
+  - chosen only by name;
+  - placement is stable;
+  - every dot sits inside its own slice and terrace;
+  - more room than the tower;
+  - lanes between slices;
+  - whole view fits.
+- Results: full vitest 5,514 passed, tsc clean, eslint clean, Title Case guard clean.
+- Screenshots of both looks at desktop, phone and landscape, including every zoom step out and back in. No console errors.
+
 ## Still To Do Before Merge
 
+- Founder picks Tower or Terraces; remove the other look.
 - Founder look on Preview.
 - Frame rate on a real phone, since the plates and wall add fill.
 - Bloom frame rate on a mid-range laptop.

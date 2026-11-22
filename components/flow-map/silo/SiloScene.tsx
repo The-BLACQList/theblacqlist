@@ -33,13 +33,13 @@ import {
   GOLD_BRIGHT,
   LABEL_KEEP,
   LEVEL_COLORS,
-  SILO,
   ORBIT,
   ORBIT_KEYS,
   SILO_FLOORS,
   businessDisplayName,
   busiestFamily,
   clusterRadius,
+  clusterSpacing,
   colorForBusiness,
   crowdAnchor,
   focusFrame,
@@ -61,9 +61,15 @@ import {
   wedgePoint,
   wrapAngle,
   ZOOM,
+  floorGap,
   fogForZoom,
+  sectorBounds,
+  shellBottom,
+  shellTop,
+  stepZoom,
   zoomAmount,
   zoomOrbit,
+  type SiloShape,
   type ColorBy,
   type LabelBox,
   type LabelCandidate,
@@ -83,7 +89,6 @@ const BG = new THREE.Color(BG_HEX)
  * is taken down once more to land on BG after the output pass.
  */
 const BG_FOR_COMPOSER = BG.clone().convertSRGBToLinear()
-const FOG_DENSITY = ZOOM.fogNear
 const DRAG_THRESHOLD_PX = 5
 const LINK_SEGMENTS = 20
 /** Every linked business under the total bar draws at this one size (ticket 250). */
@@ -95,7 +100,6 @@ const GAP_HEX = '#ff8ccf'
 const GAP_SIZE = 4.6
 /** Floor plate tints, Shoppers first: light gold at the top, warmer lower down. */
 const PLATE_TINTS = ['#ffe9b8', '#ffd867', '#e9c27a', '#d9a866', '#c99560'] as const
-const FLOOR_GAP = SILO.y[0] - SILO.y[1]
 
 /** What the keys can do to the camera. */
 export interface SiloNav {
@@ -105,9 +109,13 @@ export interface SiloNav {
   turn: (dAz: number) => void
   /** Backs out to the whole tower, or back inside. No argument toggles. */
   wholeTower: (on?: boolean) => void
+  /** One step out (+1) toward the whole tower, or in (-1). */
+  zoomStep: (dir: 1 | -1) => void
 }
 
 export interface SiloSceneProps {
+  /** Which look, and its sizes (ticket 246): the Glass Tower or Open Terraces. */
+  shape: SiloShape
   businesses: readonly SiloBusiness[]
   placed: ReadonlyMap<string, PlacedBusiness>
   colorBy: ColorBy
@@ -137,6 +145,8 @@ export interface SiloSceneProps {
   youTagRef: RefObject<HTMLDivElement | null>
   /** The view backed out to the whole tower (true) or came back inside. */
   onWholeTowerChange?: (on: boolean) => void
+  /** How far out the camera is asked to be: 0 inside, 1 the whole tower. */
+  onZoomChange?: (zoom: number) => void
   /** Wedges with no business on the list yet: a pink square each. */
   gaps: readonly SiloGap[]
   selectedGap: SiloGap | null
@@ -223,7 +233,7 @@ export default function SiloScene(props: SiloSceneProps) {
         })
       }}
     >
-      <fogExp2 attach="fog" args={[BG_HEX, FOG_DENSITY]} />
+      <fogExp2 attach="fog" args={[BG_HEX, props.shape.fogNear]} />
       <SceneContents {...props} phone={phone} />
     </Canvas>
   )
@@ -232,6 +242,8 @@ export default function SiloScene(props: SiloSceneProps) {
 interface Shown {
   b: SiloBusiness
   p: PlacedBusiness
+  /** Where its link starts: its family's shopper crowd. */
+  from: Point3
   on: boolean
   /** Resting size in scene units. */
   size: number
@@ -243,12 +255,14 @@ interface Halo {
   /** Ring radius in scene units. */
   radius: number
   familyIndex: number
+  /** A family's whole slice of a floor (terraces), not a round cluster. */
+  sector: boolean
 }
 
 type Inner = SiloSceneProps & { phone: boolean }
 
 function SceneContents(props: Inner) {
-  const { businesses, placed, visible, motion, active, phone } = props
+  const { businesses, placed, visible, motion, active, phone, shape } = props
   const invalidate = useThree((s) => s.invalidate)
 
   // Any prop change redraws once, even with the loop on demand.
@@ -260,18 +274,23 @@ function SceneContents(props: Inner) {
   // Written each frame by the camera rig, read by every glass and node shader.
   const glass = useMemo<Glass>(
     () => ({
-      fog: { value: FOG_DENSITY },
+      fog: { value: shape.fogNear },
       floor: { value: 0 },
       out: { value: 0 },
       time: { value: 0 },
     }),
-    []
+    [shape]
   )
 
   const { shown, halos } = useMemo(() => {
     const rows = businesses
-      .map((b, i) => ({ b, p: placed.get(b.id), on: visible[i] ?? true }))
-      .filter((x): x is { b: SiloBusiness; p: PlacedBusiness; on: boolean } => !!x.p)
+      .map((b, i) => ({
+        b,
+        p: placed.get(b.id),
+        from: crowdAnchor(b.familyIndex, shape),
+        on: visible[i] ?? true,
+      }))
+      .filter((x): x is { b: SiloBusiness; p: PlacedBusiness; from: Point3; on: boolean } => !!x.p)
 
     const counts = new Map<string, number>()
     for (const r of rows) {
@@ -284,42 +303,47 @@ function SceneContents(props: Inner) {
     // hints at one shopper's amount. The rest share a size small enough that a
     // busy wedge doesn't pile up.
     const max = Math.max(1, ...rows.filter((r) => r.b.figuresShown).map((r) => r.b.amountCents))
+    const k = shape.dotScale
     const sized: Shown[] = rows.map((r) => {
       if (r.b.figuresShown) {
-        return { ...r, size: 0.5 + 1.1 * Math.sqrt(r.b.amountCents / max) }
+        return { ...r, size: (0.5 + 1.1 * Math.sqrt(r.b.amountCents / max)) * k }
       }
-      if (r.b.linked) return { ...r, size: LINKED_UNCOUNTED_SIZE }
+      if (r.b.linked) return { ...r, size: LINKED_UNCOUNTED_SIZE * k }
       const n = counts.get(`${r.b.familyIndex}:${r.b.floorIndex}`) ?? 1
-      const spacing = clusterRadius(n) * Math.sqrt((Math.PI * CLUSTER_WIDE) / n)
-      return { ...r, size: THREE.MathUtils.clamp(spacing * 0.3, 0.32, 0.6) }
+      const spacing = clusterSpacing(n, shape)
+      return { ...r, size: THREE.MathUtils.clamp(spacing * 0.3, 0.32, 0.6) * k }
     })
 
+    const sector = shape.spread === 'sector'
     const rings: Halo[] = CATEGORY_FAMILIES.map((_, fi) => ({
       floor: 0,
-      center: crowdAnchor(fi),
-      radius: SILO.crowdR,
+      center: crowdAnchor(fi, shape),
+      radius: shape.crowdR,
       familyIndex: fi,
+      sector: false,
     }))
     for (const [key, n] of counts) {
       const [fi, k] = key.split(':').map(Number) as [number, number]
       if (k === 0) continue
       rings.push({
         floor: k,
-        center: wedgePoint(fi, k, 0, DOT_LIFT * 0.5),
-        radius: clusterRadius(n),
+        center: wedgePoint(fi, k, 0, DOT_LIFT * 0.5, 0, shape),
+        radius: sector ? (shape.band[1] - shape.band[0]) / 2 : clusterRadius(n, shape),
         familyIndex: fi,
+        sector,
       })
     }
     return { shown: sized, halos: rings }
-  }, [businesses, placed, visible])
+  }, [businesses, placed, visible, shape])
 
   return (
     <>
       <Controls {...props} shown={shown} halos={halos} glass={glass} />
-      <GlassTower glass={glass} />
-      <Sky phone={phone} dot={textures.dot} />
-      <Core glow={textures.glow} motion={motion} glass={glass} />
+      <GlassTower glass={glass} shape={shape} />
+      <Sky phone={phone} dot={textures.dot} shape={shape} />
+      <Core glow={textures.glow} motion={motion} glass={glass} shape={shape} />
       <Halos
+        shape={shape}
         halos={halos}
         colorBy={props.colorBy}
         focusFloor={props.focusFloor}
@@ -330,6 +354,7 @@ function SceneContents(props: Inner) {
       {motion && active && <Pulses shown={shown} dot={textures.dot} />}
       <Nodes {...props} shown={shown} textures={textures} glass={glass} />
       <Gaps
+        shape={shape}
         gaps={props.gaps}
         selected={props.selectedGap}
         tex={textures.gap}
@@ -354,8 +379,8 @@ interface Glass {
 }
 
 /** A gap square's spot: the middle of its wedge, just above the plate. */
-function gapPoint(g: SiloGap): Point3 {
-  return wedgePoint(g.familyIndex, g.floorIndex, 0, DOT_LIFT)
+function gapPoint(g: SiloGap, shape: SiloShape): Point3 {
+  return wedgePoint(g.familyIndex, g.floorIndex, 0, DOT_LIFT, 0, shape)
 }
 
 // ─── Textures ────────────────────────────────────────────────────────────────
@@ -520,8 +545,6 @@ interface Rig {
   vel: Orbit
   /** 0 is the view as picked, 1 the whole tower from outside (ticket 246). */
   zoom: number
-  /** The track spot when the zoom was set; scrolling well off it comes back in. */
-  zoomAt: number
 }
 
 const DRAG_TURN = 0.006
@@ -542,8 +565,8 @@ const PHONE_TOWER_DROP = 18
  * The zoomed view. A phone shows the tower in a short window above its sheet,
  * so it backs further out and looks a little lower.
  */
-function zoomGoal(base: Orbit, zoom: number, phone: boolean): Orbit {
-  const o = zoomOrbit(base, zoom)
+function zoomGoal(base: Orbit, zoom: number, phone: boolean, shape: SiloShape): Orbit {
+  const o = zoomOrbit(base, zoom, shape)
   if (!phone || zoom <= 0) return o
   const z = Math.min(zoom, 1)
   return { ...o, R: o.R * (1 + PHONE_TOWER_FAR * z), y: o.y - PHONE_TOWER_DROP * z }
@@ -551,6 +574,8 @@ function zoomGoal(base: Orbit, zoom: number, phone: boolean): Orbit {
 
 /** Seconds for the glide out to the whole tower and back. */
 const WHOLE_TOWER_S = 0.8
+/** Seconds for one zoom step, slow enough to read as a glide. */
+const ZOOM_STEP_S = 0.45
 
 /** Turns whichever view is live, so a close-up circles what it's looking at. */
 function turn(r: Rig, dAz: number, dEl: number) {
@@ -596,13 +621,14 @@ function focusOn(
   el: HTMLElement,
   kind: Focus['kind'],
   p: Point3,
-  floor: number | undefined
+  floor: number | undefined,
+  shape: SiloShape
 ) {
   if (floor !== undefined) {
-    r.t = scrollForFloor(floor)
+    r.t = scrollForFloor(floor, shape)
     seatTrack(el, r.t)
   }
-  r.focus = { kind, orbit: focusFrame(p, kind) }
+  r.focus = { kind, orbit: focusFrame(p, kind, shape) }
   r.zoom = 0
   r.spin = 0
   r.ease = ORBIT.jumpS
@@ -638,12 +664,12 @@ function Controls(
     spin: 0,
     dragging: false,
     ease: ORBIT.easeS,
-    cur: orbitForScroll(0, 0, ORBIT.el),
+    cur: orbitForScroll(0, 0, ORBIT.el, props.shape),
     vel: { x: 0, y: 0, z: 0, az: 0, el: 0, R: 0 },
     zoom: 0,
-    zoomAt: 0,
   })
   const outNow = useRef(false)
+  const zoomNow = useRef(0)
   const pendingFloor = useRef<number | null>(null)
   const floorNow = useRef<number | null>(null)
   const live = useRef(props)
@@ -672,12 +698,13 @@ function Controls(
     if (fromRing) return
     const on = live.current.shown.filter((s) => s.on).map((s) => s.b)
     const family = busiestFamily(on, focusFloor)
+    const { shape } = live.current
     clearFocus(r)
     r.zoom = 0
-    r.t = scrollForFloor(focusFloor)
+    r.t = scrollForFloor(focusFloor, shape)
     seatTrack(gl.domElement, r.t)
     r.el = family === null ? ORBIT.el : ORBIT.floorEl
-    if (family !== null) r.az = headingTo(wedgePoint(family, focusFloor))
+    if (family !== null) r.az = headingTo(wedgePoint(family, focusFloor, 0, 0, 0, shape))
     r.spin = 0
     r.ease = ORBIT.jumpS
     invalidate()
@@ -697,7 +724,8 @@ function Controls(
       gl.domElement,
       'business',
       p,
-      live.current.businesses.find((b) => b.id === selectedId)?.floorIndex
+      live.current.businesses.find((b) => b.id === selectedId)?.floorIndex,
+      live.current.shape
     )
     invalidate()
   }, [selectedId, placed, gl, invalidate])
@@ -711,7 +739,8 @@ function Controls(
       invalidate()
       return
     }
-    focusOn(r, gl.domElement, 'gap', gapPoint(selectedGap), selectedGap.floorIndex)
+    const { shape } = live.current
+    focusOn(r, gl.domElement, 'gap', gapPoint(selectedGap, shape), selectedGap.floorIndex, shape)
     invalidate()
   }, [selectedGap, gl, invalidate])
 
@@ -762,7 +791,7 @@ function Controls(
       }
       if (best) return best
       for (const g of live.current.gaps) {
-        const sp = toScreen(gapPoint(g), GAP_SIZE / 2)
+        const sp = toScreen(gapPoint(g, live.current.shape), GAP_SIZE / 2)
         if (sp && sp.d < Math.max(sp.r, 14) && sp.d < bestD) {
           bestD = sp.d
           best = { kind: 'gap', gap: g }
@@ -780,7 +809,7 @@ function Controls(
     }
 
     function focusRing(h: Halo) {
-      focusOn(rig.current, el, 'floor', h.center, h.floor)
+      focusOn(rig.current, el, 'floor', h.center, h.floor, live.current.shape)
       const l = live.current
       if (l.selectedId) l.onSelect(null)
       if (l.focusFloor !== h.floor && l.onPickFloor) {
@@ -865,7 +894,10 @@ function Controls(
       if (hit?.kind === 'business') {
         // The same dot again: frame it once more.
         const p = hit.id === l.selectedId ? l.placed.get(hit.id) : undefined
-        if (p) focusOn(r, el, 'business', p, l.businesses.find((b) => b.id === hit.id)?.floorIndex)
+        if (p) {
+          const floor = l.businesses.find((b) => b.id === hit.id)?.floorIndex
+          focusOn(r, el, 'business', p, floor, l.shape)
+        }
         l.onSelect(hit.id)
       } else if (hit?.kind === 'gap') l.onSelectGap?.(hit.gap)
       else if (hit?.kind === 'halo') focusRing(hit.halo)
@@ -909,7 +941,6 @@ function Controls(
       if (!r.focus && ((r.t <= 0 && dt < 0) || (r.t >= 1 && dt > 0))) return false
       r.ease = ORBIT.easeS
       letGo()
-      r.zoom = 0
       r.t = THREE.MathUtils.clamp(r.t + dt, 0, 1)
       seatTrack(el, r.t)
       invalidate()
@@ -932,9 +963,19 @@ function Controls(
           const out = on ?? r.zoom < 0.5
           if (out) letGo()
           r.zoom = out ? 1 : 0
-          r.zoomAt = r.t
           r.spin = 0
           r.ease = live.current.reducedMotion ? ORBIT.easeS : WHOLE_TOWER_S
+          invalidate()
+        },
+        zoomStep: (dir) => {
+          const r = rig.current
+          const next = stepZoom(r.zoom, dir)
+          if (next === r.zoom) return
+          // Backing out leaves a close-up; stepping in from one keeps it.
+          if (dir > 0 && r.focus) letGo()
+          r.zoom = next
+          r.spin = 0
+          r.ease = live.current.reducedMotion ? ORBIT.easeS : ZOOM_STEP_S
           invalidate()
         },
       }
@@ -947,7 +988,6 @@ function Controls(
       e.preventDefault()
       const r = rig.current
       r.zoom = THREE.MathUtils.clamp(r.zoom + e.deltaY * PINCH_ZOOM, ZOOM.min, 1)
-      r.zoomAt = r.t
       r.ease = ORBIT.easeS
       invalidate()
     }
@@ -963,9 +1003,9 @@ function Controls(
         letGo()
       }
       if (t === r.t) return
+      // The zoom holds while scrolling, so the reader can ride the floors from
+      // part way out.
       r.t = t
-      // Scrolling to another floor comes back inside the tower.
-      if (r.zoom && Math.abs(t - r.zoomAt) > 0.01) r.zoom = 0
       r.ease = ORBIT.easeS
       invalidate()
     }
@@ -975,7 +1015,7 @@ function Controls(
     if (start !== null && !hasPick()) {
       const r = rig.current
       r.t = start
-      r.cur = orbitForScroll(start, r.az, r.el)
+      r.cur = orbitForScroll(start, r.az, r.el, live.current.shape)
       invalidate()
     }
 
@@ -1011,9 +1051,10 @@ function Controls(
       if (Math.abs(r.spin) < 0.01) r.spin = 0
     }
 
-    const base = r.focus?.orbit ?? orbitForScroll(r.t, r.az, r.el)
-    const goal = r.zoom ? zoomGoal(base, r.zoom, l.phone) : base
-    const floor = floorForHeight(base.y)
+    const { shape } = l
+    const base = r.focus?.orbit ?? orbitForScroll(r.t, r.az, r.el, shape)
+    const goal = r.zoom ? zoomGoal(base, r.zoom, l.phone, shape) : base
+    const floor = floorForHeight(base.y, shape)
     if (floor !== floorNow.current) {
       floorNow.current = floor
       l.onFloorChange?.(floor)
@@ -1037,19 +1078,24 @@ function Controls(
     camera.lookAt(look.x, look.y, look.z)
 
     // Fog thins and the floors even out as the camera backs out of the tower.
-    const out = zoomAmount(r.cur.R)
+    const out = zoomAmount(r.cur.R, shape)
     const { glass } = l
     setUniform(glass.out, out)
-    setUniform(glass.fog, fogForZoom(out))
+    setUniform(glass.fog, fogForZoom(out, shape))
     setFog(scene, glass.fog.value)
+    // The lit floor follows the floor being ridden, not the zoomed camera.
     setUniform(
       glass.floor,
-      THREE.MathUtils.clamp((SILO.y[0] - r.cur.y) / FLOOR_GAP, 0, SILO.y.length - 1)
+      THREE.MathUtils.clamp((shape.y[0]! - base.y) / floorGap(shape), 0, shape.y.length - 1)
     )
     const isOut = r.zoom >= 0.5
     if (isOut !== outNow.current) {
       outNow.current = isOut
       l.onWholeTowerChange?.(isOut)
+    }
+    if (r.zoom !== zoomNow.current) {
+      zoomNow.current = r.zoom
+      l.onZoomChange?.(r.zoom)
     }
 
     // With the loop on demand, keep drawing until the move settles.
@@ -1067,7 +1113,7 @@ function lineGeometry(pts: number[]): THREE.BufferGeometry {
   return geo
 }
 
-function disposeAll(objects: readonly (THREE.Points | THREE.LineSegments | THREE.Mesh)[]) {
+function disposeAll(objects: readonly (THREE.Points | THREE.Line | THREE.Mesh)[]) {
   for (const o of objects) {
     o.geometry.dispose()
     ;(o.material as THREE.Material).dispose()
@@ -1096,19 +1142,19 @@ uniform float uIdx;
 uniform float uFloor;
 uniform float uOut;
 uniform float uDensity;
+uniform float uEdge;
+uniform float uFill;
 varying vec2 vUv;
 varying float vD;
 ${FOG_GLSL}
-float grain(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
 void main() {
   float r = length(vUv - 0.5) * 2.0;
   if (r > 1.0) discard;
   float lit = max(0.0, 1.0 - abs(uFloor - uIdx));
-  float dim = mix(mix(0.4, 1.0, lit), 0.85, uOut);
-  float edge = smoothstep(0.93, 0.995, r) * (1.0 - smoothstep(0.995, 1.0, r));
-  float fill = 0.0025 * (1.0 - r * 0.6) + 0.006 * exp(-r * r * 14.0);
-  float g = (grain(floor(vUv * 900.0)) - 0.5) * 0.0016;
-  float a = (fill + g + edge * 0.32) * dim * fogF(vD);
+  float dim = mix(mix(0.35, 1.0, lit), 0.85, uOut);
+  float edge = smoothstep(0.95, 0.995, r) * (1.0 - smoothstep(0.995, 1.0, r));
+  float fill = uFill * (1.0 - r * 0.7);
+  float a = (fill + edge * uEdge) * dim * fogF(vD);
   gl_FragColor = vec4(uTint * a, 1.0);
   #include <colorspace_fragment>
 }
@@ -1133,7 +1179,7 @@ void main() {
 
 const SHELL_FRAG = /* glsl */ `
 uniform vec3 uTint;
-uniform float uLevels[${SILO.y.length}];
+uniform float uLevels[${SILO_FLOORS.length}];
 uniform float uDensity;
 varying float vY;
 varying float vD;
@@ -1142,12 +1188,31 @@ varying vec3 vV;
 ${FOG_GLSL}
 void main() {
   float bands = 0.0;
-  for (int i = 0; i < ${SILO.y.length}; i++) {
+  for (int i = 0; i < ${SILO_FLOORS.length}; i++) {
     float d = (vY - uLevels[i]) / 2.6;
     bands += exp(-d * d);
   }
   float rim = pow(1.0 - abs(dot(vN, vV)), 3.0);
-  float a = (0.0006 + bands * 0.03 + rim * 0.008) * fogF(vD);
+  float a = (bands * 0.022 + rim * 0.005) * fogF(vD);
+  gl_FragColor = vec4(uTint * a, 1.0);
+  #include <colorspace_fragment>
+}
+`
+
+/** A terrace's lit edge: a thin band of light round its rim, brightest in the middle. */
+const BAND_FRAG = /* glsl */ `
+uniform vec3 uTint;
+uniform float uIdx;
+uniform float uFloor;
+uniform float uOut;
+uniform float uDensity;
+varying vec2 vUv;
+varying float vD;
+${FOG_GLSL}
+void main() {
+  float lit = max(0.0, 1.0 - abs(uFloor - uIdx));
+  float dim = mix(mix(0.35, 1.0, lit), 0.85, uOut);
+  float a = 0.16 * pow(1.0 - abs(vUv.y - 0.5) * 2.0, 1.6) * dim * fogF(vD);
   gl_FragColor = vec4(uTint * a, 1.0);
   #include <colorspace_fragment>
 }
@@ -1200,23 +1265,50 @@ const glassBlend = {
   blending: THREE.AdditiveBlending,
 } as const
 
-/** Top of the glass and the bottom of the wall, just above the core. */
-const SHELL_TOP = SILO.y[0] + SILO.shellPad
-const SHELL_BOTTOM = SILO.y[SILO.y.length - 1]! - SILO.shellPad
-
-/** The glass wall and one glass plate per floor (ticket 246). Nothing in here is a label. */
-function GlassTower({ glass }: { glass: Glass }) {
+/**
+ * One plate per floor, and the glass wall for the tower; the terraces get a
+ * lit band round each rim instead (ticket 246). Nothing in here is a label.
+ */
+function GlassTower({ glass, shape }: { glass: Glass; shape: SiloShape }) {
   const objects = useMemo(() => {
-    const plates = SILO.y.map((y, k) => {
+    const terraces = !shape.wall
+    const out: THREE.Mesh[] = []
+    shape.y.forEach((y, k) => {
+      const rad = k === 0 ? shape.topR : shape.R
+      const tint = new THREE.Color(PLATE_TINTS[k] ?? PLATE_TINTS[0])
       const m = new THREE.Mesh(
-        new THREE.CircleGeometry(SILO.R, 160),
+        new THREE.CircleGeometry(rad, 160),
         new THREE.ShaderMaterial({
           ...glassBlend,
           side: THREE.DoubleSide,
           vertexShader: GLASS_VERT,
           fragmentShader: PLATE_FRAG,
           uniforms: {
-            uTint: { value: new THREE.Color(PLATE_TINTS[k] ?? PLATE_TINTS[0]) },
+            uTint: { value: tint },
+            uIdx: { value: k },
+            uFloor: glass.floor,
+            uOut: glass.out,
+            uDensity: glass.fog,
+            // Terraces stand on their own, so their floors read a touch stronger.
+            uEdge: { value: terraces ? 0.26 : 0.2 },
+            uFill: { value: terraces ? 0.004 : 0.0015 },
+          },
+        })
+      )
+      m.rotation.x = -Math.PI / 2
+      m.position.y = y
+      m.renderOrder = -1
+      out.push(m)
+      if (!terraces) return
+      const band = new THREE.Mesh(
+        new THREE.CylinderGeometry(rad, rad, 2.4, 160, 1, true),
+        new THREE.ShaderMaterial({
+          ...glassBlend,
+          side: THREE.DoubleSide,
+          vertexShader: GLASS_VERT,
+          fragmentShader: BAND_FRAG,
+          uniforms: {
+            uTint: { value: tint },
             uIdx: { value: k },
             uFloor: glass.floor,
             uOut: glass.out,
@@ -1224,20 +1316,15 @@ function GlassTower({ glass }: { glass: Glass }) {
           },
         })
       )
-      m.rotation.x = -Math.PI / 2
-      m.position.y = y
-      m.renderOrder = -1
-      return m
+      band.position.y = y - 1.2
+      band.renderOrder = -1
+      out.push(band)
     })
+    if (terraces) return out
+    const top = shellTop(shape)
+    const bottom = shellBottom(shape)
     const shell = new THREE.Mesh(
-      new THREE.CylinderGeometry(
-        SILO.R + 0.6,
-        SILO.R + 0.6,
-        SHELL_TOP - SHELL_BOTTOM,
-        160,
-        1,
-        true
-      ),
+      new THREE.CylinderGeometry(shape.R + 0.6, shape.R + 0.6, top - bottom, 160, 1, true),
       new THREE.ShaderMaterial({
         ...glassBlend,
         side: THREE.DoubleSide,
@@ -1245,15 +1332,15 @@ function GlassTower({ glass }: { glass: Glass }) {
         fragmentShader: SHELL_FRAG,
         uniforms: {
           uTint: { value: new THREE.Color(GOLD) },
-          uLevels: { value: [...SILO.y] },
+          uLevels: { value: [...shape.y] },
           uDensity: glass.fog,
         },
       })
     )
-    shell.position.y = (SHELL_TOP + SHELL_BOTTOM) / 2
+    shell.position.y = (top + bottom) / 2
     shell.renderOrder = -1
-    return [...plates, shell]
-  }, [glass])
+    return [...out, shell]
+  }, [glass, shape])
   useEffect(() => () => disposeAll(objects), [objects])
   return (
     <>
@@ -1265,7 +1352,7 @@ function GlassTower({ glass }: { glass: Glass }) {
 }
 
 /** Far stars and the dust inside the silo. Fixed, seeded, no motion. */
-function Sky({ phone, dot }: { phone: boolean; dot: THREE.Texture }) {
+function Sky({ phone, dot, shape }: { phone: boolean; dot: THREE.Texture; shape: SiloShape }) {
   const objects = useMemo(() => {
     const rand = seededRandom(7)
     const n = phone ? 1100 : 2000
@@ -1277,7 +1364,8 @@ function Sky({ phone, dot }: { phone: boolean; dot: THREE.Texture }) {
       const r = 380 + rand() * 200
       const s = Math.sqrt(1 - u * u)
       pos.set([r * s * Math.cos(a), r * u, r * s * Math.sin(a)], i * 3)
-      const w = 0.35 + rand() * 0.65
+      // Kept under the bloom threshold so stars stay pin-sharp, never fuzzy.
+      const w = 0.3 + rand() * 0.4
       col.set(rand() < 0.5 ? [w, w * 0.82, w * 0.5] : [w, w * 0.95, w * 0.9], i * 3)
     }
     const starGeo = new THREE.BufferGeometry()
@@ -1290,21 +1378,21 @@ function Sky({ phone, dot }: { phone: boolean; dot: THREE.Texture }) {
         sizeAttenuation: false,
         vertexColors: true,
         transparent: true,
-        opacity: 0.8,
+        opacity: 0.55,
         fog: false,
         depthWrite: false,
       })
     )
 
-    const m = phone ? 260 : 520
+    // A little dust, kept sparse: hundreds of motes read as haze.
+    const m = phone ? 60 : 120
     const mp = new Float32Array(m * 3)
+    const top = shellTop(shape)
+    const bottom = shellBottom(shape)
     for (let i = 0; i < m; i++) {
-      const r = Math.sqrt(rand()) * (SILO.R - 1)
+      const r = Math.sqrt(rand()) * (shape.R - 1)
       const a = rand() * Math.PI * 2
-      mp.set(
-        [Math.cos(a) * r, SHELL_TOP - rand() * (SHELL_TOP - SHELL_BOTTOM), Math.sin(a) * r],
-        i * 3
-      )
+      mp.set([Math.cos(a) * r, top - rand() * (top - bottom), Math.sin(a) * r], i * 3)
     }
     const moteGeo = new THREE.BufferGeometry()
     moteGeo.setAttribute('position', new THREE.BufferAttribute(mp, 3))
@@ -1315,13 +1403,13 @@ function Sky({ phone, dot }: { phone: boolean; dot: THREE.Texture }) {
         map: dot,
         color: 0xf6d58a,
         transparent: true,
-        opacity: 0.4,
+        opacity: 0.3,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       })
     )
     return [stars, motes]
-  }, [phone, dot])
+  }, [phone, dot, shape])
   useEffect(() => () => disposeAll(objects), [objects])
   return (
     <>
@@ -1333,18 +1421,29 @@ function Sky({ phone, dot }: { phone: boolean; dot: THREE.Texture }) {
 }
 
 /** Where the money settles: a smooth glowing core with a halo, and a column of light up the tower. */
-function Core({ glow, motion, glass }: { glow: THREE.Texture; motion: boolean; glass: Glass }) {
+function Core({
+  glow,
+  motion,
+  glass,
+  shape,
+}: {
+  glow: THREE.Texture
+  motion: boolean
+  glass: Glass
+  shape: SiloShape
+}) {
+  const { hub, hubR } = shape
   const objects = useMemo(() => {
     const sphere = new THREE.Mesh(
-      new THREE.SphereGeometry(SILO.hubR, 64, 48),
+      new THREE.SphereGeometry(shape.hubR, 64, 48),
       new THREE.ShaderMaterial({
         vertexShader: CORE_VERT,
         fragmentShader: SPHERE_FRAG,
         uniforms: { uTime: glass.time },
       })
     )
-    sphere.position.set(SILO.hub.x, SILO.hub.y, SILO.hub.z)
-    const height = SHELL_TOP - SILO.hub.y
+    sphere.position.set(shape.hub.x, shape.hub.y, shape.hub.z)
+    const height = shellTop(shape) - shape.hub.y
     const column = new THREE.Mesh(
       new THREE.CylinderGeometry(0.35, 0.35, height, 16, 1, true),
       new THREE.ShaderMaterial({
@@ -1354,9 +1453,9 @@ function Core({ glow, motion, glass }: { glow: THREE.Texture; motion: boolean; g
         uniforms: { uDensity: glass.fog },
       })
     )
-    column.position.set(SILO.hub.x, SILO.hub.y + height / 2, SILO.hub.z)
+    column.position.set(shape.hub.x, shape.hub.y + height / 2, shape.hub.z)
     return [sphere, column]
-  }, [glass])
+  }, [glass, shape])
   useEffect(() => () => disposeAll(objects), [objects])
   useFrame((_, delta) => {
     if (motion) setUniform(glass.time, glass.time.value + Math.min(delta, 0.05))
@@ -1366,7 +1465,7 @@ function Core({ glow, motion, glass }: { glow: THREE.Texture; motion: boolean; g
       {objects.map((o, i) => (
         <primitive key={i} object={o} />
       ))}
-      <sprite position={[SILO.hub.x, SILO.hub.y, SILO.hub.z]} scale={SILO.hubR * 5}>
+      <sprite position={[hub.x, hub.y, hub.z]} scale={hubR * 5}>
         <spriteMaterial
           map={glow}
           color={GOLD_BRIGHT}
@@ -1390,7 +1489,9 @@ function Bloom() {
   const fx = useMemo(() => {
     const composer = new EffectComposer(gl)
     composer.addPass(new RenderPass(scene, camera))
-    const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.8, 0.55, 0.12)
+    // A high threshold and a short reach: only the bright bits glow, so the
+    // dark between them stays clear (founder 2026-11-21: no haze).
+    const bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.55, 0.25, 0.4)
     composer.addPass(bloom)
     composer.addPass(new OutputPass())
     return { composer, bloom }
@@ -1417,7 +1518,53 @@ function Bloom() {
 
 /** How far a ring reaches from its center along the wall, for picking. */
 function haloReach(h: Halo): number {
+  if (h.sector) return h.radius
   return h.floor === 0 ? h.radius + 1.5 : h.radius * CLUSTER_WIDE + 1.5
+}
+
+/** Recolors a line, kept out of hook bodies. */
+function paintLine(line: THREE.Line, color: string, opacity: number) {
+  const m = line.material as THREE.LineBasicMaterial
+  m.color.set(color)
+  m.opacity = opacity
+}
+
+/** A family's slice of a terrace, as a thin outline in its color. */
+function SectorOutline({
+  h,
+  color,
+  lit,
+  shape,
+}: {
+  h: Halo
+  color: string
+  lit: boolean
+  shape: SiloShape
+}) {
+  const line = useMemo(() => {
+    const { start, length, r0, r1 } = sectorBounds(h.familyIndex, h.floor, shape)
+    const y = (shape.y[h.floor] ?? 0) + 0.15
+    const steps = 40
+    const pts: number[] = []
+    const at = (r: number, a: number) => pts.push(r * Math.cos(a), y, r * Math.sin(a))
+    for (let i = 0; i <= steps; i++) at(r1, start + (length * i) / steps)
+    for (let i = steps; i >= 0; i--) at(r0, start + (length * i) / steps)
+    const obj = new THREE.LineLoop(
+      lineGeometry(pts),
+      new THREE.LineBasicMaterial({
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+    )
+    obj.renderOrder = 1
+    return obj
+  }, [h, shape])
+  useEffect(() => {
+    paintLine(line, color, lit ? 0.55 : 0.22)
+  }, [line, color, lit])
+  useEffect(() => () => disposeAll([line]), [line])
+  return <primitive object={line} />
 }
 
 function Halos({
@@ -1425,7 +1572,9 @@ function Halos({
   colorBy,
   focusFloor,
   textures,
+  shape,
 }: {
+  shape: SiloShape
   halos: readonly Halo[]
   colorBy: ColorBy
   focusFloor: number | null
@@ -1436,13 +1585,24 @@ function Halos({
       {halos.map((h) => {
         const color = haloColor(h, colorBy)
         const lit = focusFloor === h.floor
+        if (h.sector) {
+          return (
+            <SectorOutline
+              key={`${h.familyIndex}:${h.floor}`}
+              h={h}
+              color={color}
+              lit={lit}
+              shape={shape}
+            />
+          )
+        }
         return (
           <group
             key={`${h.familyIndex}:${h.floor}`}
             position={[h.center.x, h.center.y, h.center.z]}
           >
             {/* A flat ring on the plate, long along the wall like its cluster. */}
-            <group rotation={[0, haloTurn(h), 0]}>
+            <group rotation={[0, haloTurn(h, shape), 0]}>
               <mesh
                 rotation={[-Math.PI / 2, 0, 0]}
                 scale={[
@@ -1457,7 +1617,7 @@ function Halos({
                   map={textures.ring}
                   color={color}
                   transparent
-                  opacity={lit ? 0.3 : 0.14}
+                  opacity={lit ? 0.26 : 0.1}
                   blending={THREE.AdditiveBlending}
                   depthWrite={false}
                   side={THREE.DoubleSide}
@@ -1466,12 +1626,12 @@ function Halos({
             </group>
             {h.floor === 0 && (
               // The shopper crowd: one soft glow, never a dot per person.
-              <sprite scale={SILO.crowdR * 2.4} renderOrder={1}>
+              <sprite scale={shape.crowdR * 2} renderOrder={1}>
                 <spriteMaterial
                   map={textures.glow}
                   color={color}
                   transparent
-                  opacity={0.25}
+                  opacity={0.14}
                   blending={THREE.AdditiveBlending}
                   depthWrite={false}
                 />
@@ -1485,15 +1645,15 @@ function Halos({
 }
 
 /** Turns a flat ring so its long side runs along the wall at its wedge. */
-function haloTurn(h: Halo): number {
-  const a = wedgeAngle(h.familyIndex, h.floor)
+function haloTurn(h: Halo, shape: SiloShape): number {
+  const a = wedgeAngle(h.familyIndex, h.floor, shape)
   return Math.atan2(-Math.cos(a), -Math.sin(a))
 }
 
 // ─── Links and pulses ────────────────────────────────────────────────────────
 
 function linkCurve(s: Shown) {
-  const [a, b, c, d] = linkControlPoints(crowdAnchor(s.b.familyIndex), s.p)
+  const [a, b, c, d] = linkControlPoints(s.from, s.p)
   return new THREE.CubicBezierCurve3(v3(a), v3(b), v3(c), v3(d))
 }
 
@@ -1678,7 +1838,7 @@ varying vec3 vColor;
 varying float vFog;
 void main() {
   vec4 t = texture2D(uMap, gl_PointCoord);
-  gl_FragColor = vec4(vColor, t.a * 0.28 * (1.0 - vFog));
+  gl_FragColor = vec4(vColor, t.a * 0.16 * (1.0 - vFog));
   #include <colorspace_fragment>
 }
 `
@@ -1740,7 +1900,7 @@ function Nodes({
         new THREE.ShaderMaterial({
           vertexShader: NODE_VERT,
           fragmentShader: GLOW_FRAG,
-          uniforms: { uScale, uDensity, uMul: { value: 3.6 }, uMap: { value: textures.glow } },
+          uniforms: { uScale, uDensity, uMul: { value: 3 }, uMap: { value: textures.glow } },
           transparent: true,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
@@ -1865,7 +2025,9 @@ function Gaps({
   tex,
   ring,
   phone,
+  shape,
 }: {
+  shape: SiloShape
   gaps: readonly SiloGap[]
   selected: SiloGap | null
   tex: THREE.Texture
@@ -1878,7 +2040,7 @@ function Gaps({
   return (
     <>
       {gaps.map((g) => {
-        const c = gapPoint(g)
+        const c = gapPoint(g, shape)
         const on = isSel(g)
         return (
           <sprite
@@ -1894,7 +2056,7 @@ function Gaps({
       {selected && (
         <sprite
           position={(() => {
-            const c = gapPoint(selected)
+            const c = gapPoint(selected, shape)
             return [c.x, c.y, c.z] as [number, number, number]
           })()}
           scale={base * 2}
@@ -1920,6 +2082,8 @@ const LABEL_MAX = { desk: 10, phone: 7 }
 const LABEL_MIN_PX = { desk: 9, phone: 8 }
 /** Gap labels show once the camera is this close to the square. */
 const GAP_LABEL_DIST = 150
+/** The plate radius GAP_LABEL_DIST was tuned on; a wider look reaches further. */
+const GAP_LABEL_R = 42
 const HUD_SELECTORS = '.hud > *, .ctx, .dock, .silo-tag, .silo-hint'
 
 /** How often the names are chosen while the camera moves. */
@@ -2000,6 +2164,7 @@ function Tags({
   gaps,
   selectedGap,
   phone,
+  shape,
 }: Inner & { shown: readonly Shown[] }) {
   const { camera, size, gl, invalidate } = useThree()
   const tagged = hoveredId ?? selectedId
@@ -2163,9 +2328,10 @@ function Tags({
           const el = gapEls[i]
           if (!(el instanceof HTMLElement)) return
           const slot = (st.gapSlots[i] ??= newSlot())
-          const c = gapPoint(g)
+          const c = gapPoint(g, shape)
           worldTmp.set(c.x, c.y, c.z)
-          const near = camera.position.distanceTo(worldTmp) < GAP_LABEL_DIST * (slot.on ? 1.1 : 1)
+          const reach = GAP_LABEL_DIST * (shape.R / GAP_LABEL_R) * (slot.on ? 1.1 : 1)
+          const near = camera.position.distanceTo(worldTmp) < reach
           const picked =
             !!selectedGap &&
             selectedGap.familyIndex === g.familyIndex &&
@@ -2217,7 +2383,7 @@ function Tags({
         const el = gapEls?.[i]
         const slot = st.gapSlots[i]
         if (!slot?.on || !(el instanceof HTMLElement)) return
-        const at = toScreen(gapPoint(g))
+        const at = toScreen(gapPoint(g, shape))
         if (!at) return
         const w = st.widths.get(`gap:${g.familyIndex}:${g.floorIndex}`) ?? el.offsetWidth
         moveLabel(

@@ -39,8 +39,11 @@ import {
   gapLabel,
   gapsPerFloor,
   placeBusinesses,
+  shapeForLook,
   siloGaps,
+  ZOOM,
   type ColorBy,
+  type SiloLook,
   type SiloBusiness,
   type SiloGap,
 } from '@/lib/spend/silo-layout'
@@ -118,6 +121,8 @@ interface Props {
   ticker: readonly SiloTickerItem[]
   /** `?you=1`: open focused on the reader's own business. */
   focusYou: boolean
+  /** `?look=terraces`: the Open Terraces look, to compare with the tower (ticket 246). */
+  look?: SiloLook
 }
 
 export function SiloExperience({
@@ -127,6 +132,7 @@ export function SiloExperience({
   cities,
   ticker,
   focusYou,
+  look = 'tower',
 }: Props) {
   const support = useSiloSupport()
   const reducedMotion = usePrefersReducedMotion()
@@ -170,6 +176,9 @@ export function SiloExperience({
   const hoverTagRef = useRef<HTMLDivElement>(null)
   const youTagRef = useRef<HTMLDivElement>(null)
   const [wholeTower, setWholeTower] = useState(false)
+  const [zoom, setZoom] = useState(0)
+  const shape = shapeForLook(look)
+  const towerWord = shape.wall ? 'Tower' : 'View'
   const labelsRef = useRef<HTMLDivElement>(null)
   const gapLabelsRef = useRef<HTMLDivElement>(null)
 
@@ -177,8 +186,8 @@ export function SiloExperience({
   const floors = useMemo(() => buildFloors(totalSpentCents), [totalSpentCents])
   const counts = useMemo(() => businessesPerFloor(businesses), [businesses])
   const placed = useMemo(
-    () => new Map(placeBusinesses(businesses).map((p) => [p.id, p])),
-    [businesses]
+    () => new Map(placeBusinesses(businesses, shape).map((p) => [p.id, p])),
+    [businesses, shape]
   )
   const visible = useMemo(
     () =>
@@ -399,6 +408,8 @@ export function SiloExperience({
     else if (k === 'c') toggleColor()
     else if (k === 't') toggleList()
     else if (k === 'w' && showScene) navRef.current?.wholeTower()
+    else if ((k === '-' || k === '_') && showScene) navRef.current?.zoomStep(1)
+    else if ((k === '=' || k === '+') && showScene) navRef.current?.zoomStep(-1)
     else if (k === 'p') togglePause()
     else if (e.key === '?') setKeysOpen((v) => !v)
     else return
@@ -559,6 +570,8 @@ export function SiloExperience({
                     hoverTagRef={hoverTagRef}
                     youTagRef={youTagRef}
                     onWholeTowerChange={setWholeTower}
+                    onZoomChange={setZoom}
+                    shape={shape}
                     labelsRef={labelsRef}
                     gapLabelsRef={gapLabelsRef}
                   />
@@ -612,13 +625,35 @@ export function SiloExperience({
               </button>
             )}
             {showScene && (
-              <button
-                type="button"
-                aria-pressed={wholeTower}
-                onClick={() => navRef.current?.wholeTower()}
-              >
-                {wholeTower ? 'Go Inside' : 'Whole Tower'}
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="zoom"
+                  aria-label="Move Closer"
+                  title="Move Closer (+)"
+                  disabled={zoom <= ZOOM.min}
+                  onClick={() => navRef.current?.zoomStep(-1)}
+                >
+                  <span aria-hidden="true">+</span>
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={wholeTower}
+                  onClick={() => navRef.current?.wholeTower()}
+                >
+                  {wholeTower ? 'Go Inside' : `Whole ${towerWord}`}
+                </button>
+                <button
+                  type="button"
+                  className="zoom"
+                  aria-label="Move Farther"
+                  title="Move Farther (−)"
+                  disabled={zoom >= 1}
+                  onClick={() => navRef.current?.zoomStep(1)}
+                >
+                  <span aria-hidden="true">−</span>
+                </button>
+              </>
             )}
             <button
               ref={moreBtnRef}

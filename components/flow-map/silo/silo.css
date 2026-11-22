@@ -979,6 +979,18 @@
   background: rgba(196, 160, 101, 0.12);
 }
 
+.dock .zoom {
+  padding: 0;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.dock .zoom:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 .dock .find {
   background: var(--gold);
   color: #1a1405;
@@ -1363,7 +1375,8 @@
     grid-template-columns: 1fr auto;
     border-radius: 22px;
   }
-  .dock .keys {
+  .dock .keys,
+  .dock .zoom {
     display: none;
   }
 
@@ -1652,6 +1665,7 @@
   .silo-track[data-mode='map'] .ticker,
   .silo-track[data-mode='map'] .hud .legend,
   .silo-track[data-mode='map'] .dock .keys,
+  .silo-track[data-mode='map'] .dock .zoom,
   .silo-track[data-mode='map'] .keymap {
     display: none;
   }

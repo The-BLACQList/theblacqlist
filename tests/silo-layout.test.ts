@@ -40,6 +40,12 @@ import {
   CLUSTER_WIDE,
   DOT_LIFT,
   ZOOM,
+  TERRACES,
+  SECTOR_SHARE,
+  clusterSpacing,
+  sectorBounds,
+  shapeForLook,
+  stepZoom,
   zoomOrbit,
   zoomAmount,
   fogForZoom,
@@ -464,7 +470,7 @@ describe('whole tower zoom', () => {
     // Outside the glass, with the top and bottom of the tower in view.
     expect(Math.hypot(pos.x, pos.z)).toBeGreaterThan(SILO.R * 2)
     const halfFov = ((62 / 2) * Math.PI) / 180
-    const h = (SILO.y[0] + SILO.shellPad - (SILO.hub.y - SILO.hubR)) / 2
+    const h = (SILO.y[0]! + SILO.shellPad - (SILO.hub.y - SILO.hubR)) / 2
     expect(Math.atan(h / ZOOM.R)).toBeLessThan(halfFov)
   })
 
@@ -741,7 +747,7 @@ describe('floorForHeight', () => {
   })
 
   it('switches floors halfway between them', () => {
-    const half = (SILO.y[0] - SILO.y[1]) / 2
+    const half = (SILO.y[0]! - SILO.y[1]!) / 2
     expect(floorForHeight(SILO.y[0]! - half + 1)).toBe(0)
     expect(floorForHeight(SILO.y[0]! - half - 1)).toBe(1)
   })
@@ -779,5 +785,101 @@ describe('trackProgress', () => {
   it('stays between 0 and 1', () => {
     expect(trackProgress({ top: 0, height: 2100 }, { top: -5, height: 700 })).toBe(0)
     expect(trackProgress({ top: 0, height: 2100 }, { top: 1405, height: 700 })).toBe(1)
+  })
+})
+
+describe('gradual zoom', () => {
+  it('moves one even step at a time and stops at the ends', () => {
+    expect(stepZoom(0, 1)).toBeCloseTo(0.2)
+    expect(stepZoom(0.2, 1)).toBeCloseTo(0.4)
+    expect(stepZoom(0.4, -1)).toBeCloseTo(0.2)
+    expect(stepZoom(1, 1)).toBe(1)
+    expect(stepZoom(ZOOM.min, -1)).toBe(ZOOM.min)
+  })
+
+  it('lands on the next mark from part way, never skipping one', () => {
+    expect(stepZoom(0.1, 1)).toBeCloseTo(0.2)
+    expect(stepZoom(0.1, -1)).toBeCloseTo(0)
+    expect(stepZoom(0.3, 1)).toBeCloseTo(0.4)
+  })
+
+  it('takes several presses to go from inside to the whole tower', () => {
+    let z = 0
+    let presses = 0
+    while (z < 1) {
+      z = stepZoom(z, 1)
+      presses++
+    }
+    expect(presses).toBeGreaterThanOrEqual(4)
+  })
+})
+
+describe('open terraces look', () => {
+  function makeMany(n: number, categorySlug = 'food-dining') {
+    return buildSiloBusinesses({
+      nodes: [],
+      listings: Object.fromEntries(
+        Array.from({ length: n }, (_, i) => [`t-${categorySlug}-${i}`, listing({ categorySlug })])
+      ),
+      isNameOptedIn: () => false,
+    })
+  }
+
+  it('is chosen only by name, the tower stays the default', () => {
+    expect(shapeForLook('terraces')).toBe(TERRACES)
+    expect(shapeForLook('tower')).toBe(SILO)
+    expect(shapeForLook(undefined)).toBe(SILO)
+    expect(shapeForLook('nonsense')).toBe(SILO)
+    expect(TERRACES.wall).toBe(false)
+    expect(SILO.wall).toBe(true)
+  })
+
+  it('places the same way every time', () => {
+    const many = makeMany(60)
+    expect(placeBusinesses(many, TERRACES)).toEqual(placeBusinesses(many, TERRACES))
+  })
+
+  it('keeps every business inside its own slice of its own terrace', () => {
+    const many = [...makeMany(300), ...makeMany(80, 'beauty-grooming')]
+    const placed = placeBusinesses(many, TERRACES)
+    const byId = new Map(many.map((b) => [b.id, b]))
+    for (const p of placed) {
+      const b = byId.get(p.id)!
+      const { start, length, r0, r1 } = sectorBounds(b.familyIndex, b.floorIndex, TERRACES)
+      const r = Math.hypot(p.x, p.z)
+      expect(r).toBeGreaterThanOrEqual(r0 - 0.01)
+      expect(r).toBeLessThanOrEqual(r1 + 0.01)
+      const a = Math.atan2(p.z, p.x)
+      const off = Math.atan2(Math.sin(a - (start + length / 2)), Math.cos(a - (start + length / 2)))
+      expect(Math.abs(off)).toBeLessThanOrEqual(length / 2 + 1e-6)
+      const above = p.y - (TERRACES.y[b.floorIndex] ?? 0)
+      expect(above).toBeGreaterThanOrEqual(DOT_LIFT)
+      expect(above).toBeLessThan(DOT_LIFT + 1)
+    }
+  })
+
+  it('gives businesses more room than the tower does', () => {
+    for (const n of [10, 60, 300]) {
+      expect(clusterSpacing(n, TERRACES)).toBeGreaterThan(clusterSpacing(n, SILO))
+    }
+  })
+
+  it('leaves a lane between neighbouring slices', () => {
+    expect(SECTOR_SHARE).toBeLessThan(1)
+    const a = sectorBounds(0, 0, TERRACES)
+    const b = sectorBounds(1, 0, TERRACES)
+    expect(b.start - (a.start + a.length)).toBeGreaterThan(0)
+  })
+
+  it('sees every terrace from the whole view', () => {
+    const out = zoomOrbit(
+      orbitForScroll(scrollForFloor(2, TERRACES), 0.7, ORBIT.el, TERRACES),
+      1,
+      TERRACES
+    )
+    expect(out.R).toBeCloseTo(TERRACES.zoomR)
+    const halfFov = ((62 / 2) * Math.PI) / 180
+    const h = (TERRACES.y[0]! - (TERRACES.hub.y - TERRACES.hubR)) / 2
+    expect(Math.atan(h / TERRACES.zoomR)).toBeLessThan(halfFov)
   })
 })
