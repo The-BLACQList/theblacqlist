@@ -50,7 +50,7 @@ Twelve of the touched files were not Prettier-formatted on main. Those got the w
 Local, 2026-11-21:
 - Unit tests: 5801 passed. Typecheck clean.
 - Lint: no errors. The 2 warnings were already on main (SaveButton, save-icon-button).
-- Playwright: see the PR.
+- Playwright on staging data (listing-thin-page, for-business-brand): 21 passed.
 
 ## Not in This Ticket
 
