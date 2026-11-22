@@ -7,6 +7,7 @@ import { offerGrowthTo, offerPremiumTo } from '@/lib/marketplace/entitlements'
 import { upgradeTarget } from '@/lib/stripe/planChecks'
 import { toOwnerPosts } from '@/lib/listings/happeningNow'
 import { PostsManager } from '@/components/dashboard/PostsManager'
+import { itemHelp } from '@/lib/ai/itemHelpServer'
 
 // Happening now posts for one page (owner-experience round 2, part F).
 // Business pages only: jobs and events are dated posts already.
@@ -44,7 +45,7 @@ export default async function PostsPage({ params }: Props) {
     )
   }
 
-  const [{ data: rows }, growthOpen, premiumOpen] = await Promise.all([
+  const [{ data: rows }, growthOpen, premiumOpen, aiHelp] = await Promise.all([
     supabase
       .from('listing_posts')
       .select(
@@ -54,6 +55,7 @@ export default async function PostsPage({ params }: Props) {
       .order('created_at', { ascending: false }),
     offerGrowthTo(listing.tier),
     offerPremiumTo(listing.tier),
+    itemHelp(listing.tier, 'happening_now_post'),
   ])
 
   return (
@@ -79,6 +81,7 @@ export default async function PostsPage({ params }: Props) {
         tier={listing.tier}
         upgradeTo={upgradeTarget(listing.tier, growthOpen, premiumOpen)}
         initialNow={new Date().toISOString()}
+        aiHelp={aiHelp}
       />
     </div>
   )

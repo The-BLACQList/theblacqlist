@@ -2,6 +2,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Star, BadgeCheck, MessageSquare } from 'lucide-react'
 import type { EntityPageData, ReviewItem } from '@/types'
+import type { ItemHelp } from '@/lib/ai/itemHelp'
+import { reviewReplyHelp } from '@/lib/ai/itemHelpServer'
 import { ReviewFormDisclosure } from '@/components/entity-page/ReviewFormDisclosure'
 import { OwnerRespondForm } from '@/components/entity-page/OwnerRespondForm'
 import { buildEntityUrl } from '@/lib/listings/url'
@@ -59,10 +61,12 @@ function ReviewCard({
   review,
   isOwner,
   listingId,
+  replyHelp,
 }: {
   review: ReviewItem
   isOwner: boolean
   listingId: string
+  replyHelp: ItemHelp
 }) {
   const displayName = review.reviewer_display_name ?? 'BLACQList Community Member'
   const initial = displayName.charAt(0).toUpperCase()
@@ -149,7 +153,7 @@ function ReviewCard({
 
       {/* Respond button — shown only to the owner when no response yet */}
       {isOwner && !review.owner_response && (
-        <OwnerRespondForm reviewId={review.id} listingId={listingId} />
+        <OwnerRespondForm reviewId={review.id} listingId={listingId} aiHelp={replyHelp} />
       )}
     </article>
   )
@@ -158,6 +162,7 @@ function ReviewCard({
 export function EntityReviewsSection({ entity, userId, isOwner, hasReviewed }: Props) {
   const canReview = !!userId && !isOwner && !hasReviewed
   const hasReviews = entity.reviews && entity.reviews.length > 0
+  const replyHelp = isOwner ? reviewReplyHelp(entity.tier) : null
 
   // [Decision — founder, 2026-10-15: a signed-out visitor on a listing with no
   // reviews used to see nothing. Give them a reason to sign in.] Signed-in
@@ -247,7 +252,13 @@ export function EntityReviewsSection({ entity, userId, isOwner, hasReviewed }: P
         {hasReviews && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
             {entity.reviews.map((review) => (
-              <ReviewCard key={review.id} review={review} isOwner={isOwner} listingId={entity.id} />
+              <ReviewCard
+                key={review.id}
+                review={review}
+                isOwner={isOwner}
+                listingId={entity.id}
+                replyHelp={replyHelp}
+              />
             ))}
           </div>
         )}

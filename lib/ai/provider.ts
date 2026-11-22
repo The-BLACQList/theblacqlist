@@ -53,6 +53,7 @@ import {
   type AgentDefinition,
 } from './agents'
 import { callAnthropic, ProviderCallError, type TokenUsage } from './anthropic'
+import { clampRating, ITEM_LIMITS, itemFactLines, type ItemFacts } from './itemFacts'
 import { mockResponseFor, type MockContext } from './mock-responses'
 import {
   buildOnboardingPromptVars,
@@ -117,6 +118,13 @@ export interface GenerateContext {
    * description: no emails, phones, street addresses or the owner's name.
    */
   siteText?: string | null
+  /**
+   * Ticket 242: the one thing this request writes about (a review to reply to,
+   * a post, a product or service, an event, a job), or absent for page-level
+   * help. See lib/ai/itemFacts.ts for where each comes from. Cleaned in
+   * buildPromptVars like every other field.
+   */
+  item?: ItemFacts | null
   /** Aggregate counts only. Never individual analytics_events rows. */
   pageViews30d: number
   ctaClicks30d: number
@@ -217,7 +225,33 @@ export function buildPromptVars(
     saves_30d: String(ctx.saves30d),
     shares_30d: String(ctx.shares30d),
     page_views_7d: String(ctx.pageViews7d),
+    ...itemPromptVars(ctx.item ?? null, redaction),
   }
+}
+
+/**
+ * Ticket 242: the item's facts as prompt variables. The review's text is a
+ * customer's words, so it loses contact details, street addresses and the
+ * owner's name like owner text does; the reviewer's name never reaches here.
+ * Every owner-typed value is cleaned the same way.
+ */
+function itemPromptVars(item: ItemFacts | null, redaction: PromptRedaction): Record<string, string> {
+  if (!item) return { item_block: '', rating: '', review_text: '' }
+  if (item.kind === 'review') {
+    return {
+      item_block: '',
+      rating: String(clampRating(item.rating)),
+      review_text: unbracket(sanitizeForPrompt(item.text, ITEM_LIMITS.reviewText, redaction)),
+    }
+  }
+  const lines = itemFactLines(item)
+    .map(([label, value]) => {
+      // parseItemInput already capped each value; notes is the longest cap.
+      const clean = unbracket(sanitizeForPrompt(value, ITEM_LIMITS.notes, redaction))
+      return clean ? `${label}: ${clean}` : ''
+    })
+    .filter(Boolean)
+  return { item_block: lines.join('\n'), rating: '', review_text: '' }
 }
 
 function mockContextOf(ctx: GenerateContext, redaction: PromptRedaction): MockContext {
@@ -230,6 +264,34 @@ function mockContextOf(ctx: GenerateContext, redaction: PromptRedaction): MockCo
     pageViews30d: ctx.pageViews30d,
     ctaClicks30d: ctx.ctaClicks30d,
     saves30d: ctx.saves30d,
+    item: mockItemOf(ctx.item ?? null, redaction),
+  }
+}
+
+/**
+ * Brackets, braces and backticks out of item text, so a review or a note
+ * cannot fake the [REVIEW END] marker or a placeholder (same rule as
+ * lib/ai/onboarding.ts `neutralize`).
+ */
+export function unbracket(text: string): string {
+  return text.replace(/[[\]{}`]/g, ' ').replace(/[ \t]{2,}/g, ' ').trim()
+}
+
+/** The item for the sample writer, cleaned the same way as the prompt's copy. */
+function mockItemOf(item: ItemFacts | null, redaction: PromptRedaction): ItemFacts | null {
+  if (!item) return null
+  const clean = (v: string | null, max: number) => (v ? sanitizeForPrompt(v, max, redaction) || null : null)
+  switch (item.kind) {
+    case 'review':
+      return { kind: 'review', rating: clampRating(item.rating), text: clean(item.text, ITEM_LIMITS.reviewText) ?? '' }
+    case 'post':
+      return { kind: 'post', notes: clean(item.notes, ITEM_LIMITS.notes) ?? '' }
+    case 'offering':
+      return { ...item, name: clean(item.name, ITEM_LIMITS.name) ?? '', notes: clean(item.notes, ITEM_LIMITS.notes), price: clean(item.price, ITEM_LIMITS.short) }
+    case 'event':
+      return { ...item, name: clean(item.name, ITEM_LIMITS.name) ?? '', when: clean(item.when, ITEM_LIMITS.short), where: clean(item.where, ITEM_LIMITS.name), notes: clean(item.notes, ITEM_LIMITS.notes) }
+    case 'job':
+      return { ...item, title: clean(item.title, ITEM_LIMITS.name) ?? '', employmentType: clean(item.employmentType, ITEM_LIMITS.short), workplaceType: clean(item.workplaceType, ITEM_LIMITS.short), pay: clean(item.pay, ITEM_LIMITS.short), notes: clean(item.notes, ITEM_LIMITS.notes) }
   }
 }
 

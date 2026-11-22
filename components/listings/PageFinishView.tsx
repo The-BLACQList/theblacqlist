@@ -56,6 +56,7 @@ import { MAX_PHOTO_CANDIDATES } from '@/lib/import/limits'
 import type { WeeklyHours } from '@/types'
 import { HappeningNowCard } from '@/components/dashboard/HappeningNowCard'
 import type { OwnerPost } from '@/lib/listings/happeningNow'
+import { itemHelpFor } from '@/lib/ai/itemHelp'
 import { DealsSection } from '@/components/dashboard/DealsSection'
 import type { OwnerDeal } from '@/lib/listings/deals'
 import { dealsUpgradeTarget } from '@/lib/stripe/planChecks'
@@ -253,6 +254,13 @@ export function PageFinishView({
   const rootRef = useRef<HTMLDivElement>(null)
 
   const tier = data.tier
+  // Ticket 242: product and service descriptions come with Growth. Writing
+  // help is undefined when AI is switched off; growthOpen is true only for a
+  // Starter page while Growth is for sale.
+  const offeringHelp = itemHelpFor(tier, 'offering_description', {
+    aiOn: Boolean(writingHelp),
+    growthOpen,
+  })
   // About and social links are Starter features, so only a Free page is offered
   // an upgrade there. The count limits (details, video, questions) also offer
   // Growth to a Starter page while Growth is for sale (ticket 143).
@@ -539,10 +547,10 @@ export function PageFinishView({
             </p>
           </div>
           <div className="px-5 py-4">
-            <OfferingsList services={data.services} />
+            <OfferingsList services={data.services} listingId={data.id} aiHelp={offeringHelp} />
           </div>
         </div>
-        <AddOfferingForm listingId={data.id} />
+        <AddOfferingForm listingId={data.id} aiHelp={offeringHelp} />
       </div>
     ),
     role:

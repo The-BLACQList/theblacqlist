@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react'
+import type { ItemHelp } from '@/lib/ai/itemHelp'
 import type {
   ChapterData,
   DealView,
@@ -687,12 +688,15 @@ function ReviewCard({
   index,
   total,
   respondAs,
+  replyHelp = null,
 }: {
   r: ReviewView
   index: number
   total: number
   /** The listing id, when the viewer owns it and may answer a review. */
   respondAs?: string | null
+  /** Ticket 242: AI help under the reply box. */
+  replyHelp?: ItemHelp
 }) {
   const n = r.photos.length
   return (
@@ -749,7 +753,7 @@ function ReviewCard({
       )}
       {respondAs && !r.response && (
         <div className="resp-form">
-          <OwnerRespondForm reviewId={r.id} listingId={respondAs} />
+          <OwnerRespondForm reviewId={r.id} listingId={respondAs} aiHelp={replyHelp} />
         </div>
       )}
     </div>
@@ -759,9 +763,11 @@ function ReviewCard({
 function ReviewCarousel({
   reviews,
   respondAs,
+  replyHelp = null,
 }: {
   reviews: ReviewView[]
   respondAs?: string | null
+  replyHelp?: ItemHelp
 }) {
   const n = reviews.length
   return (
@@ -791,7 +797,14 @@ function ReviewCarousel({
         {/* Slides are divs, not list items: role="group" is not allowed inside a list. */}
         <div className="revs rc-track">
           {reviews.map((r, i) => (
-            <ReviewCard key={r.id} r={r} index={i} total={n} respondAs={respondAs} />
+            <ReviewCard
+              key={r.id}
+              r={r}
+              index={i}
+              total={n}
+              respondAs={respondAs}
+              replyHelp={replyHelp}
+            />
           ))}
         </div>
       </div>
@@ -839,6 +852,7 @@ function ReviewActions({ data }: { data: ChapterData }) {
 export function ReviewsBand({ data }: { data: ChapterData }) {
   const hasReviews = data.reviews.length > 0
   const respondAs = data.live?.isOwner ? data.live.listingId : null
+  const replyHelp = data.live?.replyHelp ?? null
   return (
     <section className="band s-ember" id="reviews" data-ch="reviews" aria-labelledby="h-reviews">
       <div className="wrap">
@@ -881,7 +895,9 @@ export function ReviewsBand({ data }: { data: ChapterData }) {
             )}
           </div>
         )}
-        {hasReviews && <ReviewCarousel reviews={data.reviews} respondAs={respondAs} />}
+        {hasReviews && (
+          <ReviewCarousel reviews={data.reviews} respondAs={respondAs} replyHelp={replyHelp} />
+        )}
         <ReviewActions data={data} />
         {data.credentials.length > 0 && (
           <ul className="creds">

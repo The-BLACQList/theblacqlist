@@ -1,6 +1,6 @@
 # Ticket 241: Advanced Analytics on Growth and Up
 
-**Status:** In review on `feat/241-advanced-analytics`. Migration `20261203000000_owner_listing_insights.sql` applied on staging 2026-11-21 (founder OK); prod at merge, with the founder's OK.
+**Status:** Merged #375 (b0e78e7), 2026-11-21. Migration `20261203000000_owner_listing_insights.sql` applied on staging and prod (founder OK).
 
 ## Why
 

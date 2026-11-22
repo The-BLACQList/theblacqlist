@@ -20,11 +20,11 @@ export type WritingAllowance =
   | { state: 'locked' }
   | {
       state: 'ready'
-      /** Drafts the plan includes per 30 days. Null means no monthly cap. */
+      /** AI requests the plan includes per 30 days. Null means no monthly cap. */
       limit: number | null
-      /** Drafts left in the window. Null when there is no cap. */
+      /** Requests left in the window. Null when there is no cap. */
       left: number | null
-      /** When the oldest counted draft leaves the window (ISO), or null. */
+      /** When the oldest counted request leaves the window (ISO), or null. */
       resetsOn: string | null
       /** Requests one page can make in 24 hours. */
       perDay: number
@@ -69,12 +69,12 @@ export function formatResetDate(iso: string): string {
 
 export function monthlyUsedUpMessage(resetsOn: string | null): string {
   return resetsOn
-    ? `No drafts left this month. More on ${formatResetDate(resetsOn)}.`
-    : 'No drafts left this month.'
+    ? `You've used this month's AI help for this page. More on ${formatResetDate(resetsOn)}.`
+    : "You've used this month's AI help for this page."
 }
 
 export function dailyLimitMessage(perDay: number, left: number | null): string {
-  const base = `That's ${perDay} drafts for this page today. You can ask again tomorrow.`
+  const base = `That's ${perDay} AI requests for this page today. You can ask again tomorrow.`
   if (left === null) return base
   return `${base} You still have ${left} left this month.`
 }

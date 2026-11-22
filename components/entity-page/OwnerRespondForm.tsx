@@ -1,18 +1,28 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useRef, useState } from 'react'
 import { submitReviewResponse } from '@/lib/actions/owner/submitReviewResponse'
 import type { ReviewResponseState } from '@/lib/actions/owner/submitReviewResponse'
+import { ItemWriteHelp } from '@/components/ai/ItemWriteHelp'
+import type { ItemHelp } from '@/lib/ai/itemHelp'
 
 interface Props {
   reviewId: string
   listingId: string
+  /**
+   * Ticket 242: AI help under the reply box. It only fills the box. The reply
+   * goes up when the owner presses Post Response, never before.
+   */
+  aiHelp?: ItemHelp
 }
+
+const REPLY_MAX = 2000
 
 const initial: ReviewResponseState = {}
 
-export function OwnerRespondForm({ reviewId, listingId }: Props) {
+export function OwnerRespondForm({ reviewId, listingId, aiHelp = null }: Props) {
   const [open, setOpen] = useState(false)
+  const replyRef = useRef<HTMLTextAreaElement>(null)
   const [state, action, pending] = useActionState(submitReviewResponse, initial)
 
   if (state.success) {
@@ -40,13 +50,29 @@ export function OwnerRespondForm({ reviewId, listingId }: Props) {
       <input type="hidden" name="review_id" value={reviewId} />
       <input type="hidden" name="listing_id" value={listingId} />
       <textarea
+        ref={replyRef}
         name="response"
         required
-        maxLength={2000}
+        maxLength={REPLY_MAX}
         rows={3}
         autoFocus
         placeholder="Write your response to this review…"
         className="w-full rounded-lg border border-charcoal/20 px-3 py-2 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40 resize-none"
+      />
+      <ItemWriteHelp
+        listingId={listingId}
+        agentType="review_response"
+        help={aiHelp}
+        getItem={() => ({ kind: 'review', reviewId })}
+        missing="Couldn't find this review. Refresh the page and try again."
+        getValue={() => replyRef.current?.value ?? ''}
+        setValue={(text) => {
+          const box = replyRef.current
+          if (!box) return
+          box.value = text.slice(0, REPLY_MAX)
+          box.focus()
+        }}
+        usedNote="Not posted yet. Read it over, then post it."
       />
       {state.error && (
         <p role="alert" className="font-body text-xs text-red-600">

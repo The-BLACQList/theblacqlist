@@ -1,8 +1,9 @@
 import 'server-only'
 
-import { findAgent } from '@/lib/ai/agents'
+import { agentGate, findAgent } from '@/lib/ai/agents'
 import { getWritingAllowance } from '@/lib/ai/allowance'
 import { loadGenerateContext } from '@/lib/ai/context'
+import { ITEM_LIMITS, parseItemInput, type ItemFacts, type ItemKind } from '@/lib/ai/itemFacts'
 import { loadOwnerNames } from '@/lib/ai/ownerName'
 import { generate, RATE_LIMIT_PER_LISTING_24H } from '@/lib/ai/provider'
 import { ownerRejectionMessage } from '@/lib/ai/sanitize'
@@ -31,7 +32,27 @@ import { createClient } from '@/lib/supabase/server'
  *
  * `siteText` (About only): visible text from the owner's website. Capped at
  * MAX_SITE_TEXT here and sanitized again in buildPromptVars.
+ *
+ * `item` (ticket 242): what a review reply, post or write-up is about, as the
+ * browser sent it. Checked by parseItemInput. A review is sent by id only and
+ * loaded here, after checking it is a published review on this listing; only
+ * its rating, title and text are used, never who wrote it.
  */
+
+/** Why a request for one item's help was refused for missing facts. */
+const ITEM_MISSING: Record<ItemKind, string> = {
+  review: 'That review could not be found.',
+  post: 'Type a few words about your news first, then ask again.',
+  offering: 'Add a name first, then ask again.',
+  event: 'Add the event name first, then ask again.',
+  job: 'Add the job title first, then ask again.',
+}
+
+/** Locked messages by plan feature. */
+export const LOCKED_MESSAGE = {
+  ai_suggestions: 'AI help comes with Starter.',
+  ai_item_writeups: 'AI help with this comes with Growth.',
+} as const
 
 export type SuggestionErrorCode =
   | 'invalid'
@@ -52,7 +73,7 @@ export type SuggestionRequestResult =
 
 export async function requestSuggestion(
   userId: string,
-  args: { listingId: string; agentType: string; siteText?: string | null }
+  args: { listingId: string; agentType: string; siteText?: string | null; item?: unknown }
 ): Promise<SuggestionRequestResult> {
   const { listingId } = args
   if (!listingId) return { error: 'Missing listing ID.', code: 'invalid' }
@@ -74,7 +95,39 @@ export async function requestSuggestion(
   }
 
   if (!canAccess(listing.tier, 'ai_suggestions')) {
-    return { error: 'Writing help comes with Starter.', code: 'locked' }
+    return { error: LOCKED_MESSAGE.ai_suggestions, code: 'locked' }
+  }
+  const gate = agentGate(agent)
+  if (!canAccess(listing.tier, gate)) {
+    return { error: LOCKED_MESSAGE[gate], code: 'locked' }
+  }
+
+  // The item, when this agent writes about one. Checked before anything is
+  // spent, so a bad request never uses up the allowance.
+  let item: ItemFacts | null = null
+  if (agent.item) {
+    const input = parseItemInput(args.item)
+    if (!input || input.kind !== agent.item) {
+      return { error: ITEM_MISSING[agent.item], code: 'invalid' }
+    }
+    if (input.kind === 'review') {
+      const { data: review } = await supabase
+        .from('reviews')
+        .select('rating, title, body')
+        .eq('id', input.reviewId)
+        .eq('listing_id', listingId)
+        .eq('status', 'published')
+        .maybeSingle()
+      if (!review) return { error: ITEM_MISSING.review, code: 'invalid' }
+      const text = [review.title, review.body]
+        .map((v) => (typeof v === 'string' ? v.trim() : ''))
+        .filter(Boolean)
+        .join('. ')
+        .slice(0, ITEM_LIMITS.reviewText)
+      item = { kind: 'review', rating: Number(review.rating), text }
+    } else {
+      item = input
+    }
   }
 
   const loaded = await loadGenerateContext(listingId)
@@ -83,7 +136,7 @@ export async function requestSuggestion(
     agent.agentType === 'listing_description'
       ? args.siteText?.trim().slice(0, MAX_SITE_TEXT) || null
       : null
-  const context = siteText ? { ...loaded, siteText } : loaded
+  const context = { ...loaded, ...(siteText ? { siteText } : {}), ...(item ? { item } : {}) }
 
   // The owner's name is read only so it can be taken out of their text before
   // the prompt is built. If it cannot be read, nothing is sent (fail closed).
@@ -120,7 +173,7 @@ export async function requestSuggestion(
         // The monthly spending ceiling is reached, or could not be checked.
         // Owners never see a dollar figure for this.
         return {
-          error: 'Writing help is paused for now. Try again later.',
+          error: 'AI help is paused for now. Try again later.',
           code: 'paused',
           allowance,
         }

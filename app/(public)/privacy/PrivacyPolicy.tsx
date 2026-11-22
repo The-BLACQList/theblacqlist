@@ -86,6 +86,10 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
               <li>Your home city or town, if you choose one when you join. The list of US places we suggest from is our own, so what you type goes only to us. If you tap Use My Location, your browser rounds your location to about a kilometer before sending it, and we use it only to find the nearest town. We don&apos;t save your location</li>
               <li>Receipt and spend data when you submit receipts through the community spend feature</li>
               <li>Reviews and community content you submit</li>
+              {/* Ticket 242. Founder approved 2026-11-21; moved the "Last updated" date. */}
+              {isNext && (
+                <li>If a business asks for help writing a reply to your review, the words and star rating of your review (not your name) are sent to Anthropic to suggest that reply. Nothing is posted until the business owner reads it and posts it</li>
+              )}
               <li>Communications you send to us through email or support channels</li>
             </ul>
 
@@ -186,17 +190,21 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                   If you use our writing help when you set up or manage a business page, we send some
                   of your business information to Anthropic, the company that makes the Claude AI
                   model, so it can suggest drafts. Drafts can include a tagline, an About section, a
-                  search title and description, and a category for your business.
+                  search title and description, and a category for your business. It can also
+                  suggest a reply to a review on your page, a Happening Now post, or a description
+                  for a product, service, event or job.
                 </p>
                 <p>
                   <strong>What we send:</strong> your business name, your city, category names, and
                   the words you type or bring in from your website to describe your business. Before
-                  we send those words, we cut them to 500 characters and take out anything that looks
+                  we send those words, we cut them to a set length and take out anything that looks
                   like an email address, a phone number, or a street address, along with your name.
                   If your name is part of your business name, it stays in the business name. Our
                   filter can miss things, so leave out anything you don&apos;t want shared. For a page that&apos;s already live, the writing help can also use your current
                   tagline and About text, and simple totals like how many people viewed your page in
-                  the last 30 days. It never gets anything about who those people are.
+                  the last 30 days. It never gets anything about who those people are. If you ask for
+                  help replying to a review, we also send that review&apos;s star rating, title and
+                  words. We never send who wrote it.
                 </p>
                 <p>
                   <strong>What we never add:</strong> we don&apos;t attach your account name, your email
@@ -579,7 +587,7 @@ export function PrivacyPolicy({ version, notice }: PrivacyPolicyProps) {
                     <>
                       <tr>
                         <td className="border-b border-gray-200 p-3">Anthropic</td>
-                        <td className="border-b border-gray-200 p-3">Optional AI writing help for business owners (drafts you choose whether to use), the home page guide and Cue, our AI assistant, that search our listings for what a visitor types and write a reply from what they find (not saved), and Cue on the owner dashboard, which answers a business owner&apos;s questions about their own pages (not saved). Also reads a receipt photo when a shopper asks it to (what it reads is not saved)</td>
+                        <td className="border-b border-gray-200 p-3">Optional AI writing help for business owners, including replies to reviews (drafts you choose whether to use), the home page guide and Cue, our AI assistant, that search our listings for what a visitor types and write a reply from what they find (not saved), and Cue on the owner dashboard, which answers a business owner&apos;s questions about their own pages (not saved). Also reads a receipt photo when a shopper asks it to (what it reads is not saved)</td>
                         <td className="border-b border-gray-200 p-3">
                           <a
                             href="https://www.anthropic.com/legal/privacy"

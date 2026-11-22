@@ -27,6 +27,7 @@ import { initialTab } from '@/lib/listings/editTabs'
 import { toOwnerPosts } from '@/lib/listings/happeningNow'
 import { dealsAllowed, toOwnerDeals } from '@/lib/listings/deals'
 import { loadOwnerWhereSold } from '@/lib/listings/whereSoldOwner'
+import { itemHelp } from '@/lib/ai/itemHelpServer'
 
 interface Props {
   params: Promise<{ entityId: string }>
@@ -119,8 +120,10 @@ export default async function EditPage({ params, searchParams }: Props) {
 
         <EventDetailsSection
           listingId={listing.id}
+          name={listing.name}
           event={eventRow ?? null}
           businesses={(ownerBusinesses ?? []) as { id: string; name: string }[]}
+          aiHelp={await itemHelp(listing.tier, 'event_description')}
         />
 
         <SeoSection
@@ -256,8 +259,10 @@ export default async function EditPage({ params, searchParams }: Props) {
 
         <JobDetailsSection
           listingId={listing.id}
+          title={listing.name}
           job={job}
           businesses={(ownerBusinesses ?? []) as { id: string; name: string }[]}
+          aiHelp={await itemHelp(listing.tier, 'job_description')}
         />
 
         <SeoSection

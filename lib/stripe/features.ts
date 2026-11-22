@@ -54,6 +54,7 @@ export type GatedFeature =
   | 'team_members'
   | 'editorial_eligibility'
   | 'analytics_advanced'
+  | 'ai_item_writeups'
   | 'priority_support'
   // ── Premium — "Keep customers coming back": coupons, booking, and the spend view.
   //    Renamed 2026-10-03; "Own the category" read as exclusivity, which is not sold.
@@ -112,6 +113,10 @@ export const FEATURE_MIN_TIER: Record<GatedFeature, number> = {
   team_members: 2,
   editorial_eligibility: 2,
   analytics_advanced: 2,
+  // Ticket 242 (founder, 2026-11-21): AI help writing product, service, event
+  // and job descriptions. Starter's AI help covers the page text, captions,
+  // review replies, Happening Now posts and the monthly read of the numbers.
+  ai_item_writeups: 2,
   priority_support: 2,
   // Premium (3)
   coupons: 3,
@@ -236,7 +241,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     teamMembers: 0,
     locations: 1,
     pagesCovered: 1,
-    aiGenerationsPerMonth: 10,
+    aiGenerationsPerMonth: 20,
     descriptionChars: null,
     analyticsHistoryDays: 30,
     extraButtons: 1,
@@ -255,7 +260,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     teamMembers: 5,
     locations: 1,
     pagesCovered: 2,
-    aiGenerationsPerMonth: 100,
+    aiGenerationsPerMonth: 50,
     descriptionChars: null,
     analyticsHistoryDays: 365,
     extraButtons: 2,
@@ -278,7 +283,7 @@ export const TIER_LIMITS: Record<PlanSlug, TierLimits> = {
     teamMembers: null,
     locations: 3,
     pagesCovered: 3,
-    aiGenerationsPerMonth: 500,
+    aiGenerationsPerMonth: 100,
     descriptionChars: null,
     analyticsHistoryDays: 365,
     extraButtons: 3,
@@ -378,7 +383,9 @@ export function analyticsHistoryDays(tier: string | null): number {
   return limitsFor(tier).analyticsHistoryDays
 }
 
-// Monthly AI generation quota per listing. Ticket 104's limiter reads this rather than a hardcoded
+// Monthly AI generation quota per listing. Ticket 242 (founder, 2026-11-21): Starter 20, Growth 50,
+// Premium 100 (was 10/100/500); the plan cards lead with what AI helps with, not the number.
+// Ticket 104's limiter reads this rather than a hardcoded
 // constant, so the cost guardrail and the pricing lever can never drift apart.
 export function aiQuota(tier: string | null): number | null {
   return limitsFor(tier).aiGenerationsPerMonth

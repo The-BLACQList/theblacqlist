@@ -43,11 +43,16 @@ const WAITLIST_SOURCE: Record<string, string> = {
   premium: 'pricing-premium',
 }
 
-// AI writing help leads while FEATURE_AI_BETA is on (ticket 146). The numbers
-// come from aiQuota(), the same as the plan cards.
+// AI help leads while FEATURE_AI_BETA is on (ticket 146). Ticket 242: say what
+// it helps with, never "drafts"; the numbers come from aiQuota(), the same as
+// the plan cards' small print.
 function faqItems(growthOpen: boolean, aiOn: boolean) {
-  const starterAi = aiOn ? `AI writing help with ${aiQuota('starter')} drafts every 30 days, ` : ''
-  const growthAi = aiOn ? `${aiQuota('growth')} AI drafts every 30 days, ` : ''
+  const starterAi = aiOn
+    ? `AI help with your page text, Instagram captions, review replies, and Happening now posts (up to ${aiQuota('starter')} times a month per page), `
+    : ''
+  const growthAi = aiOn
+    ? `AI help with product, service, event, and job descriptions (up to ${aiQuota('growth')} times a month per page), `
+    : ''
   return [
     {
       q: 'Is listing my business really free?',
@@ -77,8 +82,8 @@ function faqItems(growthOpen: boolean, aiOn: boolean) {
     ...(aiOn
       ? [
           {
-            q: 'How does AI writing help work?',
-            a: "On Edit content, tap a Write button under your about text, search title, or search description, or ask for an Instagram caption. You get a draft written from what's already on your page. Change any word, and nothing goes live until you save. Explain my numbers gives you a plain read on your last 30 days. Each draft uses one from your plan's monthly allowance.",
+            q: 'How does AI help work?',
+            a: "Tap a Write button under your about text, search title, or search description, under a review reply, or on a Happening now post. Growth and Premium also get one under each product, service, event, and job description. AI writes it from what's already on your page and what you typed. Change any word: nothing goes on your page or gets sent until you save or send it yourself. Explain my numbers gives you a plain read on your last 30 days. Each use counts once toward your plan's monthly amount.",
           },
         ]
       : []),
@@ -116,7 +121,7 @@ export default async function PricingPage() {
   const availability = await getPlanAvailability(supabase)
   const growthOpen = isTierOpen(availability, 'growth')
   const aiOn = isFeatureEnabled('aiBeta')
-  const aiLead = aiOn ? 'Paid plans come with AI writing help for your page. ' : ''
+  const aiLead = aiOn ? 'Paid plans come with AI help for your page. ' : ''
 
   // A tier earns a waitlist slot when neither cycle can be bought. Offering one
   // for a tier that is merely annual-only would send a buyer to a form instead

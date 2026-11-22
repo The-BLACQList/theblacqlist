@@ -278,7 +278,7 @@ export function ownerStatusFor(name: string): string {
     case 'get_help':
       return 'Checking the help…'
     case 'draft_text':
-      return 'Writing a draft…'
+      return 'Writing it…'
     default:
       return 'Working…'
   }

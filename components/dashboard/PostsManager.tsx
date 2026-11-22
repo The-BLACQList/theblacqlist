@@ -27,6 +27,8 @@ import {
 } from '@/lib/listings/happeningNow'
 import { activePostLimit } from '@/lib/stripe/features'
 import type { UpgradeTarget } from '@/lib/stripe/planChecks'
+import { ItemWriteHelp } from '@/components/ai/ItemWriteHelp'
+import { joinPostText, splitPostText, type ItemHelp } from '@/lib/ai/itemHelp'
 
 // Happening now posts (owner-experience round 2, part F): write a post, post
 // it now or later, end it early, edit or delete it. Each change saves on its
@@ -40,6 +42,8 @@ interface Props {
   upgradeTo: UpgradeTarget
   /** When the page was read, so the first render matches the server's. */
   initialNow: string
+  /** Ticket 242: AI help under the post's text. Null hides it. */
+  aiHelp?: ItemHelp
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -79,7 +83,14 @@ function formatWhen(iso: string): string {
   })
 }
 
-export function PostsManager({ listingId, initial, tier, upgradeTo, initialNow }: Props) {
+export function PostsManager({
+  listingId,
+  initial,
+  tier,
+  upgradeTo,
+  initialNow,
+  aiHelp = null,
+}: Props) {
   const [posts, setPosts] = useState(initial)
   const [now, setNow] = useState(() => new Date(initialNow))
   // null: the form writes a new post. The form is keyed on this, so switching
@@ -163,6 +174,7 @@ export function PostsManager({ listingId, initial, tier, upgradeTo, initialNow }
             post={editing}
             now={now}
             onSaved={saved}
+            aiHelp={aiHelp}
           />
         </div>
       </section>
@@ -307,11 +319,13 @@ function PostForm({
   post,
   now,
   onSaved,
+  aiHelp,
 }: {
   listingId: string
   post: OwnerPost | null
   now: Date
   onSaved: (posts: OwnerPost[]) => void
+  aiHelp: ItemHelp
 }) {
   const [headline, setHeadline] = useState(post?.headline ?? '')
   const [body, setBody] = useState(post?.body ?? '')
@@ -433,6 +447,24 @@ function PostForm({
         />
         <Counter value={body} max={POST_BODY_MAX} />
       </div>
+
+      <ItemWriteHelp
+        listingId={listingId}
+        agentType="happening_now_post"
+        help={aiHelp}
+        getItem={() => {
+          const notes = [headline, body].map((s) => s.trim()).filter(Boolean).join('. ')
+          return notes ? { kind: 'post', notes } : null
+        }}
+        missing="Type a few words about what's happening, then ask."
+        getValue={() => joinPostText(headline, body)}
+        setValue={(text) => {
+          const next = splitPostText(text, { headline: POST_HEADLINE_MAX, body: POST_BODY_MAX })
+          setHeadline(next.headline)
+          setBody(next.body)
+        }}
+        usedNote="Not posted yet. Read it over, then post or save it."
+      />
 
       <div className="flex flex-wrap gap-3">
         <div className="min-w-[11rem] flex-[2]">

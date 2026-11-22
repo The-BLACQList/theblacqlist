@@ -1,7 +1,9 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useRef, useState } from 'react'
 import { useSaveLabel } from './SaveLabel'
+import { ItemWriteHelp } from '@/components/ai/ItemWriteHelp'
+import { offeringFromForm, type ItemHelp } from '@/lib/ai/itemHelp'
 import { Loader2, Trash2, Pencil, Star, CheckCircle, AlertCircle, X } from 'lucide-react'
 import { updateServiceAction } from '@/lib/actions/dashboard/updateService'
 import { deleteServiceAction } from '@/lib/actions/dashboard/deleteService'
@@ -18,6 +20,9 @@ interface Service {
 
 interface Props {
   services: Service[]
+  /** Ticket 242: AI help under each description while editing. Needs the listing id. */
+  listingId?: string
+  aiHelp?: ItemHelp
 }
 
 function DeleteServiceButton({ serviceId }: { serviceId: string }) {
@@ -50,15 +55,25 @@ function DeleteServiceButton({ serviceId }: { serviceId: string }) {
   )
 }
 
-function ServiceRow({ service }: { service: Service }) {
+function ServiceRow({
+  service,
+  listingId,
+  aiHelp,
+}: {
+  service: Service
+  listingId?: string
+  aiHelp: ItemHelp
+}) {
   const [editing, setEditing] = useState(false)
+  const formRef = useRef<HTMLFormElement>(null)
+  const descRef = useRef<HTMLInputElement>(null)
   const [state, formAction, isPending] = useActionState(updateServiceAction, null)
   const saveLabel = useSaveLabel()
 
   if (editing) {
     return (
       <li className="rounded-lg border border-amber-gold/30 bg-amber-50/30 px-4 py-3">
-        <form action={formAction} className="space-y-2">
+        <form ref={formRef} action={formAction} className="space-y-2">
           <input type="hidden" name="service_id" value={service.id} />
           <div className="flex items-center gap-2">
             <input
@@ -80,6 +95,7 @@ function ServiceRow({ service }: { service: Service }) {
             </button>
           </div>
           <input
+            ref={descRef}
             name="description"
             type="text"
             defaultValue={service.description ?? ''}
@@ -87,6 +103,19 @@ function ServiceRow({ service }: { service: Service }) {
             aria-label="Service description"
             className="w-full px-2 py-1.5 rounded-md border border-charcoal/20 font-body text-sm text-brand-black placeholder:text-charcoal-faint focus:outline-none focus:ring-2 focus:ring-amber-gold/40"
           />
+          {listingId && (
+            <ItemWriteHelp
+              listingId={listingId}
+              agentType="offering_description"
+              help={aiHelp}
+              getItem={() => offeringFromForm(formRef.current)}
+              missing="Add a name first, then ask."
+              getValue={() => descRef.current?.value ?? ''}
+              setValue={(text) => {
+                if (descRef.current) descRef.current.value = text
+              }}
+            />
+          )}
           <input
             name="price_display"
             type="text"
@@ -182,7 +211,7 @@ function ServiceRow({ service }: { service: Service }) {
   )
 }
 
-export function OfferingsList({ services }: Props) {
+export function OfferingsList({ services, listingId, aiHelp = null }: Props) {
   if (services.length === 0) {
     return (
       <p className="font-body text-sm text-charcoal-soft text-center py-6">
@@ -194,7 +223,7 @@ export function OfferingsList({ services }: Props) {
   return (
     <ul className="space-y-2">
       {services.map((service) => (
-        <ServiceRow key={service.id} service={service} />
+        <ServiceRow key={service.id} service={service} listingId={listingId} aiHelp={aiHelp} />
       ))}
     </ul>
   )
