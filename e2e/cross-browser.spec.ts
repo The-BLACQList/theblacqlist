@@ -101,7 +101,7 @@ test.describe('L. Cross-browser critical paths', () => {
     const errors = trackConsoleErrors(page)
 
     await loginAsOwner(page)
-    await expect(page.getByRole('heading', { name: 'Dashboard', level: 1 })).toBeVisible()
+    await expect(page.getByTestId('business-home')).toBeVisible()
 
     await page.goto('/dashboard/pages')
     await page.locator('main').first().waitFor()

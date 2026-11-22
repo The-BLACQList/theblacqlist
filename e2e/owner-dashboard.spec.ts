@@ -138,7 +138,7 @@ test.describe('owner dashboard', () => {
     page,
   }) => {
     await page.goto(`/dashboard/pages/${FIXTURE_OWNED_ID}/analytics`)
-    await expect(page.getByRole('heading', { name: 'Analytics', level: 1 })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Insights', level: 1 })).toBeVisible()
     // 30d is the default and is expressed by the ABSENCE of ?period. exact:true
     // because the search-queries section heading reads "Top search queries,
     // last 30 days" and would otherwise match too.
@@ -155,7 +155,7 @@ test.describe('owner dashboard', () => {
     // what the user gets either way; the status code is not the contract here.
     await page.goto(`/dashboard/pages/${FIXTURE_CLAIMABLE_ID}/analytics`)
     await expect(page.getByRole('heading', { name: /isn.t on the list/, level: 1 })).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Analytics', level: 1 })).toHaveCount(0)
+    await expect(page.getByRole('heading', { name: 'Insights', level: 1 })).toHaveCount(0)
   })
 
   test('TA-18 step 2 — a signed-in non-admin is bounced off /admin', async ({ page }) => {
