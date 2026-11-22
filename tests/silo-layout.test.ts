@@ -36,8 +36,15 @@ import {
   snapLabelPos,
   SILO,
   clusterRadius,
-  clusterDepth,
   CLUSTER_MAX_R,
+  CLUSTER_WIDE,
+  DOT_LIFT,
+  ZOOM,
+  clusterSpacing,
+  stepZoom,
+  zoomOrbit,
+  zoomAmount,
+  fogForZoom,
   crowdAnchor,
   linkControlPoints,
   ORBIT,
@@ -283,7 +290,7 @@ describe('placement', () => {
     expect(a).toHaveLength(30)
   })
 
-  it('keeps each business near its own floor and inside the cage', () => {
+  it('keeps each business on its own glass floor and inside the tower', () => {
     const many = [
       ...makeMany(400),
       ...makeMany(12, 'beauty-grooming').map((b) => ({ ...b, id: `s-${b.id}`, floorIndex: 4 })),
@@ -292,9 +299,10 @@ describe('placement', () => {
     const byId = new Map(many.map((b) => [b.id, b]))
     for (const p of placed) {
       const b = byId.get(p.id)!
-      const spread = clusterRadius(400)
-      expect(Math.abs(p.y - SILO.y[b.floorIndex]!)).toBeLessThanOrEqual(spread)
-      expect(Math.hypot(p.x, p.z)).toBeLessThan(SILO.R + SILO.cr)
+      // Just above the plate, never below it, never up near the next floor.
+      expect(p.y - SILO.y[b.floorIndex]!).toBeGreaterThanOrEqual(DOT_LIFT)
+      expect(p.y - SILO.y[b.floorIndex]!).toBeLessThanOrEqual(DOT_LIFT + 0.8)
+      expect(Math.hypot(p.x, p.z)).toBeLessThan(SILO.R)
     }
   })
 
@@ -308,13 +316,27 @@ describe('placement', () => {
     for (const p of before) expect(after.find((q) => q.id === p.id)).toEqual(p)
   })
 
-  it('spreads a busy cluster wider and deeper than a small one', () => {
+  it('spreads a busy cluster wider than a small one', () => {
     expect(clusterRadius(300)).toBeGreaterThan(clusterRadius(40))
-    expect(clusterDepth(300)).toBeGreaterThan(clusterDepth(5))
-    // Two full clusters on neighbouring floors never touch.
-    expect(2 * CLUSTER_MAX_R).toBeLessThan(SILO.y[0] - SILO.y[1])
-    // The deepest slab still stays outside the hub column.
-    expect(SILO.rA - clusterDepth(10_000)).toBeGreaterThan(SILO.hubR)
+    // A full cluster still stays outside the light column in the middle.
+    expect(SILO.rA - CLUSTER_MAX_R).toBeGreaterThan(SILO.hubR)
+    // Neighbouring wedges on a floor don't run into each other.
+    const wedge = (2 * Math.PI * SILO.rA) / CATEGORY_FAMILIES.length
+    expect(2 * CLUSTER_MAX_R * CLUSTER_WIDE).toBeLessThan(wedge)
+  })
+
+  it('keeps businesses apart in a busy cluster', () => {
+    const placed = placeBusinesses(makeMany(300))
+    let close = 0
+    for (let i = 0; i < placed.length; i++) {
+      for (let j = i + 1; j < placed.length; j++) {
+        const a = placed[i]!
+        const b = placed[j]!
+        if (Math.hypot(a.x - b.x, a.z - b.z) < 0.25) close++
+      }
+    }
+    // Hashed spots can land close now and then, but not often.
+    expect(close / placed.length).toBeLessThan(0.05)
   })
 
   it('grows the cluster with the crowd, within limits', () => {
@@ -347,15 +369,18 @@ describe('placement', () => {
 })
 
 describe('camera', () => {
-  it('holds the same default view as before the orbit', () => {
+  it('looks at the center line from inside the tower, at every scroll', () => {
     for (const t of [0, 0.3, 1]) {
       const { pos, look } = orbitPose(orbitForScroll(t, 0, ORBIT.el))
-      expect(pos.x).toBeCloseTo(0)
-      expect(pos.y).toBeCloseTo(46 - t * 82)
-      expect(pos.z).toBeCloseTo(6)
-      expect(look.y).toBeCloseTo(33 - t * 82)
-      expect(look.z).toBeCloseTo(0)
+      expect(look).toEqual({ x: 0, y: look.y, z: 0 })
+      expect(Math.hypot(pos.x, pos.z)).toBeLessThan(SILO.R)
+      expect(pos.y).toBeGreaterThan(look.y)
     }
+    const top = orbitForScroll(0, 0, ORBIT.el).y
+    const bottom = orbitForScroll(1, 0, ORBIT.el).y
+    expect(top).toBeGreaterThan(SILO.y[1]!)
+    expect(bottom).toBeLessThan(SILO.y[SILO.y.length - 1]!)
+    expect(bottom).toBeGreaterThan(SILO.hub.y - SILO.hubR)
   })
 
   it('wraps a turn the short way round', () => {
@@ -422,6 +447,56 @@ describe('camera', () => {
       const off = Math.acos(dot / (Math.hypot(...toLook) * Math.hypot(...toDot)))
       expect((off * 180) / Math.PI).toBeLessThan(fov / 2)
     }
+  })
+})
+
+describe('whole tower zoom', () => {
+  const inside = orbitForScroll(scrollForFloor(2), 0.7, ORBIT.el)
+
+  it('leaves the view alone at zero', () => {
+    expect(zoomOrbit(inside, 0)).toEqual(inside)
+  })
+
+  it('backs all the way out of the tower at one', () => {
+    const out = zoomOrbit(inside, 1)
+    expect(out.R).toBeCloseTo(ZOOM.R)
+    expect(out.y).toBeCloseTo(ZOOM.y)
+    expect(out.az).toBe(inside.az)
+    const { pos } = orbitPose(out)
+    // Outside the glass, with the top and bottom of the tower in view.
+    expect(Math.hypot(pos.x, pos.z)).toBeGreaterThan(SILO.R * 2)
+    const halfFov = ((62 / 2) * Math.PI) / 180
+    const h = (SILO.y[0]! + SILO.shellPad - (SILO.hub.y - SILO.hubR)) / 2
+    expect(Math.atan(h / ZOOM.R)).toBeLessThan(halfFov)
+  })
+
+  it('moves out smoothly, never closer as the zoom grows', () => {
+    let last = 0
+    for (let z = 0; z <= 1.0001; z += 0.05) {
+      const R = zoomOrbit(inside, z).R
+      expect(R).toBeGreaterThanOrEqual(last)
+      last = R
+    }
+  })
+
+  it('comes in a little closer below zero', () => {
+    const near = zoomOrbit(inside, ZOOM.min)
+    expect(near.R).toBeLessThan(inside.R)
+    expect(near.R).toBeGreaterThan(0)
+    expect(near.y).toBe(inside.y)
+  })
+
+  it('reads how far out the camera is, 0 inside to 1 outside', () => {
+    expect(zoomAmount(ORBIT.R)).toBe(0)
+    expect(zoomAmount(ORBIT.R / 2)).toBe(0)
+    expect(zoomAmount(ZOOM.R)).toBeCloseTo(1)
+    expect(zoomAmount(zoomOrbit(inside, 0.5).R)).toBeCloseTo(0.5)
+  })
+
+  it('thins the fog as the camera backs out', () => {
+    expect(fogForZoom(0)).toBe(ZOOM.fogNear)
+    expect(fogForZoom(1)).toBeCloseTo(ZOOM.fogFar)
+    expect(fogForZoom(0.5)).toBeLessThan(ZOOM.fogNear)
   })
 })
 
@@ -668,8 +743,9 @@ describe('floorForHeight', () => {
   })
 
   it('switches floors halfway between them', () => {
-    expect(floorForHeight(SILO.y[0]! - 8)).toBe(0)
-    expect(floorForHeight(SILO.y[0]! - 9)).toBe(1)
+    const half = (SILO.y[0]! - SILO.y[1]!) / 2
+    expect(floorForHeight(SILO.y[0]! - half + 1)).toBe(0)
+    expect(floorForHeight(SILO.y[0]! - half - 1)).toBe(1)
   })
 
   it('stays on the end floors past the top and bottom', () => {
@@ -705,5 +781,38 @@ describe('trackProgress', () => {
   it('stays between 0 and 1', () => {
     expect(trackProgress({ top: 0, height: 2100 }, { top: -5, height: 700 })).toBe(0)
     expect(trackProgress({ top: 0, height: 2100 }, { top: 1405, height: 700 })).toBe(1)
+  })
+})
+
+describe('gradual zoom', () => {
+  it('moves one even step at a time and stops at the ends', () => {
+    expect(stepZoom(0, 1)).toBeCloseTo(0.2)
+    expect(stepZoom(0.2, 1)).toBeCloseTo(0.4)
+    expect(stepZoom(0.4, -1)).toBeCloseTo(0.2)
+    expect(stepZoom(1, 1)).toBe(1)
+    expect(stepZoom(ZOOM.min, -1)).toBe(ZOOM.min)
+  })
+
+  it('lands on the next mark from part way, never skipping one', () => {
+    expect(stepZoom(0.1, 1)).toBeCloseTo(0.2)
+    expect(stepZoom(0.1, -1)).toBeCloseTo(0)
+    expect(stepZoom(0.3, 1)).toBeCloseTo(0.4)
+  })
+
+  it('takes several presses to go from inside to the whole tower', () => {
+    let z = 0
+    let presses = 0
+    while (z < 1) {
+      z = stepZoom(z, 1)
+      presses++
+    }
+    expect(presses).toBeGreaterThanOrEqual(4)
+  })
+})
+
+describe('room between businesses', () => {
+  it('gives a small group more room per business than a busy one, never none', () => {
+    expect(clusterSpacing(10)).toBeGreaterThan(clusterSpacing(100))
+    expect(clusterSpacing(400)).toBeGreaterThan(0.5)
   })
 })
