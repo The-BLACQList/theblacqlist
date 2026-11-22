@@ -1,6 +1,6 @@
 # Ticket 264: Stale e2e Fixes
 
-**Status:** PR open, 2026-11-21.
+**Status:** Merged #395 (`4a3f6ca`), 2026-11-21.
 
 ## Why
 
