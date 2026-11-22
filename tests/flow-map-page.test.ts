@@ -321,6 +321,27 @@ describe('/flow-map demo mode (ticket 249)', () => {
     expect(scene).toContain('demoArrivalAt(Date.now(), links.length)')
   })
 
+  it('shows businesses buying from businesses, and the trail, in Demo only', () => {
+    expect(experience).toContain('supply={demo?.supply}')
+    expect(experience).toContain('trail={activeTrail}')
+    expect(scene).toContain('<SupplyLinks')
+    expect(scene).toContain('<TrailPath')
+  })
+
+  it('offers Follow a Dollar in Demo, with a card that steps and ends', () => {
+    const panels = read(`${SILO}/SiloPanels.tsx`)
+    expect(experience).toMatch(/\{demo && showScene && \(\s*<button[\s\S]*?className="dollar"/)
+    expect(experience).toContain('aria-pressed={!!activeTrail}')
+    expect(experience).toContain('else if (activeTrail) endTrail()')
+    expect(panels).toContain("{last ? 'Follow Another Dollar' : 'Next Stop'}")
+    expect(panels).toContain('End Trail')
+    expect(panels).toContain("TRAIL_NOTE = 'Sample trail. Not real businesses or spending.'")
+    // The trail holds still when motion is paused or the device asks for less.
+    expect(experience).toMatch(
+      /!motion \|\| !active\) return\s*const t = window\.setTimeout\(\(\) => nextStopRef/
+    )
+  })
+
   it('lets the sideways preview map reach the right edge', () => {
     expect(css).toMatch(
       /\.silo-track\[data-mode='map'\]:not\(\[data-full\]\) \.silo-stage \{\s*right: 0;/

@@ -278,6 +278,71 @@ interface CardProps {
   onClear: () => void
   /** The color key, for the resting card on a phone. */
   legend: ReactNode
+  /** Follow a Dollar (ticket 249, demo only): the stop on screen, or null. */
+  trail?: SiloTrailView | null
+}
+
+/** One stop of a sample dollar's trail, as the card shows it. */
+export interface SiloTrailView {
+  /** 0-based. */
+  stop: number
+  count: number
+  name: string
+  where: string
+  text: string
+  crossed: boolean
+  color: string
+  onNext: () => void
+  onEnd: () => void
+}
+
+export const TRAIL_TITLE = 'Follow a Dollar'
+export const TRAIL_NOTE = 'Sample trail. Not real businesses or spending.'
+
+/** A plain call, not a component: the card keeps the same <aside> node. */
+function trailCard(trail: SiloTrailView) {
+  const last = trail.stop >= trail.count - 1
+  return (
+    <aside className="ctx trail" aria-labelledby="silo-ctx-title">
+      <p className="ctx-eyebrow trail-eyebrow">
+        {TRAIL_TITLE} · Stop {trail.stop + 1} of {trail.count}
+      </p>
+      <div className="sel-head">
+        <span className="ic" style={{ borderColor: trail.color }} aria-hidden="true">
+          <span className="sel-dot" style={{ background: trail.color }} />
+        </span>
+        <div className="sel-txt">
+          <b id="silo-ctx-title">{trail.name}</b>
+          <small>{trail.where}</small>
+        </div>
+        <button
+          type="button"
+          className="card-x"
+          aria-label="End Trail"
+          title="End Trail (Esc)"
+          onClick={trail.onEnd}
+        >
+          {IC_X}
+        </button>
+      </div>
+      {trail.crossed && <span className="trail-cross">Crosses Categories</span>}
+      <p>{trail.text}</p>
+      <ol className="trail-dots" aria-hidden="true">
+        {Array.from({ length: trail.count }, (_, i) => (
+          <li key={i} data-on={i <= trail.stop ? '' : undefined} />
+        ))}
+      </ol>
+      <div className="trail-actions">
+        <button type="button" className="trail-next" onClick={trail.onNext}>
+          {last ? 'Follow Another Dollar' : 'Next Stop'}
+        </button>
+        <button type="button" className="trail-end" onClick={trail.onEnd}>
+          End Trail
+        </button>
+      </div>
+      <p className="trail-note">{TRAIL_NOTE}</p>
+    </aside>
+  )
 }
 
 /**
@@ -294,7 +359,11 @@ export function SiloCard({
   totalSpentCents,
   onClear,
   legend,
+  trail,
 }: CardProps) {
+  // One <aside> root in every branch, so the sheet measuring it stays attached.
+  if (trail) return trailCard(trail)
+
   const close = (
     <button
       type="button"

@@ -62,6 +62,71 @@ Decided on the server, in this order:
   - Landscape: the switch sits inline in the strip and only "Sample Data" shows. At 667 wide, only Spent shows among the KPIs, so nothing overlaps More.
   - Fixed along the way: in the sideways preview the map stopped at 604 of 844 px, leaving a dark band. It now reaches the right edge. This was there before 249.
 
+## Round 2: Businesses Buying From Businesses, Follow a Dollar (2026-11-21)
+
+Founder: "make sure to include the follow the dollar experience, as well as take into account that some lines will cross categories as businesses often buy from other businesses. Make sure there's no flickering on movement."
+
+### Businesses Buying From Businesses (`buildDemoSupply`, `SupplyLinks`)
+
+- Demo only. Each linked shop buys from 1 or 2 suppliers (30% get 2). Each supplier then buys from makers, and each maker from growers, so the lines chain down the floors.
+- **Crossing categories:**
+  - About two in three lines stay in the family. The rest cross along pairs that make sense (`CROSS_BUYS`). For example, food buys from home (kitchen goods) and culture, style buys from health, and home buys from style.
+  - About 16% of businesses also hire a services business on the Shops or Suppliers floor (a bookkeeper, a printer).
+- **The current sample:**
+  - 370 lines in all: 117 goods lines cross categories, and 46 are services.
+  - By floor: 135 lines from Shops to Suppliers, 94 from Suppliers to Makers, 96 from Makers to Growers.
+- **On the map:**
+  - The lines are faint, so the floors stay calm.
+  - With colours by kind, a line runs from the buyer's colour to the seller's. A cafe buying from a woodshop reads as green into orange.
+  - Picking a business lights its own lines.
+  - A filter hides a line when either end is hidden.
+- The supply layer is built only when the data, colours or pick change, never per frame.
+
+### Follow a Dollar (`demoDollarTrail`, `trailStops`, `TrailPath`, card in `SiloPanels`)
+
+- **Starting:** a gold **Follow a Dollar** button in the map tools, shown in Demo only, starts a trail.
+- **The trail:**
+  - It starts at a linked shop that has suppliers, never a services business.
+  - It walks the supply lines down the floors: shop, supplier, maker, grower. That is at most 5 stops (`TRAIL_MAX_STOPS`); today's trails run 4.
+  - It prefers a route that crosses one category, then stays in the family.
+- **Each stop:**
+  - The camera flies to the business.
+  - The path taken so far shows bright gold, and the rest of the way shows faint.
+  - A spark runs the newest hop while motion is on.
+- **The card:**
+  - Header: "Follow a Dollar · Stop N of M", then the name and its kind and floor.
+  - A "Crosses Categories" chip shows when the hop changed family.
+  - One plain sentence ("Saffron Goods restocks from Harbor Light Trade Goods. Part of the dollar moves with it."), then progress bars.
+  - Buttons: **Next Stop** (**Follow Another Dollar** on the last stop) and **End Trail**.
+  - A note at the bottom: "Sample trail. Not real businesses or spending."
+  - No dollar amounts or shares anywhere, since the sample has no real spending to split.
+- **Moving through it:**
+  - The trail moves on by itself every 8 s.
+  - It holds still for Pause, for reduced motion, or when the map is off screen.
+  - Next Stop skips ahead.
+- **Ending it:**
+  - Escape, End Trail, the X, picking another business, a floor, a gap, or switching to Live all end the trail.
+  - The status line reads "Trail ended." and focus goes back to the button.
+  - The trail is derived from the open business, so it can't linger after a different pick.
+- The status line reads each stop aloud ("Stop 2 of 4: …").
+
+### Flicker on Movement (`SiloScene.tsx`)
+
+The founder saw flicker on an iPhone while moving. These fixes address the known causes:
+
+- **Small dots:**
+  - A dot never draws smaller than 2.5 CSS px. A far dot fades instead of shrinking under a pixel, which is what made distant dots blink while turning.
+  - Under 9 px a dot is a soft plain disc. The icon fades in only when there is room for it, so icon edges no longer sparkle.
+- **Stars and dust:** stars are a fixed screen size with a soft round texture, and the dust is fainter.
+- **Glow:** it now runs at full size instead of 75%. At the smaller size, the glow stepped as the camera moved.
+- **Floor halos:** they ease between lit and unlit (0.35 s) instead of snapping.
+- **Ring textures:** anisotropic filtering, so rings seen edge-on don't shimmer.
+- **New lines:** supply lines are 1.3 px and the trail is 2.8 px. Nothing thinner than the existing shopper lines.
+
+Measured locally: a frame-to-frame probe found no GPU rebuilds while moving. A software renderer can't reproduce the iPhone flicker, though, so this has to be confirmed on a real phone.
+
+Also fixed: in sideways full-screen at 844 wide, "Links" ran under More once the X was added. The Links figure now makes room at 900 wide or less, while the Sample Data badge shows.
+
 ## Checks (local, 2026-11-21)
 
 Playwright at desktop 1440×900, 390×844, 360×740, 844×390 and 667×375:
@@ -76,6 +141,16 @@ Playwright at desktop 1440×900, 390×844, 360×740, 844×390 and 667×375:
 | Landscape 844 and 667  | inline switch, map full width, KPIs clear of More               |
 | Console errors         | 0                                                               |
 
+Round 2 (desktop 1440, 390×844, 360×740, 844×390):
+
+| Check                   | Result                                                         |
+| ----------------------- | -------------------------------------------------------------- |
+| Follow a Dollar         | 4 stops, shop to grower; camera flies to each; card and status |
+| Auto-advance, Next Stop | both move on; last stop offers Follow Another Dollar           |
+| Escape                  | ends the trail, "Trail ended.", button no longer pressed       |
+| Phone and landscape     | button in the map tools; card in the bottom sheet / right edge |
+| Console errors          | 0                                                              |
+
 ## Tests
 
 - `tests/collective-demo.test.ts`:
@@ -85,14 +160,17 @@ Playwright at desktop 1440×900, 390×844, 360×740, 844×390 and 667×375:
   - figures only at the total bar;
   - gaps present;
   - the same sample every time;
-  - arrival timing and a stable pick per arrival.
+  - arrival timing and a stable pick per arrival;
+  - supply lines one floor down, some crossing, services present, chained, stable;
+  - trails start at a linked shop, follow supply lines, differ per dollar, and have no amounts.
 - `tests/flow-map-page.test.ts`:
   - the server pick;
   - the switch with `aria-pressed` and the remembered choice;
   - the badge and Demo title;
   - nothing fetched or written;
   - arrivals wired to the scene;
-  - the sideways preview fix.
+  - the sideways preview fix;
+  - supply and trail wired to the scene; Follow a Dollar in Demo only; the card's buttons; Escape ends it; the trail holds still without motion.
 
 ## Later
 

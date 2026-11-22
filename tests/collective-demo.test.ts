@@ -4,6 +4,8 @@
 // Pins the founder's rules for the sample map: when it opens by itself, that
 // it holds only made-up businesses with no links, that every business floor
 // has life, and that a simulated arrival is stable for the ticker and scene.
+// Also the founder's ask of 2026-11-21: businesses buy from businesses (some
+// across categories), and Follow a Dollar walks one dollar down the floors.
 // =============================================================================
 
 import { describe, it, expect } from 'vitest'
@@ -13,12 +15,16 @@ import {
   DEMO_UNTIL_LINKED,
   SAMPLE_BADGE,
   SAMPLE_NOTE,
+  TRAIL_MAX_STOPS,
   buildDemoCollective,
+  buildDemoSupply,
   demoArrivalAt,
+  demoDollarTrail,
   demoArrivalIndex,
   parseView,
   pickView,
   recentDemoArrivals,
+  trailStops,
 } from '@/lib/spend/collective-demo'
 import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 import { SILO_FLOORS, siloGaps } from '@/lib/spend/silo-layout'
@@ -156,5 +162,90 @@ describe('demo arrivals', () => {
   it('labels the sample plainly', () => {
     expect(SAMPLE_BADGE).toBe('Sample Data')
     expect(SAMPLE_NOTE).toBe('Not real businesses or spending.')
+  })
+})
+
+describe('businesses buying from businesses (demo)', () => {
+  const demo = buildDemoCollective()
+  const byId = new Map(demo.businesses.map((b) => [b.id, b]))
+  const goods = demo.supply.filter((l) => !l.service)
+
+  it('runs each goods line one floor down, from buyer to seller', () => {
+    expect(goods.length).toBeGreaterThan(150)
+    for (const l of goods) {
+      const a = byId.get(l.from)!
+      const b = byId.get(l.to)!
+      expect(a.floorIndex).toBeGreaterThanOrEqual(1)
+      expect(b.floorIndex).toBe(a.floorIndex + 1)
+    }
+  })
+
+  it('crosses categories on some lines, but most stay in the family', () => {
+    const cross = goods.filter((l) => l.cross)
+    expect(cross.length).toBeGreaterThan(goods.length * 0.15)
+    expect(cross.length).toBeLessThan(goods.length * 0.5)
+    for (const l of goods) {
+      expect(l.cross).toBe(byId.get(l.from)!.familyIndex !== byId.get(l.to)!.familyIndex)
+    }
+  })
+
+  it('has businesses hiring services on the upper floors', () => {
+    const services = demo.supply.filter((l) => l.service)
+    expect(services.length).toBeGreaterThan(0)
+    for (const l of services) {
+      expect(l.cross).toBe(true)
+      expect([1, 2]).toContain(byId.get(l.to)!.floorIndex)
+    }
+  })
+
+  it('chains: every supplier and maker that sells also buys from the floor below', () => {
+    const buys = new Set(goods.map((l) => l.from))
+    for (const l of goods) {
+      if (byId.get(l.to)!.floorIndex < SILO_FLOORS.length - 1) expect(buys.has(l.to)).toBe(true)
+    }
+  })
+
+  it('is the same every visit', () => {
+    expect(buildDemoSupply(demo.businesses)).toEqual(demo.supply)
+  })
+})
+
+describe('Follow a Dollar (demo)', () => {
+  const demo = buildDemoCollective()
+  const byId = new Map(demo.businesses.map((b) => [b.id, b]))
+  const edges = new Set(demo.supply.filter((l) => !l.service).map((l) => `${l.from}>${l.to}`))
+  const trails = Array.from({ length: 12 }, (_, n) =>
+    demoDollarTrail(demo.businesses, demo.supply, n)
+  )
+
+  it('starts at a shop with a line and walks down the supply lines', () => {
+    for (const t of trails) {
+      expect(t.length).toBeGreaterThanOrEqual(2)
+      expect(t.length).toBeLessThanOrEqual(TRAIL_MAX_STOPS)
+      const first = byId.get(t[0]!)!
+      expect(first.floorIndex).toBe(1)
+      expect(first.linked).toBe(true)
+      for (let i = 1; i < t.length; i++) expect(edges.has(`${t[i - 1]}>${t[i]}`)).toBe(true)
+    }
+  })
+
+  it('gives a different dollar each time, and some cross categories', () => {
+    expect(new Set(trails.map((t) => t.join())).size).toBeGreaterThan(6)
+    const crossing = trails.filter((t) => trailStops(demo.businesses, t).some((s) => s.crossed))
+    expect(crossing.length).toBeGreaterThan(0)
+  })
+
+  it('tells each stop in words, with no amounts or shares', () => {
+    for (const t of trails) {
+      const stops = trailStops(demo.businesses, t)
+      expect(stops).toHaveLength(t.length)
+      expect(stops[0]!.text).toMatch(/^A shopper spends a dollar at /)
+      expect(stops[0]!.crossed).toBe(false)
+      for (const s of stops) {
+        expect(s.text).not.toMatch(/\$|%|\d|\.\./)
+        expect(s.where).toMatch(/ · /)
+      }
+      expect(stops.at(-1)!.text).toMatch(/The trail ends /)
+    }
   })
 })

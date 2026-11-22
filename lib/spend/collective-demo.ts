@@ -22,7 +22,10 @@
 import type { BusinessLevel } from '@/lib/listings/levels'
 import {
   CATEGORY_FAMILIES,
+  FALLBACK_FAMILY_INDEX,
+  SILO_FLOORS,
   buildSiloBusinesses,
+  businessDisplayName,
   hashString,
   mulberry32,
   type BusinessListingMeta,
@@ -193,6 +196,8 @@ export interface DemoCollective {
   businesses: SiloBusiness[]
   totalSpentCents: number
   receiptCount: number
+  /** Businesses buying from businesses, down the floors (see buildDemoSupply). */
+  supply: DemoSupplyLink[]
 }
 
 /** Business-floor levels, top to bottom. */
@@ -260,11 +265,221 @@ export function buildDemoCollective(): DemoCollective {
     })
   }
 
+  const businesses = buildSiloBusinesses({ nodes, listings })
   return {
-    businesses: buildSiloBusinesses({ nodes, listings }),
+    businesses,
     totalSpentCents,
     receiptCount,
+    supply: buildDemoSupply(businesses),
   }
+}
+
+// ─── Businesses buying from businesses ──────────────────────────────────────
+
+/**
+ * One sample purchase between two businesses: `from` buys from `to`, so money
+ * moves from `from` to `to`. Demo only: the live map doesn't track these yet,
+ * which is why its lower floors say "Not tracked yet".
+ */
+export interface DemoSupplyLink {
+  from: string
+  to: string
+  /** The two businesses are in different families, like a cafe buying furniture. */
+  cross: boolean
+  /** A service the buyer pays for (taxes, staffing, design), not goods it sells on. */
+  service: boolean
+}
+
+/** Most buyers stay in their own family; the rest cross. */
+const SUPPLY_SAME_FAMILY = 0.68
+/** Some buyers have two suppliers on the floor below. */
+const SUPPLY_SECOND = 0.3
+/** Share of buyers that also pay a services business. */
+const SUPPLY_SERVICE = 0.16
+
+/**
+ * Where a family's businesses buy when they cross, by family key: a cafe buys
+ * furniture and printed menus, a salon buys from an apothecary, a woodshop
+ * buys upholstery cloth.
+ */
+const CROSS_BUYS: Record<string, readonly string[]> = {
+  food: ['home', 'culture'],
+  style: ['health'],
+  health: ['style', 'food'],
+  home: ['style'],
+  culture: ['home', 'food'],
+  services: ['home', 'culture'],
+}
+
+const familyKeyOf = (b: SiloBusiness) =>
+  (CATEGORY_FAMILIES[b.familyIndex] ?? CATEGORY_FAMILIES[FALLBACK_FAMILY_INDEX]!).key
+
+/**
+ * Seeded purchases between sample businesses. Shops with a line buy from
+ * suppliers, suppliers from makers, makers from growers: every business that
+ * sells to one above it buys from the floor below in turn, so a dollar can be
+ * followed down the tower. About a third cross into another family, and some
+ * buyers also pay a services business (a tax office, staffing, design).
+ */
+export function buildDemoSupply(businesses: readonly SiloBusiness[]): DemoSupplyLink[] {
+  const rnd = mulberry32(hashString(`${DEMO_SEED}:supply`))
+  const byPlace = new Map<string, SiloBusiness[]>()
+  for (const b of businesses) {
+    const key = `${b.floorIndex}:${familyKeyOf(b)}`
+    const list = byPlace.get(key)
+    if (list) list.push(b)
+    else byPlace.set(key, [b])
+  }
+  const services = businesses.filter(
+    (b) => familyKeyOf(b) === 'services' && (b.level === 'local' || b.level === 'supplier')
+  )
+  const buying = new Set(businesses.filter((b) => b.linked).map((b) => b.id))
+  const out: DemoSupplyLink[] = []
+  const lastBuyingFloor = SILO_FLOORS.length - 2
+
+  for (let floor = 1; floor <= lastBuyingFloor; floor++) {
+    for (const b of businesses) {
+      if (b.floorIndex !== floor || !buying.has(b.id)) continue
+      const own = familyKeyOf(b)
+      const taken = new Set<string>()
+      const n = rnd() < SUPPLY_SECOND ? 2 : 1
+      for (let k = 0; k < n; k++) {
+        const stay = rnd() < SUPPLY_SAME_FAMILY
+        const crosses = CROSS_BUYS[own] ?? []
+        const first = stay ? own : crosses[Math.floor(rnd() * crosses.length)]
+        // A family with no one on the floor below (a gap) buys across instead.
+        const order = [first, ...crosses, own].filter((f): f is string => !!f)
+        const pool = order.map((f) => byPlace.get(`${floor + 1}:${f}`) ?? []).find((l) => l.length)
+        if (!pool) continue
+        const seller = pool[Math.floor(rnd() * pool.length)]!
+        if (taken.has(seller.id)) continue
+        taken.add(seller.id)
+        buying.add(seller.id)
+        out.push({
+          from: b.id,
+          to: seller.id,
+          cross: seller.familyIndex !== b.familyIndex,
+          service: false,
+        })
+      }
+      if (own !== 'services' && services.length > 0 && rnd() < SUPPLY_SERVICE) {
+        const pro = services[Math.floor(rnd() * services.length)]!
+        out.push({ from: b.id, to: pro.id, cross: true, service: true })
+      }
+    }
+  }
+  return out
+}
+
+// ─── Follow a Dollar ─────────────────────────────────────────────────────────
+
+/** A trail never runs longer than this (workshop round 6). */
+export const TRAIL_MAX_STOPS = 5
+
+/**
+ * One sample shopper's dollar, as business ids: the shop it was spent at, then
+ * down the floors along the supply lines, ending at a grower or wherever the
+ * chain stops. `n` picks which dollar, so Follow Another Dollar shows a new one.
+ * Services are left out: the trail follows the goods. A trail crosses into
+ * another family at most once, so it reads as one chain, not a tour.
+ */
+export function demoDollarTrail(
+  businesses: readonly SiloBusiness[],
+  supply: readonly DemoSupplyLink[],
+  n: number
+): string[] {
+  const byId = new Map(businesses.map((b) => [b.id, b]))
+  const sells = new Map<string, string[]>()
+  for (const l of supply) {
+    if (l.service) continue
+    const list = sells.get(l.from)
+    if (list) list.push(l.to)
+    else sells.set(l.from, [l.to])
+  }
+  // How many more stops a dollar can make from each business.
+  const reach = new Map<string, number>()
+  const depth = (id: string): number => {
+    const known = reach.get(id)
+    if (known !== undefined) return known
+    reach.set(id, 0)
+    const d = 1 + Math.max(0, ...(sells.get(id) ?? []).map(depth))
+    reach.set(id, d)
+    return d
+  }
+  // A services shop (a tutor, a law office) has no goods to follow.
+  const shops = businesses.filter(
+    (b) => b.linked && b.level === 'local' && familyKeyOf(b) !== 'services' && sells.has(b.id)
+  )
+  if (shops.length === 0) return []
+  const longest = Math.max(...shops.map((b) => depth(b.id)))
+  const starts = shops.filter((b) => depth(b.id) === longest)
+
+  const rnd = mulberry32(hashString(`${DEMO_SEED}:trail:${n}`))
+  const trail = [starts[Math.floor(rnd() * starts.length)]!.id]
+  while (trail.length < TRAIL_MAX_STOPS) {
+    const next = (sells.get(trail[trail.length - 1]!) ?? []).filter((id) => !trail.includes(id))
+    if (next.length === 0) break
+    const best = Math.max(...next.map(depth))
+    const deepest = next.filter((id) => depth(id) === best)
+    const here = byId.get(trail[trail.length - 1]!)
+    const crossed = trail.some(
+      (id, i) => i > 0 && byId.get(id)?.familyIndex !== byId.get(trail[i - 1]!)?.familyIndex
+    )
+    const same = deepest.filter((id) => byId.get(id)?.familyIndex === here?.familyIndex)
+    const pick = crossed && same.length > 0 ? same : deepest
+    trail.push(pick[Math.floor(rnd() * pick.length)]!)
+  }
+  return trail.filter((id) => byId.has(id))
+}
+
+export interface TrailStop {
+  name: string
+  /** "Food and farm · Shops" */
+  where: string
+  /** What happens to the dollar here, in one or two plain sentences. No amounts. */
+  text: string
+  /** This stop is in a different family from the one before it. */
+  crossed: boolean
+}
+
+/** Ends a sentence, without doubling the stop on a name like "Parts Co." */
+const stop = (s: string) => (s.endsWith('.') ? s : `${s}.`)
+
+const SELL_VERB: Record<string, (buyer: string, seller: string) => string> = {
+  supplier: (buyer, seller) => stop(`${buyer} restocks from ${seller}`),
+  maker: (buyer, seller) => stop(`${buyer} buys goods made by ${seller}`),
+  grower: (buyer, seller) => `${buyer} buys what ${seller} grows.`,
+}
+
+/** The words for each stop on a trail. Plain sentences, never an amount. */
+export function trailStops(
+  businesses: readonly SiloBusiness[],
+  trail: readonly string[]
+): TrailStop[] {
+  const byId = new Map(businesses.map((b) => [b.id, b]))
+  const stops = trail.map((id) => byId.get(id)).filter((b): b is SiloBusiness => !!b)
+  return stops.map((b, i) => {
+    const fam = CATEGORY_FAMILIES[b.familyIndex] ?? CATEGORY_FAMILIES[FALLBACK_FAMILY_INDEX]!
+    const floor = SILO_FLOORS[b.floorIndex]
+    const name = businessDisplayName(b)
+    const prev = i > 0 ? stops[i - 1] : undefined
+    const crossed = !!prev && prev.familyIndex !== b.familyIndex
+    const last = i === stops.length - 1
+    let text = prev
+      ? `${(SELL_VERB[b.level] ?? SELL_VERB.supplier!)(businessDisplayName(prev), name)} Part of the dollar moves with it.`
+      : stop(`A shopper spends a dollar at ${name}`)
+    if (crossed) {
+      const from = CATEGORY_FAMILIES[prev.familyIndex] ?? CATEGORY_FAMILIES[FALLBACK_FAMILY_INDEX]!
+      text += ` This crosses from ${from.noun} into ${fam.noun}.`
+    }
+    if (last && stops.length > 1) {
+      text +=
+        b.level === 'grower'
+          ? ' The trail ends where the goods start: with the people who grow them.'
+          : ' The trail ends here for now: no one below it on the list yet.'
+    }
+    return { name, where: `${fam.name} · ${floor?.short ?? ''}`, text, crossed }
+  })
 }
 
 // ─── Arrivals ────────────────────────────────────────────────────────────────
