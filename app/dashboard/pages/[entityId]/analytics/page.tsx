@@ -3,7 +3,7 @@ import { BarChart2, Lock } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { requireOwner } from '@/lib/dashboard/guard'
-import { ANALYTICS_EVENTS, SERVER_ONLY_EVENTS } from '@/lib/analytics/constants'
+import { SERVER_ONLY_EVENTS } from '@/lib/analytics/constants'
 import { isFeatureEnabled } from '@/lib/env'
 import { canAccess } from '@/lib/stripe/features'
 import { getPlanAvailability, isTierOpen } from '@/lib/stripe/availability'
@@ -18,6 +18,7 @@ import {
   type PeriodChange,
 } from '@/lib/analytics/advanced'
 import { getWritingAllowance } from '@/lib/ai/allowance'
+import { pagePeriodCounts } from '@/lib/analytics/pageCounts'
 import { bucketTrend, periodsFor, resolvePeriod, type TrendPoint } from '@/lib/analytics/periods'
 import { PeriodToggle } from './_components/PeriodToggle'
 import { ExplainNumbers } from './_components/ExplainNumbers'
@@ -195,7 +196,7 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
     return (
       <div className="max-w-2xl space-y-4">
         <div>
-          <h1 className="font-headline text-2xl text-brand-black">Analytics</h1>
+          <h1 className="font-headline text-2xl text-brand-black">Insights</h1>
           <p className="font-body text-sm text-charcoal-soft mt-0.5">{listing.name}</p>
         </div>
         <div className="rounded-xl border border-charcoal/10 bg-white px-8 py-12 text-center">
@@ -250,42 +251,8 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
           .gte('created_at', sinceIso)
       : Promise.resolve({ count: 0 })
 
-  // The four period cards, for any window. Listing-scoped rows only: the owner
-  // read policy covers entity_type 'listing' rows of their own listings.
-  const pageCounts = async (from: string, to: string) => {
-    const base = () =>
-      supabase
-        .from('analytics_events')
-        .select('id', { count: 'exact', head: true })
-        .eq('entity_id', entityId)
-        .gte('created_at', from)
-        .lt('created_at', to)
-    const [views, taps, shares, saves] = await Promise.all([
-      base().eq('event_name', ANALYTICS_EVENTS.PAGE_VIEW),
-      // Website, call and directions taps from the hero, the quick-action bar
-      // and At a Glance (lib/analytics/contactTap.ts), emitted since
-      // 2026-10-05. MARKETPLACE_CTA_CLICK is deliberately not here: the
-      // marketplace emits plain `cta_click` on the product or service row,
-      // which the insights function below attributes to this page.
-      base().in('event_name', [
-        ANALYTICS_EVENTS.CTA_CLICK,
-        ANALYTICS_EVENTS.HERO_CTA_CLICK,
-        ANALYTICS_EVENTS.ACTION_BAR_CTA_CLICK,
-      ]),
-      base().eq('event_name', ANALYTICS_EVENTS.SHARE_INITIATED),
-      // The action filter is required, not optional: save_toggled covers both
-      // directions, and without it an unsave would read as a save. It also
-      // keeps this live count consistent with the nightly rollup, which filters
-      // the same way (20260515000000_analytics_aggregation.sql).
-      base().eq('event_name', ANALYTICS_EVENTS.SAVE_TOGGLED).eq('properties->>action', 'save'),
-    ])
-    return {
-      views: views.count ?? 0,
-      taps: taps.count ?? 0,
-      shares: shares.count ?? 0,
-      saves: saves.count ?? 0,
-    }
-  }
+  // The four period cards, for any window (shared with Business Home, 253).
+  const pageCounts = (from: string, to: string) => pagePeriodCounts(supabase, entityId, from, to)
 
   // Storefront items, and the events and jobs this owner posted from the page.
   // Their rows are entity_type 'product', 'service' or another listing, which
@@ -379,7 +346,7 @@ export default async function AnalyticsPage({ params, searchParams }: Props) {
     <div className="max-w-2xl space-y-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="font-headline text-2xl text-brand-black">Analytics</h1>
+          <h1 className="font-headline text-2xl text-brand-black">Insights</h1>
           <p className="font-body text-sm text-charcoal-soft mt-0.5">{listing.name}</p>
         </div>
         <PeriodToggle
