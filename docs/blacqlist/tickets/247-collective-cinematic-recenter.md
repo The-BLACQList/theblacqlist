@@ -1,6 +1,6 @@
 # Ticket 247: The Collective Goes Cinematic, With Recenter
 
-**Status:** Built on `feat/247-collective-cinematic-recenter` (stacked on 246), 2026-11-21. Not merged.
+**Status:** Merged #383, 2026-11-21.
 
 Part of the Collective tighten-up (246–250). Founder brief: the light band above the map made the page look cheap, and there was no clear way to get back to where you started.
 

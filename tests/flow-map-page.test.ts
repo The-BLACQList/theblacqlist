@@ -240,3 +240,48 @@ describe('/flow-map cinematic page (ticket 247)', () => {
     expect(experience).toContain('A line appears once a business has one')
   })
 })
+
+// Ticket 248: on a phone the page shows a preview; full-screen owns the gestures.
+describe('/flow-map phone full-screen (ticket 248)', () => {
+  const experience = read(EXPERIENCE)
+  const scene = read(SCENE)
+  const css = read(`${SILO}/silo.css`)
+
+  it('opens from an Enter The Collective button and closes with Back or X', () => {
+    expect(experience).toContain('Enter The Collective')
+    expect(experience).toContain('window.history.pushState(')
+    expect(experience).toContain("addEventListener('popstate', onPop)")
+    expect(experience).toContain('aria-label="Close Full Screen"')
+  })
+
+  it('only goes full-screen on a phone-sized window', () => {
+    expect(experience).toContain('const full = fullAsked && compact')
+    expect(read(SUPPORT)).toContain('export const COMPACT_QUERY')
+  })
+
+  it('locks the page, hands the canvas every gesture and returns focus', () => {
+    expect(css).toMatch(/html\.silo-full-lock body \{\s*overflow: hidden;/)
+    expect(css).toMatch(/\[data-full\] \.silo-stage canvas \{\s*touch-action: none;/)
+    expect(css).toMatch(/\[data-full\] \.silo \{[^}]*height: 100dvh;/)
+    expect(experience).toContain('enterBtnRef.current?.focus(')
+  })
+
+  it('takes no gestures in the page preview, so the page still scrolls', () => {
+    expect(css).toMatch(/:not\(\[data-full\]\) \.silo-stage canvas \{\s*pointer-events: none;/)
+    expect(scene).toContain('PREVIEW_SPIN * dt')
+  })
+
+  it('pinches to zoom in full-screen', () => {
+    expect(scene).toContain('pinchZoom(')
+  })
+
+  it('swipes up and down the floors in full-screen and settles on one', () => {
+    expect(scene).toContain('swipeTravel(dy, el.clientHeight)')
+    expect(scene).toContain('swipeLanding(r.t, r.glide, l.shape)')
+    expect(experience).toContain('Swipe up or down for floors.')
+  })
+
+  it("never resizes the canvas when Safari's bars come and go", () => {
+    expect(css).toMatch(/\[data-full\] \.silo-stage \{\s*bottom: auto;\s*height: calc\(100lvh/)
+  })
+})

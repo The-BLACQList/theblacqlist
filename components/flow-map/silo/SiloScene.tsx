@@ -70,7 +70,13 @@ import {
   shellTop,
   stepZoom,
   INTRO,
+  PINCH,
+  PREVIEW_SPIN,
+  SWIPE,
   RECENTER,
+  pinchZoom,
+  swipeLanding,
+  swipeTravel,
   zoomAmount,
   zoomOrbit,
   type SiloShape,
@@ -160,6 +166,16 @@ export interface SiloSceneProps {
   intro?: boolean
   /** A double-click on empty space recentered the view. */
   onRecenter?: () => void
+  /**
+   * Phone, in the page (ticket 248): the map takes no gestures and turns slowly
+   * on its own, so the page always scrolls.
+   */
+  preview?: boolean
+  /**
+   * Phone full-screen (ticket 248): one finger swipes up and down the floors or
+   * sideways to turn; two fingers pinch the zoom and tilt. The page never moves.
+   */
+  full?: boolean
   /** Wedges with no business on the list yet: a pink square each. */
   gaps: readonly SiloGap[]
   selectedGap: SiloGap | null
@@ -544,6 +560,8 @@ interface Rig {
   focus: Focus | null
   /** Heading speed a drag leaves behind, in radians a second. */
   spin: number
+  /** Track speed of a phone swipe, in track a second, for where it settles (ticket 248). */
+  glide: number
   dragging: boolean
   /** Seconds to settle, from the last thing that moved the view. */
   ease: number
@@ -608,7 +626,8 @@ function trackT(el: HTMLElement): number | null {
 /** Moves the page to `t` on the track. Instant, so it can't read as a user scroll. */
 function seatTrack(el: HTMLElement, t: number) {
   const parts = trackParts(el)
-  if (!parts) return
+  // Full-screen (ticket 248) locks the page, so the floor moves the camera only.
+  if (!parts || parts.track.hasAttribute('data-full')) return
   const track = parts.track.getBoundingClientRect()
   const stage = parts.stage.getBoundingClientRect()
   const room = track.height - stage.height
@@ -669,6 +688,7 @@ function Controls(
     el: ORBIT.el,
     focus: null,
     spin: 0,
+    glide: 0,
     dragging: false,
     ease: ORBIT.easeS,
     cur: orbitForScroll(0, 0, ORBIT.el, props.shape),
@@ -766,6 +786,21 @@ function Controls(
       axis: 'x' | 'y' | null
     } | null = null
     let hovered: string | null = null
+    // Full-screen (ticket 248): every finger on the map, for a two-finger pinch.
+    const fingers = new Map<number, { x: number; y: number }>()
+    let pinch: { gap: number; zoom: number; moving: boolean; midY: number } | null = null
+    // A pinch ends one finger at a time. Until all are up, nothing is a tap.
+    let pinched = false
+
+    function fingerGap(): number {
+      const [a, b] = [...fingers.values()]
+      return a && b ? Math.hypot(a.x - b.x, a.y - b.y) : 0
+    }
+
+    function fingerMidY(): number {
+      const [a, b] = [...fingers.values()]
+      return a && b ? (a.y + b.y) / 2 : 0
+    }
 
     function pickAt(clientX: number, clientY: number): Pick {
       const rect = el.getBoundingClientRect()
@@ -834,6 +869,22 @@ function Controls(
 
     const onDown = (e: PointerEvent) => {
       if (e.button !== 0) return
+      const full = !!live.current.full && e.pointerType === 'touch'
+      if (full) {
+        fingers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+        if (fingers.size === 2) {
+          // A second finger turns the drag into a pinch.
+          pinch = { gap: fingerGap(), zoom: rig.current.zoom, moving: false, midY: fingerMidY() }
+          pinched = true
+          down = null
+          rig.current.dragging = false
+          rig.current.spin = 0
+          rig.current.glide = 0
+          el.setPointerCapture?.(e.pointerId)
+          return
+        }
+        if (fingers.size > 2) return
+      }
       down = {
         id: e.pointerId,
         x: e.clientX,
@@ -841,15 +892,37 @@ function Controls(
         lastX: e.clientX,
         lastY: e.clientY,
         at: e.timeStamp,
+        // A finger keeps one direction. In full-screen up and down travels the
+        // floors; in the page it's the browser's own scroll.
         mouse: e.pointerType !== 'touch',
         drag: false,
         axis: null,
       }
       rig.current.spin = 0
+      rig.current.glide = 0
       el.setPointerCapture?.(e.pointerId)
     }
 
     const onMove = (e: PointerEvent) => {
+      if (fingers.has(e.pointerId)) fingers.set(e.pointerId, { x: e.clientX, y: e.clientY })
+      if (pinch && fingers.size >= 2) {
+        const r = rig.current
+        // Two fingers moving together up or down tilt the view.
+        const midY = fingerMidY()
+        turn(r, 0, (midY - pinch.midY) * DRAG_TILT)
+        pinch.midY = midY
+        r.ease = ORBIT.easeS
+        const gap = fingerGap()
+        if (pinch.moving || Math.abs(gap - pinch.gap) >= PINCH.startPx) {
+          pinch.moving = true
+          const next = pinchZoom(pinch.zoom, pinch.gap, gap)
+          // Backing out leaves a close-up, as Move Farther does.
+          if (next > pinch.zoom && r.focus) letGo()
+          r.zoom = next
+        }
+        invalidate()
+        return
+      }
       if (down && e.pointerId === down.id) {
         if (!down.drag && Math.hypot(e.clientX - down.x, e.clientY - down.y) > DRAG_THRESHOLD_PX) {
           down.drag = true
@@ -860,17 +933,25 @@ function Controls(
           const dx = e.clientX - down.lastX
           const dy = e.clientY - down.lastY
           // A swipe keeps one direction: sideways turns, up and down is the
-          // browser's own page scroll.
+          // browser's own page scroll, or in full-screen the floors.
           if (!down.mouse) {
             down.axis ??= Math.abs(e.clientX - down.x) >= Math.abs(e.clientY - down.y) ? 'x' : 'y'
           }
+          const secs = Math.max((e.timeStamp - down.at) / 1000, 0.001)
           if (down.mouse || down.axis === 'x') {
             const dAz = -dx * DRAG_TURN
             turn(r, dAz, down.mouse ? dy * DRAG_TILT : 0)
             r.dragging = true
             r.ease = ORBIT.easeS
-            const speed = dAz / Math.max((e.timeStamp - down.at) / 1000, 0.001)
-            r.spin = THREE.MathUtils.clamp(r.spin * 0.6 + speed * 0.4, -SPIN_MAX, SPIN_MAX)
+            const max = down.mouse ? SPIN_MAX : SWIPE.spinMax
+            r.spin = THREE.MathUtils.clamp(r.spin * 0.6 + (dAz / secs) * 0.4, -max, max)
+          } else if (live.current.full) {
+            const dT = swipeTravel(dy, el.clientHeight)
+            if (travel(dT)) {
+              r.dragging = true
+              const max = SWIPE.glideMax
+              r.glide = THREE.MathUtils.clamp(r.glide * 0.6 + (dT / secs) * 0.4, -max, max)
+            } else r.glide = 0
           }
           down.at = e.timeStamp
           invalidate()
@@ -886,11 +967,28 @@ function Controls(
     }
 
     const onUp = (e: PointerEvent) => {
+      if (fingers.delete(e.pointerId)) {
+        if (fingers.size < 2) pinch = null
+        if (pinched) {
+          if (fingers.size === 0) pinched = false
+          el.releasePointerCapture?.(e.pointerId)
+          return
+        }
+      }
       if (!down || e.pointerId !== down.id) return
       const wasDrag = down.drag
       const r = rig.current
       const l = live.current
-      if (l.reducedMotion || e.timeStamp - down.at > SPIN_STALE_MS) r.spin = 0
+      if (l.reducedMotion || e.timeStamp - down.at > SPIN_STALE_MS) {
+        r.spin = 0
+        r.glide = 0
+      }
+      // A phone swipe up or down settles on a floor (ticket 248).
+      if (wasDrag && l.full && down.axis === 'y' && !r.focus) {
+        r.t = swipeLanding(r.t, r.glide, l.shape)
+        r.ease = ORBIT.easeS
+      }
+      r.glide = 0
       r.dragging = false
       down = null
       el.releasePointerCapture?.(e.pointerId)
@@ -914,10 +1012,14 @@ function Controls(
       }
     }
 
-    const onCancel = () => {
+    const onCancel = (e: PointerEvent) => {
+      fingers.delete(e.pointerId)
+      if (fingers.size < 2) pinch = null
+      if (fingers.size === 0) pinched = false
       down = null
       rig.current.dragging = false
       rig.current.spin = 0
+      rig.current.glide = 0
       el.style.cursor = ''
     }
 
@@ -1084,6 +1186,12 @@ function Controls(
       turn(r, r.spin * dt, 0)
       r.spin *= Math.exp(-4 * dt)
       if (Math.abs(r.spin) < 0.01) r.spin = 0
+    }
+
+    // The phone preview in the page turns slowly on its own (ticket 248).
+    // It waits for the opening glide to land.
+    if (l.preview && l.motion && !l.intro && !r.focus && !r.dragging) {
+      r.az += PREVIEW_SPIN * dt
     }
 
     const { shape } = l

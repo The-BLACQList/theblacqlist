@@ -66,6 +66,27 @@ export function usePrefersReducedMotion(): boolean {
   )
 }
 
+/**
+ * A phone, upright or sideways: the map is a preview in the page and opens
+ * full-screen (ticket 248). Matches the phone and sideways stages in silo.css.
+ */
+export const COMPACT_QUERY = '(max-width: 759px) and (min-height: 501px), (max-height: 500px)'
+
+function subscribeCompact(onChange: () => void): () => void {
+  const mql = window.matchMedia(COMPACT_QUERY)
+  mql.addEventListener('change', onChange)
+  return () => mql.removeEventListener('change', onChange)
+}
+
+/** True on a phone stage. False on the server. */
+export function useCompactStage(): boolean {
+  return useSyncExternalStore(
+    subscribeCompact,
+    () => window.matchMedia(COMPACT_QUERY).matches,
+    () => false
+  )
+}
+
 function subscribeVisibility(onChange: () => void): () => void {
   document.addEventListener('visibilitychange', onChange)
   return () => document.removeEventListener('visibilitychange', onChange)

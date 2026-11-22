@@ -1,6 +1,6 @@
 # Ticket 246: The Collective Becomes a Glass Tower
 
-**Status:** Built on `feat/246-collective-glass-tower` (stacked on 250), 2026-11-21. Not merged.
+**Status:** Merged #380, 2026-11-21.
 
 Part of the Collective tighten-up (246–250). Founder pick, 2026-11-21: **Glass Tower**, chosen from the sketch, because "I can still sit in the center surrounded" and still see the category groupings. Founder add-on: "I would also like to be able to zoom out and see the full tower."
 

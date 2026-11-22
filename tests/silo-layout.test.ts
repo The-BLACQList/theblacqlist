@@ -44,6 +44,12 @@ import {
   stepZoom,
   INTRO,
   RECENTER,
+  PINCH,
+  PREVIEW_SPIN,
+  pinchZoom,
+  SWIPE,
+  swipeLanding,
+  swipeTravel,
   introPlays,
   zoomOrbit,
   zoomAmount,
@@ -847,5 +853,61 @@ describe('the opening', () => {
     expect(INTRO.glideS * 3 * 1000).toBeLessThanOrEqual(INTRO.endMs + 500)
     // Worst case, a slow scene load: the wait, then the opening.
     expect(INTRO.waitMs + INTRO.endMs).toBeLessThanOrEqual(5000)
+  })
+})
+
+// Ticket 248: pinch on a phone in full-screen, a slow turn in the page.
+describe('phone pinch and preview (ticket 248)', () => {
+  it('spreading fingers moves closer, pinching moves out, each in a clamp', () => {
+    expect(pinchZoom(0, 100, 200)).toBeLessThan(0)
+    expect(pinchZoom(0, 200, 100)).toBeGreaterThan(0)
+    expect(pinchZoom(0, 100, 100)).toBe(0)
+    expect(pinchZoom(0, 300, 10)).toBe(1)
+    expect(pinchZoom(0, 10, 300)).toBe(ZOOM.min)
+  })
+
+  it('ignores a pinch with no gap', () => {
+    expect(pinchZoom(0.3, 0, 120)).toBe(0.3)
+    expect(pinchZoom(0.3, 120, 0)).toBe(0.3)
+  })
+
+  it('needs a real movement before it counts as a pinch', () => {
+    expect(PINCH.startPx).toBeGreaterThanOrEqual(6)
+  })
+
+  it('turns the preview slowly, about one lap a minute and a half', () => {
+    expect((Math.PI * 2) / PREVIEW_SPIN).toBeGreaterThanOrEqual(60)
+    expect((Math.PI * 2) / PREVIEW_SPIN).toBeLessThanOrEqual(120)
+  })
+})
+
+// Ticket 248 round 2: on the founder's iPhone a swipe up or down did nothing.
+describe('phone swipe through the floors (ticket 248)', () => {
+  it('a finger moving up goes down the tower, down comes back up', () => {
+    expect(swipeTravel(-100, 800)).toBeGreaterThan(0)
+    expect(swipeTravel(100, 800)).toBeLessThan(0)
+    expect(swipeTravel(100, 0)).toBe(0)
+  })
+
+  it('two screens of swipe cover the whole tower', () => {
+    expect(swipeTravel(-1600, 800)).toBeCloseTo(1)
+  })
+
+  it('settles on a floor, never between two', () => {
+    const floors = SILO_FLOORS.map((_, i) => scrollForFloor(i))
+    for (const t of [0, 0.1, 0.33, 0.5, 0.71, 1]) {
+      expect(floors).toContain(swipeLanding(t, 0))
+    }
+  })
+
+  it('a flick carries no more than half a floor further', () => {
+    const one = scrollForFloor(1)
+    const gap = scrollForFloor(2) - one
+    expect(SWIPE.glideMax * SWIPE.flingS).toBeLessThanOrEqual(gap / 2 + 1e-9)
+    expect(swipeLanding(one, SWIPE.glideMax)).toBeLessThanOrEqual(scrollForFloor(2))
+  })
+
+  it('coasts a sideways flick less than a mouse, so it cannot jump', () => {
+    expect(SWIPE.spinMax).toBeLessThan(3)
   })
 })
