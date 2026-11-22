@@ -128,17 +128,20 @@ describe('components/admin/AdminPendingAlert.tsx', () => {
 
 describe('components/admin/AdminSidebar.tsx', () => {
   const src = read(SIDEBAR)
+  const nav = read('lib/admin/navGroups.ts')
+  const rail = read('components/nav/NavRail.tsx')
 
   it('takes counts as an optional prop keyed by href', () => {
     expect(src).toMatch(/counts\?: Record<string, number>/)
-    expect(src).toMatch(/counts\?\.\[href\]/)
+    expect(nav).toMatch(/counts\?\.\[it\.href\]/)
   })
 
   it('renders the pill only above zero, with an accessible label', () => {
-    const pill = src.slice(src.indexOf('{pending > 0 && ('), src.indexOf('</Link>'))
+    const pill = rail.slice(rail.indexOf('{badge > 0 && ('), rail.indexOf('</Link>'))
     expect(pill.length).toBeGreaterThan(0)
-    expect(pill).toContain('aria-label={`${pending} pending`}')
-    expect(pill).toContain('data-testid={`admin-nav-count-')
+    expect(pill).toContain("aria-label={`${badge} ${item.badgeLabel ?? 'pending'}`}")
+    expect(pill).toContain('data-testid={`${testIdPrefix}-count-')
+    expect(src).toContain('testIdPrefix="admin-nav"')
   })
 })
 

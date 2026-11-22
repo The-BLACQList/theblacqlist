@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Bookmark, Menu, ShieldCheck } from 'lucide-react'
+import { Menu, ShieldCheck } from 'lucide-react'
 import {
   Sheet,
   SheetContent,
@@ -17,17 +17,19 @@ import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { cn } from '@/lib/utils'
 import { signOutAction } from '@/lib/actions/auth/signOut'
 import { SoonPill } from '@/components/ui/soon-pill'
-import { MAIN_NAV_LINKS, SAVED_LINK } from '@/components/nav/nav-links'
+import { MAIN_NAV_LINKS, type NavLink } from '@/components/nav/nav-links'
 
 interface Props {
   isSignedIn: boolean
   /** Resolved server-side in PublicHeader. Gates the link only — /admin still guards itself. */
   isAdmin: boolean
+  /** The My Account links (accountMenuLinks): My Business first for owners (ticket 252). */
+  accountLinks?: NavLink[]
   /** The Collective isn't open yet (ticket 122). Its link stays, with a "Soon" pill. */
   collectiveSoon: boolean
 }
 
-export function MobileNav({ isSignedIn, isAdmin, collectiveSoon }: Props) {
+export function MobileNav({ isSignedIn, isAdmin, accountLinks = [], collectiveSoon }: Props) {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   const prevPathname = useRef(pathname)
@@ -121,25 +123,33 @@ export function MobileNav({ isSignedIn, isAdmin, collectiveSoon }: Props) {
                     </Link>
                   </Button>
                 )}
-                <Button
-                  variant="outline"
-                  className="w-full h-12 border-cream/50 text-cream bg-transparent hover:bg-white/5 hover:text-cream font-subhead"
-                  asChild
-                >
-                  <Link href={SAVED_LINK.href} onClick={() => setIsOpen(false)}>
-                    <Bookmark className="h-4 w-4" aria-hidden="true" />
-                    {SAVED_LINK.label}
-                  </Link>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full h-12 border-cream/50 text-cream bg-transparent hover:bg-white/5 hover:text-cream font-subhead"
-                  asChild
-                >
-                  <Link href="/account" onClick={() => setIsOpen(false)}>
+                <section aria-labelledby="mobile-account-heading" data-testid="mobile-account-menu">
+                  <h2
+                    id="mobile-account-heading"
+                    className="px-2 pb-1 font-subhead text-sm font-bold uppercase tracking-[0.12em] text-gold"
+                  >
                     My Account
-                  </Link>
-                </Button>
+                  </h2>
+                  <ul className="flex flex-col gap-1">
+                    {accountLinks.map((link) => (
+                      <li key={link.href}>
+                        <Link
+                          href={link.href}
+                          onClick={() => setIsOpen(false)}
+                          aria-current={pathname === link.href ? 'page' : undefined}
+                          className={cn(
+                            'flex items-center min-h-[48px] px-2 rounded-md font-subhead text-base transition-colors',
+                            'text-cream hover:text-gold hover:bg-white/5',
+                            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold',
+                            pathname === link.href && 'text-gold'
+                          )}
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
                 <form action={signOutAction} onSubmit={() => setIsOpen(false)}>
                   <Button
                     type="submit"

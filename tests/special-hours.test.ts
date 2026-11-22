@@ -449,7 +449,7 @@ describe('wiring', () => {
   it('the JSON-LD builder, the cron, the sidebar and the Hours card are wired', () => {
     expect(read('lib/listings/jsonLd.ts')).toMatch(/jsonLd\.specialOpeningHoursSpecification/)
     expect(read('app/api/cron/expiry/route.ts')).toMatch(/purgePastHoursOverrides\(supabase, now\)/)
-    expect(read('components/dashboard/DashboardSidebar.tsx')).toMatch(/\/special-hours`/)
+    expect(read('lib/account/shellNav.ts')).toMatch(/\/special-hours`/)
     expect(read('components/dashboard/HoursSection.tsx')).toMatch(/\/special-hours`/)
   })
 })

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { collectiveItems } from '@/components/account/AccountNav'
+import { collectiveItems } from '@/lib/account/shellNav'
 
 // H4 (simplicity pass, 2026-10-15): the three Collective-flag rows collapse into
 // one "Soon" row while covered, and come back individually once it opens.

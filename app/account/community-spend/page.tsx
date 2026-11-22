@@ -174,8 +174,7 @@ export default async function CommunitySpendPage() {
   // second, independent reason for the same outcome: a matched business under
   // AGGREGATE_MIN_TRANSACTIONS is withheld, not missing. The empty-state body
   // names both causes.
-  const hasBreakdowns =
-    topBusinesses.length > 0 || topCities.length > 0 || topCategories.length > 0
+  const hasBreakdowns = topBusinesses.length > 0 || topCities.length > 0 || topCategories.length > 0
 
   return (
     <main>
@@ -184,8 +183,8 @@ export default async function CommunitySpendPage() {
         <div>
           <h1 className="font-headline text-3xl text-brand-black">The Collective</h1>
           <p className="font-subhead text-sm text-charcoal-soft mt-1 max-w-[480px]">
-            Anonymized community data showing how BLACQList users are supporting the businesses
-            on the list. No personal data is attached to these totals.
+            Anonymized community data showing how people on The BLACQList are supporting the
+            businesses on the list. No personal data is attached to these totals.
           </p>
         </div>
 

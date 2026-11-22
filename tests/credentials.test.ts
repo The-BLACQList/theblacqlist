@@ -397,7 +397,7 @@ describe('wiring', () => {
     expect(read('app/dashboard/pages/[entityId]/credentials/page.tsx')).toContain(
       'CredentialsManager'
     )
-    expect(read('components/dashboard/DashboardSidebar.tsx')).toContain('/credentials`')
+    expect(read('lib/account/shellNav.ts')).toContain('/credentials`')
   })
 
   it('press links open safely in a new tab', () => {

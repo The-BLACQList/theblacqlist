@@ -6,6 +6,10 @@
 // it has no way in from the menu (tests/admin-nav-groups.test.ts checks every
 // app/admin/<route>/page.tsx is listed).
 
+import { isUnder, parseOpenSlugs } from '@/lib/nav/rail'
+
+export { isUnder }
+
 export interface AdminNavItem {
   href: string
   label: string
@@ -76,11 +80,6 @@ export const DEFAULT_OPEN_GROUPS = ['to-review']
 /** The localStorage key holding the admin's open/closed choices. */
 export const ADMIN_NAV_PREF_KEY = 'blacq-admin-nav'
 
-/** True when `pathname` is `href` or a page below it (`/admin/claims/123`). */
-export function isUnder(pathname: string, href: string): boolean {
-  return pathname === href || pathname.startsWith(`${href}/`)
-}
-
 /**
  * The group holding the page you are on, or null on the overview and on any
  * admin page the menu does not list. That group is always drawn open.
@@ -108,13 +107,18 @@ export function totalCount(counts: Record<string, number> | undefined): number {
  * hand-edited) falls back to the defaults rather than throwing.
  */
 export function parseOpenGroups(raw: string | null): string[] {
-  if (!raw) return DEFAULT_OPEN_GROUPS
-  try {
-    const parsed: unknown = JSON.parse(raw)
-    if (!Array.isArray(parsed)) return DEFAULT_OPEN_GROUPS
-    const known = new Set(ADMIN_NAV_GROUPS.map((g) => g.slug))
-    return parsed.filter((s): s is string => typeof s === 'string' && known.has(s))
-  } catch {
-    return DEFAULT_OPEN_GROUPS
-  }
+  return parseOpenSlugs(
+    raw,
+    ADMIN_NAV_GROUPS.map((g) => g.slug),
+    DEFAULT_OPEN_GROUPS
+  )
+}
+
+/** The menu as rail groups: each item's waiting count becomes its badge. */
+export function adminRailGroups(counts: Record<string, number> | undefined) {
+  return ADMIN_NAV_GROUPS.map((g) => ({
+    slug: g.slug,
+    label: g.label,
+    items: g.items.map((it) => ({ ...it, badge: counts?.[it.href] ?? 0 })),
+  }))
 }
