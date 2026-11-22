@@ -75,6 +75,8 @@ export interface CueRunResult {
   swapped: boolean
   usage: CueUsage
   calls: number
+  /** Cards found by meaning, not by the words (ticket 260). */
+  related: number
 }
 
 export async function runCue(args: {
@@ -145,5 +147,6 @@ function finish(args: {
   }
   if (!text && cards.length > 0) text = SWAP_WITH_CARDS
 
-  return { text, cards, actions, stop, swapped, usage: args.usage, calls: args.calls }
+  const related = cards.filter((c) => c.related).length
+  return { text, cards, actions, stop, swapped, usage: args.usage, calls: args.calls, related }
 }

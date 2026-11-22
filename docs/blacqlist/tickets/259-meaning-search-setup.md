@@ -1,6 +1,6 @@
 # Ticket 259: Meaning Search Setup (Flag Off)
 
-**Status:** PR open. Merge needs the founder's OK. Applying the migration to staging, then prod, is GATE-DATA.
+**Status:** Merged #390 (b320baf), 2026-11-21. Migration applied on staging and prod (checks passed). Flag off everywhere.
 
 ## Why
 Founder, 2026-11-21: "How do I switch to Black Owned bathroom products" found nothing on production. Tickets 254–258 made search understand the question and always answer. Keyword search still needs the words to match.
@@ -78,5 +78,5 @@ There is no local pgvector, so the SQL is checked by reading it. It runs for rea
 - `SELECT has_table_privilege('anon', 'listing_embeddings', 'SELECT');` should be false.
 
 ## Founder Asks
-- OK the Privacy Policy wording (`#meaning-search`) before 260 turns the flag on in prod.
-- Voyage's docs don't say whether API text is used for training. Check the Voyage dashboard for an opt-out before the prod flip.
+- Done 2026-11-21: the founder OK'd the Privacy Policy wording (`#meaning-search`).
+- Done 2026-11-21: the founder opted out of data training in the Voyage dashboard.

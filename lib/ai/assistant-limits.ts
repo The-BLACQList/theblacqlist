@@ -17,6 +17,11 @@ export interface AssistantCard {
   rating: number | null
   reviewCount: number
   imageSrc: string | null
+  /**
+   * Found by meaning, not by the words (ticket 260). Shown under a Related
+   * Businesses heading, after the matches.
+   */
+  related?: boolean
 }
 
 /**

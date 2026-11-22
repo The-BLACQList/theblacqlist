@@ -45,7 +45,7 @@ import { cueDeps, listingNames, loadLists, loadPage } from '@/lib/ai/cue/data'
 import { createMockCueCall } from '@/lib/ai/cue/mock'
 import { buildCueMessages, cleanTurnText, cueSystem, CUE_PROMPT_VERSION } from '@/lib/ai/cue/prompt'
 import { CUE_CONTENT_TYPE, encodeCueEvent, type CueEvent } from '@/lib/ai/cue/stream'
-import { newTurnState, type CueToolContext } from '@/lib/ai/cue/tools'
+import { newTurnState, toCard, type CueToolContext } from '@/lib/ai/cue/tools'
 import { fallbackHref, withinGuideBudget } from '@/lib/ai/guide'
 import { aiKillSwitchOn, resolveProvider } from '@/lib/ai/provider'
 import {
@@ -59,6 +59,7 @@ import { parsePagePath } from '@/lib/assistant/page'
 import { queryListings } from '@/lib/listings/query'
 import { isFeatureEnabled } from '@/lib/env'
 import { buildBasicAnswer, type ExactBucket } from '@/lib/search/basicAnswer'
+import { findRelatedListings } from '@/lib/services/relatedListings'
 import type { AssistantCategory } from '@/lib/ai/assistant'
 import { checkRateLimit, getClientIp } from '@/lib/security/rate-limit'
 import { createServiceClient } from '@/lib/supabase/server'
@@ -101,7 +102,13 @@ type BasicReason =
  * One `search_answer_served` row. Awaited, and any failure dropped: analytics
  * never costs the visitor their answer. Properties only, no words, no IP.
  */
-async function logAnswer(props: { mode: 'ai' | 'basic'; reason: BasicReason | null; exact_bucket: ExactBucket | null }) {
+async function logAnswer(props: {
+  mode: 'ai' | 'basic'
+  reason: BasicReason | null
+  exact_bucket: ExactBucket | null
+  /** Any card under Related Businesses, found by meaning (ticket 260). */
+  related_used: boolean
+}) {
   try {
     await createServiceClient()
       .from('analytics_events')
@@ -133,8 +140,17 @@ async function basicAnswerEvents(args: {
   try {
     const categories =
       args.categories !== undefined ? args.categories : ((await loadLists().catch(() => null))?.categories ?? null)
-    const answer = await buildBasicAnswer(args.message, args.near, { search: queryListings, categories })
-    await logAnswer({ mode: 'basic', reason: args.reason, exact_bucket: answer.exactBucket })
+    const answer = await buildBasicAnswer(args.message, args.near, {
+      search: queryListings,
+      categories,
+      related: async (request) => (await findRelatedListings(request, cueDeps.loadByIds)).map(toCard),
+    })
+    await logAnswer({
+      mode: 'basic',
+      reason: args.reason,
+      exact_bucket: answer.exactBucket,
+      related_used: answer.related > 0,
+    })
     const events: CueEvent[] = []
     if (answer.cards.length > 0) events.push({ type: 'cards', cards: answer.cards })
     if (answer.actions.length > 0) events.push({ type: 'actions', actions: answer.actions })
@@ -336,7 +352,9 @@ export async function POST(request: Request): Promise<Response> {
         if (result.cards.length > 0) emit({ type: 'cards', cards: result.cards })
         if (result.actions.length > 0) emit({ type: 'actions', actions: result.actions })
         emit({ type: 'done', text: result.text, ...(surface === 'search' ? { mode: 'ai' as const } : {}) })
-        if (surface === 'search') await logAnswer({ mode: 'ai', reason: null, exact_bucket: null })
+        if (surface === 'search') {
+          await logAnswer({ mode: 'ai', reason: null, exact_bucket: null, related_used: result.related > 0 })
+        }
       } else {
         // Cue ran and had nothing to say, or failed. Stopped by the visitor:
         // nobody is listening, so nothing more is sent.

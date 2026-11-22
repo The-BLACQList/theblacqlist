@@ -39,6 +39,7 @@ import { buildEntityUrl } from '@/lib/listings/url'
 import { distanceMiles, type LatLng } from '@/lib/map/distance'
 import { FILLER_WORDS, findPlaces, matchCategories, type AssistCity } from '@/lib/search/assist'
 import { CATEGORY_KEYWORDS } from '@/lib/search/categoryKeywords'
+import { wantsRelated } from '@/lib/search/hybrid'
 import { intentWords, isGenericObject, queryWords } from '@/lib/search/understand'
 import type { DiscoveryEntity, WeeklyHours } from '@/types'
 
@@ -172,7 +173,7 @@ export const CUE_TOOLS: readonly Anthropic.Tool[] = Object.freeze([
   {
     name: 'search_listings',
     description:
-      'Search The BLACQList for businesses. Matches any of the words or phrases against names, descriptions and categories; a phrase needs all its words. Returns up to 8 results. When nothing matches, returns close matches from the nearest category, if any.',
+      'Search The BLACQList for businesses. Matches any of the words or phrases against names, descriptions and categories; a phrase needs all its words. Returns up to 8 results. When nothing matches, returns close matches from the nearest category, if any. When fewer than 3 match, may add related businesses found by meaning.',
     input_schema: jsonSchema(searchInput),
     eager_input_streaming: true,
   },
@@ -221,6 +222,16 @@ export interface CueToolDeps {
   loadDetails(id: string): Promise<CueListingDetails | null>
   /** A point for a place we have no row for, or null. */
   locate(place: string, cities: readonly AssistCity[]): Promise<{ label: string; point: LatLng } | null>
+  /**
+   * Businesses close in meaning to the words, best first (ticket 260). Empty
+   * when meaning search is off. Optional: without it there are none.
+   */
+  related?(request: {
+    text: string
+    cityId?: string | null
+    exclude?: Iterable<string>
+    near?: LatLng | null
+  }): Promise<DiscoveryEntity[]>
 }
 
 /** What this turn has found and chosen. */
@@ -235,10 +246,15 @@ export interface CueTurnState {
   searches: number
   /** Results that matched the words this turn, close matches not counted. */
   found: number
+  /**
+   * Ids found by meaning, not by the words (ticket 260). Their cards sit under
+   * Related Businesses. An id a later search matches by the words leaves.
+   */
+  related: Set<string>
 }
 
 export function newTurnState(): CueTurnState {
-  return { seen: new Map(), shown: [], actionCodes: [], searches: 0, found: 0 }
+  return { seen: new Map(), shown: [], actionCodes: [], searches: 0, found: 0, related: new Set() }
 }
 
 export interface CueToolContext {
@@ -533,7 +549,10 @@ async function searchListings(input: z.infer<typeof searchInput>, ctx: CueToolCo
   }
 
   const top = items.slice(0, CUE_SEARCH_RESULTS)
-  for (const e of top) ctx.state.seen.set(e.id, e)
+  for (const e of top) {
+    ctx.state.seen.set(e.id, e)
+    ctx.state.related.delete(e.id)
+  }
   ctx.state.found += top.length
 
   // Nothing matched: never leave the model with only "not listed". Name the
@@ -552,6 +571,27 @@ async function searchListings(input: z.infer<typeof searchInput>, ctx: CueToolCo
     }
   }
 
+  // Fewer than three by the words: add businesses close in meaning (ticket
+  // 260). Never with open now, which meaning search can't check.
+  let related: DiscoveryEntity[] = []
+  if (ctx.deps.related && wantsRelated(top.length) && !input.open_now) {
+    try {
+      related = await ctx.deps.related({
+        text: input.words.join(' '),
+        cityId: city?.id ?? null,
+        exclude: [...top, ...close].map((e) => e.id),
+        near: input.near_me ? ctx.near : null,
+      })
+    } catch {
+      related = []
+    }
+    for (const e of related) {
+      if (ctx.state.seen.has(e.id)) continue
+      ctx.state.seen.set(e.id, e)
+      ctx.state.related.add(e.id)
+    }
+  }
+
   return ok({
     searched: {
       words: first.terms,
@@ -566,6 +606,14 @@ async function searchListings(input: z.infer<typeof searchInput>, ctx: CueToolCo
       : {}),
     results: top.map(resultFor),
     ...(top.length === 0 && nearest.length > 0 ? { nearestCategories: nearest.map((c) => c.name) } : {}),
+    ...(related.length > 0
+      ? {
+          related: {
+            results: related.map(resultFor),
+            note: 'These are close in meaning, not matches for the words. Read their text: show the ones that fit as related businesses, never as exact matches.',
+          },
+        }
+      : {}),
     ...(close.length > 0
       ? {
           closeMatches: { category: nearest[0]!.name, results: close.map(resultFor) },
@@ -693,7 +741,7 @@ export function turnOutput(ctx: CueToolContext): { cards: AssistantCard[]; actio
   const cards = ctx.state.shown
     .map((id) => ctx.state.seen.get(id))
     .filter((e): e is DiscoveryEntity => !!e)
-    .map(toCard)
+    .map((e) => (ctx.state.related.has(e.id) ? { ...toCard(e), related: true } : toCard(e)))
   const actions = ctx.state.actionCodes
     .map((code) => ctx.page.actions[code])
     .filter((a): a is AssistantAction => !!a)
