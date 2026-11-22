@@ -39,7 +39,7 @@ import { buildEntityUrl } from '@/lib/listings/url'
 import { distanceMiles, type LatLng } from '@/lib/map/distance'
 import { FILLER_WORDS, findPlaces, matchCategories, type AssistCity } from '@/lib/search/assist'
 import { CATEGORY_KEYWORDS } from '@/lib/search/categoryKeywords'
-import { wantsRelated } from '@/lib/search/hybrid'
+import { wantsRelated, type RelatedStats } from '@/lib/search/hybrid'
 import { intentWords, isGenericObject, queryWords } from '@/lib/search/understand'
 import type { DiscoveryEntity, WeeklyHours } from '@/types'
 
@@ -55,12 +55,21 @@ export const CUE_MAX_TERMS = 12
 const NEAREST_CITY_COUNT = 3
 /** Close matches offered when a search finds nothing (ticket 256). */
 export const CUE_CLOSE_RESULTS = 5
+/** Close matches kept even when related businesses take the room (ticket 263). */
+export const CUE_CLOSE_MIN = 2
 const SNIPPET_CHARS = 160
 const DETAIL_CHARS = 600
 
 /** Words that say what the need is for, not what it is ("birthday cake" is a cake). */
 export const OCCASION_WORDS: ReadonlySet<string> = new Set([
-  'birthday', 'party', 'wedding', 'baby', 'shower', 'graduation', 'anniversary', 'holiday',
+  'birthday',
+  'party',
+  'wedding',
+  'baby',
+  'shower',
+  'graduation',
+  'anniversary',
+  'holiday',
 ])
 
 /** The categories where an occasion word is the need itself ("party planner"). */
@@ -73,11 +82,25 @@ export const EVENTS_FAMILY: ReadonlySet<string> = new Set([
 ])
 
 /** Category name words too broad to search a group by. */
-const GENERIC_NAME_WORDS = new Set(['and', 'shops', 'shop', 'stores', 'store', 'services', 'service', 'other', 'live'])
+const GENERIC_NAME_WORDS = new Set([
+  'and',
+  'shops',
+  'shop',
+  'stores',
+  'store',
+  'services',
+  'service',
+  'other',
+  'live',
+])
 
 // ─── Inputs ──────────────────────────────────────────────────────────────────
 
-const slug = z.string().trim().toLowerCase().regex(/^[a-z0-9-]{1,80}$/)
+const slug = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(/^[a-z0-9-]{1,80}$/)
 const listingId = z.string().uuid()
 
 export const searchInput = z
@@ -94,7 +117,9 @@ export const searchInput = z
     near_me: z
       .boolean()
       .optional()
-      .describe('True to search near the visitor. Only when the context says their location is shared.'),
+      .describe(
+        'True to search near the visitor. Only when the context says their location is shared.'
+      ),
     open_now: z.boolean().optional().describe('True only when the visitor asked for open now.'),
   })
   .strict()
@@ -123,7 +148,11 @@ export const showInput = z
 
 export const pageActionInput = z
   .object({
-    codes: z.array(z.string().trim().min(1).max(40)).min(1).max(3).describe('Action codes from the page context.'),
+    codes: z
+      .array(z.string().trim().min(1).max(40))
+      .min(1)
+      .max(3)
+      .describe('Action codes from the page context.'),
   })
   .strict()
 
@@ -167,7 +196,11 @@ function jsonSchema(schema: z.ZodType): Anthropic.Tool.InputSchema {
 /** The visitor tools that look something up: text written alongside them is a
  *  working note and is hidden (ticket 261). show_businesses and page_action
  *  are the answer's own parts, so text beside them is kept. */
-export const CUE_LOOKUP_TOOLS: ReadonlySet<string> = new Set(['search_listings', 'find_place', 'get_listing'])
+export const CUE_LOOKUP_TOOLS: ReadonlySet<string> = new Set([
+  'search_listings',
+  'find_place',
+  'get_listing',
+])
 
 export const CUE_TOOLS: readonly Anthropic.Tool[] = Object.freeze([
   {
@@ -221,7 +254,10 @@ export interface CueToolDeps {
   loadByIds(ids: readonly string[]): Promise<DiscoveryEntity[]>
   loadDetails(id: string): Promise<CueListingDetails | null>
   /** A point for a place we have no row for, or null. */
-  locate(place: string, cities: readonly AssistCity[]): Promise<{ label: string; point: LatLng } | null>
+  locate(
+    place: string,
+    cities: readonly AssistCity[]
+  ): Promise<{ label: string; point: LatLng } | null>
   /**
    * Businesses close in meaning to the words, best first (ticket 260). Empty
    * when meaning search is off. Optional: without it there are none.
@@ -231,6 +267,7 @@ export interface CueToolDeps {
     cityId?: string | null
     exclude?: Iterable<string>
     near?: LatLng | null
+    onStats?: (stats: RelatedStats) => void
   }): Promise<DiscoveryEntity[]>
 }
 
@@ -251,10 +288,31 @@ export interface CueTurnState {
    * Related Businesses. An id a later search matches by the words leaves.
    */
   related: Set<string>
+  /**
+   * What meaning search scored this turn, for tuning the bar (ticket 263):
+   * the best score across lookups and the most that reached the bar in one.
+   * Null when no lookup ran.
+   */
+  relatedCheck: RelatedStats | null
 }
 
 export function newTurnState(): CueTurnState {
-  return { seen: new Map(), shown: [], actionCodes: [], searches: 0, found: 0, related: new Set() }
+  return {
+    seen: new Map(),
+    shown: [],
+    actionCodes: [],
+    searches: 0,
+    found: 0,
+    related: new Set(),
+    relatedCheck: null,
+  }
+}
+
+/** Two lookups' scores as one: the best score and the most hits. Pure. */
+export function mergeRelatedStats(a: RelatedStats | null, b: RelatedStats): RelatedStats {
+  if (!a) return b
+  const best = a.best === null ? b.best : b.best === null ? a.best : Math.max(a.best, b.best)
+  return { best, hits: Math.max(a.hits, b.hits) }
 }
 
 export interface CueToolContext {
@@ -285,20 +343,25 @@ function fail(message: string): CueToolResult {
 
 /** Lowercase letters, digits and inner spaces only, so websearch reads it as words. */
 export function cleanTerm(raw: string): string {
-  return raw
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/['’]/g, '')
-    .replace(/[^a-z0-9& ]+/g, ' ')
-    .replace(/&/g, ' ')
-    .split(/\s+/)
-    // A typed "or" would read as the query's own OR.
-    .filter((w) => w && w !== 'or')
-    .join(' ')
+  return (
+    raw
+      .toLowerCase()
+      .normalize('NFKD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/['’]/g, '')
+      .replace(/[^a-z0-9& ]+/g, ' ')
+      .replace(/&/g, ' ')
+      .split(/\s+/)
+      // A typed "or" would read as the query's own OR.
+      .filter((w) => w && w !== 'or')
+      .join(' ')
+  )
 }
 
-function isEventsFamily(category: AssistantCategory | null, categories: readonly AssistantCategory[]): boolean {
+function isEventsFamily(
+  category: AssistantCategory | null,
+  categories: readonly AssistantCategory[]
+): boolean {
   if (!category) return false
   if (EVENTS_FAMILY.has(category.slug)) return true
   return categories.some((c) => c.parentId === category.id && EVENTS_FAMILY.has(c.slug))
@@ -499,12 +562,17 @@ export function toCard(e: DiscoveryEntity): AssistantCard {
 
 // ─── The tools ───────────────────────────────────────────────────────────────
 
-async function searchListings(input: z.infer<typeof searchInput>, ctx: CueToolContext): Promise<CueToolResult> {
+async function searchListings(
+  input: z.infer<typeof searchInput>,
+  ctx: CueToolContext
+): Promise<CueToolResult> {
   const category = input.category
     ? (ctx.categories.find((c) => c.slug === input.category) ?? null)
     : null
   if (input.category && !category) {
-    return fail(`Unknown category "${input.category}". Use a slug from the list, or leave category out.`)
+    return fail(
+      `Unknown category "${input.category}". Use a slug from the list, or leave category out.`
+    )
   }
 
   const city = input.city ? ctx.cities.find((c) => c.slug === input.city && c.isActive) : null
@@ -533,7 +601,12 @@ async function searchListings(input: z.infer<typeof searchInput>, ctx: CueToolCo
     return found.filter((e) => !e.sponsored_placement_id)
   }
 
-  const first = buildSearchQuery({ words: input.words, category, categories: ctx.categories, withName: true })
+  const first = buildSearchQuery({
+    words: input.words,
+    category,
+    categories: ctx.categories,
+    withName: true,
+  })
   let items = await run(category, first.q)
   let widenedTo: string | null = null
 
@@ -555,32 +628,21 @@ async function searchListings(input: z.infer<typeof searchInput>, ctx: CueToolCo
   }
   ctx.state.found += top.length
 
-  // Nothing matched: never leave the model with only "not listed". Name the
-  // categories the words point to, and offer the nearest one's businesses as
-  // close matches (ticket 256).
-  let nearest: AssistantCategory[] = []
-  let close: DiscoveryEntity[] = []
-  if (top.length === 0) {
-    const pointed = matchCategories(first.terms.join(' '), ctx.categories, CATEGORY_KEYWORDS, 3)
-    nearest = pointed
-      .map((m) => ctx.categories.find((c) => c.slug === m.category.slug))
-      .filter((c): c is AssistantCategory => !!c && c.slug !== category?.slug)
-    if (nearest[0]) {
-      close = (await run(nearest[0], '')).slice(0, CUE_CLOSE_RESULTS)
-      for (const e of close) ctx.state.seen.set(e.id, e)
-    }
-  }
-
   // Fewer than three by the words: add businesses close in meaning (ticket
-  // 260). Never with open now, which meaning search can't check.
+  // 260). Never with open now, which meaning search can't check. Asked before
+  // the close matches (ticket 263): meaning reaches past one category, so
+  // "stress relief" can find a counsellor as well as a spa.
   let related: DiscoveryEntity[] = []
   if (ctx.deps.related && wantsRelated(top.length) && !input.open_now) {
     try {
       related = await ctx.deps.related({
         text: input.words.join(' '),
         cityId: city?.id ?? null,
-        exclude: [...top, ...close].map((e) => e.id),
+        exclude: top.map((e) => e.id),
         near: input.near_me ? ctx.near : null,
+        onStats: (stats) => {
+          ctx.state.relatedCheck = mergeRelatedStats(ctx.state.relatedCheck, stats)
+        },
       })
     } catch {
       related = []
@@ -589,6 +651,25 @@ async function searchListings(input: z.infer<typeof searchInput>, ctx: CueToolCo
       if (ctx.state.seen.has(e.id)) continue
       ctx.state.seen.set(e.id, e)
       ctx.state.related.add(e.id)
+    }
+  }
+
+  // Nothing matched: never leave the model with only "not listed". Name the
+  // categories the words point to, and offer the nearest one's businesses as
+  // close matches (ticket 256). Related ones take the room first (ticket
+  // 263); close matches fill what is left, at least two, never repeating one.
+  let nearest: AssistantCategory[] = []
+  let close: DiscoveryEntity[] = []
+  if (top.length === 0) {
+    const pointed = matchCategories(first.terms.join(' '), ctx.categories, CATEGORY_KEYWORDS, 3)
+    nearest = pointed
+      .map((m) => ctx.categories.find((c) => c.slug === m.category.slug))
+      .filter((c): c is AssistantCategory => !!c && c.slug !== category?.slug)
+    if (nearest[0]) {
+      const relatedIds = new Set(related.map((e) => e.id))
+      const room = Math.max(CUE_CLOSE_MIN, CUE_CLOSE_RESULTS - related.length)
+      close = (await run(nearest[0], '')).filter((e) => !relatedIds.has(e.id)).slice(0, room)
+      for (const e of close) ctx.state.seen.set(e.id, e)
     }
   }
 
@@ -605,7 +686,9 @@ async function searchListings(input: z.infer<typeof searchInput>, ctx: CueToolCo
         }
       : {}),
     results: top.map(resultFor),
-    ...(top.length === 0 && nearest.length > 0 ? { nearestCategories: nearest.map((c) => c.name) } : {}),
+    ...(top.length === 0 && nearest.length > 0
+      ? { nearestCategories: nearest.map((c) => c.name) }
+      : {}),
     ...(related.length > 0
       ? {
           related: {
@@ -617,17 +700,27 @@ async function searchListings(input: z.infer<typeof searchInput>, ctx: CueToolCo
     ...(close.length > 0
       ? {
           closeMatches: { category: nearest[0]!.name, results: close.map(resultFor) },
-          next: `Nothing matched the words. These are close matches from ${nearest[0]!.name}: show them as close matches, or search again with other words. Never reply only that it is not listed.`,
+          next:
+            related.length > 0
+              ? `Nothing matched the words. Lead with the related businesses whose text fits, then the close matches from ${nearest[0]!.name}. Never reply only that it is not listed.`
+              : `Nothing matched the words. These are close matches from ${nearest[0]!.name}: show them as close matches, or search again with other words. Never reply only that it is not listed.`,
         }
-      : top.length === 0
+      : top.length === 0 && related.length > 0
         ? {
-            next: 'Nothing found. Try other words or a broader category, or another city. If still nothing, say it is not on The BLACQList yet, name the nearest category if there is one, and give one short tip on what to look for.',
+            next: 'Nothing matched the words. Show the related businesses whose text fits, as related businesses. Never reply only that it is not listed.',
           }
-        : {}),
+        : top.length === 0
+          ? {
+              next: 'Nothing found. Try other words or a broader category, or another city. If still nothing, say it is not on The BLACQList yet, name the nearest category if there is one, and give one short tip on what to look for.',
+            }
+          : {}),
   })
 }
 
-async function findPlace(input: z.infer<typeof findPlaceInput>, ctx: CueToolContext): Promise<CueToolResult> {
+async function findPlace(
+  input: z.infer<typeof findPlaceInput>,
+  ctx: CueToolContext
+): Promise<CueToolResult> {
   const active = ctx.cities.filter((c) => c.isActive)
   const cityRow = (c: AssistCity) => ({
     slug: c.slug,
@@ -664,7 +757,10 @@ function knownId(id: string, ctx: CueToolContext): boolean {
   return ctx.state.seen.has(id) || ctx.priorIds.has(id)
 }
 
-async function getListing(input: z.infer<typeof getListingInput>, ctx: CueToolContext): Promise<CueToolResult> {
+async function getListing(
+  input: z.infer<typeof getListingInput>,
+  ctx: CueToolContext
+): Promise<CueToolResult> {
   if (!knownId(input.id, ctx)) {
     return fail('Unknown id. Use an id from a search result this turn or a card shown last turn.')
   }
@@ -679,7 +775,10 @@ async function getListing(input: z.infer<typeof getListingInput>, ctx: CueToolCo
   })
 }
 
-async function showBusinesses(input: z.output<typeof showParse>, ctx: CueToolContext): Promise<CueToolResult> {
+async function showBusinesses(
+  input: z.output<typeof showParse>,
+  ctx: CueToolContext
+): Promise<CueToolResult> {
   const ids = [...new Set(input.ids)]
   const unknown = ids.filter((id) => !knownId(id, ctx))
   const toLoad = ids.filter((id) => !ctx.state.seen.has(id) && ctx.priorIds.has(id))
@@ -715,7 +814,11 @@ export function isCueTool(name: string): name is CueToolName {
  * the model to fix, never a throw. A data failure does throw, and the agent
  * closes the reply with what it already has.
  */
-export async function runCueTool(name: string, rawInput: unknown, ctx: CueToolContext): Promise<CueToolResult> {
+export async function runCueTool(
+  name: string,
+  rawInput: unknown,
+  ctx: CueToolContext
+): Promise<CueToolResult> {
   if (!isCueTool(name)) return fail(`No tool named "${name}".`)
   const parsed = SCHEMAS[name].safeParse(rawInput)
   if (!parsed.success) {
@@ -737,7 +840,10 @@ export async function runCueTool(name: string, rawInput: unknown, ctx: CueToolCo
 }
 
 /** The cards and buttons this turn chose. */
-export function turnOutput(ctx: CueToolContext): { cards: AssistantCard[]; actions: AssistantAction[] } {
+export function turnOutput(ctx: CueToolContext): {
+  cards: AssistantCard[]
+  actions: AssistantAction[]
+} {
   const cards = ctx.state.shown
     .map((id) => ctx.state.seen.get(id))
     .filter((e): e is DiscoveryEntity => !!e)
@@ -750,11 +856,18 @@ export function turnOutput(ctx: CueToolContext): { cards: AssistantCard[]; actio
 
 /** A short line for the status row while a tool runs. No visitor text. */
 export function statusFor(name: string, rawInput: unknown, ctx: CueToolContext): string {
-  const input = (rawInput && typeof rawInput === 'object' ? rawInput : {}) as Record<string, unknown>
+  const input = (rawInput && typeof rawInput === 'object' ? rawInput : {}) as Record<
+    string,
+    unknown
+  >
   switch (name) {
     case 'search_listings': {
-      const city = typeof input.city === 'string' ? ctx.cities.find((c) => c.slug === input.city) : null
-      const cat = typeof input.category === 'string' ? ctx.categories.find((c) => c.slug === input.category) : null
+      const city =
+        typeof input.city === 'string' ? ctx.cities.find((c) => c.slug === input.city) : null
+      const cat =
+        typeof input.category === 'string'
+          ? ctx.categories.find((c) => c.slug === input.category)
+          : null
       const what = cat ? cat.name : 'listings'
       if (input.near_me) return `Searching ${what} near you`
       return city ? `Searching ${what} in ${city.name}` : `Searching ${what}`

@@ -60,6 +60,7 @@ import { queryListings } from '@/lib/listings/query'
 import { isFeatureEnabled } from '@/lib/env'
 import { buildBasicAnswer, type ExactBucket } from '@/lib/search/basicAnswer'
 import { findRelatedListings } from '@/lib/services/relatedListings'
+import { relatedCheckProps } from '@/lib/search/hybrid'
 import type { AssistantCategory } from '@/lib/ai/assistant'
 import { checkRateLimit, getClientIp } from '@/lib/security/rate-limit'
 import { createServiceClient } from '@/lib/supabase/server'
@@ -108,6 +109,14 @@ async function logAnswer(props: {
   exact_bucket: ExactBucket | null
   /** Any card under Related Businesses, found by meaning (ticket 260). */
   related_used: boolean
+  /**
+   * Meaning search's scores, to tune the 0.45 bar (ticket 263). Numbers
+   * only: whether it ran, its best score (2 places) and how many reached
+   * the bar. Never the words.
+   */
+  related_checked: boolean
+  related_best: number | null
+  related_hits: number
 }) {
   try {
     await createServiceClient()
@@ -139,17 +148,21 @@ async function basicAnswerEvents(args: {
   if (!allowed) return null
   try {
     const categories =
-      args.categories !== undefined ? args.categories : ((await loadLists().catch(() => null))?.categories ?? null)
+      args.categories !== undefined
+        ? args.categories
+        : ((await loadLists().catch(() => null))?.categories ?? null)
     const answer = await buildBasicAnswer(args.message, args.near, {
       search: queryListings,
       categories,
-      related: async (request) => (await findRelatedListings(request, cueDeps.loadByIds)).map(toCard),
+      related: async (request) =>
+        (await findRelatedListings(request, cueDeps.loadByIds)).map(toCard),
     })
     await logAnswer({
       mode: 'basic',
       reason: args.reason,
       exact_bucket: answer.exactBucket,
       related_used: answer.related > 0,
+      ...relatedCheckProps(answer.relatedCheck),
     })
     const events: CueEvent[] = []
     if (answer.cards.length > 0) events.push({ type: 'cards', cards: answer.cards })
@@ -162,7 +175,12 @@ async function basicAnswerEvents(args: {
 }
 
 function rawMessage(input: unknown): string {
-  if (input && typeof input === 'object' && 'message' in input && typeof input.message === 'string') {
+  if (
+    input &&
+    typeof input === 'object' &&
+    'message' in input &&
+    typeof input.message === 'string'
+  ) {
     return input.message.slice(0, CUE_MESSAGE_MAX)
   }
   return ''
@@ -195,7 +213,8 @@ function outcome(result: CueRunResult, replied: boolean): { failed: boolean; cod
 export async function POST(request: Request): Promise<Response> {
   // 0. and 1. Input.
   if (!sameSiteJson(request)) return fallback('', 'error')
-  if (Number(request.headers.get('content-length') ?? 0) > MAX_BODY_BYTES) return fallback('', 'error')
+  if (Number(request.headers.get('content-length') ?? 0) > MAX_BODY_BYTES)
+    return fallback('', 'error')
   let body: unknown
   try {
     body = await request.json()
@@ -210,10 +229,7 @@ export async function POST(request: Request): Promise<Response> {
   // Every "no" from here on. The chat panel gets the fallback; the /search
   // strip gets the quick answer, or the fallback if even that can't run.
   let lists: Awaited<ReturnType<typeof loadLists>> | undefined
-  const cannot = async (
-    wire: 'limited' | 'error',
-    reason: BasicReason
-  ): Promise<Response> => {
+  const cannot = async (wire: 'limited' | 'error', reason: BasicReason): Promise<Response> => {
     if (surface !== 'search') return fallback(message, wire)
     const events = await basicAnswerEvents({
       message,
@@ -267,7 +283,9 @@ export async function POST(request: Request): Promise<Response> {
     const resolved = resolveProvider(ASSISTANT_AGENT)
     const { provider } = resolved
     const model =
-      provider === 'anthropic' && surface === 'search' ? searchModel(resolved.model) : resolved.model
+      provider === 'anthropic' && surface === 'search'
+        ? searchModel(resolved.model)
+        : resolved.model
     if (provider === 'anthropic') {
       if (!(await withinMonthlyCeiling())) return await cannot('limited', 'ceiling')
       const ceiling = monthlyCeilingUsd()
@@ -276,7 +294,12 @@ export async function POST(request: Request): Promise<Response> {
         countAgentAttemptsThisMonth(GUIDE_AGENT.agentType),
         countAgentAttemptsThisMonth(ASSISTANT_AGENT.agentType),
       ])
-      if (!withinGuideBudget(visitorCallsUsed(guideUsed, assistantUsed * cueMessageUnits()), monthlyCallBudget(ceiling))) {
+      if (
+        !withinGuideBudget(
+          visitorCallsUsed(guideUsed, assistantUsed * cueMessageUnits()),
+          monthlyCallBudget(ceiling)
+        )
+      ) {
         return await cannot('limited', 'budget')
       }
     }
@@ -300,7 +323,8 @@ export async function POST(request: Request): Promise<Response> {
       nearShared: near !== null,
       priorCards: cards,
     })
-    const call = provider === 'mock' ? createMockCueCall({ cities: cueLists.cities }) : anthropicCueCall()
+    const call =
+      provider === 'mock' ? createMockCueCall({ cities: cueLists.cities }) : anthropicCueCall()
     run = (emit, signal) => runCue({ call, model, system, messages, ctx, names, emit, signal })
 
     const { data: row, error: rowError } = await supabase
@@ -351,9 +375,19 @@ export async function POST(request: Request): Promise<Response> {
       if (result && replied) {
         if (result.cards.length > 0) emit({ type: 'cards', cards: result.cards })
         if (result.actions.length > 0) emit({ type: 'actions', actions: result.actions })
-        emit({ type: 'done', text: result.text, ...(surface === 'search' ? { mode: 'ai' as const } : {}) })
+        emit({
+          type: 'done',
+          text: result.text,
+          ...(surface === 'search' ? { mode: 'ai' as const } : {}),
+        })
         if (surface === 'search') {
-          await logAnswer({ mode: 'ai', reason: null, exact_bucket: null, related_used: result.related > 0 })
+          await logAnswer({
+            mode: 'ai',
+            reason: null,
+            exact_bucket: null,
+            related_used: result.related > 0,
+            ...relatedCheckProps(result.relatedCheck),
+          })
         }
       } else {
         // Cue ran and had nothing to say, or failed. Stopped by the visitor:
@@ -372,7 +406,9 @@ export async function POST(request: Request): Promise<Response> {
         else emit({ type: 'fallback', href: fallbackHref(message), reason: 'error' })
       }
 
-      const { failed, code } = result ? outcome(result, replied) : { failed: true, code: 'provider_error' }
+      const { failed, code } = result
+        ? outcome(result, replied)
+        : { failed: true, code: 'provider_error' }
       const tokens = result
         ? { request_tokens: result.usage.inputTokens, response_tokens: result.usage.outputTokens }
         : {}

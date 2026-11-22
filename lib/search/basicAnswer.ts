@@ -29,8 +29,13 @@ import type { ListingsParams, ListingsResult } from '@/lib/listings/query'
 import { categoryFilterHref } from '@/lib/listings/url'
 import { matchCategories, normalizeQuery, stem } from '@/lib/search/assist'
 import { CATEGORY_KEYWORDS } from '@/lib/search/categoryKeywords'
-import { RELATED_MAX, wantsRelated } from '@/lib/search/hybrid'
-import { echoWords, INTENT_FAMILIES, understandQuery, type UnderstoodQuery } from '@/lib/search/understand'
+import { RELATED_MAX, wantsRelated, type RelatedStats } from '@/lib/search/hybrid'
+import {
+  echoWords,
+  INTENT_FAMILIES,
+  understandQuery,
+  type UnderstoodQuery,
+} from '@/lib/search/understand'
 
 /** Below this many strict matches, close matches from the category are added. */
 export const CLOSE_MATCH_BELOW = 3
@@ -53,6 +58,8 @@ export interface BasicAnswer {
   exactBucket: ExactBucket
   /** Cards in the Related Businesses row (ticket 260). */
   related: number
+  /** What meaning search scored, null when it didn't run (ticket 263). */
+  relatedCheck: RelatedStats | null
 }
 
 export interface BasicAnswerParts {
@@ -78,7 +85,11 @@ function bucket(n: number): ExactBucket {
 }
 
 /** The words to echo back: what carried the search, or what was typed. */
-function labelFor(query: string, understood: UnderstoodQuery, rescued: boolean | undefined): string {
+function labelFor(
+  query: string,
+  understood: UnderstoodQuery,
+  rescued: boolean | undefined
+): string {
   const words =
     rescued === false
       ? echoWords(query)
@@ -110,9 +121,10 @@ export function composeBasicAnswer(parts: BasicAnswerParts): BasicAnswer {
 
   let text: string
   if (understood.mode === 'browse') {
-    text = exact.length > 0
-      ? `Here are a few businesses to start with${where}. Add what you need, like a kind of business or a city, to narrow it down.`
-      : 'Add what you need, like a kind of business or a city, and we’ll find it.'
+    text =
+      exact.length > 0
+        ? `Here are a few businesses to start with${where}. Add what you need, like a kind of business or a city, to narrow it down.`
+        : 'Add what you need, like a kind of business or a city, and we’ll find it.'
   } else if (exact.length > 0) {
     const lead = exact.length === 1 ? 'Here’s the business' : 'Here are businesses'
     const match = exact.length === 1 ? 'matches' : 'match'
@@ -130,10 +142,20 @@ export function composeBasicAnswer(parts: BasicAnswerParts): BasicAnswer {
 
   const actions: AssistantAction[] = []
   const categoryHref = category ? categoryFilterHref(category) : null
-  if (category && categoryHref) actions.push({ kind: 'link', href: categoryHref, label: `Browse ${category.name}` })
-  if (understood.mode !== 'browse' && exact.length < CLOSE_MATCH_BELOW) actions.push(SUGGEST_BUSINESS)
+  if (category && categoryHref)
+    actions.push({ kind: 'link', href: categoryHref, label: `Browse ${category.name}` })
+  if (understood.mode !== 'browse' && exact.length < CLOSE_MATCH_BELOW)
+    actions.push(SUGGEST_BUSINESS)
 
-  return { text, cards, actions, exactBucket: bucket(parts.exact.length), related: related.length }
+  return {
+    text,
+    cards,
+    actions,
+    exactBucket: bucket(parts.exact.length),
+    related: related.length,
+    // Scores belong to the lookup, not the composing: buildBasicAnswer sets them.
+    relatedCheck: null,
+  }
 }
 
 export interface BasicAnswerDeps {
@@ -152,6 +174,7 @@ export interface BasicAnswerDeps {
     text: string
     exclude: readonly string[]
     near: { lat: number; lng: number } | null
+    onStats?: (stats: RelatedStats) => void
   }) => Promise<AssistantCard[]>
 }
 
@@ -159,7 +182,9 @@ export interface BasicAnswerDeps {
 function categoryText(query: string, understood: UnderstoodQuery): string {
   if (understood.mode === 'browse') return ''
   if (understood.words.length === 0) return query
-  const intent = understood.words.flatMap((w) => INTENT_FAMILIES[w] ?? INTENT_FAMILIES[stem(w)] ?? [])
+  const intent = understood.words.flatMap(
+    (w) => INTENT_FAMILIES[w] ?? INTENT_FAMILIES[stem(w)] ?? []
+  )
   return [...understood.words, ...intent].join(' ')
 }
 
@@ -181,7 +206,9 @@ export async function buildBasicAnswer(
       ? { lat: near.lat, lng: near.lng, radius: DEFAULT_RADIUS_MILES, sort: 'distance' }
       : { sort: 'relevance' }),
   }
-  const find = async (params: ListingsParams): Promise<{ cards: AssistantCard[]; rescued: boolean }> => {
+  const find = async (
+    params: ListingsParams
+  ): Promise<{ cards: AssistantCard[]; rescued: boolean }> => {
     try {
       const found = await deps.search({ ...base, ...params })
       return {
@@ -194,7 +221,10 @@ export async function buildBasicAnswer(
   }
 
   const text = categoryText(query, understood)
-  const match = deps.categories && text ? matchCategories(text, deps.categories, CATEGORY_KEYWORDS, 1)[0] : undefined
+  const match =
+    deps.categories && text
+      ? matchCategories(text, deps.categories, CATEGORY_KEYWORDS, 1)[0]
+      : undefined
   let category = match ? { name: match.category.name, slug: match.category.slug } : null
 
   const exact = await find({ q: query })
@@ -219,6 +249,7 @@ export async function buildBasicAnswer(
   // to Black Owned". Browse mode has none, so nothing is looked up; with
   // nothing to understand, the words as typed.
   let related: AssistantCard[] = []
+  let relatedCheck: RelatedStats | null = null
   const relatedText =
     understood.mode === 'browse'
       ? ''
@@ -227,13 +258,20 @@ export async function buildBasicAnswer(
         : normalizeQuery(query)
   if (deps.related && relatedText && wantsRelated(exact.cards.length)) {
     try {
-      related = await deps.related({ text: relatedText, exclude: exact.cards.map((c) => c.id), near })
+      related = await deps.related({
+        text: relatedText,
+        exclude: exact.cards.map((c) => c.id),
+        near,
+        onStats: (stats) => {
+          relatedCheck = stats
+        },
+      })
     } catch {
       related = []
     }
   }
 
-  return composeBasicAnswer({
+  const answer = composeBasicAnswer({
     query,
     understood,
     exact: exact.cards,
@@ -244,4 +282,5 @@ export async function buildBasicAnswer(
     // Only meaningful when something was found; an empty search echoes as before.
     rescued: exact.cards.length > 0 ? exact.rescued : undefined,
   })
+  return { ...answer, relatedCheck }
 }
