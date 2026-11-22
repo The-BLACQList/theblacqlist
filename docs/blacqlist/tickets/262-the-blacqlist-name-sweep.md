@@ -1,6 +1,6 @@
 # Ticket 262: Always "The BLACQList"
 
-**Status:** PR open, 2026-11-21. Follows 252, where the signed-in area was fixed first.
+**Status:** Done (#391 `12fc22f`), 2026-11-21. Follows 252, where the signed-in area was fixed first.
 
 ## Why
 
