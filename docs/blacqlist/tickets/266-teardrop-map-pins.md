@@ -1,6 +1,6 @@
 # 266 · Teardrop Map Pins With a Larger Circle
 
-**Status:** PR open
+**Status:** Merged #397, 2026-11-22.
 **Priority:** P1
 **Depends on:** 244 (Calm Map, logo pin on Starter and up)
 
