@@ -61,8 +61,11 @@ test.describe('L. Cross-browser critical paths', () => {
     // (Not `page.locator('form').first()`: the site header carries its own
     // search form, which is collapsed at 375px and would fail the mobile cell
     // for a reason that has nothing to do with this path.)
-    // The first step is a welcome with Black-owned preselected (2026-10-16), so
-    // Next advances without a choice. The Ally switch is a quiet text button.
+    // The quick start opens on "Have a Website or Link Page?" (bring in your
+    // info). Skip it to reach the welcome step, which has Black-owned
+    // preselected (2026-10-16), so Next advances without a choice. The Ally
+    // switch is a quiet text button.
+    await page.getByRole('button', { name: "Skip, I'll Type It" }).click()
     await expect(page.getByRole('button', { name: 'Not Black-owned? List as an Ally' })).toBeVisible()
     await page.getByRole('button', { name: 'Next', exact: true }).click()
     await expect(page.locator('#qs-name')).toBeVisible()

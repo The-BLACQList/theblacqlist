@@ -64,12 +64,12 @@ function FounderCard({ member }: { member: TeamMember }) {
     >
       <Avatar member={member} large />
       <div className="min-w-0">
-        <span className="inline-flex items-center rounded-full bg-gold/20 px-2.5 py-0.5 font-subhead text-[11px] font-bold uppercase tracking-[0.12em] text-amber">
+        <span className="inline-flex items-center rounded-full bg-gold/10 px-2.5 py-0.5 font-subhead text-sm font-bold uppercase tracking-[0.12em] text-amber">
           Owner
         </span>
         <p className="mt-2 font-subhead text-lg font-semibold text-brand-black">{member.name}</p>
         {member.role && (
-          <p className="font-subhead text-xs font-bold uppercase tracking-[0.12em] text-amber mt-0.5">
+          <p className="font-subhead text-sm font-bold uppercase tracking-[0.12em] text-amber mt-0.5">
             {member.role}
           </p>
         )}
@@ -134,7 +134,7 @@ export function EntityTeamSection({ team, bare = false }: Props) {
                     {member.name}
                   </p>
                   {member.role && (
-                    <p className="font-subhead text-xs font-bold uppercase tracking-[0.12em] text-amber mt-0.5">
+                    <p className="font-subhead text-sm font-bold uppercase tracking-[0.12em] text-amber mt-0.5">
                       {member.role}
                     </p>
                   )}

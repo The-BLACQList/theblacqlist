@@ -182,7 +182,15 @@ export function ProfileSaveProvider({ live, rootRef, reveal, children }: Provide
       )
     })
   }, [dirtyEntries])
-  useEffect(() => () => cancelAnimationFrame(frame.current), [])
+  useEffect(
+    () => () => {
+      cancelAnimationFrame(frame.current)
+      // Clear it too, or a remount (Strict Mode runs this once in dev) finds
+      // a stale id and refresh() returns early forever.
+      frame.current = 0
+    },
+    []
+  )
 
   const register = useCallback<Api['register']>(
     (id, entry) => {

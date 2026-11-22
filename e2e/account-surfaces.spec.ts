@@ -43,11 +43,28 @@ test.describe('account surfaces', () => {
   test('TA-24 — save a listing, see it in Saved, then unsave it', async ({ page }) => {
     await page.goto(fixtureListingUrl(FIXTURE_OWNED_SLUG))
 
+    // A run that failed after saving leaves the fixture saved. Unsave it
+    // first so the test starts from the same state every time.
+    const alreadySaved = page.getByRole('button', { name: 'Remove from saved businesses' }).first()
+    if (await alreadySaved.isVisible()) {
+      const unsaved = page.waitForResponse(
+        (r) => r.url().includes('/api/saves') && r.request().method() === 'DELETE'
+      )
+      await alreadySaved.click()
+      expect((await unsaved).ok()).toBe(true)
+    }
+
     // The entity page mounts SaveButton more than once (hero + quick-action
     // bar, itself split mobile/desktop). Any one of them is the same control.
     const save = page.getByRole('button', { name: 'Save this business' }).first()
     await expect(save).toBeVisible()
+    // Wait for the save to land before leaving the page, or the navigation
+    // can cancel the request and Saved comes up empty.
+    const saved = page.waitForResponse(
+      (r) => r.url().includes('/api/saves') && r.request().method() === 'POST'
+    )
     await save.click()
+    expect((await saved).ok()).toBe(true)
 
     // aria-pressed is the contract the a11y suite relies on, so assert the
     // state flip rather than the label text.
