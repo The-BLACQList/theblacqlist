@@ -30,7 +30,8 @@ On a phone the map sat in a 300svh scroll track. A swipe either scrolled the pag
   - The canvas has `touch-action: none`.
   - The section is a modal dialog while open.
 - **Gestures** (in `Controls`):
-  - one finger turns and tilts;
+  - one finger swipes up or down the floors, or sideways to turn (round 2);
+  - two fingers moving together tilt;
   - two fingers pinch, with the same zoom range as 246's camera distance, from inside the tower out to the whole tower (`pinchZoom`, `PINCH`);
   - pinching out while a business is open lets go of it;
   - a tap still picks a dot, but not right after a pinch.
@@ -41,6 +42,31 @@ On a phone the map sat in a 300svh scroll track. A swipe either scrolled the pag
 - **Bottom card:** unchanged.
 - **Landscape:** the same mode, using the 179 layout. The rail is on the left, the card on the right, and the tools sit bottom-left beside the rail.
 - **`?you=1` on a phone** opens full-screen once, so the reader's business card can show.
+
+## Round 2: Founder iPhone Check (2026-11-21)
+
+Founder on the #386 Preview: "I do see jumps and flickering as I maneuver. I can't seem to scroll up or down the levels in the iPhone view."
+
+- **Swipe through the floors.**
+  - The cause: a vertical swipe only tilted the camera, so only the rail could change floors.
+  - Now in full-screen, one finger swiping up or down travels the floors: up goes down the tower, as a page scroll does, and two screens of swipe cover the whole tower.
+  - On release the view settles on the nearest floor; a flick carries it at most half a floor further (`SWIPE`, `swipeTravel`, `swipeLanding`).
+  - Sideways still turns.
+  - Tilt moves to two fingers moving up or down together, alongside pinch.
+- **Fewer jumps.**
+  - Vertical swipes no longer tilt.
+  - A sideways flick coasts at most 1.2 rad/s, down from 3. Before, a flick could keep spinning about 43° after you let go.
+  - The track keeps the preview's height while full-screen is open, so the page underneath doesn't shift and you come back to the same spot.
+- **Less flicker.** The full-screen canvas is now sized to `100lvh` (the tallest window, with Safari's bars away) instead of following `100dvh`. Safari's toolbar showing or hiding no longer resizes and blanks the canvas. The card's own scroll no longer chains to the page (`overscroll-behavior: contain`).
+- **Hint text:** "Swipe up or down for floors. Pinch to see the whole tower."
+
+Checked with the same Playwright touch script at 390, 360 and 844×390:
+
+- one swipe up moves one floor, and one swipe down moves one back;
+- the page stays where it was across Enter and Close;
+- 0 console errors.
+
+Flicker can only be confirmed on a real iPhone.
 
 ## Checks (local, 2026-11-21)
 

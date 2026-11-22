@@ -960,6 +960,36 @@ export function pinchZoom(startZoom: number, startGap: number, gap: number): num
 }
 
 /** Radians a second the phone preview turns on its own (ticket 248): a lap in about 90 s. */
+/**
+ * Phone full-screen swipes (ticket 248, round 2). Up and down travels the
+ * floors: two screens of swipe cover the whole tower, as two screens of page
+ * scroll do on a desktop. On release the view settles on a floor; a flick
+ * carries it at most half a floor further.
+ * Sideways turns, with a softer coast than a mouse, so a flick can't jump.
+ */
+export const SWIPE = { screens: 2, glideMax: 0.5, spinMax: 1.2, flingS: 0.2 } as const
+
+/** Track travel for a finger moving `dy` px on a stage `height` px tall. Up goes down. */
+export function swipeTravel(dy: number, height: number): number {
+  if (height <= 0) return 0
+  return -dy / (height * SWIPE.screens)
+}
+
+/** Where a released swipe settles: the floor nearest where its speed was taking it. */
+export function swipeLanding(t: number, glide: number, shape = SILO): number {
+  const aim = Math.min(1, Math.max(0, t + glide * SWIPE.flingS))
+  let best = t
+  let bestGap = Infinity
+  shape.y.forEach((_, i) => {
+    const floorT = scrollForFloor(i, shape)
+    if (Math.abs(floorT - aim) < bestGap) {
+      bestGap = Math.abs(floorT - aim)
+      best = floorT
+    }
+  })
+  return best
+}
+
 export const PREVIEW_SPIN = (Math.PI * 2) / 90
 
 /**

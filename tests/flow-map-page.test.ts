@@ -274,4 +274,14 @@ describe('/flow-map phone full-screen (ticket 248)', () => {
   it('pinches to zoom in full-screen', () => {
     expect(scene).toContain('pinchZoom(')
   })
+
+  it('swipes up and down the floors in full-screen and settles on one', () => {
+    expect(scene).toContain('swipeTravel(dy, el.clientHeight)')
+    expect(scene).toContain('swipeLanding(r.t, r.glide, l.shape)')
+    expect(experience).toContain('Swipe up or down for floors.')
+  })
+
+  it("never resizes the canvas when Safari's bars come and go", () => {
+    expect(css).toMatch(/\[data-full\] \.silo-stage \{\s*bottom: auto;\s*height: calc\(100lvh/)
+  })
 })

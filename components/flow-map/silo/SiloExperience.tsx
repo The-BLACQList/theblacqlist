@@ -374,7 +374,7 @@ export function SiloExperience({
       window.history.pushState({ ...base, [FULL_STATE]: true }, '')
     }
     setFullAsked(true)
-    setStatus('Full screen. Drag to look around, pinch to zoom, Back to close.')
+    setStatus('Full screen. Swipe up or down for floors, sideways to turn. Back to close.')
   }, [setStatus])
 
   /** The X and Escape step back off the entry, so Back stays in step. */
@@ -788,7 +788,7 @@ export function SiloExperience({
           {showHint && (
             <p className="silo-hint">
               {full
-                ? 'Drag to look around. Pinch to see the whole tower.'
+                ? 'Swipe up or down for floors. Pinch to see the whole tower.'
                 : 'Keep scrolling to see every floor'}
             </p>
           )}

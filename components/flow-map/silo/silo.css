@@ -2036,11 +2036,13 @@ html.silo-full-lock body {
     transform: translateX(-50%) scale(0.98);
   }
 
-  /* Full-screen: over the header and the pills, the whole window. */
+  /* Full-screen: over the header and the pills, the whole window. The track
+     keeps the preview's height, so the page under it doesn't shift. */
   .silo-track[data-full] {
-    --hdr: 0px;
+    height: calc(100svh - var(--hdr));
   }
   .silo-track[data-full] .silo {
+    --hdr: 0px;
     position: fixed;
     inset: 0;
     z-index: 70;
@@ -2050,6 +2052,15 @@ html.silo-full-lock body {
   }
   .silo-track[data-full] .silo-stage canvas {
     touch-action: none;
+  }
+  /* The map is as tall as the window with Safari's bars away, so the bars
+     coming and going never resize (and blank) the canvas. */
+  .silo-track[data-full] .silo-stage {
+    bottom: auto;
+    height: calc(100lvh + 148px);
+  }
+  .silo-track[data-full] .ctx {
+    overscroll-behavior: contain;
   }
   .silo-track[data-full] .dock .close {
     display: inline-flex;
@@ -2104,6 +2115,9 @@ html.silo-full-lock body {
 
 /* Landscape full-screen: the card owns the right edge, the rail the left. */
 @media (max-height: 500px) {
+  .silo-track[data-full] .silo-stage {
+    height: calc(100lvh + var(--strip-h));
+  }
   .silo-track[data-full] .dock .tools {
     left: 64px;
     bottom: var(--eb);
