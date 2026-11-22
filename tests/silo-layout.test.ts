@@ -48,7 +48,12 @@ import {
   PREVIEW_SPIN,
   pinchZoom,
   SWIPE,
-  swipeLanding,
+  RIDE,
+  clampPitch,
+  lookTurn,
+  rideCoast,
+  rideHeight,
+  rideOrbit,
   swipeTravel,
   swipeTurnRate,
   introPlays,
@@ -882,6 +887,62 @@ describe('phone pinch and preview (ticket 248)', () => {
   })
 })
 
+// Ticket 270: founder 2026-11-22, on the phone "it forces me to a certain
+// level", "I don't feel like I'm ever level with a level", "never up enough to
+// really be on the shopper level", "I can't look down or up the tower".
+describe('phone full-screen rides the tower at eye height (ticket 270)', () => {
+  const eye = (t: number, az: number, pitch: number) => orbitPose(rideOrbit(t, az, pitch)).pos
+
+  it('stands just above a floor when stopped on it, the shopper floor too', () => {
+    SILO_FLOORS.forEach((_, i) => {
+      const y = eye(scrollForFloor(i), 0, RIDE.pitch).y
+      expect(y - SILO.y[i]!).toBeGreaterThan(0)
+      expect(y - SILO.y[i]!).toBeLessThanOrEqual(RIDE.lift)
+    })
+  })
+
+  it('looks without moving the eye', () => {
+    const level = eye(0.3, 1, 0)
+    for (const pitch of [RIDE.minPitch, -0.4, RIDE.pitch, 0.9, RIDE.maxPitch]) {
+      const at = eye(0.3, 1, pitch)
+      expect(at.x).toBeCloseTo(level.x)
+      expect(at.y).toBeCloseTo(level.y)
+      expect(at.z).toBeCloseTo(level.z)
+    }
+  })
+
+  it('looks from far up the tower to far down it', () => {
+    expect(RIDE.minPitch).toBeLessThan(-Math.PI / 3)
+    expect(RIDE.maxPitch).toBeGreaterThan(Math.PI / 3)
+    const up = orbitPose(rideOrbit(0.5, 0, RIDE.minPitch))
+    expect(up.look.y).toBeGreaterThan(up.pos.y)
+    expect(clampPitch(10)).toBe(RIDE.maxPitch)
+    expect(clampPitch(-10)).toBe(RIDE.minPitch)
+  })
+
+  it('two fingers sliding down look down, up look up', () => {
+    expect(lookTurn(100, 800)).toBeGreaterThan(0)
+    expect(lookTurn(-100, 800)).toBeLessThan(0)
+    expect(lookTurn(100, 0)).toBe(0)
+  })
+
+  it('a released swipe glides on and stops between floors, never pulled to one', () => {
+    let t = scrollForFloor(1) + 0.01
+    let glide: number = SWIPE.glideMax
+    for (let i = 0; i < 200 && glide; i++) [t, glide] = rideCoast(t, glide, 1 / 60)
+    expect(glide).toBe(0)
+    expect(t).toBeGreaterThan(scrollForFloor(1) + 0.05)
+    const floors = SILO_FLOORS.map((_, i) => scrollForFloor(i))
+    expect(floors.some((f) => Math.abs(f - t) < 1e-6)).toBe(false)
+  })
+
+  it('stops dead at either end of the tower', () => {
+    expect(rideCoast(0.999, 0.5, 0.1)).toEqual([1, 0])
+    expect(rideCoast(0.001, -0.5, 0.1)).toEqual([0, 0])
+    expect(rideHeight(2)).toBe(rideHeight(1))
+  })
+})
+
 // Ticket 248 round 2: on the founder's iPhone a swipe up or down did nothing.
 describe('phone swipe through the floors (ticket 248)', () => {
   it('a finger moving up goes down the tower, down comes back up', () => {
@@ -892,20 +953,6 @@ describe('phone swipe through the floors (ticket 248)', () => {
 
   it('two screens of swipe cover the whole tower', () => {
     expect(swipeTravel(-1600, 800)).toBeCloseTo(1)
-  })
-
-  it('settles on a floor, never between two', () => {
-    const floors = SILO_FLOORS.map((_, i) => scrollForFloor(i))
-    for (const t of [0, 0.1, 0.33, 0.5, 0.71, 1]) {
-      expect(floors).toContain(swipeLanding(t, 0))
-    }
-  })
-
-  it('a flick carries no more than half a floor further', () => {
-    const one = scrollForFloor(1)
-    const gap = scrollForFloor(2) - one
-    expect(SWIPE.glideMax * SWIPE.flingS).toBeLessThanOrEqual(gap / 2 + 1e-9)
-    expect(swipeLanding(one, SWIPE.glideMax)).toBeLessThanOrEqual(scrollForFloor(2))
   })
 
   it('coasts a sideways flick less than a mouse, so it cannot jump', () => {
