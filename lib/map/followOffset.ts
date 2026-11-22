@@ -24,7 +24,7 @@ export interface FollowFrame {
 
 /**
  * How far the mark's coordinate sits below its visual middle. A selected
- * square on a phone runs from its top (TILE_TOP_LIFT above the tip) to the
+ * pin on a phone runs from its top (TILE_TOP_LIFT above the tip) to the
  * bottom of the name pill under the tip, so its middle is above the tip. A
  * dot is centred on its point.
  */

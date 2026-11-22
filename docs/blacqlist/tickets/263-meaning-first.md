@@ -1,6 +1,6 @@
 # Ticket 263: Meaning First When Nothing Matches
 
-**Status:** PR open. Merge needs the founder's OK. Code only: the flag is already on in prod.
+**Status:** Merged #394 (`2584b93`), 2026-11-21. Code only: the flag is already on in prod.
 
 ## Why
 Ticket 260 went live on 2026-11-21. In six live searches none showed Related Businesses (`related_used` false on all).

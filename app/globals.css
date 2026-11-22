@@ -192,17 +192,19 @@
   }
 }
 
-/* ─── Map explore: Pins (ticket 244) ─────────────────────────────────────────
-   Founder's picks 2026-11-21: option C's rounded-square tile with option A's
-   name pill, under the Calm Map rules. Every shape means one thing: a square is
-   a claimed page, a dot any other business, a circle a group (with the only
-   number on the map, its count), a pill a city, a diamond a landmark. A claimed
-   page on Starter and up gets the white logo square with a gold border; a Free
-   claimed page gets the plain ink square with its initial.
+/* ─── Map explore: Pins (tickets 244, 266) ──────────────────────────────────
+   Founder's picks 2026-11-21: option B's teardrop with a white circle (266,
+   circle a bit larger than the workshop's) and option A's name pill, under
+   the Calm Map rules. Every shape means one thing: a teardrop is a claimed
+   page, a dot any other business, a circle a group (with the only number on
+   the map, its count), a pill a city, a diamond a landmark. A claimed page on
+   Starter and up gets the gold teardrop with its logo in the white circle; a
+   Free claimed page gets the smaller ink teardrop with its initial.
    MapLibre owns the transform of the marker element, so `.blacq-pin` is a
    zero-size anchor at the listing coordinate and the button sits above it,
-   with the caret tip on the spot. Size change on selection animates only when
-   motion is allowed. */
+   with the teardrop's tip on the spot. The selected paid size must match
+   SELECTED_TILE and SELECTED_PIN_HEIGHT in lib/map/popupOffset.ts (a unit test
+   checks). Size change on selection animates only when motion is allowed. */
 .blacq-pin {
   width: 0;
   height: 0;
@@ -217,7 +219,7 @@
   background: none;
   cursor: pointer;
   border-radius: 12px;
-  /* The 34px plain tile is under 44px, so the button pads the hit area out. */
+  /* The 34px plain teardrop is under 44px wide, so the button pads it out. */
   min-width: 44px;
   min-height: 44px;
   display: flex;
@@ -229,88 +231,110 @@
   outline: 3px solid var(--color-gold);
   outline-offset: 3px;
 }
-.blacq-pin-tile {
+.blacq-pin-body {
   position: relative;
-  box-sizing: border-box;
+  display: block;
+  filter: drop-shadow(0 3px 4px rgba(29, 28, 29, 0.3));
+}
+.blacq-pin-paid .blacq-pin-body {
+  width: 52px;
+  height: 64px;
+}
+.blacq-pin-plain .blacq-pin-body {
+  width: 34px;
+  height: 42px;
+}
+.blacq-pin-shape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  display: block;
+}
+.blacq-pin-shape path {
+  fill: var(--color-gold);
+  stroke: #fff;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+.blacq-pin-plain .blacq-pin-shape path {
+  fill: var(--color-ink);
+}
+/* The white circle sits on the round head of the teardrop (centre 21 of 54).
+   Option B's was 72.7% of the width; 266 makes it 79.5%. */
+.blacq-pin-disc {
+  position: absolute;
+  left: 50%;
+  top: 38.9%;
+  transform: translate(-50%, -50%);
+  width: 79.5%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #fff;
+  color: var(--color-ink);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-headline);
   font-weight: 500;
-}
-.blacq-pin-paid .blacq-pin-tile {
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
-  border: 2px solid var(--color-gold);
-  background: #fff;
-  color: var(--color-ink);
   font-size: 14px;
-  box-shadow: 0 0 0 1.5px #fff, 0 3px 10px rgba(29, 28, 29, 0.28);
 }
-.blacq-pin-plain .blacq-pin-tile {
-  width: 34px;
-  height: 34px;
-  border-radius: 9px;
-  border: 2px solid #fff;
-  background: var(--color-ink);
+.blacq-pin-initial {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 38.9%;
+  transform: translateY(-50%);
+  text-align: center;
   color: #fff;
+  font-family: var(--font-headline);
+  font-weight: 500;
   font-size: 15px;
-  box-shadow: 0 3px 8px rgba(29, 28, 29, 0.3);
+  line-height: 1;
 }
 /* A logo is shown whole, never cropped. */
 .blacq-pin-logo {
-  width: 36px;
-  height: 36px;
+  width: 74%;
+  height: 74%;
   object-fit: contain;
   display: block;
 }
-/* No logo yet: the cover photo fills the tile. */
+/* No logo yet: the cover photo fills the circle. */
 .blacq-pin-photo {
   width: 100%;
   height: 100%;
-  border-radius: 10px;
   object-fit: cover;
   display: block;
 }
-.blacq-pin-caret {
-  width: 0;
-  height: 0;
-  margin-top: -1px;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 6px solid var(--color-gold);
+/* Hover from its card: an ink edge, no size change. */
+.blacq-pin-hover:not(.blacq-pin-selected) .blacq-pin-shape path {
+  stroke: var(--color-ink);
+  stroke-width: 2.5;
 }
-.blacq-pin-plain .blacq-pin-caret {
-  border-top-color: var(--color-ink);
+/* Ink on the ink teardrop would not show, so a Free pin's hover edge is gold. */
+.blacq-pin-hover:not(.blacq-pin-selected).blacq-pin-plain .blacq-pin-shape path {
+  stroke: var(--color-gold);
 }
-/* Hover from its card: an ink halo, no size change. */
-.blacq-pin-hover:not(.blacq-pin-selected).blacq-pin-paid .blacq-pin-tile {
-  box-shadow: 0 0 0 1.5px #fff, 0 0 0 4.5px var(--color-ink), 0 3px 10px rgba(29, 28, 29, 0.28);
+.blacq-pin-selected.blacq-pin-paid .blacq-pin-body {
+  width: 62px;
+  height: 76px;
 }
-.blacq-pin-hover:not(.blacq-pin-selected).blacq-pin-plain .blacq-pin-tile {
-  box-shadow: 0 0 0 3px var(--color-ink), 0 3px 8px rgba(29, 28, 29, 0.3);
+.blacq-pin-selected.blacq-pin-paid .blacq-pin-shape path {
+  stroke: var(--color-ink);
+  stroke-width: 2;
 }
-.blacq-pin-selected.blacq-pin-paid .blacq-pin-tile {
-  width: 56px;
-  height: 56px;
-  border-width: 3px;
-  border-radius: 14px;
-  box-shadow: 0 0 0 1.5px #fff, 0 0 0 3px var(--color-ink), 0 6px 18px rgba(29, 28, 29, 0.32);
-}
-.blacq-pin-selected .blacq-pin-logo {
+.blacq-pin-selected.blacq-pin-plain .blacq-pin-body {
   width: 42px;
-  height: 42px;
+  height: 52px;
 }
-.blacq-pin-selected.blacq-pin-plain .blacq-pin-tile {
-  width: 42px;
-  height: 42px;
-  border-radius: 11px;
-  border: 3px solid var(--color-gold);
+.blacq-pin-selected.blacq-pin-plain .blacq-pin-shape path {
+  stroke: var(--color-gold);
+  stroke-width: 3;
+}
+.blacq-pin-selected .blacq-pin-initial {
   font-size: 16px;
-}
-.blacq-pin-selected.blacq-pin-plain .blacq-pin-caret {
-  border-top-color: var(--color-gold);
 }
 /* Option A's name treatment: the name shows only when selected, under the tip. */
 .blacq-pin-name {
@@ -335,11 +359,10 @@
   pointer-events: none;
 }
 @media (prefers-reduced-motion: no-preference) {
-  .blacq-pin-tile {
+  .blacq-pin-body {
     transition:
       width 200ms cubic-bezier(0.16, 1, 0.3, 1),
-      height 200ms cubic-bezier(0.16, 1, 0.3, 1),
-      box-shadow 120ms ease-out;
+      height 200ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 }
 
