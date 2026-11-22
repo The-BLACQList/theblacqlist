@@ -7,7 +7,7 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { suggestSubcategory } from '@/lib/listings/subcategorySuggest'
+import { INTO_RULES, suggestInto, suggestSubcategory } from '@/lib/listings/subcategorySuggest'
 import type { AssistCategory } from '@/lib/search/assist'
 
 // Real slugs and parents from supabase/seed.sql, so the real related words apply.
@@ -80,5 +80,51 @@ describe('suggestSubcategory', () => {
     const s = suggestSubcategory(listing('Green Lawn Hallway Co'), PRO, CATEGORIES)
     expect(s.suggested).toBeNull()
     expect(suggestSubcategory(listing('Green Lawn Hallway Co'), EVENTS, CATEGORIES).suggested).toBeNull()
+  })
+})
+
+// ─── Into Bath & Body (ticket 257) ────────────────────────────────────────────
+
+describe('suggestInto bath-body', () => {
+  const rule = INTO_RULES['bath-body']!
+  const into = (name: string, tagline: string | null, description: string | null) =>
+    suggestInto({ name, tagline, description }, rule)
+
+  it('takes a soap maker on its name alone', () => {
+    const s = into('Lather & Light Soap Co.', null, null)
+    expect(s.confidence).toBe('name')
+    expect(s.matched).toContain('soap')
+  })
+
+  it('takes a listing whose words agree twice', () => {
+    const s = into('Golden Hour Naturals', 'Small-batch body care', 'Whipped shea butter and lotion for dry skin.')
+    expect(s.confidence).toBe('several')
+    expect(s.matched).toEqual(expect.arrayContaining(['lotion', 'shea butter']))
+  })
+
+  it('counts "bath bomb" and "bath" as one word, so one product is not enough', () => {
+    expect(into('Fizz Lab', null, 'Bath bombs for kids.').confidence).toBe('none')
+  })
+
+  it('never takes an auto body shop or a remodel', () => {
+    expect(into('Precision Auto Body', null, 'Collision repair and paint.').confidence).toBe('none')
+    const remodel = into('Bath Remodel Pros', null, 'Tub, tile and shower remodeling.')
+    expect(remodel.confidence).toBe('excluded')
+    expect(remodel.excludedBy).toBe('remodel')
+    const body = into('Smooth Body Shop', 'Auto body and soap-gentle detailing', 'We wash and wax with lotion-grade care.')
+    expect(body.confidence).toBe('excluded')
+  })
+
+  it('leaves salons and massage alone even when they sell lotion', () => {
+    expect(into('Crown Hair Salon', null, 'Silk press, soap-free shampoo and body lotion for sale.').confidence).toBe(
+      'excluded'
+    )
+    expect(into('Healing Hands Massage', null, 'Massage with shea butter lotion.').confidence).toBe('excluded')
+  })
+
+  it('needs more than a passing word', () => {
+    expect(into('Sweet Auburn Bakery', null, 'Pound cake and a free bar of soap with every order.').confidence).toBe(
+      'none'
+    )
   })
 })

@@ -95,8 +95,10 @@ export const INTENT_FAMILIES: Readonly<Record<string, readonly string[]>> = {
   cafe: ['coffee'],
   jewelry: ['jeweler', 'jewellery'],
   tax: ['accountant', 'accounting', 'bookkeeping', 'cpa'],
-  car: ['auto', 'automotive', 'mechanic'],
-  mechanic: ['auto', 'automotive'],
+  // Never a lone "auto": it matched "auto insurance" for "a good mechanic"
+  // (live eval, 2026-11-21). "auto repair" needs both words.
+  car: ['automotive', 'mechanic', 'auto repair'],
+  mechanic: ['auto repair', 'car repair', 'automotive'],
   daycare: ['childcare', 'preschool'],
   childcare: ['daycare', 'preschool'],
   doctor: ['physician', 'clinic', 'medical'],
@@ -105,6 +107,52 @@ export const INTENT_FAMILIES: Readonly<Record<string, readonly string[]>> = {
   book: ['bookstore', 'bookshop'],
   wine: ['winery', 'vineyard'],
   beer: ['brewery', 'brewing'],
+}
+
+// ─── "IT" the trade, not "it" the word ───────────────────────────────────────
+//
+// Postgres drops "it" as an English stop word, so "IT support" searched only
+// "support" and found any business that offers support (live eval,
+// 2026-11-21). In the trade sense it becomes "technology": every listing under
+// IT Support & Managed Services carries that word through its group's name
+// (search_vector weight B).
+
+/** Words that make a preceding "it" the trade: "IT support", "it consultant". */
+const TECH_NOUNS: ReadonlySet<string> = new Set([
+  'support', 'services', 'service', 'security', 'consulting', 'consultant', 'consultants',
+  'consultancy', 'solution', 'solutions', 'company', 'companies', 'firm', 'firms', 'guy', 'guys',
+  'person', 'provider', 'providers', 'department', 'staffing', 'training', 'professional',
+  'professionals', 'managed', 'network', 'networking', 'specialist', 'specialists',
+  'technician', 'technicians', 'tech', 'helpdesk', 'desk', 'infrastructure', 'contractor',
+  'contractors', 'job', 'jobs',
+])
+
+/** Before a lowercase "it", these make it the pronoun: "can it support", "make it work". */
+const IT_PRONOUN_BEFORE: ReadonlySet<string> = new Set([
+  'is', 'was', 'does', 'do', 'did', 'will', 'would', 'can', 'could', 'should', 'has', 'have',
+  'had', 'make', 'makes', 'made', 'keep', 'let', 'take', 'give', 'put', 'call', 'bring', 'send',
+])
+
+/**
+ * Rewrites "it" to "technology" where it names the trade: before a word like
+ * support or consultant ("IT support", "need an it guy"), or a capital "IT"
+ * that ends the search ("help with IT"). A capital "IT" elsewhere stays ("IT
+ * Works"), and so does all-capitals text, where "IT" could be anything.
+ */
+export function withTechIt(raw: string): string {
+  if (!/\bit\b/i.test(raw)) return raw
+  const shouting = raw === raw.toUpperCase()
+  return raw.replace(/\bit\b/gi, (match: string, offset: number) => {
+    const before = /([a-z']+)[^a-z']*$/i.exec(raw.slice(0, offset))?.[1]?.toLowerCase()
+    const afterText = raw.slice(offset + match.length)
+    const after = /^[^a-z']*([a-z']+)/i.exec(afterText)?.[1]?.toLowerCase()
+    const capital = match === 'IT' && !shouting
+    if (after && TECH_NOUNS.has(after)) {
+      return capital || !before || !IT_PRONOUN_BEFORE.has(before) ? 'technology' : match
+    }
+    if (capital && !after) return 'technology'
+    return match
+  })
 }
 
 /** Same cap as expandSearchQuery: past this the query is too long to widen. */
@@ -180,7 +228,7 @@ export interface QueryWords {
  * Shared by the grid's rescue below and Cue's any-word query (ticket 256).
  */
 export function queryWords(text: string): QueryWords {
-  const tokens = normalizeQuery(text).split(' ').filter(Boolean)
+  const tokens = normalizeQuery(withTechIt(text)).split(' ').filter(Boolean)
   const { rest, removed: identityRemoved } = withoutIdentity(tokens)
 
   const kept: string[] = []
@@ -201,6 +249,28 @@ export function queryWords(text: string): QueryWords {
 
   const specific = kept.filter((w) => !GENERIC_OBJECTS.has(w))
   return { words: (specific.length > 0 ? specific : kept).slice(0, MAX_WORDS), identityRemoved }
+}
+
+// Words a question opens with. Taken off the front of an echo only, so a
+// name keeps its own words ("The Shop ATL").
+const QUESTION_LEAD: ReadonlySet<string> = new Set([
+  'how', 'what', 'whats', 'where', 'wheres', 'who', 'which', 'can', 'could', 'do', 'does', 'did',
+  'i', 'im', 'is', 'are', 'there', 'get', 'find', 'need', 'want', 'looking', 'please', 'for',
+  'to', 'a', 'an', 'some', 'any', 'show', 'me', 'tell',
+])
+
+/**
+ * The visitor's words to echo back when the search as typed found something:
+ * what they typed, without identity phrases (#299) or the question it opened
+ * with. "where can I find The Shop ATL" → "the shop atl". Falls back to the
+ * words that carry the search when nothing else is left.
+ */
+export function echoWords(text: string): string {
+  const { rest } = withoutIdentity(normalizeQuery(text).split(' ').filter(Boolean))
+  let start = 0
+  while (start < rest.length && QUESTION_LEAD.has(rest[start]!)) start++
+  const echo = rest.slice(start)
+  return echo.length > 0 ? echo.join(' ') : queryWords(text).words.join(' ')
 }
 
 /** True for a word that names no particular thing ("products", "stuff"). */

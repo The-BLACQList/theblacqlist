@@ -37,6 +37,13 @@ describe('buildSearchQuery', () => {
     expect(q).not.toMatch(/ or /)
   })
 
+  it('rejoins single words that make a curated phrase (ticket 257)', () => {
+    const { q, terms } = buildSearchQuery({ words: ['body', 'wash'], category: null, categories: CATEGORIES })
+    expect(terms[0]).toBe('body wash')
+    expect(q).toContain('"body wash"')
+    expect(terms).toContain('soap')
+  })
+
   it('finds the law words from the typed word alone when no category is set', () => {
     const { terms } = buildSearchQuery({ words: ['lawyer'], category: null, categories: CATEGORIES })
     expect(terms).toEqual(expect.arrayContaining(['lawyer', 'attorney', 'law firm']))
