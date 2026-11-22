@@ -11,12 +11,19 @@
 
 import type { AssistantAction, AssistantCard } from '@/lib/ai/assistant-limits'
 
+/** Who wrote a reply: Cue, or the quick answer from our listings (ticket 255). */
+export type AnswerMode = 'ai' | 'basic'
+
 export type CueEvent =
   | { type: 'status'; text: string }
   | { type: 'text'; text: string }
   | { type: 'cards'; cards: AssistantCard[] }
   | { type: 'actions'; actions: AssistantAction[] }
-  | { type: 'done'; text: string }
+  /**
+   * `mode` 'basic': the quick answer from our listings, built with no model
+   * call when Cue can't answer on /search (ticket 255). Absent means Cue.
+   */
+  | { type: 'done'; text: string; mode?: AnswerMode }
   | { type: 'fallback'; href: string; reason: 'limited' | 'error' }
 
 const TYPES: ReadonlySet<string> = new Set(['status', 'text', 'cards', 'actions', 'done', 'fallback'])

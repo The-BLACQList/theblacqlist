@@ -75,6 +75,7 @@ const replySchema = z.discriminatedUnion('kind', [
     actions: z.array(actionSchema),
     near: z.boolean(),
     stopped: z.boolean().optional(),
+    mode: z.enum(['ai', 'basic']).optional(),
   }),
   fallbackSchema,
 ])

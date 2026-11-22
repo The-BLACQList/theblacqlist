@@ -115,3 +115,28 @@ test.describe('TA-21 — Spend data privacy', () => {
     }
   })
 })
+
+// Ticket 255: the /search answer strip never comes back empty. Whatever the
+// AI flag, kill switch or provider say in this environment, the strip's call
+// to /api/cue ends in an answer: Cue's ('ai') or the quick answer from our
+// listings ('basic'). Never the bare fallback the chat panel gets.
+test.describe('Search answer — always answers (ticket 255)', () => {
+  test("the founder's question gets an answer, never a fallback", async ({ request }) => {
+    const res = await request.post('/api/cue', {
+      headers: { 'content-type': 'application/json' },
+      data: { message: 'How do I switch to Black Owned bathroom products', surface: 'search' },
+    })
+    expect(res.status()).toBe(200)
+    const events = (await res.text())
+      .split('\n')
+      .filter(Boolean)
+      .map((line) => JSON.parse(line) as { type: string; text?: string; mode?: string })
+    expect(events.some((e) => e.type === 'fallback'), JSON.stringify(events.at(-1))).toBe(false)
+    const done = events.at(-1)
+    expect(done?.type).toBe('done')
+    expect(['ai', 'basic']).toContain(done?.mode)
+    expect(done?.text?.trim().length ?? 0).toBeGreaterThan(0)
+    // No remark on ownership (#299).
+    if (done?.mode === 'basic') expect(done.text).not.toMatch(/black[- ]owned/i)
+  })
+})
