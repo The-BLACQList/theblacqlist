@@ -19,6 +19,7 @@ import { useActionState, useEffect, useRef, useState } from 'react'
 import { useFormStatus } from 'react-dom'
 import { usePathname } from 'next/navigation'
 import { Loader2, MessageSquareWarning } from 'lucide-react'
+import { isUnder } from '@/lib/nav/rail'
 
 import {
   Dialog,
@@ -129,7 +130,10 @@ export function ReportProblemButton() {
       className={cn(
         'lift-over-quick-bar fixed bottom-4 left-4 z-40',
         // The Collective's card sheet fills a phone's bottom edge (globals.css).
-        pathname === '/flow-map' && 'lift-over-map-sheet'
+        pathname === '/flow-map' && 'lift-over-map-sheet',
+        // The signed-in menu's black rail (w-68, lg and up) holds Sign Out in
+        // this corner (ticket 252): sit just past the rail instead.
+        (isUnder(pathname, '/account') || isUnder(pathname, '/dashboard')) && 'lg:left-72'
       )}
     >
       <Dialog open={open} onOpenChange={setOpen}>
@@ -154,8 +158,8 @@ export function ReportProblemButton() {
             <DialogHeader className="pr-8">
               <DialogTitle>Report a Problem</DialogTitle>
               <DialogDescription>
-                Something broken, confusing, or missing on this page? Tell us here. We read
-                every report and reply if we need more detail.
+                Something broken, confusing, or missing on this page? Tell us here. We read every
+                report and reply if we need more detail.
               </DialogDescription>
             </DialogHeader>
             <ReportProblemForm pagePath={pathname} />

@@ -78,6 +78,10 @@ describe('post sign-in destination', () => {
   it('routes an un-onboarded account to /onboarding and an onboarded one to /account', () => {
     expect(postSignInDestination(null, fresh)).toBe('/onboarding')
     expect(postSignInDestination(null, onboarded)).toBe('/account')
+    // Ticket 252: owners land on Business Home; onboarding still comes first.
+    expect(postSignInDestination(null, onboarded, true)).toBe('/dashboard')
+    expect(postSignInDestination(null, fresh, true)).toBe('/onboarding')
+    expect(postSignInDestination('/account/saved', onboarded, true)).toBe('/account/saved')
   })
 
   it('lets a safe explicit next win (the E2E fixtures and auth guard depend on it)', () => {
@@ -119,7 +123,7 @@ describe('wiring', () => {
 
   it('sign-in routes through postSignInDestination', () => {
     const src = read('lib/actions/auth/signIn.ts')
-    expect(src).toContain('redirect(postSignInDestination(next, data.user))')
+    expect(src).toContain('redirect(postSignInDestination(next, data.user, ownsPages))')
   })
 
   it('setOnboardingRoleAction stamps completion in user_metadata', () => {

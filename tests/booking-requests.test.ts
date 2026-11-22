@@ -681,6 +681,6 @@ describe('wiring', () => {
 
   it('the dashboard page and sidebar link exist', () => {
     expect(read('app/dashboard/pages/[entityId]/bookings/page.tsx')).toContain('BookingsManager')
-    expect(read('components/dashboard/DashboardSidebar.tsx')).toContain('/bookings`')
+    expect(read('lib/account/shellNav.ts')).toContain('/bookings`')
   })
 })

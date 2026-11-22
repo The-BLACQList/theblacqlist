@@ -12,7 +12,7 @@ import { UpgradePlans } from './UpgradePlans'
 import { PlanCompareTable } from '@/components/billing/PlanCompareTable'
 import { compareOpen } from '@/lib/stripe/planCompare'
 
-export const metadata: Metadata = { title: 'Upgrade | BLACQList Dashboard' }
+export const metadata: Metadata = { title: 'Upgrade | The BLACQList' }
 
 const UNCOVERABLE = new Set(['job', 'event'])
 
@@ -39,8 +39,7 @@ export default async function UpgradePage({
   // owner came from (?page=), else their oldest page; job and event pages are
   // paid for on their own and never anchor a plan.
   const coverable = (listings ?? []).filter((l) => !UNCOVERABLE.has(l.entity_type))
-  const primaryListingId =
-    (coverable.find((l) => l.id === pageParam) ?? coverable[0])?.id ?? ''
+  const primaryListingId = (coverable.find((l) => l.id === pageParam) ?? coverable[0])?.id ?? ''
 
   // Which plans have Stripe price IDs configured, per cycle. Shared with the
   // public /pricing page so the two surfaces cannot disagree about what is for sale.
@@ -59,8 +58,8 @@ export default async function UpgradePage({
       <div className="mb-8">
         <h1 className="font-headline text-2xl text-brand-black mb-2">Upgrade Your Plan</h1>
         <p className="font-body text-sm text-charcoal-soft max-w-lg">
-          More photos, the full page layout, analytics, and more for your pages. Pay monthly or
-          save with annual billing.
+          More photos, the full page layout, analytics, and more for your pages. Pay monthly or save
+          with annual billing.
         </p>
       </div>
 
@@ -75,16 +74,16 @@ export default async function UpgradePage({
       {ownerPlan.coverage &&
         coverable.length > 0 &&
         (coverable.length > 1 || ownerPlan.coverage.count === 0) && (
-        <PlanPages
-          tier={currentTier}
-          cap={ownerPlan.coverage.cap}
-          pages={coverable.map((l) => ({
-            id: l.id,
-            name: l.name,
-            covered: ownerPlan.coverage!.pageIds.includes(l.id),
-          }))}
-        />
-      )}
+          <PlanPages
+            tier={currentTier}
+            cap={ownerPlan.coverage.cap}
+            pages={coverable.map((l) => ({
+              id: l.id,
+              name: l.name,
+              covered: ownerPlan.coverage!.pageIds.includes(l.id),
+            }))}
+          />
+        )}
 
       <UpgradePlans
         primaryListingId={primaryListingId}

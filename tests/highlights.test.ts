@@ -431,7 +431,7 @@ describe('wiring', () => {
     expect(read('app/dashboard/pages/[entityId]/highlights/page.tsx')).toContain(
       'HighlightsManager'
     )
-    expect(read('components/dashboard/DashboardSidebar.tsx')).toContain('/highlights`')
+    expect(read('lib/account/shellNav.ts')).toContain('/highlights`')
   })
 
   it('the icon picker offers only the allow-list', () => {

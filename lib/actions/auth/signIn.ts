@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { TURNSTILE_ERROR, TURNSTILE_TOKEN_FIELD } from '@/lib/security/turnstile'
 import { postSignInDestination } from '@/lib/services/auth/onboarding'
+import { ownsAnyPage } from '@/lib/messaging/loaders'
 
 type SignInField = 'email' | 'password' | 'general'
 
@@ -47,5 +48,8 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
   // An account whose confirmation link failed (other device, mail prefetch,
   // different hostname) has a confirmed email but never saw onboarding. Sign-in
   // is its second door — see lib/services/auth/onboarding.ts.
-  redirect(postSignInDestination(next, data.user))
+  // Owners land on Business Home (ticket 252) unless `next` says otherwise.
+  // A failed read just means /account.
+  const ownsPages = await ownsAnyPage(supabase, data.user.id).catch(() => false)
+  redirect(postSignInDestination(next, data.user, ownsPages))
 }

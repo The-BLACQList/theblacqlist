@@ -110,7 +110,7 @@ export default async function DashboardPage() {
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Dashboard</h1>
         <p className="font-body text-sm text-charcoal-soft mt-0.5">
-          Manage your BLACQList business pages.
+          Manage your business pages on The BLACQList.
         </p>
       </div>
 
@@ -200,7 +200,9 @@ export default async function DashboardPage() {
                   )}
                 </div>
 
-                {showAi && <WriteWithAi listingId={listing.id} listingName={listing.name} quota={quota} />}
+                {showAi && (
+                  <WriteWithAi listingId={listing.id} listingName={listing.name} quota={quota} />
+                )}
 
                 {/* Completeness checklist */}
                 <div className="px-5 py-4">

@@ -230,8 +230,9 @@ export function resetAssistantStoreForTests(): void {
 }
 
 // ─── The home bar ────────────────────────────────────────────────────────────
-// While the home page's Ask Cue bar is on screen, the corner button steps
-// aside so there is one Ask Cue in view. Memory only.
+// While the home page's Ask Cue bar, or the follow-up box under the /search
+// answer (ticket 258), is on screen, the corner button steps aside so there is
+// one Ask Cue in view and it never covers the box's send button. Memory only.
 
 let homeBarInView = false
 const barListeners = new Set<() => void>()

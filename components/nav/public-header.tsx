@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Bookmark, ShieldCheck } from 'lucide-react'
+import { ShieldCheck } from 'lucide-react'
 import { Container } from '@/components/layout/container'
 import { MobileNav } from '@/components/nav/mobile-nav'
 import { HeaderSearch } from '@/components/nav/HeaderSearch'
@@ -10,7 +10,8 @@ import { getAdminRole } from '@/lib/admin/guard'
 import { signOutAction } from '@/lib/actions/auth/signOut'
 import { isCovered } from '@/lib/features/covered'
 import { SoonPill } from '@/components/ui/soon-pill'
-import { MAIN_NAV_LINKS, SAVED_LINK } from '@/components/nav/nav-links'
+import { MAIN_NAV_LINKS, accountMenuLinks } from '@/components/nav/nav-links'
+import { AccountMenu } from '@/components/nav/AccountMenu'
 import { MessagesNavLink } from '@/components/nav/MessagesNavLink'
 import { getUnreadMessageCount, ownsAnyPage } from '@/lib/messaging/loaders'
 
@@ -32,15 +33,21 @@ export async function PublicHeader() {
     ? await Promise.all([
         getAdminRole(user.id),
         messagingOn ? getUnreadMessageCount(supabase) : Promise.resolve(undefined),
-        messagingOn ? ownsAnyPage(supabase, user.id) : Promise.resolve(false),
+        // Also drives "My Business" (ticket 252), so it runs with messaging off too.
+        ownsAnyPage(supabase, user.id),
       ])
     : [null, undefined, false]
   const isAdmin = adminRole !== null
+  // My Business sits inside the My Account menu (founder 2026-11-21).
+  const accountLinks = accountMenuLinks({
+    isOwner: ownsPages,
+    messagingOn: messagesUnread !== undefined,
+  })
   const collectiveSoon = isCovered('collective')
   // The search icon opens Search or ask Cue when the assistant is on; a plain
   // link to /search otherwise.
   const cue = isFeatureEnabled('aiAssistant')
-  // Signed-in visitors carry Saved, My Account and Sign Out (and Admin), which
+  // Signed-in visitors carry the My Account menu and Sign Out (and Admin), which
   // overflowed the row below 1100px, so their full nav starts at xl. Literal
   // classes so Tailwind keeps them.
   const showFull = isSignedIn ? 'hidden xl:flex' : 'hidden lg:flex'
@@ -96,20 +103,10 @@ export async function PublicHeader() {
                     Admin
                   </Link>
                 )}
-                {messagesUnread !== undefined && <MessagesNavLink unread={messagesUnread} owner={ownsPages} />}
-                <Link
-                  href={SAVED_LINK.href}
-                  className="inline-flex items-center gap-1.5 font-subhead text-sm text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm px-2 py-1"
-                >
-                  <Bookmark className="h-4 w-4" aria-hidden="true" />
-                  {SAVED_LINK.label}
-                </Link>
-                <Link
-                  href="/account"
-                  className="font-subhead text-sm text-cream hover:text-gold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-deep-bg rounded-sm px-2 py-1"
-                >
-                  My Account
-                </Link>
+                {messagesUnread !== undefined && (
+                  <MessagesNavLink unread={messagesUnread} owner={ownsPages} />
+                )}
+                <AccountMenu links={accountLinks} />
                 <form action={signOutAction}>
                   <button
                     type="submit"
@@ -140,8 +137,15 @@ export async function PublicHeader() {
           {/* Mobile right zone */}
           <div className={`${showCompact} items-center gap-1`}>
             <HeaderSearch cue={cue} size="mobile" />
-            {messagesUnread !== undefined && <MessagesNavLink unread={messagesUnread} owner={ownsPages} />}
-            <MobileNav isSignedIn={isSignedIn} isAdmin={isAdmin} collectiveSoon={collectiveSoon} />
+            {messagesUnread !== undefined && (
+              <MessagesNavLink unread={messagesUnread} owner={ownsPages} />
+            )}
+            <MobileNav
+              isSignedIn={isSignedIn}
+              isAdmin={isAdmin}
+              accountLinks={accountLinks}
+              collectiveSoon={collectiveSoon}
+            />
           </div>
         </nav>
       </Container>

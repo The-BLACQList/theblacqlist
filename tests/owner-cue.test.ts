@@ -531,7 +531,7 @@ describe('replies read easily', () => {
 
 describe('the corner button', () => {
   const read = (path: string) => readFileSync(join(process.cwd(), path), 'utf8')
-  const sidebar = read('components/dashboard/DashboardSidebar.tsx')
+  const sidebar = read('components/account/SignedInShell.tsx')
   const layout = read('app/dashboard/layout.tsx')
   const cue = read('components/dashboard/OwnerCue.tsx')
   const css = read('app/globals.css')
