@@ -942,15 +942,17 @@
   background: radial-gradient(56% 42% at 50% 50%, rgba(8, 8, 10, 0.6), rgba(8, 8, 10, 0) 72%);
 }
 
+/* Founder 2026-11-21: the first cut (Jost 300, 15px) read thin. */
 .silo-intro-kicker {
   margin: 0;
-  padding-left: 0.42em;
+  padding-left: 0.32em;
   font-family: var(--font-headline), system-ui, sans-serif;
-  font-weight: 300;
-  font-size: clamp(12px, 1.3vw, 15px);
-  letter-spacing: 0.42em;
+  font-weight: 500;
+  font-size: clamp(14px, 1.6vw, 19px);
+  letter-spacing: 0.32em;
   text-transform: uppercase;
-  color: var(--gold);
+  color: var(--gold-2);
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.8);
 }
 
 .silo-intro-line {

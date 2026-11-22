@@ -93,3 +93,14 @@ Ticket 248 rebuilds phone controls for full-screen anyway.
 
 - Founder look on Preview, the opening especially (timing and feel are taste calls).
 - 246's checks still apply: real-phone frame rate, bloom on a mid-range laptop.
+
+## Round 2 (Founder Feedback 2026-11-21)
+
+Feedback on Preview: "The Collective is a bit thin and hard to read on the opening. I want the lines to be smoother, everything else is great."
+
+- **Opening kicker:** Jost 500 (was 300), up to 19px (was 15px), light gold, a shadow behind it, and slightly tighter tracking.
+- **Smoother lines:**
+  - Links and pending links are real-width lines now (three's own `LineSegments2` + `LineMaterial`, 1.5 CSS px). Before, they were 1-pixel GL lines that break up at shallow angles.
+  - Each curve has 64 steps, up from 20, so long links bend smoothly instead of in kinks.
+  - On desktop the bloom composer now draws into a 4x-multisampled target. The composer was skipping the canvas's antialiasing, which made every thin edge jagged.
+  - Everyday link brightness went from 0.26 to 0.2, so the wider line keeps the same weight as before.

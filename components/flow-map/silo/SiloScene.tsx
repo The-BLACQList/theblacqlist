@@ -23,6 +23,9 @@ import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js'
+import { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
+import { LineSegments2 } from 'three/examples/jsm/lines/LineSegments2.js'
+import { LineSegmentsGeometry } from 'three/examples/jsm/lines/LineSegmentsGeometry.js'
 
 import {
   CATEGORY_FAMILIES,
@@ -91,7 +94,10 @@ const BG = new THREE.Color(BG_HEX)
  */
 const BG_FOR_COMPOSER = BG.clone().convertSRGBToLinear()
 const DRAG_THRESHOLD_PX = 5
-const LINK_SEGMENTS = 20
+/** Enough steps that a long link reads as one smooth curve, not a chain. */
+const LINK_SEGMENTS = 64
+/** Link width in CSS pixels. Real width, so links stay smooth at any angle. */
+const LINK_WIDTH_PX = 1.5
 /** Every linked business under the total bar draws at this one size (ticket 250). */
 const LINKED_UNCOUNTED_SIZE = 0.55
 const ATLAS_CELLS = 8
@@ -1136,12 +1142,6 @@ function Controls(
 
 // ─── The cage, sky and hub ───────────────────────────────────────────────────
 
-function lineGeometry(pts: number[]): THREE.BufferGeometry {
-  const geo = new THREE.BufferGeometry()
-  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3))
-  return geo
-}
-
 function disposeAll(objects: readonly (THREE.Points | THREE.Line | THREE.Mesh)[]) {
   for (const o of objects) {
     o.geometry.dispose()
@@ -1470,7 +1470,11 @@ function Bloom() {
   const { gl, scene, camera, size } = useThree()
   const dpr = useThree((s) => s.viewport.dpr)
   const fx = useMemo(() => {
-    const composer = new EffectComposer(gl)
+    // The composer draws into its own target, which skips the canvas's
+    // antialiasing, so the target gets its own (4x MSAA). Without it the thin
+    // links come out jagged on desktop.
+    const target = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 })
+    const composer = new EffectComposer(gl, target)
     composer.addPass(new RenderPass(scene, camera))
     // A high threshold and a short reach: only the bright bits glow, so the
     // dark between them stays clear (founder 2026-11-21: no haze).
@@ -1602,7 +1606,7 @@ function Links({
     const c = new THREE.Color()
     for (const s of links) {
       const pts = linkCurve(s).getPoints(LINK_SEGMENTS)
-      const k = s.b.id === selectedId ? 0.95 : s.b.isYou ? 0.85 : 0.26
+      const k = s.b.id === selectedId ? 0.95 : s.b.isYou ? 0.85 : 0.2
       ca.set(crowdColor(s.b.familyIndex, colorBy)).multiplyScalar(k)
       cb.set(colorForBusiness(s.b, colorBy)).multiplyScalar(k)
       for (let i = 0; i < LINK_SEGMENTS; i++) {
@@ -1615,22 +1619,39 @@ function Links({
         col.push(c.r, c.g, c.b)
       }
     }
-    const geo = lineGeometry(pos)
-    geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3))
-    const obj = new THREE.LineSegments(
-      geo,
-      new THREE.LineBasicMaterial({
-        vertexColors: true,
-        transparent: true,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      })
-    )
+    const geo = new LineSegmentsGeometry()
+    if (pos.length > 0) {
+      geo.setPositions(pos)
+      geo.setColors(col)
+    }
+    const mat = new LineMaterial({
+      vertexColors: true,
+      linewidth: LINK_WIDTH_PX,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
+    mat.fog = true
+    const obj = new LineSegments2(geo, mat)
     obj.frustumCulled = false
     return obj
   }, [shown, colorBy, selectedId])
-  useEffect(() => () => disposeAll([line]), [line])
+  useLinkResolution(line)
+  useEffect(() => () => disposeLine(line), [line])
   return <primitive object={line} />
+}
+
+/** Fat lines size themselves against the canvas, in CSS pixels. */
+function useLinkResolution(line: LineSegments2 | null) {
+  const size = useThree((s) => s.size)
+  useEffect(() => {
+    line?.material.resolution.set(size.width, size.height)
+  }, [line, size])
+}
+
+function disposeLine(line: LineSegments2) {
+  line.geometry.dispose()
+  line.material.dispose()
 }
 
 /**
@@ -1652,23 +1673,27 @@ function PendingLinks({ shown }: { shown: readonly Shown[] }) {
         pos.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z)
       }
     }
-    const obj = new THREE.LineSegments(
-      lineGeometry(pos),
-      new THREE.LineDashedMaterial({
-        color: GOLD_BRIGHT,
-        dashSize: 1.4,
-        gapSize: 1.0,
-        transparent: true,
-        opacity: 0.85,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-      })
-    )
+    const geo = new LineSegmentsGeometry()
+    geo.setPositions(pos)
+    const mat = new LineMaterial({
+      color: GOLD_BRIGHT,
+      linewidth: LINK_WIDTH_PX,
+      dashed: true,
+      dashSize: 1.4,
+      gapSize: 1.0,
+      transparent: true,
+      opacity: 0.85,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
+    mat.fog = true
+    const obj = new LineSegments2(geo, mat)
     obj.computeLineDistances()
     obj.frustumCulled = false
     return obj
   }, [shown])
-  useEffect(() => () => (line ? disposeAll([line]) : undefined), [line])
+  useLinkResolution(line)
+  useEffect(() => () => (line ? disposeLine(line) : undefined), [line])
   return line ? <primitive object={line} /> : null
 }
 
