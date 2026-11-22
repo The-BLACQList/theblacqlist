@@ -1124,18 +1124,18 @@
 /* Recenter, Whole Tower and Find Me: a mark and a word on wide screens, the
    mark alone where the phone strip is short of room. The mark stays hidden
    where the word fits, except Recenter's. */
-.dock :is(.recenter, .tower, .find) {
+.dock :is(.recenter, .tower, .find, .dollar) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
 }
 
-.dock :is(.tower, .find) svg {
+.dock :is(.tower, .find, .dollar) svg {
   display: none;
 }
 
-.dock :is(.recenter, .tower, .find) svg {
+.dock :is(.recenter, .tower, .find, .dollar) svg {
   flex: none;
   width: 16px;
   height: 16px;
@@ -1152,6 +1152,17 @@
 
 .dock .find:hover {
   background: var(--gold-2);
+}
+
+/* Follow a Dollar (ticket 249, demo only): gold outline, filled while a trail runs. */
+.dock .dollar {
+  border-color: rgba(196, 160, 101, 0.55);
+  color: var(--gold-2);
+}
+
+.dock .dollar[aria-pressed='true'] {
+  border-color: var(--gold-2);
+  background: rgba(255, 216, 103, 0.16);
 }
 
 /* Key map: closed by default, opens above the dock. */
@@ -1633,10 +1644,13 @@
     display: none;
   }
   .silo-track[data-mode='map'] .brand-cta,
-  .silo-track[data-mode='map'] .dock .recenter .lbl {
+  .silo-track[data-mode='map'] .dock :is(.recenter, .dollar) .lbl {
     display: none;
   }
-  .silo-track[data-mode='map'] .dock .recenter {
+  .silo-track[data-mode='map'] .dock .dollar svg {
+    display: block;
+  }
+  .silo-track[data-mode='map'] .dock :is(.recenter, .dollar) {
     padding: 0;
     justify-content: center;
   }
@@ -1788,13 +1802,13 @@
    only and the logo mark goes (the site header shows it just above). */
 @media (max-width: 759px) and (min-height: 501px) {
   .silo-track[data-mode='map'] .brand .brand-mark,
-  .silo-track[data-mode='map'] .dock :is(.tower, .find) .lbl {
+  .silo-track[data-mode='map'] .dock :is(.tower, .find, .dollar) .lbl {
     display: none;
   }
-  .silo-track[data-mode='map'] .dock :is(.tower, .find) svg {
+  .silo-track[data-mode='map'] .dock :is(.tower, .find, .dollar) svg {
     display: block;
   }
-  .silo-track[data-mode='map'] .dock :is(.tower, .find) {
+  .silo-track[data-mode='map'] .dock :is(.tower, .find, .dollar) {
     padding: 0;
   }
 }
@@ -2125,4 +2139,223 @@ html.silo-full-lock body {
   .silo-track[data-full] .silo-hint {
     bottom: calc(var(--eb) + 56px);
   }
+}
+
+/* ── Demo / Live (ticket 249) ────────────────────────────────────────────── */
+
+/* The switch is always on screen. The Sample Data badge shows for as long as
+   Demo is on, next to the numbers it covers. */
+.silo-view {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.silo-view .switch {
+  display: inline-flex;
+  flex: none;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(252, 250, 244, 0.03);
+}
+
+.silo-view .switch button {
+  min-height: 32px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    background var(--t-fast) var(--ease),
+    color var(--t-fast) var(--ease);
+}
+
+.silo-view .switch button:hover {
+  color: var(--ink);
+}
+
+.silo-view .switch button[aria-pressed='true'] {
+  background: var(--gold);
+  color: #0a0907;
+}
+
+.silo-view .switch button:focus-visible {
+  outline: 2px solid var(--gold-2);
+  outline-offset: 2px;
+}
+
+.silo-view .sample {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--ink-2);
+}
+
+.silo-view .sample b {
+  color: var(--gold-2);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.silo-intro-sample {
+  margin: 0;
+  max-width: 34ch;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ink-2);
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.8);
+}
+
+/* Sideways phone: one 52px strip, so the switch sits in the title row and the
+   badge shortens to its two words. The Beta tag makes room. */
+@media (max-height: 500px) {
+  .silo-track[data-mode='map'] .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .silo-track[data-mode='map'] .silo-view {
+    gap: 8px;
+    margin-top: 0;
+  }
+  .silo-track[data-mode='map'] .silo-view .switch button {
+    min-height: 30px;
+    padding: 0 10px;
+  }
+  .silo-track[data-mode='map'] .silo-view .sample span,
+  .silo-track[data-mode='map'] .brand h2 .beta {
+    display: none;
+  }
+  .silo-track[data-mode='map'] .silo-view .sample b {
+    white-space: nowrap;
+  }
+}
+
+/* A short sideways phone (667 wide) also drops the KPI words for room. */
+@media (max-height: 500px) and (max-width: 760px) {
+  .silo-track[data-mode='map'] .brand .brand-mark {
+    display: none;
+  }
+  .silo-track[data-mode='map'] .kpis {
+    gap: 12px;
+  }
+  /* With the badge in the row, only Spent stays. */
+  .silo-track[data-mode='map'] .silo:has(.silo-view .sample) .kpi + .kpi {
+    display: none;
+  }
+}
+
+/* Full-screen sideways adds the X, which moves More left: with the badge in the
+   row, Links makes room up to 900 wide. */
+@media (max-height: 500px) and (max-width: 900px) {
+  .silo-track[data-full] .silo:has(.silo-view .sample) .kpi:nth-child(3) {
+    display: none;
+  }
+}
+
+/* The sideways preview has no card (ticket 248), so the map takes the width
+   the card would hold in full-screen. Found while building 249. */
+@media (max-height: 500px) {
+  .silo-track[data-mode='map']:not([data-full]) .silo-stage {
+    right: 0;
+  }
+}
+
+/* ── Follow a Dollar card (ticket 249) ───────────────────────────────────── */
+
+.ctx.trail {
+  border-color: rgba(196, 160, 101, 0.45);
+}
+
+.ctx .trail-eyebrow {
+  margin-bottom: 10px;
+  color: var(--gold-2);
+}
+
+.trail-cross {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 216, 103, 0.45);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--gold-2);
+}
+
+.trail-dots {
+  display: flex;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.trail-dots li {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--line-2);
+}
+
+.trail-dots li[data-on] {
+  background: var(--gold-2);
+}
+
+.trail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.trail-actions button {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.trail-next {
+  border: 1px solid var(--gold-2);
+  background: var(--gold);
+  color: #1a1405;
+}
+
+.trail-next:hover {
+  background: var(--gold-2);
+}
+
+.trail-end {
+  border: 1px solid var(--line-2);
+  background: none;
+  color: var(--ink-2);
+}
+
+.trail-end:hover {
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.ctx p.trail-note {
+  margin-top: 12px;
+  font-size: 11px;
+  color: var(--ink-3);
 }

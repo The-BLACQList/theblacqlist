@@ -89,6 +89,7 @@ import {
   type SiloBusiness,
   type SiloGap,
 } from '@/lib/spend/silo-layout'
+import { demoArrivalAt, type DemoSupplyLink } from '@/lib/spend/collective-demo'
 import { FLOOR_ICON_PATHS } from './floor-icons'
 
 const BG_HEX = '#0a0907'
@@ -176,6 +177,18 @@ export interface SiloSceneProps {
    * sideways to turn; two fingers pinch the zoom and tilt. The page never moves.
    */
   full?: boolean
+  /**
+   * Demo mode (ticket 249): a sample receipt arrives every few seconds, its
+   * line growing from the family's crowd to the business. Off with the motion.
+   */
+  arrivals?: boolean
+  /**
+   * Demo mode: businesses buying from businesses, drawn between floors. Some
+   * cross families, like a cafe buying from a woodshop. Live has none yet.
+   */
+  supply?: readonly DemoSupplyLink[]
+  /** Follow a Dollar: the trail's business ids, top first, and the stop on screen. */
+  trail?: { ids: readonly string[]; stop: number } | null
   /** Wedges with no business on the list yet: a pink square each. */
   gaps: readonly SiloGap[]
   selectedGap: SiloGap | null
@@ -373,8 +386,21 @@ function SceneContents(props: Inner) {
         textures={textures}
       />
       <Links shown={shown} colorBy={props.colorBy} selectedId={props.selectedId} />
+      {props.supply && props.supply.length > 0 && (
+        <SupplyLinks
+          shown={shown}
+          supply={props.supply}
+          colorBy={props.colorBy}
+          selectedId={props.selectedId}
+          dimmed={!!props.trail}
+        />
+      )}
+      {props.trail && props.trail.ids.length > 0 && (
+        <TrailPath shown={shown} trail={props.trail} dot={textures.dot} motion={motion && active} />
+      )}
       <PendingLinks shown={shown} />
       {motion && active && <Pulses shown={shown} dot={textures.dot} />}
+      {props.arrivals && motion && active && <Arrivals shown={shown} dot={textures.dot} />}
       <Nodes {...props} shown={shown} textures={textures} glass={glass} />
       <Gaps
         shape={shape}
@@ -515,6 +541,17 @@ function useTextures(): Textures {
     }),
     []
   )
+  // The rings and gap squares lie nearly flat to a camera on the floor. Without
+  // anisotropic filtering their thin strokes shimmer at that angle as it moves.
+  const gl = useThree((st) => st.gl)
+  useEffect(() => {
+    const most = Math.min(8, gl.capabilities.getMaxAnisotropy())
+    for (const t of [textures.ring, textures.gap]) {
+      if (t.anisotropy === most) continue
+      t.anisotropy = most
+      t.needsUpdate = true
+    }
+  }, [gl, textures])
   useEffect(
     () => () => {
       Object.values(textures).forEach((t) => t.dispose())
@@ -1462,14 +1499,17 @@ function Sky({ phone, dot, shape }: { phone: boolean; dot: THREE.Texture; shape:
     const starGeo = new THREE.BufferGeometry()
     starGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3))
     starGeo.setAttribute('color', new THREE.BufferAttribute(col, 3))
+    // A hard 1-2px square twinkles as the view turns, landing on one pixel
+    // or two. A soft 2.6px disc covers the same pixels from frame to frame.
     const stars = new THREE.Points(
       starGeo,
       new THREE.PointsMaterial({
-        size: 1.6,
+        size: 2.6,
         sizeAttenuation: false,
+        map: dot,
         vertexColors: true,
         transparent: true,
-        opacity: 0.55,
+        opacity: 0.6,
         fog: false,
         depthWrite: false,
       })
@@ -1489,12 +1529,13 @@ function Sky({ phone, dot, shape }: { phone: boolean; dot: THREE.Texture; shape:
     moteGeo.setAttribute('position', new THREE.BufferAttribute(mp, 3))
     const motes = new THREE.Points(
       moteGeo,
+      // Big enough to stay over a couple of pixels from across the tower.
       new THREE.PointsMaterial({
-        size: 0.3,
+        size: 0.7,
         map: dot,
         color: 0xf6d58a,
         transparent: true,
-        opacity: 0.3,
+        opacity: 0.16,
         blending: THREE.AdditiveBlending,
         depthWrite: false,
       })
@@ -1593,9 +1634,9 @@ function Bloom() {
   }, [gl, scene, camera])
   useEffect(() => {
     fx.composer.setPixelRatio(dpr)
+    // The glow runs at the composer's full size. Smaller, thin lines and small
+    // dots fall between its pixels as the view moves, and the glow flickers.
     fx.composer.setSize(size.width, size.height)
-    // The glow is soft anyway, so it works at a smaller size.
-    fx.bloom.setSize(Math.round(size.width * 0.75), Math.round(size.height * 0.75))
   }, [fx, size, dpr])
   useEffect(() => {
     gl.setClearColor(BG_FOR_COMPOSER, 1)
@@ -1635,50 +1676,91 @@ function Halos({
         const color = haloColor(h, colorBy)
         const lit = focusFloor === h.floor
         return (
-          <group
+          <HaloRing
             key={`${h.familyIndex}:${h.floor}`}
-            position={[h.center.x, h.center.y, h.center.z]}
-          >
-            {/* A flat ring on the plate, long along the wall like its cluster. */}
-            <group rotation={[0, haloTurn(h, shape), 0]}>
-              <mesh
-                rotation={[-Math.PI / 2, 0, 0]}
-                scale={[
-                  (h.floor === 0 ? h.radius + 1.5 : h.radius * CLUSTER_WIDE + 1.5) * 2.2,
-                  (h.radius + 1.5) * 2.2,
-                  1,
-                ]}
-                renderOrder={1}
-              >
-                <planeGeometry args={[1, 1]} />
-                <meshBasicMaterial
-                  map={textures.ring}
-                  color={color}
-                  transparent
-                  opacity={lit ? 0.26 : 0.1}
-                  blending={THREE.AdditiveBlending}
-                  depthWrite={false}
-                  side={THREE.DoubleSide}
-                />
-              </mesh>
-            </group>
-            {h.floor === 0 && (
-              // The shopper crowd: one soft glow, never a dot per person.
-              <sprite scale={shape.crowdR * 2} renderOrder={1}>
-                <spriteMaterial
-                  map={textures.glow}
-                  color={color}
-                  transparent
-                  opacity={0.14}
-                  blending={THREE.AdditiveBlending}
-                  depthWrite={false}
-                />
-              </sprite>
-            )}
-          </group>
+            h={h}
+            shape={shape}
+            color={color}
+            lit={lit}
+            textures={textures}
+          />
         )
       })}
     </>
+  )
+}
+
+/** Seconds for a ring to brighten or dim when its floor is picked. */
+const HALO_EASE_S = 0.35
+
+function HaloRing({
+  h,
+  shape,
+  color,
+  lit,
+  textures,
+}: {
+  h: Halo
+  shape: SiloShape
+  color: string
+  lit: boolean
+  textures: Textures
+}) {
+  const invalidate = useThree((s) => s.invalidate)
+  const ringRef = useRef<THREE.MeshBasicMaterial>(null)
+  // Eased, never snapped: a whole floor of rings jumping at once reads as a flash.
+  useFrame((_, delta) => {
+    const m = ringRef.current
+    if (!m) return
+    const goal = lit ? 0.26 : 0.1
+    const gap = goal - m.opacity
+    if (Math.abs(gap) < 0.002) {
+      if (gap !== 0) m.opacity = goal
+      return
+    }
+    m.opacity += gap * (1 - Math.exp(-Math.min(delta, 0.05) / (HALO_EASE_S / 4)))
+    invalidate()
+  })
+  return (
+    <group position={[h.center.x, h.center.y, h.center.z]}>
+      {/* A flat ring on the plate, long along the wall like its cluster. */}
+      <group rotation={[0, haloTurn(h, shape), 0]}>
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          scale={[
+            (h.floor === 0 ? h.radius + 1.5 : h.radius * CLUSTER_WIDE + 1.5) * 2.2,
+            (h.radius + 1.5) * 2.2,
+            1,
+          ]}
+          renderOrder={1}
+        >
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial
+            ref={ringRef}
+            map={textures.ring}
+            color={color}
+            transparent
+            opacity={0.1}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      </group>
+      {h.floor === 0 && (
+        // The shopper crowd: one soft glow, never a dot per person.
+        <sprite scale={shape.crowdR * 2} renderOrder={1}>
+          <spriteMaterial
+            map={textures.glow}
+            color={color}
+            transparent
+            opacity={0.14}
+            blending={THREE.AdditiveBlending}
+            depthWrite={false}
+          />
+        </sprite>
+      )}
+    </group>
   )
 }
 
@@ -1852,6 +1934,298 @@ function Pulses({ shown, dot }: { shown: readonly Shown[]; dot: THREE.Texture })
   return <primitive object={points} />
 }
 
+/** An arriving line is a little wider than a resting one, so it reads as new. */
+const ARRIVAL_WIDTH_PX = 2.6
+
+/**
+ * Demo mode (ticket 249): the sample's newest receipt. Its line grows along the
+ * same curve as the resting link, a bright head leading, then fades back into
+ * the map before the next one. One line, filled in place: nothing rebuilds.
+ * The pick follows demoArrivalAt over every linked business, the same list the
+ * ticker reads, so the line and the ticker always name the same business.
+ */
+function Arrivals({ shown, dot }: { shown: readonly Shown[]; dot: THREE.Texture }) {
+  const links = useMemo(() => shown.filter((s) => s.b.linked), [shown])
+  const line = useMemo(() => {
+    const geo = new LineSegmentsGeometry()
+    geo.setPositions(new Float32Array(LINK_SEGMENTS * 6))
+    const mat = new LineMaterial({
+      color: GOLD_BRIGHT,
+      linewidth: ARRIVAL_WIDTH_PX,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    })
+    mat.fog = true
+    const obj = new LineSegments2(geo, mat)
+    obj.frustumCulled = false
+    obj.visible = false
+    return obj
+  }, [])
+  const head = useMemo(() => {
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(3), 3))
+    const obj = new THREE.Points(
+      geo,
+      new THREE.PointsMaterial({
+        size: 4.2,
+        map: dot,
+        color: GOLD_BRIGHT,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+    )
+    obj.frustumCulled = false
+    obj.visible = false
+    return obj
+  }, [dot])
+  useLinkResolution(line)
+  useEffect(() => () => disposeLine(line), [line])
+  useEffect(() => () => disposeAll([head]), [head])
+
+  const flying = useRef<{ seq: number; curve: THREE.CubicBezierCurve3 | null }>({
+    seq: -1,
+    curve: null,
+  })
+  const at = useMemo(() => new THREE.Vector3(), [])
+  // Written each frame through refs, the way three objects are meant to be.
+  const lineRef = useRef<LineSegments2>(null)
+  const headRef = useRef<THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial>>(null)
+  useFrame(() => {
+    const ln = lineRef.current
+    const hd = headRef.current
+    if (!ln || !hd) return
+    const a = demoArrivalAt(Date.now(), links.length)
+    const s = a ? links[a.index] : undefined
+    if (!a || !s || !s.on) {
+      ln.visible = false
+      hd.visible = false
+      return
+    }
+    const f = flying.current
+    if (a.seq !== f.seq || !f.curve) {
+      f.seq = a.seq
+      f.curve = linkCurve(s)
+      const pts = f.curve.getPoints(LINK_SEGMENTS)
+      const start = ln.geometry.getAttribute('instanceStart') as THREE.InterleavedBufferAttribute
+      const arr = start.data.array as Float32Array
+      for (let i = 0; i < LINK_SEGMENTS; i++) {
+        const p0 = pts[i]!
+        const p1 = pts[i + 1]!
+        arr.set([p0.x, p0.y, p0.z, p1.x, p1.y, p1.z], i * 6)
+      }
+      start.data.needsUpdate = true
+    }
+    ln.visible = true
+    ln.geometry.instanceCount = Math.max(1, Math.round(a.grow * LINK_SEGMENTS))
+    ln.material.opacity = 0.9 * a.glow
+    f.curve.getPoint(a.grow, at)
+    const hp = hd.geometry.getAttribute('position') as THREE.BufferAttribute
+    hp.setXYZ(0, at.x, at.y, at.z)
+    hp.needsUpdate = true
+    hd.material.opacity = a.grow < 1 ? 1 : a.glow
+    hd.visible = true
+  })
+
+  return (
+    <>
+      <primitive ref={lineRef} object={line} />
+      <primitive ref={headRef} object={head} />
+    </>
+  )
+}
+
+/** A business-to-business line is thinner than a shopper's, so the floors stay calm. */
+const SUPPLY_WIDTH_PX = 1.3
+
+/** From the buyer to the seller, bowing in toward the core like the shopper links. */
+function supplyCurve(a: Point3, b: Point3) {
+  const [p0, p1, p2, p3] = linkControlPoints(a, b)
+  return new THREE.CubicBezierCurve3(v3(p0), v3(p1), v3(p2), v3(p3))
+}
+
+/** Appends one curve as line segments, its colour running from `ca` to `cb`. */
+function pushCurve(
+  pos: number[],
+  col: number[],
+  curve: THREE.Curve<THREE.Vector3>,
+  ca: THREE.Color,
+  cb: THREE.Color,
+  c: THREE.Color
+) {
+  const pts = curve.getPoints(LINK_SEGMENTS)
+  for (let i = 0; i < LINK_SEGMENTS; i++) {
+    const p0 = pts[i]!
+    const p1 = pts[i + 1]!
+    pos.push(p0.x, p0.y, p0.z, p1.x, p1.y, p1.z)
+    c.copy(ca).lerp(cb, i / LINK_SEGMENTS)
+    col.push(c.r, c.g, c.b)
+    c.copy(ca).lerp(cb, (i + 1) / LINK_SEGMENTS)
+    col.push(c.r, c.g, c.b)
+  }
+}
+
+function fatLines(pos: number[], col: number[], width: number) {
+  const geo = new LineSegmentsGeometry()
+  if (pos.length > 0) {
+    geo.setPositions(pos)
+    geo.setColors(col)
+  }
+  const mat = new LineMaterial({
+    vertexColors: true,
+    linewidth: width,
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+  })
+  mat.fog = true
+  const obj = new LineSegments2(geo, mat)
+  obj.frustumCulled = false
+  return obj
+}
+
+/**
+ * Demo mode: businesses buying from businesses, one faint line each, down the
+ * floors. In the kind colours a line runs from the buyer's colour to the
+ * seller's, so a cafe buying from a woodshop reads as green into orange. A
+ * picked business lights its own lines; a running trail dims them all.
+ * Rebuilt only when the data, colours or pick change, never per frame.
+ */
+function SupplyLinks({
+  shown,
+  supply,
+  colorBy,
+  selectedId,
+  dimmed,
+}: {
+  shown: readonly Shown[]
+  supply: readonly DemoSupplyLink[]
+  colorBy: ColorBy
+  selectedId: string | null
+  dimmed: boolean
+}) {
+  const line = useMemo(() => {
+    const byId = new Map(shown.map((s) => [s.b.id, s]))
+    const pos: number[] = []
+    const col: number[] = []
+    const ca = new THREE.Color()
+    const cb = new THREE.Color()
+    const c = new THREE.Color()
+    for (const l of supply) {
+      const a = byId.get(l.from)
+      const b = byId.get(l.to)
+      if (!a || !b || !a.on || !b.on) continue
+      const lit = selectedId !== null && (l.from === selectedId || l.to === selectedId)
+      const k = lit ? 0.8 : dimmed ? 0.05 : 0.13
+      ca.set(colorBy === 'category' ? familyColor(a.b.familyIndex) : GOLD).multiplyScalar(k)
+      cb.set(colorBy === 'category' ? familyColor(b.b.familyIndex) : GOLD).multiplyScalar(k)
+      pushCurve(pos, col, supplyCurve(a.p, b.p), ca, cb, c)
+    }
+    return fatLines(pos, col, SUPPLY_WIDTH_PX)
+  }, [shown, supply, colorBy, selectedId, dimmed])
+  useLinkResolution(line)
+  useEffect(() => () => disposeLine(line), [line])
+  return <primitive object={line} />
+}
+
+/** The trail line is the widest on the map: it is what the reader is following. */
+const TRAIL_WIDTH_PX = 2.8
+/** One run of the spark along the newest hop, then a short rest. */
+const TRAIL_SPARK_MS = 1600
+const TRAIL_REST_MS = 500
+
+/**
+ * Follow a Dollar: the path from the shoppers to the shop, then down the
+ * supply lines. Hops already taken are bright gold, the rest of the way faint,
+ * and a spark runs the newest hop while motion is on. Built once per stop.
+ */
+function TrailPath({
+  shown,
+  trail,
+  dot,
+  motion,
+}: {
+  shown: readonly Shown[]
+  trail: { ids: readonly string[]; stop: number }
+  dot: THREE.Texture
+  motion: boolean
+}) {
+  const { line, hop } = useMemo(() => {
+    const byId = new Map(shown.map((s) => [s.b.id, s]))
+    const stops = trail.ids.map((id) => byId.get(id)).filter((s): s is Shown => !!s)
+    const curves: THREE.Curve<THREE.Vector3>[] = []
+    if (stops[0]) curves.push(linkCurve(stops[0]))
+    for (let i = 1; i < stops.length; i++) curves.push(supplyCurve(stops[i - 1]!.p, stops[i]!.p))
+    const pos: number[] = []
+    const col: number[] = []
+    const bright = new THREE.Color(GOLD_BRIGHT)
+    const faint = new THREE.Color(GOLD).multiplyScalar(0.22)
+    const c = new THREE.Color()
+    curves.forEach((curve, i) => {
+      const tint = i <= trail.stop ? bright : faint
+      pushCurve(pos, col, curve, tint, tint, c)
+    })
+    return {
+      line: fatLines(pos, col, TRAIL_WIDTH_PX),
+      hop: curves[Math.min(trail.stop, curves.length - 1)] ?? null,
+    }
+  }, [shown, trail])
+  const spark = useMemo(() => {
+    const geo = new THREE.BufferGeometry()
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(3), 3))
+    const obj = new THREE.Points(
+      geo,
+      new THREE.PointsMaterial({
+        size: 4.2,
+        map: dot,
+        color: GOLD_BRIGHT,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      })
+    )
+    obj.frustumCulled = false
+    obj.visible = false
+    return obj
+  }, [dot])
+  useLinkResolution(line)
+  useEffect(() => () => disposeLine(line), [line])
+  useEffect(() => () => disposeAll([spark]), [spark])
+
+  // Each new stop starts its spark from the top of the hop.
+  const started = useRef(0)
+  useEffect(() => {
+    started.current = performance.now()
+  }, [hop])
+  const at = useMemo(() => new THREE.Vector3(), [])
+  const sparkRef = useRef<THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial>>(null)
+  useFrame(() => {
+    const sp = sparkRef.current
+    if (!sp) return
+    if (!motion || !hop) {
+      sp.visible = false
+      return
+    }
+    const run = (performance.now() - started.current) % (TRAIL_SPARK_MS + TRAIL_REST_MS)
+    const t = Math.min(1, run / TRAIL_SPARK_MS)
+    // Eased, so the spark sets off and lands gently instead of snapping.
+    hop.getPoint(t * t * (3 - 2 * t), at)
+    const p = sp.geometry.getAttribute('position') as THREE.BufferAttribute
+    p.setXYZ(0, at.x, at.y, at.z)
+    p.needsUpdate = true
+    sp.material.opacity = t < 1 ? 1 : 1 - (run - TRAIL_SPARK_MS) / TRAIL_REST_MS
+    sp.visible = true
+  })
+
+  return (
+    <>
+      <primitive object={line} />
+      <primitive ref={sparkRef} object={spark} />
+    </>
+  )
+}
+
 // ─── Business nodes ──────────────────────────────────────────────────────────
 
 const NODE_VERT = /* glsl */ `
@@ -1861,14 +2235,23 @@ attribute float aIcon;
 uniform float uScale;
 uniform float uMul;
 uniform float uDensity;
+uniform float uMinPx;
 varying vec3 vColor;
 varying float vIcon;
 varying float vFog;
+varying float vDim;
+varying float vPx;
 void main() {
   vec4 mv = modelViewMatrix * vec4(position, 1.0);
   gl_Position = projectionMatrix * mv;
   float depth = max(-mv.z, 0.001);
-  gl_PointSize = aSize * uMul * uScale / depth;
+  // A point under a couple of pixels pops on and off as it crosses pixel
+  // centres while the camera moves. It keeps a floor size instead, and dims
+  // by how much smaller it really is, so it fades out smoothly.
+  float px = aSize * uMul * uScale / depth;
+  gl_PointSize = max(px, uMinPx);
+  vDim = clamp(px / uMinPx, 0.0, 1.0);
+  vPx = gl_PointSize;
   vColor = aColor;
   vIcon = aIcon;
   vFog = 1.0 - exp(-uDensity * uDensity * depth * depth);
@@ -1879,14 +2262,28 @@ const CORE_FRAG = /* glsl */ `
 uniform sampler2D uMap;
 uniform vec3 uFogColor;
 uniform float uCells;
+uniform float uPlainPx;
 varying vec3 vColor;
 varying float vIcon;
 varying float vFog;
+varying float vDim;
+varying float vPx;
 void main() {
-  vec2 uv = vec2((vIcon + gl_PointCoord.x) / uCells, 1.0 - gl_PointCoord.y);
-  vec4 t = texture2D(uMap, uv);
-  if (t.a < 0.3) discard;
-  gl_FragColor = vec4(mix(vColor * t.rgb, uFogColor, vFog), t.a);
+  // Too small to read, the icon's thin rim and strokes shimmer as it moves,
+  // so a small dot is a plain soft disc, blending into the icon as it grows.
+  float d = length(gl_PointCoord - 0.5) * 2.0;
+  float plainA = 1.0 - smoothstep(max(0.0, 1.0 - 2.0 / vPx), 1.0, d);
+  float k = smoothstep(uPlainPx * 0.75, uPlainPx * 1.25, vPx);
+  vec4 t = vec4(0.0);
+  if (k > 0.0) {
+    vec2 uv = vec2((vIcon + gl_PointCoord.x) / uCells, 1.0 - gl_PointCoord.y);
+    t = texture2D(uMap, uv);
+  }
+  float a = mix(plainA, t.a, k);
+  if (a < mix(0.02, 0.3, k)) discard;
+  vec3 c = vColor * mix(vec3(0.75), t.rgb, k);
+  c = mix(c, uFogColor, vFog);
+  gl_FragColor = vec4(mix(uFogColor, c, vDim), a);
   #include <colorspace_fragment>
 }
 `
@@ -1895,12 +2292,18 @@ const GLOW_FRAG = /* glsl */ `
 uniform sampler2D uMap;
 varying vec3 vColor;
 varying float vFog;
+varying float vDim;
 void main() {
   vec4 t = texture2D(uMap, gl_PointCoord);
-  gl_FragColor = vec4(vColor, t.a * 0.16 * (1.0 - vFog));
+  gl_FragColor = vec4(vColor, t.a * 0.16 * (1.0 - vFog) * vDim);
   #include <colorspace_fragment>
 }
 `
+
+/** A dot never draws smaller than this many CSS pixels; smaller ones dim instead. */
+const NODE_MIN_PX = 2.5
+/** Under about this many CSS pixels a dot is a plain disc, not its icon. */
+const NODE_PLAIN_PX = 9
 
 /**
  * Every business in one draw call: an icon disc per floor, tinted by the
@@ -1933,6 +2336,8 @@ function Nodes({
     geo.setAttribute('aColor', new THREE.BufferAttribute(new Float32Array(n * 3), 3))
 
     const uScale = { value: 1 }
+    const uMinPx = { value: NODE_MIN_PX }
+    const uPlainPx = { value: NODE_PLAIN_PX }
     const uDensity = glass.fog
     const core = new THREE.Points(
       geo,
@@ -1942,10 +2347,12 @@ function Nodes({
         uniforms: {
           uScale,
           uDensity,
+          uMinPx,
           uMul: { value: 2.0 },
           uMap: { value: textures.atlas },
           uFogColor: { value: BG },
           uCells: { value: ATLAS_CELLS },
+          uPlainPx,
         },
         transparent: true,
       })
@@ -1959,7 +2366,13 @@ function Nodes({
         new THREE.ShaderMaterial({
           vertexShader: NODE_VERT,
           fragmentShader: GLOW_FRAG,
-          uniforms: { uScale, uDensity, uMul: { value: 3 }, uMap: { value: textures.glow } },
+          uniforms: {
+            uScale,
+            uDensity,
+            uMinPx,
+            uMul: { value: 3 },
+            uMap: { value: textures.glow },
+          },
           transparent: true,
           blending: THREE.AdditiveBlending,
           depthWrite: false,
@@ -1968,7 +2381,7 @@ function Nodes({
       glow.renderOrder = 1
       glow.frustumCulled = false
     }
-    return { geo, core, glow, uScale }
+    return { geo, core, glow, uScale, uMinPx, uPlainPx }
   }, [shown, phone, textures, glass])
 
   useEffect(
@@ -2000,6 +2413,8 @@ function Nodes({
     const cam = camera as THREE.PerspectiveCamera
     gl.getDrawingBufferSize(buf)
     setUniform(objects.uScale, buf.y / (2 * Math.tan(THREE.MathUtils.degToRad(cam.fov) / 2)))
+    setUniform(objects.uMinPx, NODE_MIN_PX * gl.getPixelRatio())
+    setUniform(objects.uPlainPx, NODE_PLAIN_PX * gl.getPixelRatio())
 
     const attr = objects.geo.getAttribute('aSize') as THREE.BufferAttribute
     const k = reducedMotion ? 1 : 1 - Math.exp(-Math.min(delta, 0.05) * 4)

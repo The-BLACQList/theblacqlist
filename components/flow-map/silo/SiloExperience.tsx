@@ -8,6 +8,8 @@
  * settles into the HUD, and Recenter (button, R, double-click). Ticket 248:
  * on a phone the map is a slow preview in the page, and Enter The Collective
  * opens it full-screen, where it owns every gesture and Back closes it.
+ * Ticket 249: while real activity is thin it opens on sample data, with a
+ * Demo / Live switch and a Sample Data badge always on screen.
  *
  * The HUD is plain HTML and renders first. The Three.js scene loads on its
  * own chunk after mount, and only when the device can draw it. If it can't
@@ -30,6 +32,19 @@ import Link from 'next/link'
 
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
+import {
+  DEMO_ARRIVAL,
+  DEMO_INTRO_LINE,
+  SAMPLE_BADGE,
+  SAMPLE_NOTE,
+  VIEW_COOKIE,
+  VIEW_COOKIE_MAX_AGE,
+  buildDemoCollective,
+  demoDollarTrail,
+  recentDemoArrivals,
+  trailStops,
+  type CollectiveView,
+} from '@/lib/spend/collective-demo'
 
 import {
   CATEGORY_FAMILIES,
@@ -63,7 +78,9 @@ import {
   SiloKeyMap,
   SiloLegend,
   SiloTicker,
+  TRAIL_TITLE,
   type SiloTickerItem,
+  type SiloTrailView,
 } from './SiloPanels'
 import {
   readShortcutsOn,
@@ -127,6 +144,8 @@ interface Props {
   ticker: readonly SiloTickerItem[]
   /** `?you=1`: open focused on the reader's own business. */
   focusYou: boolean
+  /** Sample data or the real map, picked on the server (ticket 249). */
+  initialView: CollectiveView
   /** The page's headline, shown as the opening title over the map (ticket 247). */
   headline: string
   /** Add a Receipt (or Sign In), in the HUD and the opening title. */
@@ -140,6 +159,15 @@ interface Props {
  * the reader, or over.
  */
 type IntroState = 'wait' | 'play' | 'skip' | 'done'
+
+/** A sample dollar's trail (ticket 249): business ids, top floor first. */
+interface DollarTrail {
+  ids: readonly string[]
+  stop: number
+}
+
+/** Each stop holds this long before the trail moves on, while motion is on. */
+const TRAIL_STEP_MS = 8000
 
 /** How long a cut-short opening takes to fade. Matches silo.css. */
 const INTRO_SKIP_MS = 320
@@ -155,13 +183,24 @@ function isFullEntry(): boolean {
   return !!state && typeof state === 'object' && FULL_STATE in state
 }
 
+/** Remembers the Demo / Live choice, and keeps a `?view=` in the URL in step. */
+function rememberView(view: CollectiveView) {
+  document.cookie = `${VIEW_COOKIE}=${view}; Max-Age=${VIEW_COOKIE_MAX_AGE}; Path=/flow-map; SameSite=Lax`
+  const url = new URL(window.location.href)
+  if (url.searchParams.has('view')) {
+    url.searchParams.set('view', view)
+    window.history.replaceState(window.history.state, '', url)
+  }
+}
+
 export function SiloExperience({
-  totalSpentCents,
-  receiptCount,
-  businesses,
-  cities,
-  ticker,
+  totalSpentCents: realSpentCents,
+  receiptCount: realReceiptCount,
+  businesses: realBusinesses,
+  cities: realCities,
+  ticker: realTicker,
   focusYou,
+  initialView,
   headline,
   cta,
   steps,
@@ -173,6 +212,20 @@ export function SiloExperience({
   // Phone full-screen (ticket 248). Only a phone stage opens it.
   const [fullAsked, setFullAsked] = useState(false)
   const full = fullAsked && compact
+
+  // Demo or Live (ticket 249). The sample is built here, not sent by the server.
+  const [view, setView] = useState<CollectiveView>(initialView)
+  const demo = useMemo(() => (view === 'demo' ? buildDemoCollective() : null), [view])
+  const businesses = demo?.businesses ?? realBusinesses
+  const totalSpentCents = demo?.totalSpentCents ?? realSpentCents
+  const receiptCount = demo?.receiptCount ?? realReceiptCount
+  const cities = demo ? [] : realCities
+  // The sample's newest arrival, counted in DEMO_ARRIVAL.everyMs steps.
+  const [arrivalSeq, setArrivalSeq] = useState<number | null>(null)
+  // Follow a Dollar (demo only): a sample trail from a shop down to a grower.
+  const [trail, setTrail] = useState<DollarTrail | null>(null)
+  const trailCount = useRef(0)
+  const dollarBtnRef = useRef<HTMLButtonElement>(null)
 
   const [Scene, setScene] = useState<Scene | null>(null)
   const [chunkFailed, setChunkFailed] = useState(false)
@@ -240,17 +293,40 @@ export function SiloExperience({
   const gaps = useMemo(() => siloGaps(businesses), [businesses])
   const gapCounts = useMemo(() => gapsPerFloor(gaps), [gaps])
   const linkedCount = useMemo(() => businesses.filter((b) => b.linked).length, [businesses])
+  const demoLinked = useMemo(() => (demo ? demo.businesses.filter((b) => b.linked) : []), [demo])
+  const ticker: readonly SiloTickerItem[] = useMemo(() => {
+    if (!demo) return realTicker
+    if (arrivalSeq === null) return []
+    return recentDemoArrivals(arrivalSeq, demoLinked.length, 2).map((i, k) => ({
+      id: `demo-${arrivalSeq - k}`,
+      label: businessDisplayName(demoLinked[i]!),
+      when: k === 0 ? 'just now' : 'moments ago',
+    }))
+  }, [demo, demoLinked, arrivalSeq, realTicker])
   const youList = useMemo(() => businesses.filter((b) => b.isYou), [businesses])
   const youFloors = useMemo(() => new Set(youList.map((b) => b.floorIndex)), [youList])
   const selected = businesses.find((b) => b.id === selectedId) ?? null
   const hovered = businesses.find((b) => b.id === hoveredId) ?? selected
   const you = youList[0] ?? null
+  // A trail is on only while its stop is the open business, so any other pick,
+  // Escape or a switch to Live ends it without an effect.
+  const activeTrail = demo && trail && selectedId === trail.ids[trail.stop] ? trail : null
 
   // ── Which view ──
   const canMap = support === 'ok' || (support === 'low-power' && mapAnyway)
   const wantMap = canMap && !listChosen && !contextLost && !chunkFailed
   const motion = !paused && !reducedMotion
   const active = inView && docVisible && !moreOpen
+
+  // The sample's ticker follows its arrivals, and rests with the motion.
+  const arriving = !!demo && motion && active
+  useEffect(() => {
+    if (!arriving) return
+    const tick = () => setArrivalSeq(Math.floor(Date.now() / DEMO_ARRIVAL.everyMs))
+    tick()
+    const id = window.setInterval(tick, DEMO_ARRIVAL.everyMs / 4)
+    return () => window.clearInterval(id)
+  }, [arriving])
 
   useEffect(() => {
     if (!wantMap || Scene) return
@@ -308,6 +384,7 @@ export function SiloExperience({
   // ── Actions ──
   const selectBusiness = useCallback(
     (b: SiloBusiness | null) => {
+      setTrail(null)
       setSelectedId(b?.id ?? null)
       if (b) {
         setFocusFloor(null)
@@ -335,6 +412,7 @@ export function SiloExperience({
 
   const selectGap = useCallback(
     (g: SiloGap | null) => {
+      setTrail(null)
       setSelectedGap(g)
       if (g) {
         setSelectedId(null)
@@ -346,6 +424,7 @@ export function SiloExperience({
   )
 
   function clearCard() {
+    setTrail(null)
     setSelectedId(null)
     setSelectedGap(null)
     setFocusFloor(null)
@@ -353,6 +432,7 @@ export function SiloExperience({
   }
 
   function pickFloor(i: number) {
+    setTrail(null)
     setSelectedId(null)
     setSelectedGap(null)
     const next = focusFloor === i ? null : i
@@ -423,6 +503,73 @@ export function SiloExperience({
     navRef.current?.recenter()
     setStatus('Back to the starting view.')
   }
+
+  function switchView(next: CollectiveView) {
+    if (next === view) return
+    setView(next)
+    setTrail(null)
+    setSelectedId(null)
+    setSelectedGap(null)
+    setHoveredId(null)
+    setFocusFloor(null)
+    setFilter(new Set())
+    rememberView(next)
+    setStatus(
+      next === 'demo'
+        ? `Showing sample data. ${SAMPLE_NOTE}`
+        : 'Showing live data from The BLACQList.'
+    )
+  }
+
+  /** Opens one stop of the trail: the camera flies to it, the card tells it. */
+  function showStop(next: DollarTrail) {
+    if (!demo) return
+    const stops = trailStops(demo.businesses, next.ids)
+    const s = stops[next.stop]
+    if (!s) return
+    setTrail(next)
+    setSelectedId(next.ids[next.stop]!)
+    setSelectedGap(null)
+    setFocusFloor(null)
+    setHintGone(true)
+    setStatus(`Stop ${next.stop + 1} of ${stops.length}: ${s.name}. ${s.text}`)
+  }
+
+  function startTrail() {
+    if (!demo) return
+    const ids = demoDollarTrail(demo.businesses, demo.supply, trailCount.current++)
+    if (ids.length === 0) return
+    // Every stop shows, whatever the key was hiding.
+    setFilter(new Set())
+    showStop({ ids, stop: 0 })
+  }
+
+  function nextStop() {
+    if (!activeTrail) return
+    if (activeTrail.stop + 1 >= activeTrail.ids.length) startTrail()
+    else showStop({ ...activeTrail, stop: activeTrail.stop + 1 })
+  }
+
+  function endTrail() {
+    setTrail(null)
+    setSelectedId(null)
+    setStatus('Trail ended.')
+    dollarBtnRef.current?.focus({ preventScroll: true })
+  }
+
+  // The trail plays itself while motion is on; Next Stop skips ahead, and Pause
+  // (or the device's less-motion setting) holds it on the current stop.
+  const nextStopRef = useRef(nextStop)
+  useEffect(() => {
+    nextStopRef.current = nextStop
+  })
+  const trailIds = activeTrail?.ids
+  const trailStop = activeTrail?.stop ?? -1
+  useEffect(() => {
+    if (!trailIds || trailStop >= trailIds.length - 1 || !motion || !active) return
+    const t = window.setTimeout(() => nextStopRef.current(), TRAIL_STEP_MS)
+    return () => window.clearTimeout(t)
+  }, [trailIds, trailStop, motion, active])
 
   function leaveFloor() {
     setFocusFloor(null)
@@ -523,6 +670,7 @@ export function SiloExperience({
     }
     if (e.key === 'Escape') {
       if (keysOpen) closeKeys()
+      else if (activeTrail) endTrail()
       else if (selectedId) selectBusiness(null)
       else if (selectedGap) setSelectedGap(null)
       else if (focusFloor !== null) pickFloor(focusFloor)
@@ -658,6 +806,16 @@ export function SiloExperience({
     }
   }, [showList, full])
 
+  const trailView: Omit<SiloTrailView, 'onNext' | 'onEnd'> | null = useMemo(() => {
+    if (!demo || !trailIds) return null
+    const stops = trailStops(demo.businesses, trailIds)
+    const s = stops[trailStop]
+    const b = demo.businesses.find((x) => x.id === trailIds[trailStop])
+    if (!s || !b) return null
+    const fam = CATEGORY_FAMILIES[b.familyIndex] ?? CATEGORY_FAMILIES[FALLBACK_FAMILY_INDEX]!
+    return { ...s, stop: trailStop, count: stops.length, color: fam.color }
+  }, [demo, trailIds, trailStop])
+
   const currentFloor = showScene ? liveFloor : (focusFloor ?? selected?.floorIndex ?? null)
   const showIntro = intro !== 'done' && !showList
   const showHint =
@@ -731,6 +889,9 @@ export function SiloExperience({
                     intro={intro === 'wait' || intro === 'play'}
                     preview={compact && !full}
                     full={full}
+                    arrivals={arriving}
+                    supply={demo?.supply}
+                    trail={activeTrail}
                     onRecenter={() => setStatus('Back to the starting view.')}
                     shape={shape}
                     labelsRef={labelsRef}
@@ -780,7 +941,14 @@ export function SiloExperience({
             // the page's h1, so this layer is hidden from readers and tabbing.
             <div className="silo-intro" aria-hidden="true" inert>
               <p className="silo-intro-kicker">The Collective</p>
-              <p className="silo-intro-line">{headline}</p>
+              {/* Demo (ticket 249): the real total would sit oddly over a sample
+                  map, so the opening names the sample instead. */}
+              <p className="silo-intro-line">{demo ? DEMO_INTRO_LINE : headline}</p>
+              {demo && (
+                <p className="silo-intro-sample">
+                  This preview uses {SAMPLE_BADGE.toLowerCase()}. {SAMPLE_NOTE}
+                </p>
+              )}
               {cta && <div className="silo-intro-cta">{cta}</div>}
             </div>
           )}
@@ -811,6 +979,23 @@ export function SiloExperience({
                     <path d="M4 17c1-3.5 3.4-5 6-5s5 1.5 6 5" />
                   </svg>
                   <span className="lbl">Find Me</span>
+                </button>
+              )}
+              {demo && showScene && (
+                <button
+                  ref={dollarBtnRef}
+                  type="button"
+                  className="dollar"
+                  aria-label={TRAIL_TITLE}
+                  aria-pressed={!!activeTrail}
+                  title={TRAIL_TITLE}
+                  onClick={activeTrail ? endTrail : startTrail}
+                >
+                  <svg viewBox="0 0 20 20" aria-hidden="true">
+                    <circle cx="10" cy="10" r="7.5" />
+                    <path d="M12.6 7.3c-.5-.9-1.5-1.3-2.6-1.3-1.5 0-2.6.8-2.6 2s1.1 1.7 2.6 2 2.6.8 2.6 2-1.1 2-2.6 2c-1.1 0-2.1-.4-2.6-1.3M10 4.5V6M10 14v1.5" />
+                  </svg>
+                  <span className="lbl">{TRAIL_TITLE}</span>
                 </button>
               )}
               {showScene && (
@@ -918,6 +1103,30 @@ export function SiloExperience({
               <p>
                 Every business on the list, floor by floor. A line means a member shopped there.
               </p>
+              <div className="silo-view">
+                <div className="switch" role="group" aria-label="Map data">
+                  <button
+                    type="button"
+                    aria-pressed={view === 'demo'}
+                    onClick={() => switchView('demo')}
+                  >
+                    Demo
+                  </button>
+                  <button
+                    type="button"
+                    aria-pressed={view === 'live'}
+                    onClick={() => switchView('live')}
+                  >
+                    Live
+                  </button>
+                </div>
+                {demo && (
+                  <div className="sample">
+                    <b>{SAMPLE_BADGE}</b>
+                    <span>{SAMPLE_NOTE}</span>
+                  </div>
+                )}
+              </div>
               {cta && <div className="brand-cta">{cta}</div>}
             </div>
 
@@ -965,6 +1174,7 @@ export function SiloExperience({
             you={you}
             totalSpentCents={totalSpentCents}
             onClear={clearCard}
+            trail={trailView && { ...trailView, onNext: nextStop, onEnd: endTrail }}
             legend={
               <SiloLegend
                 className="legend-in-card"

@@ -1,6 +1,6 @@
 # Ticket 248: Phone Full-Screen for The Collective
 
-**Status:** Built on `feat/248-collective-phone-fullscreen`, 2026-11-21. Not merged.
+**Status:** Merged #386 (`a09c599`), 2026-11-21. Live in prod.
 
 Part of the Collective tighten-up (246–250). Founder pick (2026-11-21): on a phone, tap to go full-screen, and in full-screen the map owns every gesture.
 
