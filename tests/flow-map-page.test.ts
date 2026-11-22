@@ -198,3 +198,45 @@ describe('Silo copy', () => {
     }
   })
 })
+
+// Ticket 247: the page is the map. No light hero, an opening title, Recenter.
+describe('/flow-map cinematic page (ticket 247)', () => {
+  const page = read(PAGE)
+  const experience = read(EXPERIENCE)
+
+  it('is dark end to end, with no light hero band', () => {
+    expect(page).not.toContain('bg-pale-lavender')
+    expect(page).toContain('bg-deep-bg')
+  })
+
+  it('keeps the headline as the page h1 and plays it over the map', () => {
+    expect(page).toMatch(/<h1 className="sr-only">\{headline\}<\/h1>/)
+    expect(page).toContain('headline={headline}')
+    expect(experience).toMatch(/className="silo-intro" aria-hidden="true" inert/)
+  })
+
+  it('skips the opening for reduced motion, a reload partway down and ?you=1', () => {
+    expect(experience).toContain('introPlays({')
+    expect(read(`${SILO}/silo.css`)).toMatch(
+      /prefers-reduced-motion: reduce\) \{\s*\.silo-intro \{\s*display: none;/
+    )
+  })
+
+  it('moves How It Works under the map and into More', () => {
+    expect(page).toContain('<CollectiveHowItWorks')
+    expect(page).toContain('steps={<FirstLookSteps layout="sheet" />}')
+    expect(experience).toContain('<h4>How It Works</h4>')
+  })
+
+  it('recenters from a button, the R key and a double-click on empty space', () => {
+    expect(experience).toMatch(/className="recenter"/)
+    expect(experience).toMatch(/k === 'r' && showScene\) recenter\(\)/)
+    expect(read(SCENE)).toContain("addEventListener('dblclick', onDoubleClick)")
+    expect(read(PANELS)).toContain('<kbd>R</kbd>')
+  })
+
+  it('says a line shows from one receipt, not from the total bar', () => {
+    expect(experience).not.toMatch(/A line appears once a business has at least/)
+    expect(experience).toContain('A line appears once a business has one')
+  })
+})

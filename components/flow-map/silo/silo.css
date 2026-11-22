@@ -2,9 +2,9 @@
  * The Silo (ticket 167). Layout B from the round 17 workshop
  * (docs/blacqlist/flow-map/visual-workshop-2026-10.md §20).
  *
- * Everything is scoped under .silo so the dark band never leaks into the
- * light page around it. Dark only by design: the band is the night sky the
- * map sits in, and the page around it keeps the site's own light theme.
+ * Everything is scoped under .silo. Dark only by design: the band is the night
+ * sky the map sits in. Since ticket 247 the whole /flow-map page is dark too
+ * (bg-deep-bg), with no light hero above the map.
  */
 
 .silo {
@@ -904,6 +904,134 @@
   height: 12px;
 }
 
+/* ── Beta tag and the HUD's button (ticket 247) ──────────────────────────── */
+
+.brand h2 .beta {
+  margin-left: 2px;
+  padding: 3px 7px 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  color: var(--gold);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.brand-cta {
+  margin-top: 12px;
+}
+
+/* ── The opening (ticket 247) ────────────────────────────────────────────── */
+
+/* The title over the scene while the camera glides in from the whole tower,
+   then the HUD comes in. 3200ms is INTRO.endMs and 320ms INTRO_SKIP_MS. It
+   holds on 'wait' until the scene has drawn (INTRO.waitMs at most). */
+.silo-intro {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 0 24px;
+  text-align: center;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(56% 42% at 50% 50%, rgba(8, 8, 10, 0.6), rgba(8, 8, 10, 0) 72%);
+}
+
+.silo-intro-kicker {
+  margin: 0;
+  padding-left: 0.42em;
+  font-family: var(--font-headline), system-ui, sans-serif;
+  font-weight: 300;
+  font-size: clamp(12px, 1.3vw, 15px);
+  letter-spacing: 0.42em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.silo-intro-line {
+  margin: 0;
+  max-width: 18ch;
+  font-family: var(--font-headline), system-ui, sans-serif;
+  font-weight: 400;
+  font-size: clamp(28px, 4.2vw, 54px);
+  line-height: 1.08;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-wrap: balance;
+  text-shadow: 0 2px 30px rgba(0, 0, 0, 0.65);
+}
+
+.silo-intro-cta {
+  margin-top: 10px;
+}
+
+/* Waiting for the scene: the title fades in and holds, the HUD stays back. The
+   HUD's late fade is only a fallback in case the script never moves on. */
+.intro-wait .silo-intro {
+  animation: silo-fade-in 500ms ease both;
+}
+.intro-wait :is(.hud, .hud-bg, .dock, .ctx, .silo-labels) {
+  animation: silo-fade-in 400ms ease 4s both;
+}
+.intro-play .silo-intro {
+  animation: silo-intro-title 3200ms var(--ease) both;
+}
+.intro-skip .silo-intro {
+  animation: silo-fade-out 320ms ease both;
+}
+.intro-play :is(.hud, .hud-bg, .dock, .ctx, .silo-labels) {
+  animation: silo-hud-in 3200ms ease both;
+}
+.intro-skip :is(.hud, .hud-bg, .dock, .ctx, .silo-labels) {
+  animation: silo-fade-in 320ms ease both;
+}
+
+/* Starts in full view: the wait already faded the title in. */
+@keyframes silo-intro-title {
+  0%,
+  72% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes silo-hud-in {
+  0%,
+  70% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes silo-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes silo-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* ── Scroll hint ─────────────────────────────────────────────────────────── */
 
 /* Only the track gives scrolling a meaning, so it only shows there. */
@@ -989,6 +1117,30 @@
 .dock .zoom:disabled {
   opacity: 0.35;
   cursor: default;
+}
+
+/* Recenter, Whole Tower and Find Me: a mark and a word on wide screens, the
+   mark alone where the phone strip is short of room. The mark stays hidden
+   where the word fits, except Recenter's. */
+.dock :is(.recenter, .tower, .find) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.dock :is(.tower, .find) svg {
+  display: none;
+}
+
+.dock :is(.recenter, .tower, .find) svg {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
 }
 
 .dock .find {
@@ -1478,6 +1630,14 @@
   .silo-track[data-mode='map'] .brand p {
     display: none;
   }
+  .silo-track[data-mode='map'] .brand-cta,
+  .silo-track[data-mode='map'] .dock .recenter .lbl {
+    display: none;
+  }
+  .silo-track[data-mode='map'] .dock .recenter {
+    padding: 0;
+    justify-content: center;
+  }
 
   .silo-track[data-mode='map'] .kpis {
     gap: 16px;
@@ -1622,9 +1782,38 @@
   }
 }
 
-@media (max-width: 359px) and (min-height: 501px) {
-  .silo-track[data-mode='map'] .brand .brand-mark {
+/* Upright phones: the title and the dock share one row, so the dock is marks
+   only and the logo mark goes (the site header shows it just above). */
+@media (max-width: 759px) and (min-height: 501px) {
+  .silo-track[data-mode='map'] .brand .brand-mark,
+  .silo-track[data-mode='map'] .dock :is(.tower, .find) .lbl {
     display: none;
+  }
+  .silo-track[data-mode='map'] .dock :is(.tower, .find) svg {
+    display: block;
+  }
+  .silo-track[data-mode='map'] .dock :is(.tower, .find) {
+    padding: 0;
+  }
+}
+
+/* A member with a receipt also gets Find Me in that row. */
+@media (max-width: 759px) and (min-height: 501px) {
+  .silo-track[data-mode='map'] .silo:has(.dock .find) .brand h2 .beta {
+    display: none;
+  }
+}
+
+@media (max-width: 379px) and (min-height: 501px) {
+  .silo-track[data-mode='map'] .brand h2 .beta {
+    display: none;
+  }
+  .silo-track[data-mode='map'] .silo:has(.dock .find) .brand h2 {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+  }
+  .silo-track[data-mode='map'] .silo:has(.dock .find) .dock button {
+    padding: 0 10px;
   }
 }
 
@@ -1768,6 +1957,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .silo-intro {
+    display: none;
+  }
   .silo *,
   .silo *::before,
   .silo *::after {

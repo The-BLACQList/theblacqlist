@@ -942,6 +942,40 @@ export function stepZoom(zoom: number, dir: 1 | -1): number {
   return Math.min(1, Math.max(ZOOM.min, Math.round(mark * ZOOM.step * 100) / 100))
 }
 
+/**
+ * Where Recenter goes (ticket 247): the opening heading, tilt and distance,
+ * inside the tower, with nothing picked. The level stays where the reader is.
+ */
+export const RECENTER = { az: 0, el: ORBIT.el, zoom: 0 } as const
+
+/**
+ * The opening (ticket 247): the camera starts at the whole tower and glides
+ * down inside while the title shows, then the title settles into the HUD.
+ */
+export const INTRO = {
+  /**
+   * The title holds over the page until the scene has drawn, so it never plays
+   * over an empty frame. Past this the opening plays anyway.
+   */
+  waitMs: 1500,
+  /** Smoothing time for the glide in. About three times this to land. */
+  glideS: 1.1,
+  /** When the opening is over and its layer leaves the page. Matches silo.css. */
+  endMs: 3200,
+} as const
+
+/**
+ * Whether the opening plays. Not with reduced motion, not on a reload partway
+ * down the page, and not for `?you=1`, which opens on the reader's business.
+ */
+export function introPlays(o: {
+  reducedMotion: boolean
+  scrolled: boolean
+  focusYou: boolean
+}): boolean {
+  return !o.reducedMotion && !o.scrolled && !o.focusYou
+}
+
 /** The heading that stands at the center of the silo and faces a point. */
 export function headingTo(p: Point3): number {
   return Math.atan2(-p.x, -p.z)

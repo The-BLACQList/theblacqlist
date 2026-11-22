@@ -66,6 +66,8 @@ import {
   shellBottom,
   shellTop,
   stepZoom,
+  INTRO,
+  RECENTER,
   zoomAmount,
   zoomOrbit,
   type SiloShape,
@@ -110,6 +112,8 @@ export interface SiloNav {
   wholeTower: (on?: boolean) => void
   /** One step out (+1) toward the whole tower, or in (-1). */
   zoomStep: (dir: 1 | -1) => void
+  /** Back to the opening view at the current level, with nothing picked (ticket 247). */
+  recenter: () => void
 }
 
 export interface SiloSceneProps {
@@ -146,6 +150,10 @@ export interface SiloSceneProps {
   onWholeTowerChange?: (on: boolean) => void
   /** How far out the camera is asked to be: 0 inside, 1 the whole tower. */
   onZoomChange?: (zoom: number) => void
+  /** The opening plays: the camera glides in from the whole tower (ticket 247). */
+  intro?: boolean
+  /** A double-click on empty space recentered the view. */
+  onRecenter?: () => void
   /** Wedges with no business on the list yet: a pink square each. */
   gaps: readonly SiloGap[]
   selectedGap: SiloGap | null
@@ -971,7 +979,27 @@ function Controls(
           r.ease = live.current.reducedMotion ? ORBIT.easeS : ZOOM_STEP_S
           invalidate()
         },
+        recenter,
       }
+    }
+
+    /** The opening view at the level the reader is on: inside, nothing picked. */
+    function recenter() {
+      const r = rig.current
+      letGo()
+      r.az = RECENTER.az
+      r.el = RECENTER.el
+      r.zoom = RECENTER.zoom
+      r.spin = 0
+      r.ease = live.current.reducedMotion ? ORBIT.easeS : WHOLE_TOWER_S
+      invalidate()
+    }
+
+    // A double-click on empty space recenters. On a dot it stays a pick.
+    const onDoubleClick = (e: MouseEvent) => {
+      if (pickAt(e.clientX, e.clientY)) return
+      recenter()
+      live.current.onRecenter?.()
     }
 
     // A trackpad pinch (or ctrl + wheel) zooms. A plain wheel stays the page
@@ -1003,15 +1031,22 @@ function Controls(
       invalidate()
     }
 
-    // A reload partway down opens where the page is, with no glide.
+    // A reload partway down opens where the page is, with no glide. At the top,
+    // the opening starts outside at the whole tower and glides in (ticket 247).
     const start = trackT(el)
     if (start !== null && !hasPick()) {
       const r = rig.current
+      const l = live.current
       r.t = start
-      r.cur = orbitForScroll(start, r.az, r.el, live.current.shape)
+      const home = orbitForScroll(start, r.az, r.el, l.shape)
+      if (l.intro && !l.reducedMotion && start < 0.01) {
+        r.cur = zoomGoal(home, 1, l.phone, l.shape)
+        r.ease = INTRO.glideS
+      } else r.cur = home
       invalidate()
     }
 
+    el.addEventListener('dblclick', onDoubleClick)
     el.addEventListener('pointerdown', onDown)
     el.addEventListener('pointermove', onMove)
     el.addEventListener('pointerup', onUp)
@@ -1021,6 +1056,7 @@ function Controls(
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => {
       if (nav) nav.current = null
+      el.removeEventListener('dblclick', onDoubleClick)
       el.removeEventListener('pointerdown', onDown)
       el.removeEventListener('pointermove', onMove)
       el.removeEventListener('pointerup', onUp)

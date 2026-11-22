@@ -9,7 +9,11 @@ import {
   buildSiloBusinesses,
   type BusinessListingMeta,
 } from '@/lib/spend/silo-layout'
-import { CollectiveFirstLook } from '@/components/flow-map/CollectiveFirstLook'
+import {
+  CollectiveHowItWorks,
+  FirstLookButton,
+  FirstLookSteps,
+} from '@/components/flow-map/CollectiveFirstLook'
 import { SiloExperience } from '@/components/flow-map/silo/SiloExperience'
 import type { SiloTickerItem } from '@/components/flow-map/silo/SiloPanels'
 import { pickFirstLookState } from '@/lib/spend/collective-first-look'
@@ -231,44 +235,33 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
     countFailed: receiptCountFailed,
   })
 
-  return (
-    <div className="min-h-screen bg-pale-lavender pb-16">
-      {/* ── Hero (compact, ticket 171) ──────────────────────────────────────── */}
-      <div className="px-4">
-        <div className="max-w-[1100px] mx-auto pt-4 pb-5">
-          <p className="inline-flex items-center gap-1.5 bg-amber-gold/10 text-amber-700 rounded-full px-3 py-1 font-subhead text-xs font-semibold mb-2">
-            The Collective · Beta
-          </p>
-          {/*
-            The figure is labeled for what it measures. One approved receipt is
-            one unit of spend, counted once — consumer to business. It is not
-            "circulated": that word means multi-hop velocity, and the schema
-            cannot express a second hop (flow_nodes.node_type CHECKs to
-            'business' | 'city'). See docs/blacqlist/flow-map/
-            data-sourcing-and-methodology.md §2.
-          */}
-          <h1 className="font-headline text-2xl md:text-3xl text-brand-black leading-tight text-balance">
-            {hasAnyData
-              ? `${formatDollars(totalAmountCents)} spent with businesses on the list`
-              : 'Where Does Our Money Go?'}
-          </h1>
-          {/* [Decision — founder, 2026-10-15 (simplicity P4)] Ticket 161's three
-              steps stay, folded away (ticket 171: the hero was too tall). */}
-          <CollectiveFirstLook state={firstLookState} countedTotal={formatDollars(countedCents)} />
-        </div>
-      </div>
+  // The figure is labeled for what it measures. One approved receipt is one
+  // unit of spend, counted once, consumer to business. It is not "circulated":
+  // that word means multi-hop velocity, and the schema cannot express a second
+  // hop (flow_nodes.node_type CHECKs to 'business' | 'city'). See
+  // docs/blacqlist/flow-map/data-sourcing-and-methodology.md §2.
+  const headline = hasAnyData
+    ? `${formatDollars(totalAmountCents)} spent with businesses on the list`
+    : 'Where Does Our Money Go?'
 
-      {/* ── The Collective (tickets 167 and 171) ──────────────────────────── */}
+  // Ticket 247: no light hero. The page is dark end to end, the map starts
+  // under the header, and the headline plays as the map's opening title. The
+  // h1 stays in the page for readers and search; the steps sit under the map.
+  return (
+    <div className="min-h-screen bg-deep-bg">
+      <h1 className="sr-only">{headline}</h1>
+
+      {/* ── The Collective (tickets 167, 171 and 247) ─────────────────────── */}
       {/* Full bleed. The HUD is server-rendered HTML; the 3D scene loads on its
           own chunk after mount and only on this route. The CSV downloads and the
           privacy notes moved to /flow-map/methodology (ticket 171). */}
       {siloLoadFailed ? (
-        <div className="px-4">
-          <div className="max-w-[800px] mx-auto rounded-xl bg-white border border-charcoal/10 px-5 py-8 text-center">
-            <p className="font-subhead text-sm font-semibold text-brand-black">
+        <div className="px-4 pt-16 pb-8">
+          <div className="max-w-[800px] mx-auto rounded-xl bg-white/[0.04] border border-white/10 px-5 py-8 text-center">
+            <p className="font-subhead text-sm font-semibold text-[#fcfaf4]">
               We couldn&apos;t load The Collective.
             </p>
-            <p className="font-body text-xs text-charcoal-soft mt-1 mb-4 max-w-sm mx-auto">
+            <p className="font-body text-xs text-[#cdc6b6] mt-1 mb-4 max-w-sm mx-auto">
               Something went wrong on our end, so we can&apos;t show the map or its totals right
               now.
             </p>
@@ -289,8 +282,15 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
           cities={topCities}
           ticker={ticker}
           focusYou={params.you === '1'}
+          headline={headline}
+          cta={<FirstLookButton state={firstLookState} size="sm" />}
+          steps={<FirstLookSteps layout="sheet" />}
         />
       )}
+
+      {/* [Decision — founder, 2026-10-15 (simplicity P4)] Ticket 161's three
+          steps stay; ticket 247 moves them under the map and into More. */}
+      <CollectiveHowItWorks state={firstLookState} countedTotal={formatDollars(countedCents)} />
     </div>
   )
 }
