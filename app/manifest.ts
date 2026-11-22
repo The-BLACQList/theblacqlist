@@ -22,7 +22,7 @@ import type { MetadataRoute } from 'next'
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'The BLACQList',
-    short_name: 'BLACQList',
+    short_name: 'The BLACQList',
     description: 'Discover and support Black-owned businesses.',
     start_url: '/',
     display: 'minimal-ui',

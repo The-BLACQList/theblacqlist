@@ -68,7 +68,7 @@ function ReviewCard({
   listingId: string
   replyHelp: ItemHelp
 }) {
-  const displayName = review.reviewer_display_name ?? 'BLACQList Community Member'
+  const displayName = review.reviewer_display_name ?? 'Community Member'
   const initial = displayName.charAt(0).toUpperCase()
 
   return (

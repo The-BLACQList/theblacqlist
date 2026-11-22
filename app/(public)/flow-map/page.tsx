@@ -21,7 +21,7 @@ import { pickFirstLookState } from '@/lib/spend/collective-first-look'
 export const metadata: Metadata = {
   title: 'The Collective | The BLACQList',
   description:
-    'The Collective is one live map of what the BLACQList community spends with the businesses on the list. Shown in aggregate only. No buyer identities exposed.',
+    'The Collective is one live map of what The BLACQList community spends with the businesses on the list. Shown in aggregate only. No buyer identities exposed.',
 }
 
 // Revalidate every hour — same cadence as /api/flow-map/summary

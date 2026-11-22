@@ -21,7 +21,7 @@ export const dynamic = 'force-dynamic'
 export const metadata: Metadata = {
   title: 'For Vendors | The BLACQList',
   description:
-    'Sell products and services from your BLACQList business page. Get listed free today, and see what a storefront needs.',
+    'Sell products and services from your business page on The BLACQList. Get listed free today, and see what a storefront needs.',
 }
 
 const WAITLIST_OPTIONS = [{ value: 'for-vendors', label: 'Marketplace Vendor Access' }]
@@ -51,7 +51,7 @@ function SellingOpen() {
             id="for-vendors-heading"
             className="font-headline text-4xl md:text-5xl text-white leading-tight mb-4"
           >
-            Sell from your BLACQList page.
+            Sell from your page on The BLACQList.
           </h1>
           <p className="font-subhead text-pale-lavender text-lg leading-relaxed max-w-xl mb-8">
             Storefronts come with the Growth plan. Start with a free listing, then move it to

@@ -375,7 +375,7 @@ export function professionalEntity(now: Date): EntityPageData {
       {
         id: 'pro-deal-2',
         title: '$500 off the diagnostic',
-        description: 'For BLACQList members booking this quarter.',
+        description: 'For members of The BLACQList booking this quarter.',
         code: 'BLACQ500',
         terms: 'Mention the code on the discovery call. New clients only.',
         endsAt: futureIso(now, 60),

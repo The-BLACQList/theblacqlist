@@ -79,7 +79,7 @@ export default async function MarketplacePage() {
       <section className="bg-brand-black py-16 md:py-20">
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
           <p className="font-subhead text-xs font-semibold text-gold uppercase tracking-widest mb-3">
-            BLACQList Marketplace
+            The BLACQList Marketplace
           </p>
           <h1 className="font-headline text-4xl md:text-5xl text-white leading-tight max-w-2xl">
             Shop Black. Book Black. <span className="text-gold">Keep the dollar moving.</span>

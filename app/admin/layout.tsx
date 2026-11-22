@@ -5,8 +5,8 @@ import { AdminSidebar } from '@/components/admin/AdminSidebar'
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | BLACQList Admin',
-    default: 'Admin | BLACQList',
+    template: '%s | The BLACQList Admin',
+    default: 'Admin | The BLACQList',
   },
   robots: { index: false, follow: false },
 }

@@ -45,7 +45,7 @@ export default async function AdminMarketplacePage() {
       <div>
         <h1 className="font-headline text-2xl text-brand-black">Marketplace</h1>
         <p className="font-body text-sm text-charcoal-soft mt-0.5">
-          Products and services listed in the BLACQList Marketplace.
+          Products and services listed in The BLACQList Marketplace.
         </p>
       </div>
 

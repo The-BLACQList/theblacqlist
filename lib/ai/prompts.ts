@@ -1,4 +1,4 @@
-// Prompt template constants for BLACQList AI agents.
+// Prompt template constants for The BLACQList AI agents.
 // These are string templates only — no API calls in this file.
 // All templates use {{variable}} placeholders for safe server-side assembly.
 //
@@ -53,7 +53,7 @@ Requirements:
 - Do not use quotation marks
 - Write only the meta description text, nothing else`,
 
-  SOCIAL_CAPTION_INSTAGRAM: `Write an Instagram caption for a local business to share their BLACQList Page.
+  SOCIAL_CAPTION_INSTAGRAM: `Write an Instagram caption for a local business to share their page on The BLACQList.
 
 Business name: {{listing_name}}
 Category: {{category_name}}
@@ -67,7 +67,7 @@ Requirements:
 - Do not include URLs
 - Write only the caption text and hashtags, nothing else`,
 
-  SOCIAL_CAPTION_FACEBOOK: `Write a Facebook post for a local business to share their BLACQList Page.
+  SOCIAL_CAPTION_FACEBOOK: `Write a Facebook post for a local business to share their page on The BLACQList.
 
 Business name: {{listing_name}}
 Category: {{category_name}}
@@ -81,7 +81,7 @@ Requirements:
 - Do not include URLs
 - Write only the post text, nothing else`,
 
-  SOCIAL_CAPTION_X: `Write an X (Twitter) post for a local business to share their BLACQList Page.
+  SOCIAL_CAPTION_X: `Write an X (Twitter) post for a local business to share their page on The BLACQList.
 
 Business name: {{listing_name}}
 Category: {{category_name}}

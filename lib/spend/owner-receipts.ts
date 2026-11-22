@@ -15,11 +15,11 @@ import { FIX_REASON_MAX_LENGTH, OTHER_FIX_REASON } from '@/lib/spend/receipt-ema
 /** After this many days unreviewed, a claimed listing's receipt shows in the admin queue too. */
 export const ADMIN_FALLBACK_DAYS = 7
 
-export const UNKNOWN_BUYER = 'A BLACQList member'
+export const UNKNOWN_BUYER = 'A member of The BLACQList'
 
 /**
  * "Jordan Smith" → "Jordan S.", "Jordan" → "Jordan". Anything that isn't a
- * plain name (empty, an email address) becomes "A BLACQList member". Never
+ * plain name (empty, an email address) becomes "A member of The BLACQList". Never
  * more than the first name and one initial.
  */
 export function maskBuyerName(displayName: string | null | undefined): string {
@@ -152,6 +152,6 @@ export function pendingReviewLine(ownerReview: boolean): string {
 /** The privacy note on the receipt form and My receipts. */
 export function receiptPrivacyNote(ownerReview: boolean): string {
   return ownerReview
-    ? 'Receipt details are private. Only you, BLACQList admins and the business you bought from can see your receipt. The business sees your first name and last initial, only to verify your purchase.'
-    : 'Receipt details are private. Only you and BLACQList admins can see your receipt.'
+    ? "Receipt details are private. Only you, The BLACQList's admins and the business you bought from can see your receipt. The business sees your first name and last initial, only to verify your purchase."
+    : "Receipt details are private. Only you and The BLACQList's admins can see your receipt."
 }

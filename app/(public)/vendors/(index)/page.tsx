@@ -6,7 +6,7 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { STOREFRONT_TIERS } from '@/lib/marketplace/visibility'
 
 export const metadata: Metadata = {
-  title: 'Storefronts | BLACQList Marketplace',
+  title: 'Storefronts | The BLACQList Marketplace',
   description:
     'Browse Black-owned storefronts on The BLACQList. Shop products, book services, and buy direct from the business.',
 }
@@ -203,7 +203,7 @@ export default async function VendorsIndexPage() {
               href="/for-vendors"
               className="inline-flex items-center gap-1.5 mt-5 h-10 px-5 rounded-full bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold transition-colors min-h-[44px]"
             >
-              Sell on BLACQList <ArrowRight className="size-4" aria-hidden="true" />
+              Sell on The BLACQList <ArrowRight className="size-4" aria-hidden="true" />
             </Link>
           </div>
         ) : (

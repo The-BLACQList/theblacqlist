@@ -27,7 +27,7 @@ const ROLE_OPTIONS = [
     value: 'owner',
     dbRole: 'owner',
     label: 'I run a business, sell or host events',
-    description: 'Claim or create your BLACQList Page',
+    description: 'Claim or create your page on The BLACQList',
   },
 ] as const
 

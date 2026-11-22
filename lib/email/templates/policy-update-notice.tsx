@@ -77,7 +77,7 @@ export function PolicyUpdateNoticeEmail({
             </Text>
             <Text style={item}>
               <strong style={itemTitle}>Clearer wording.</strong> We now say plainly that The
-              BLACQList centers Black-owned businesses and also lists Ally businesses that support
+              The BLACQList centers Black-owned businesses and also lists Ally businesses that support
               them.
             </Text>
 

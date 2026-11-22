@@ -22,13 +22,13 @@ const SPONSOR_TYPES = [
   {
     title: 'City Spotlight',
     description:
-      'Brands and organizations targeting a specific metropolitan area. Get a labeled Sponsored placement on BLACQList city pages where your audience already looks.',
+      'Brands and organizations targeting a specific metropolitan area. Get a labeled Sponsored placement on The BLACQList city pages where your audience already looks.',
     badge: 'Regional',
   },
   {
     title: 'Platform Partner',
     description:
-      'National brands aligning with Black economic empowerment. Appear across the full BLACQList network with homepage presence and co-branded editorial.',
+      "National brands aligning with Black economic empowerment. Appear across The BLACQList's full network with homepage presence and co-branded editorial.",
     badge: 'National',
   },
 ]
@@ -83,16 +83,16 @@ export default function ForSponsorsPage() {
               asChild
               className="border border-white/40 text-white bg-transparent hover:bg-white/10 rounded-full px-7 py-3 text-base min-h-[48px] h-auto"
             >
-              <Link href="/about">Learn About BLACQList</Link>
+              <Link href="/about">Learn About The BLACQList</Link>
             </Button>
           </div>
         </Container>
       </section>
 
-      {/* Who sponsors BLACQList */}
+      {/* Who sponsors The BLACQList */}
       <Section variant="white">
         <SectionHeading subtitle="From local community organizations to national brands, we match sponsors with the audiences they want to reach authentically.">
-          Who Sponsors BLACQList?
+          Who Sponsors The BLACQList?
         </SectionHeading>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
@@ -144,7 +144,7 @@ export default function ForSponsorsPage() {
             </span>
             <h3 className="font-headline text-lg text-brand-black mb-1">Sponsored Spotlight</h3>
             <p className="font-subhead text-sm text-charcoal mb-4">
-              High-visibility placement on the BLACQList homepage, city pages, and category views.
+              High-visibility placement on The BLACQList homepage, city pages, and category views.
               Limited inventory. Pricing will be published when it opens.
             </p>
             <Button

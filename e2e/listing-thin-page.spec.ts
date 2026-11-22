@@ -80,7 +80,7 @@ test.describe('Thin listing page', () => {
     const label = page.locator('#trust-heading').locator('..').locator('[data-trust-tier]')
     await expect(label).toHaveCount(1)
     await expect(label.locator('svg')).toHaveCount(1)
-    await expect(label).toHaveText(/Unclaimed|Claimed|Verified|BLACQList Certified/)
+    await expect(label).toHaveText(/Unclaimed|Claimed|Verified|Certified/)
   })
 
   test('axe finds no critical violation', async ({ page }) => {

@@ -6,7 +6,7 @@ import { CookiePolicy } from '../CookiePolicy'
 
 export const metadata: Metadata = {
   title: 'Updated Cookie Policy | The BLACQList',
-  description: 'The updated BLACQList Cookie Policy, before it takes effect.',
+  description: "The BLACQList's updated Cookie Policy, before it takes effect.",
   robots: { index: false, follow: true },
 }
 

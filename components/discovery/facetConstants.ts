@@ -29,7 +29,7 @@ export const LOCATION_TYPES: { value: LocationType; label: string }[] =
 export const TRUST_TIERS: { value: string; label: string }[] = [
   { value: 'claimed', label: 'Claimed' },
   { value: 'verified', label: 'Verified' },
-  { value: 'certified', label: 'BLACQList Certified' },
+  { value: 'certified', label: 'Certified' },
 ]
 
 // Every entity_type the DB serves now has a chip above, so this map needs no

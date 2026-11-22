@@ -199,7 +199,7 @@ export function OnboardingFlow({ savedRole }: OnboardingFlowProps) {
                       Search for my listing
                     </p>
                     <p className="font-subhead text-xs text-charcoal-soft">
-                      Claim an existing BLACQList Page
+                      Claim your existing page on The BLACQList
                     </p>
                   </div>
                 </button>
@@ -217,7 +217,7 @@ export function OnboardingFlow({ savedRole }: OnboardingFlowProps) {
                       Add my business
                     </p>
                     <p className="font-subhead text-xs text-charcoal-soft">
-                      Create a new BLACQList Page
+                      Create a new page on The BLACQList
                     </p>
                   </div>
                 </button>

@@ -456,7 +456,7 @@ const VIDEO_SOURCE = (url: string | null) =>
 const TIER_BADGE: Record<Exclude<TrustTier, 'unclaimed'>, BadgeView> = {
   claimed: { label: 'Claimed', tier: 1 },
   verified: { label: 'Verified', tier: 2 },
-  certified: { label: 'BLACQList Certified', tier: 3 },
+  certified: { label: 'Certified', tier: 3 },
 }
 
 /** The line under the reviews. Verified and Certified only: they are the checked tiers. */
@@ -467,7 +467,10 @@ function trustFor(tier: TrustTier): ChapterData['trust'] {
       short: 'Verified by The BLACQList',
     }
   if (tier === 'certified')
-    return { line: `BLACQList Certified. ${TIER_MEANING.certified}`, short: 'BLACQList Certified' }
+    return {
+      line: `Certified by The BLACQList. ${TIER_MEANING.certified}`,
+      short: 'Certified by The BLACQList',
+    }
   return null
 }
 
