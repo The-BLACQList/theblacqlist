@@ -8,12 +8,16 @@
  *
  * Output: docs/blacqlist/ops/reports/metrics-YYYYMMDD.json
  * Any source that errors is recorded under "unknown" rather than faked.
+ * Testers and the team are left out of sign-ups, subscriptions and named events
+ * (ticket 271, the same rule as weekly-kpis.ts). Page views, top listings and top
+ * searches are stored as totals, so they cannot be filtered.
  * Exits 1 with a clear message if Supabase env is not set.
  */
 import { createClient } from '@supabase/supabase-js'
 import { writeFileSync, mkdirSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { excludedUserIds, subscriptionSummary, type SummaryRow } from '../../lib/ops/revenue'
 
 const SUPABASE_URL = process.env['SUPABASE_URL']
 const SUPABASE_SERVICE_ROLE_KEY = process.env['SUPABASE_SERVICE_ROLE_KEY']
@@ -49,7 +53,84 @@ async function safe<T>(label: string, fn: () => Promise<T>): Promise<T | null> {
   }
 }
 
+const PAGE = 1000
+const ID_CHUNK = 100
+
+type Query = PromiseLike<{ data: unknown; error: { message: string } | null }>
+
+/** Every row of a select, a page at a time. Throws on error. */
+async function readAll<T>(query: (from: number, to: number) => Query): Promise<T[]> {
+  const out: T[] = []
+  for (let from = 0; ; from += PAGE) {
+    const { data, error } = await query(from, from + PAGE - 1)
+    if (error) throw new Error(error.message)
+    const rows = (data ?? []) as T[]
+    out.push(...rows)
+    if (rows.length < PAGE) return out
+  }
+}
+
+/** Testers and the team. Throws if any of the four reads fails: never half a list. */
+async function readExcluded(): Promise<Set<string>> {
+  const users: Array<{ id: string; user_metadata?: Record<string, unknown> | null }> = []
+  for (let page = 1; ; page++) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: PAGE })
+    if (error) throw new Error(error.message)
+    users.push(...data.users)
+    if (data.users.length < PAGE) break
+  }
+  const [tours, invites, roles] = await Promise.all([
+    readAll<{ tester_user_id: string | null }>((a, b) =>
+      supabase.from('tour_enrollments').select('tester_user_id').order('id').range(a, b)
+    ),
+    readAll<{ tester_user_id: string | null }>((a, b) =>
+      supabase.from('tester_invites').select('tester_user_id').order('id').range(a, b)
+    ),
+    readAll<{ user_id: string }>((a, b) =>
+      supabase
+        .from('user_roles')
+        .select('user_id')
+        .in('role', ['admin', 'super_admin'])
+        .order('id')
+        .range(a, b)
+    ),
+  ])
+  return excludedUserIds({ tours, invites, roles, users })
+}
+
+/** The number would include testers, so it goes under "unknown" instead. */
+function needExcluded(excluded: Set<string> | null): Set<string> {
+  if (!excluded) throw new Error('tester and team accounts could not be read, so not printed')
+  return excluded
+}
+
+type CountResult = PromiseLike<{ count: number | null; error: { message: string } | null }>
+
+/** A count that came back empty is a failed read, not 0. */
+async function readCount(query: CountResult): Promise<number> {
+  const { count, error } = await query
+  if (error) throw new Error(error.message || 'count failed')
+  if (count === null) throw new Error('count came back empty')
+  return count
+}
+
+/** Total rows minus those of the excluded accounts. Signed-out rows stay in. */
+async function countKept(
+  total: CountResult,
+  ofUsers: (ids: string[]) => CountResult,
+  excluded: Set<string>
+): Promise<number> {
+  let kept = await readCount(total)
+  const ids = [...excluded]
+  for (let i = 0; i < ids.length; i += ID_CHUNK) {
+    kept -= await readCount(ofUsers(ids.slice(i, i + ID_CHUNK)))
+  }
+  return kept
+}
+
 async function main(): Promise<void> {
+  const excluded = await safe('tester and team accounts', readExcluded)
+
   const engagement = await safe('entity_analytics_daily', async () => {
     const { data, error } = await supabase
       .from('entity_analytics_daily')
@@ -81,33 +162,42 @@ async function main(): Promise<void> {
   })
 
   const signups = await safe('profiles.new', async () => {
-    const { count, error } = await supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true })
-      .gte('created_at', sinceIso)
-    if (error) throw new Error(error.message)
-    return count ?? 0
+    const base = () =>
+      supabase
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', sinceIso)
+    return countKept(base(), (ids) => base().in('id', ids), needExcluded(excluded))
   })
 
   const subscriptions = await safe('subscriptions+plans', async () => {
-    const { data: subs, error: subErr } = await supabase.from('subscriptions').select('status, plan_id')
-    if (subErr) throw new Error(subErr.message)
-    const { data: plans, error: planErr } = await supabase.from('plans').select('id, name, price_monthly')
-    if (planErr) throw new Error(planErr.message)
-    const priceById = new Map<string, number>()
-    for (const plan of (plans ?? []) as Array<{ id: string; price_monthly: number }>) {
-      priceById.set(plan.id, Number(plan.price_monthly) || 0)
-    }
-    const byStatus: Record<string, number> = {}
-    let mrr = 0
-    for (const sub of (subs ?? []) as Array<{ status: string; plan_id: string | null }>) {
-      byStatus[sub.status] = (byStatus[sub.status] ?? 0) + 1
-      if (sub.status === 'active' && sub.plan_id) mrr += priceById.get(sub.plan_id) ?? 0
-    }
+    const out = needExcluded(excluded)
+    const [subs, plans] = await Promise.all([
+      readAll<Omit<SummaryRow, 'plan_key' | 'price_monthly' | 'price_yearly'> & { plan_id: string | null }>(
+        (a, b) =>
+          supabase
+            .from('subscriptions')
+            .select('user_id, status, plan_id, current_period_start, current_period_end')
+            .order('id')
+            .range(a, b)
+      ),
+      readAll<{ id: string } & Pick<SummaryRow, 'plan_key' | 'price_monthly' | 'price_yearly'>>((a, b) =>
+        supabase.from('plans').select('id, plan_key, price_monthly, price_yearly').order('id').range(a, b)
+      ),
+    ])
+    const planById = new Map(plans.map((p) => [p.id, p]))
+    const rows: SummaryRow[] = subs.map((s) => {
+      const plan = s.plan_id ? planById.get(s.plan_id) : undefined
+      return {
+        ...s,
+        plan_key: plan?.plan_key ?? null,
+        price_monthly: plan?.price_monthly ?? null,
+        price_yearly: plan?.price_yearly ?? null,
+      }
+    })
     return {
-      byStatus,
-      mrr_usd: mrr,
-      note: 'MRR = sum of active plan price_monthly; excludes proration/discounts/tax. Stripe invoice detail not queried.',
+      ...subscriptionSummary(rows, out),
+      note: 'MRR = all paid plans, active and past due; a yearly plan counts as price_yearly / 12, read from its billing period. UNKNOWN when a plan cycle or price is not known. Testers and team left out. Excludes proration/discounts/tax. Stripe invoice detail not queried.',
     }
   })
 
@@ -121,15 +211,16 @@ async function main(): Promise<void> {
       'claim_submitted',
       'listing_submitted',
     ]
+    const out = needExcluded(excluded)
     const counts: Record<string, number> = {}
     for (const name of names) {
-      const { count, error } = await supabase
-        .from('analytics_events')
-        .select('id', { count: 'exact', head: true })
-        .eq('event_name', name)
-        .gte('created_at', sinceIso)
-      if (error) throw new Error(error.message)
-      counts[name] = count ?? 0
+      const base = () =>
+        supabase
+          .from('analytics_events')
+          .select('id', { count: 'exact', head: true })
+          .eq('event_name', name)
+          .gte('created_at', sinceIso)
+      counts[name] = await countKept(base(), (ids) => base().in('user_id', ids), out)
     }
     return counts
   })
@@ -177,6 +268,11 @@ async function main(): Promise<void> {
     window: { days, since: sinceIso },
     source: 'Supabase (service role)',
     external_unavailable: ['Vercel Web Vitals (dashboard only)', 'Stripe invoice detail (Stripe API only)'],
+    left_out: {
+      tester_team_accounts: excluded ? excluded.size : null,
+      filtered: ['signups', 'subscriptions', 'funnelEvents'],
+      not_filtered: ['engagement', 'topListings', 'topSearches'],
+    },
     aggregationHealth,
     coverCoverage,
     engagement,

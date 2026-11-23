@@ -30,6 +30,7 @@ import {
   type SignupRow,
   type SubscriptionRow,
 } from '../../lib/ops/weeklyKpis'
+import { excludedUserIds, type PricedRow } from '../../lib/ops/revenue'
 
 const SUPABASE_URL = process.env['SUPABASE_URL']
 const SUPABASE_SERVICE_ROLE_KEY = process.env['SUPABASE_SERVICE_ROLE_KEY']
@@ -106,18 +107,23 @@ async function main(): Promise<void> {
 
   const [users, plans, subs, claims, saves, saveEvents, tours, invites, roles] = await Promise.all([
     readUsers(),
-    readAll<{ id: string; plan_key: string | null; price_monthly: number | null }>(
+    readAll<{ id: string } & Pick<PricedRow, 'plan_key' | 'price_monthly' | 'price_yearly'>>(
       'plans',
-      (a, b) => supabase.from('plans').select('id, plan_key, price_monthly').range(a, b)
-    ),
-    readAll<Omit<SubscriptionRow, 'plan_key' | 'price_monthly'> & { plan_id: string | null }>(
-      'subscriptions',
       (a, b) =>
-        supabase
-          .from('subscriptions')
-          .select('id, listing_id, user_id, plan_id, status, created_at, canceled_at')
-          .order('id')
-          .range(a, b)
+        supabase.from('plans').select('id, plan_key, price_monthly, price_yearly').range(a, b)
+    ),
+    readAll<
+      Omit<SubscriptionRow, 'plan_key' | 'price_monthly' | 'price_yearly'> & {
+        plan_id: string | null
+      }
+    >('subscriptions', (a, b) =>
+      supabase
+        .from('subscriptions')
+        .select(
+          'id, listing_id, user_id, plan_id, status, created_at, canceled_at, current_period_start, current_period_end'
+        )
+        .order('id')
+        .range(a, b)
     ),
     readAll<ClaimRow>('claims', (a, b) =>
       supabase
@@ -152,16 +158,17 @@ async function main(): Promise<void> {
     ),
   ])
 
-  const excluded = new Set<string>()
-  for (const r of [...tours, ...invites]) if (r.tester_user_id) excluded.add(r.tester_user_id)
-  for (const r of roles) excluded.add(r.user_id)
-  for (const u of users)
-    if (u.user_metadata?.['signup_source'] === 'tester_link') excluded.add(u.id)
+  const excluded = excludedUserIds({ tours, invites, roles, users })
 
   const planById = new Map(plans.map((p) => [p.id, p]))
   const subscriptions: SubscriptionRow[] = subs.map((s) => {
     const plan = s.plan_id ? planById.get(s.plan_id) : undefined
-    return { ...s, plan_key: plan?.plan_key ?? null, price_monthly: plan?.price_monthly ?? null }
+    return {
+      ...s,
+      plan_key: plan?.plan_key ?? null,
+      price_monthly: plan?.price_monthly ?? null,
+      price_yearly: plan?.price_yearly ?? null,
+    }
   })
 
   const signups: SignupRow[] = users.map((u) => {

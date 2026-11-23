@@ -21,9 +21,12 @@ const sub = (over: Partial<SubscriptionRow>): SubscriptionRow => ({
   user_id: 'u1',
   plan_key: 'starter',
   price_monthly: 19,
+  price_yearly: 182,
   status: 'active',
   created_at: '2026-11-24T12:00:00Z',
   canceled_at: null,
+  current_period_start: '2026-11-24T12:00:00Z',
+  current_period_end: '2026-12-24T12:00:00Z',
   ...over,
 })
 
@@ -98,7 +101,7 @@ describe('channelOf', () => {
 describe('buildWeeklyKpis', () => {
   const now = new Date('2027-03-01T00:00:00Z')
 
-  it('counts paying Starter at week end, one per listing, and MRR', () => {
+  it('counts paying Starter at week end, one per listing, and MRR for every paid plan', () => {
     const input = empty({
       subscriptions: [
         sub({ listing_id: 'L1' }),
@@ -106,13 +109,14 @@ describe('buildWeeklyKpis', () => {
         sub({ listing_id: 'L2', status: 'past_due' }),
         sub({ listing_id: 'L3', status: 'trialing' }),
         sub({ listing_id: 'L4', status: 'inactive' }),
-        sub({ listing_id: 'L5', plan_key: 'growth', price_monthly: 49 }),
+        sub({ listing_id: 'L5', plan_key: 'growth', price_monthly: 49 }), // money, not Starter
+        sub({ listing_id: 'L7', plan_key: 'free', price_monthly: 0 }),
         sub({ listing_id: 'L6', created_at: '2026-12-01T00:00:00Z' }), // next week
       ],
     })
     const [row] = buildWeeklyKpis(input, { weeks: [W('2026-11-23')], now })
     expect(row!.paying_starter).toBe(2)
-    expect(row!.mrr_usd).toBe(38)
+    expect(row!.mrr_usd).toBe(87)
   })
 
   it('stops counting a canceled plan after it ends', () => {
@@ -124,6 +128,24 @@ describe('buildWeeklyKpis', () => {
       now,
     })
     expect(rows.map((r) => r.paying_starter)).toEqual([1, 0, 0])
+  })
+
+  it('counts a yearly plan as 1/12 a month, and each billed subscription once', () => {
+    const yearly = { current_period_end: '2027-11-24T12:00:00Z' }
+    const input = empty({
+      subscriptions: [sub(yearly), sub({ ...yearly, listing_id: 'L2' }), sub({ listing_id: 'L2' })],
+    })
+    const [row] = buildWeeklyKpis(input, { weeks: [W('2026-11-23')], now })
+    expect(row!.paying_starter).toBe(2)
+    expect(row!.mrr_usd).toBe(49.33)
+  })
+
+  it('prints UNKNOWN MRR when a billing cycle or plan is not known', () => {
+    for (const over of [{ current_period_end: null }, { plan_key: null, price_monthly: null }]) {
+      const input = empty({ subscriptions: [sub({}), sub({ listing_id: 'L2', ...over })] })
+      const [row] = buildWeeklyKpis(input, { weeks: [W('2026-11-23')], now })
+      expect(row!.mrr_usd).toBe(UNKNOWN)
+    }
   })
 
   it('prints UNKNOWN MRR when a plan price is missing', () => {
@@ -291,6 +313,9 @@ describe('output', () => {
     ]) {
       expect(text).toContain(word)
     }
+    expect(text).toContain('MRR (all paid plans)')
+    expect(text).toContain('yearly price / 12')
+    expect(text).not.toContain('until next-actions item 3')
     expect(text).toContain('3 tester and team accounts')
     expect(text).toContain('instagram 4')
     expect(text).not.toContain('—')

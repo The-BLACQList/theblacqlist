@@ -7,7 +7,9 @@
  * Testers and the team account are left out of every number.
  */
 
-export const UNKNOWN = 'UNKNOWN'
+import { UNKNOWN, isPaidPlan, sumMonthly, type Cell, type PricedRow } from './revenue'
+
+export { UNKNOWN, type Cell }
 
 /** Sign-up source capture shipped in #363 (bcfb31a). Weeks before it have no channel. */
 export const SOURCE_CAPTURE_START = '2026-11-20'
@@ -15,12 +17,10 @@ export const SOURCE_CAPTURE_START = '2026-11-20'
 const DAY_MS = 24 * 60 * 60 * 1000
 const WEEK_MS = 7 * DAY_MS
 
-export interface SubscriptionRow {
+export interface SubscriptionRow extends PricedRow {
   id: string
   listing_id: string | null
   user_id: string | null
-  plan_key: string | null
-  price_monthly: number | null
   status: string
   created_at: string
   canceled_at: string | null
@@ -64,8 +64,6 @@ export interface KpiInput {
   /** Testers (invites, tour enrollments, tester_link sign-ups) and admin/super_admin. */
   excludedUserIds: ReadonlySet<string>
 }
-
-export type Cell = number | typeof UNKNOWN
 
 export const CHANNELS = [
   'flyer',
@@ -220,7 +218,7 @@ export function channelOf(
 // ---------------------------------------------------------------------------
 // Subscriptions
 
-/** A Starter subscription that took a first payment (trials and unfinished checkouts are not). */
+/** A subscription that took a first payment (trials and unfinished checkouts are not). */
 function everPaid(s: SubscriptionRow): boolean {
   return s.status === 'active' || s.status === 'past_due' || s.status === 'canceled'
 }
@@ -250,7 +248,9 @@ export function buildWeeklyKpis(input: KpiInput, opts: BuildOptions): KpiRow[] {
     userId === null || !input.excludedUserIds.has(userId)
   const nowMs = opts.now.getTime()
 
-  const starter = input.subscriptions.filter((s) => s.plan_key === 'starter' && keep(s.user_id))
+  const subscriptions = input.subscriptions.filter((s) => keep(s.user_id))
+  const starter = subscriptions.filter((s) => s.plan_key === 'starter')
+  const paidPlans = subscriptions.filter(isPaidPlan)
   const claims = input.claims.filter((c) => keep(c.claimant_user_id))
   const signups = input.signups.filter((u) => keep(u.user_id))
   const saves = input.saves.filter((s) => keep(s.user_id))
@@ -274,15 +274,14 @@ export function buildWeeklyKpis(input: KpiInput, opts: BuildOptions): KpiRow[] {
     const start = weekStart.getTime()
     const end = start + WEEK_MS
 
-    // Paying at week end, one per listing.
+    // Paying Starter at week end, one per listing.
     const payingByListing = new Map<string, SubscriptionRow>()
     for (const s of starter) {
       if (payingAt(s, end)) payingByListing.set(s.listing_id ?? `sub:${s.id}`, s)
     }
     const paying = [...payingByListing.values()]
-    const mrr: Cell = paying.some((s) => s.price_monthly === null)
-      ? UNKNOWN
-      : Math.round(paying.reduce((sum, s) => sum + (s.price_monthly ?? 0), 0) * 100) / 100
+    // Money: every paid plan, each subscription once, because each one is billed.
+    const mrr = sumMonthly(paidPlans.filter((s) => payingAt(s, end)))
 
     // Retention cohort: first paid Starter in this week.
     const cohort = starter.filter((s) => everPaid(s) && inWeek(s.created_at, start))
@@ -366,6 +365,10 @@ export interface SummaryContext {
   sourceErrors: string[]
 }
 
+function usd(v: Cell): string {
+  return v === UNKNOWN ? UNKNOWN : `$${v}`
+}
+
 export function summaryLines(rows: KpiRow[], ctx: SummaryContext): string[] {
   const lines: string[] = []
   if (rows.length === 0) return ['No complete weeks in range.']
@@ -375,7 +378,7 @@ export function summaryLines(rows: KpiRow[], ctx: SummaryContext): string[] {
     `Weeks: ${first.week} to ${last.week} (${rows.length}, Monday start, UTC). Left out: ${ctx.excludedCount} tester and team accounts.`
   )
   lines.push(
-    `Latest week ${last.week}: ${last.paying_starter} paying Starter, MRR $${last.mrr_usd}, ${last.signups} sign-ups, ${last.claims_submitted} claims, ${last.saves_net} saves kept (${last.saves_gross} made).`
+    `Latest week ${last.week}: ${last.paying_starter} paying Starter, MRR (all paid plans) ${usd(last.mrr_usd)}, ${last.signups} sign-ups, ${last.claims_submitted} claims, ${last.saves_net} saves kept (${last.saves_gross} made).`
   )
   if (ctx.sourceErrors.length > 0) {
     lines.push(
@@ -392,7 +395,9 @@ export function summaryLines(rows: KpiRow[], ctx: SummaryContext): string[] {
   lines.push(
     '- saves_net counts saves still kept today (unsaving deletes the row). saves_gross counts save clicks from events.'
   )
-  lines.push('- mrr_usd: yearly plans count at the monthly rate until next-actions item 3 ships.')
+  lines.push(
+    "- mrr_usd: all paid plans; a yearly plan counts as its yearly price / 12. The cycle comes from today's billing period (no history), so a past week shows today's cycle and price. UNKNOWN when a counted plan's cycle or price is not known. Discounts, tax and Stripe invoices are not read."
+  )
   lines.push(
     "- paying_starter, mrr_usd, retention: rebuilt from today's subscription state (no status history). Past due counts as paying; unfinished checkouts and trials do not."
   )
