@@ -9,9 +9,11 @@ import {
   summaryLines,
   toCsv,
   unknownColumns,
+  withFailedSources,
   ymd,
   type KpiInput,
   type SignupRow,
+  type Source,
   type SubscriptionRow,
 } from '../lib/ops/weeklyKpis'
 
@@ -321,6 +323,16 @@ describe('output', () => {
     expect(text).not.toContain('—')
   })
 
+  it('says the tester list could not be read instead of a count', () => {
+    const text = summaryLines(rows, {
+      excludedCount: null,
+      topUtmSources: [],
+      sourceErrors: ['user_roles: boom'],
+    }).join('\n')
+    expect(text).toContain('The tester and team list could not be read.')
+    expect(text).not.toContain('Left out:')
+  })
+
   it('flags read errors', () => {
     const text = summaryLines(rows, {
       excludedCount: 0,
@@ -328,5 +340,60 @@ describe('output', () => {
       sourceErrors: ['claims: boom'],
     }).join('\n')
     expect(text).toContain('claims: boom')
+  })
+})
+
+describe('withFailedSources', () => {
+  const rows = buildWeeklyKpis(empty({ subscriptions: [sub({})], signups: [signup({})] }), {
+    weeks: [W('2026-11-23')],
+    now: new Date('2027-03-01T00:00:00Z'),
+  })
+  const after = (source: Source) => withFailedSources(rows, new Set([source]))
+
+  it('changes nothing when every read worked', () => {
+    expect(withFailedSources(rows, new Set())).toBe(rows)
+  })
+
+  it.each(['auth users', 'tour_enrollments', 'tester_invites', 'user_roles'] as const)(
+    'makes every number UNKNOWN when %s fails, and keeps the week',
+    (source) => {
+      expect(knownColumns(after(source))).toEqual([])
+      expect(after(source)[0]!.week).toBe('2026-11-23')
+    }
+  )
+
+  it.each(['plans', 'subscriptions'] as const)(
+    'makes the subscription numbers UNKNOWN when %s fails',
+    (source) => {
+      const [row] = after(source)
+      expect(row!.paying_starter).toBe(UNKNOWN)
+      expect(row!.mrr_usd).toBe(UNKNOWN)
+      expect(row!.starter_new).toBe(UNKNOWN)
+      expect(row!.claim_to_starter_pct).toBe(UNKNOWN)
+      expect(row!.signups).toBe(1)
+      expect(row!.saves_net).toBe(0)
+    }
+  )
+
+  it.each([
+    ['claims', ['claims_submitted', 'claims_approved', 'claim_to_starter_pct']],
+    ['saves', ['saves_net']],
+    ['save_toggled events', ['saves_gross']],
+  ] as const)('touches only its own columns when %s fails', (source, columns) => {
+    const lost = knownColumns(rows).filter((c) => !knownColumns(after(source)).includes(c))
+    expect(columns).toEqual(expect.arrayContaining(lost))
+    for (const c of columns) expect(after(source)[0]![c]).toBe(UNKNOWN)
+    expect(after(source)[0]!.mrr_usd).toBe(19)
+  })
+
+  it('never lists a spoiled column as fully known', () => {
+    const text = summaryLines(after('subscriptions'), {
+      excludedCount: 0,
+      topUtmSources: [],
+      sourceErrors: ['subscriptions: boom'],
+    }).join('\n')
+    const known = text.split('\n').find((l) => l.startsWith('Fully known'))!
+    expect(known).not.toContain('mrr_usd')
+    expect(known).not.toContain('paying_starter')
   })
 })

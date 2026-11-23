@@ -1,6 +1,6 @@
 # Ticket 271: Yearly Plans in Monthly Revenue
 
-**Status:** In review (`fix/271-yearly-mrr`). Merging needs the founder's OK. Not yet run on production data: that needs the founder, or their explicit OK in the session.
+**Status:** Merged #402 (`97aaf3a`), 2026-11-23. The failed-read follow-up below (`fix/271-weekly-read-errors`) is in its own PR.
 
 ## Why
 
@@ -43,10 +43,25 @@ No migration, no app change, nothing user-facing.
 - Page views, top listings and top searches are stored as totals, so testers cannot be taken out of them. The metrics JSON says so (`left_out.not_filtered`).
 - Past weeks use today's billing cycle and price. An owner who moves from monthly to yearly shows as yearly in earlier weeks too.
 - Discounts, proration, tax and Stripe invoices are not read.
-- **Found, not fixed here:** when a table fails to read, `weekly-kpis.ts` names it, says the numbers are not trustworthy and exits 2, as 236 designed. It still writes the CSV, though, and can list those columns as fully known. With a failed tester read that includes tester money. Do not import a run that exits 2.
+- The weekly report printed numbers after a failed read. Fixed in the follow-up below.
 
 ## Tests
 
 `tests/ops-revenue.test.ts` (new): 28 to 366-day periods and missing dates; yearly Starter 15.17, two yearly 30.33; mixed cycles; UNKNOWN cases; past due, trials, Free, testers; both scripts use the shared rule. `tests/weekly-kpis.test.ts`: Growth counts as money but not as paying Starter; yearly plans; UNKNOWN on a missing cycle or plan.
 
 **Smoke run (2026-11-23):** both scripts ran against a local stub with made-up rows, including more than 1,000 subscriptions, a failed tester read and an empty count. Monthly, yearly and past-due rows gave $73.33 in both reports, as worked out by hand (19 + 182/12 + 470/12). No real data was read.
+
+## Follow-Up: Failed Reads in the Weekly Report
+
+Founder, 2026-11-23: "fix the gap". When a table failed to read, `weekly-kpis.ts` said so and exited 2, but still wrote the numbers and could list them as fully known. A failed tester read left tester money in the total.
+
+Now every number that depends on a failed read is UNKNOWN (`withFailedSources` in `lib/ops/weeklyKpis.ts`):
+
+| Failed read | Made UNKNOWN |
+|---|---|
+| Auth users, tester tables, team roles | Every number: testers could not be left out. The account count and the campaign sources are not printed |
+| Plans, subscriptions | Paying, MRR, new, retention, claim to Starter |
+| Claims | Claims submitted, approved, claim to Starter |
+| Saves / save events | `saves_net` / `saves_gross` |
+
+It still exits 2 and names the failed read. The three tester and team reads are now ordered, so paging is stable.

@@ -12,7 +12,8 @@
  * Import: metrics.py import <slug> <csv> --period-column week --map "..."
  *
  * Testers and the team account are left out. Any table that fails to read is
- * named in the summary; its columns should not be trusted for that run.
+ * named in the summary, every number that needs it is UNKNOWN, and the script
+ * exits 2.
  * Exits 1 with a clear message if Supabase env is not set.
  */
 import { createClient } from '@supabase/supabase-js'
@@ -20,14 +21,17 @@ import { writeFileSync, mkdirSync } from 'fs'
 import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import {
+  EXCLUSION_SOURCES,
   buildWeeklyKpis,
   completeWeeks,
   summaryLines,
   toCsv,
+  withFailedSources,
   type ClaimRow,
   type SaveEventRow,
   type SaveRow,
   type SignupRow,
+  type Source,
   type SubscriptionRow,
 } from '../../lib/ops/weeklyKpis'
 import { excludedUserIds, type PricedRow } from '../../lib/ops/revenue'
@@ -50,10 +54,16 @@ function arg(name: string): string | undefined {
 }
 
 const sourceErrors: string[] = []
+const failed = new Set<Source>()
+
+function recordFailure(source: Source, message: string): void {
+  failed.add(source)
+  sourceErrors.push(`${source}: ${message || 'no message'}`)
+}
 
 /** Read every row of a select, a page at a time. Records the failure and returns [] on error. */
 async function readAll<T>(
-  label: string,
+  source: Source,
   query: (
     from: number,
     to: number
@@ -63,7 +73,7 @@ async function readAll<T>(
   for (let from = 0; ; from += PAGE) {
     const { data, error } = await query(from, from + PAGE - 1)
     if (error) {
-      sourceErrors.push(`${label}: ${error.message}`)
+      recordFailure(source, error.message)
       return []
     }
     const rows = (data ?? []) as T[]
@@ -83,8 +93,8 @@ async function readUsers(): Promise<AuthUser[]> {
   for (let page = 1; ; page++) {
     const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: PAGE })
     if (error) {
-      sourceErrors.push(`auth users: ${error.message}`)
-      return out
+      recordFailure('auth users', error.message)
+      return []
     }
     out.push(...(data.users as AuthUser[]))
     if (data.users.length < PAGE) return out
@@ -148,13 +158,18 @@ async function main(): Promise<void> {
         .range(a, b)
     ),
     readAll<{ tester_user_id: string | null }>('tour_enrollments', (a, b) =>
-      supabase.from('tour_enrollments').select('tester_user_id').range(a, b)
+      supabase.from('tour_enrollments').select('tester_user_id').order('id').range(a, b)
     ),
     readAll<{ tester_user_id: string | null }>('tester_invites', (a, b) =>
-      supabase.from('tester_invites').select('tester_user_id').range(a, b)
+      supabase.from('tester_invites').select('tester_user_id').order('id').range(a, b)
     ),
     readAll<{ user_id: string }>('user_roles', (a, b) =>
-      supabase.from('user_roles').select('user_id').in('role', ['admin', 'super_admin']).range(a, b)
+      supabase
+        .from('user_roles')
+        .select('user_id')
+        .in('role', ['admin', 'super_admin'])
+        .order('id')
+        .range(a, b)
     ),
   ])
 
@@ -189,19 +204,27 @@ async function main(): Promise<void> {
     action: str(e.properties?.['action']),
   }))
 
-  const rows = buildWeeklyKpis(
+  const built = buildWeeklyKpis(
     { subscriptions, claims, signups, saves, saveEvents: events, excludedUserIds: excluded },
     { weeks, now }
   )
+  const rows = withFailedSources(built, failed)
+
+  // Without these four reads there is no full tester and team list.
+  const listRead = !EXCLUSION_SOURCES.some((source) => failed.has(source))
 
   const utmCounts = new Map<string, number>()
-  for (const s of signups) {
+  for (const s of listRead ? signups : []) {
     if (excluded.has(s.user_id) || !s.utm_source) continue
     utmCounts.set(s.utm_source, (utmCounts.get(s.utm_source) ?? 0) + 1)
   }
   const topUtmSources = [...utmCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5)
 
-  const summary = summaryLines(rows, { excludedCount: excluded.size, topUtmSources, sourceErrors })
+  const summary = summaryLines(rows, {
+    excludedCount: listRead ? excluded.size : null,
+    topUtmSources,
+    sourceErrors,
+  })
 
   const dir = join(
     dirname(fileURLToPath(import.meta.url)),
