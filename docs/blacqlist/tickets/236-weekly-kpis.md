@@ -47,7 +47,7 @@ From the first run, every number leaves out:
 - **Retention** is UNKNOWN until every member of that week's cohort has reached the day, and when the cohort is empty.
 - **claim_to_starter_pct** is UNKNOWN when no claims were approved that week. It can rise in later runs as businesses pay.
 
-If a table fails to read, the summary names it and the script exits 2.
+If a table fails to read, the summary names it, every number that needs it is UNKNOWN, and the script exits 2 ([271](271-yearly-mrr.md), follow-up).
 
 ## Changes
 

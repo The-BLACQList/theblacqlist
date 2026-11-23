@@ -335,6 +335,68 @@ export function buildWeeklyKpis(input: KpiInput, opts: BuildOptions): KpiRow[] {
 }
 
 // ---------------------------------------------------------------------------
+// Failed reads
+
+/** The reads the report depends on. Labels match the summary's read errors. */
+export type Source =
+  | 'auth users'
+  | 'plans'
+  | 'subscriptions'
+  | 'claims'
+  | 'saves'
+  | 'save_toggled events'
+  | 'tour_enrollments'
+  | 'tester_invites'
+  | 'user_roles'
+
+const SUBSCRIPTION_COLUMNS: readonly Column[] = [
+  'paying_starter',
+  'mrr_usd',
+  'starter_new',
+  'starter_retained_d30_pct',
+  'starter_retained_d60_pct',
+  'claim_to_starter_pct',
+]
+const EVERY_NUMBER: readonly Column[] = COLUMNS.filter((c) => c !== 'week')
+
+/** The four reads that make up the tester and team list. */
+export const EXCLUSION_SOURCES: readonly Source[] = [
+  'auth users',
+  'tour_enrollments',
+  'tester_invites',
+  'user_roles',
+]
+
+/**
+ * The columns a failed read makes untrue. Without the full tester and team list,
+ * every number would include testers. Sign-ups and the tester_link list both come
+ * from auth users, so that read also spoils everything.
+ */
+const SPOILS: Record<Source, readonly Column[]> = {
+  'auth users': EVERY_NUMBER,
+  tour_enrollments: EVERY_NUMBER,
+  tester_invites: EVERY_NUMBER,
+  user_roles: EVERY_NUMBER,
+  plans: SUBSCRIPTION_COLUMNS,
+  subscriptions: SUBSCRIPTION_COLUMNS,
+  claims: ['claims_submitted', 'claims_approved', 'claim_to_starter_pct'],
+  saves: ['saves_net'],
+  'save_toggled events': ['saves_gross'],
+}
+
+/** Replace every number that depends on a failed read with UNKNOWN. */
+export function withFailedSources(rows: KpiRow[], failed: ReadonlySet<Source>): KpiRow[] {
+  const spoiled = new Set([...failed].flatMap((source) => SPOILS[source]))
+  if (spoiled.size === 0) return rows
+  return rows.map(
+    (row) =>
+      Object.fromEntries(
+        COLUMNS.map((c) => [c, spoiled.has(c) ? UNKNOWN : row[c]])
+      ) as unknown as KpiRow
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Output
 
 function csvCell(v: string | number): string {
@@ -360,7 +422,8 @@ export function unknownColumns(rows: KpiRow[]): Column[] {
 }
 
 export interface SummaryContext {
-  excludedCount: number
+  /** Null when a tester or team read failed. */
+  excludedCount: number | null
   topUtmSources: Array<[string, number]>
   sourceErrors: string[]
 }
@@ -375,14 +438,18 @@ export function summaryLines(rows: KpiRow[], ctx: SummaryContext): string[] {
   const first = rows[0]!
   const last = rows[rows.length - 1]!
   lines.push(
-    `Weeks: ${first.week} to ${last.week} (${rows.length}, Monday start, UTC). Left out: ${ctx.excludedCount} tester and team accounts.`
+    `Weeks: ${first.week} to ${last.week} (${rows.length}, Monday start, UTC). ${
+      ctx.excludedCount === null
+        ? 'The tester and team list could not be read.'
+        : `Left out: ${ctx.excludedCount} tester and team accounts.`
+    }`
   )
   lines.push(
     `Latest week ${last.week}: ${last.paying_starter} paying Starter, MRR (all paid plans) ${usd(last.mrr_usd)}, ${last.signups} sign-ups, ${last.claims_submitted} claims, ${last.saves_net} saves kept (${last.saves_gross} made).`
   )
   if (ctx.sourceErrors.length > 0) {
     lines.push(
-      `Read errors (these columns are not trustworthy this run): ${ctx.sourceErrors.join('; ')}.`
+      `Read errors (every number that needs them is UNKNOWN this run): ${ctx.sourceErrors.join('; ')}.`
     )
   }
   lines.push('Gaps:')
