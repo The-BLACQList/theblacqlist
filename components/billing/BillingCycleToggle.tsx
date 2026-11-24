@@ -63,7 +63,7 @@ export function BillingCycleToggle({ value, onChange, annualBadge, className }: 
             {opt.value === 'annual' && annualBadge && (
               <span
                 className={cn(
-                  'rounded-full px-1.5 py-0.5 text-[10px] font-bold',
+                  'rounded-full px-2 py-0.5 text-sm font-bold',
                   selected ? 'bg-amber-gold text-brand-black' : 'bg-amber-gold/15 text-amber'
                 )}
               >

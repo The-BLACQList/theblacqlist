@@ -76,20 +76,24 @@ export function PricingPlans({
               }`}
             >
               {featured && (
-                <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-block rounded-full bg-amber-gold text-brand-black text-xs font-subhead font-bold px-3 py-1 whitespace-nowrap">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-block rounded-full bg-amber-gold text-brand-black text-sm font-subhead font-bold px-3 py-1 whitespace-nowrap">
                   Most Popular
                 </span>
               )}
 
               <div className="mb-4">
                 <h3 className="font-headline text-xl text-brand-black mb-1">{plan.name}</h3>
-                <p className="font-subhead text-xs text-charcoal-soft mb-3">{plan.tagline}</p>
+                {/* Four across is narrow enough to wrap the longest tagline, so every card
+                    holds two lines there and the prices stay on one row. */}
+                <p className="font-subhead text-sm text-charcoal-soft mb-3 lg:max-xl:min-h-10">
+                  {plan.tagline}
+                </p>
                 <div className="flex items-baseline gap-1">
                   <span className="font-headline text-3xl text-brand-black">{price}</span>
                   <span className="font-subhead text-sm text-charcoal-soft">{period}</span>
                 </div>
                 {!isFree && cycle === 'annual' && (
-                  <p className="font-subhead text-xs text-amber mt-1">2 months free</p>
+                  <p className="font-subhead text-sm text-amber mt-1">2 months free</p>
                 )}
               </div>
 
@@ -122,7 +126,7 @@ export function PricingPlans({
                     ))}
                   </ul>
                   {/* Ticket 242: how often AI help can be used, as small print. */}
-                  {plan.finePrint && <p className="font-subhead text-xs text-charcoal-soft mt-3">{plan.finePrint}</p>}
+                  {plan.finePrint && <p className="font-subhead text-sm text-charcoal-soft mt-3">{plan.finePrint}</p>}
                 </div>
               )}
 
@@ -141,7 +145,7 @@ export function PricingPlans({
                   </button>
                   <a
                     href={waitlistHref}
-                    className="block text-center font-subhead text-xs text-charcoal underline underline-offset-2 hover:text-brand-black"
+                    className="block text-center font-subhead text-sm text-charcoal underline underline-offset-2 hover:text-brand-black"
                   >
                     Tell Us You Want {plan.name}
                   </a>
