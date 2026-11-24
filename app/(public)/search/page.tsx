@@ -158,7 +158,8 @@ async function SearchResults({ searchParams }: { searchParams: SearchPageProps['
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
   return (
-    <>
+    // As tall as its loader, so the footer never jumps in on a short page (ticket 272).
+    <div className="min-h-screen">
       {/* Search bar */}
       <div className="border-b border-charcoal/10 bg-white">
         <Container className="py-4">
@@ -180,6 +181,6 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           <SearchResults searchParams={searchParams} />
         </Suspense>
       </Container>
-    </>
+    </div>
   )
 }

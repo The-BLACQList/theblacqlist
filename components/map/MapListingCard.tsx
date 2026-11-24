@@ -3,6 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { BadgeCheck, ShieldCheck } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 import { isOpenNow } from '@/lib/listings/openStatus'
 import { resolveRemoteImage } from '@/lib/listings/coverImage'
 import { formatMiles } from '@/lib/map/distance'
@@ -113,5 +114,38 @@ export function MapListingCard({ listing, selected, hovered, variant, distance, 
         </Link>
       )}
     </article>
+  )
+}
+
+/**
+ * The card before its business arrives. Same box, photo and three text lines as
+ * the card above, so a list keeps its height when the real cards replace it.
+ */
+export function MapListingCardSkeleton({ variant }: Pick<Props, 'variant'>) {
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        'rounded-[18px] bg-white p-1.5 ring-1 ring-hairline',
+        variant === 'strip' ? 'w-[250px] shrink-0 snap-start' : 'w-full'
+      )}
+    >
+      <Skeleton className="aspect-[4/3] w-full rounded-[14px]" />
+      <div className="mt-2 px-1.5 pb-1">
+        <SkeletonLine className="font-headline text-[17px] leading-tight" bar="w-3/4" />
+        <SkeletonLine className="mt-0.5 text-[13px]" bar="w-1/2" />
+        <SkeletonLine className="mt-1 text-[12.5px]" bar="w-2/5" />
+      </div>
+    </div>
+  )
+}
+
+/** A bar inside an empty line of text, so the line is as tall as the words will be. */
+function SkeletonLine({ className, bar }: { className: string; bar: string }) {
+  return (
+    <div className={cn('relative', className)}>
+      &nbsp;
+      <Skeleton className={cn('absolute inset-y-[15%] left-0', bar)} />
+    </div>
   )
 }

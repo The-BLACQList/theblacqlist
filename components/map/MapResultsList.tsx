@@ -3,8 +3,7 @@
 import Link from 'next/link'
 import { widerRadius } from '@/lib/listings/location-params'
 import { distanceMiles } from '@/lib/map/distance'
-import { MapListingCard } from '@/components/map/MapListingCard'
-import { Skeleton } from '@/components/ui/skeleton'
+import { MapListingCard, MapListingCardSkeleton } from '@/components/map/MapListingCard'
 import type { MapResultsProps } from '@/lib/map/types'
 import { cn } from '@/lib/utils'
 
@@ -61,7 +60,20 @@ export function MapResultsList({
     </p>
   ) : null
 
-  if (message) return <div className={className}>{message}</div>
+  // The strip's message is as tall as a card, so the phone sheet holds its height
+  // (ticket 272). Not on a short screen, where it would cover the map.
+  if (message)
+    return (
+      <div
+        className={cn(
+          variant === 'strip' &&
+            '[@media(min-height:700px)]:grid [@media(min-height:700px)]:min-h-[271px] [@media(min-height:700px)]:place-items-center',
+          className
+        )}
+      >
+        {message}
+      </div>
+    )
 
   return (
     <ul
@@ -75,10 +87,8 @@ export function MapResultsList({
     >
       {loading
         ? Array.from({ length: variant === 'grid' ? 6 : 3 }).map((_, i) => (
-            <li key={i} className={variant === 'strip' ? 'w-[250px] shrink-0' : undefined}>
-              <Skeleton className="aspect-[4/3] w-full rounded-[14px]" />
-              <Skeleton className="mt-2 h-4 w-3/4" />
-              <Skeleton className="mt-1.5 h-3 w-1/2" />
+            <li key={i} className={variant === 'strip' ? 'shrink-0' : undefined}>
+              <MapListingCardSkeleton variant={variant} />
             </li>
           ))
         : listings.map((listing) => (

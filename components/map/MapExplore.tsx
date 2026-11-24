@@ -141,11 +141,16 @@ export function MapExplore() {
   const filtered = useMemo(() => filterListings(listings, filters), [listings, filters])
   // moveend and zoomend bump viewNonce, which re-reads the viewport bounds.
   const visible = useMemo(() => {
-    if (!mapReady || !map) return []
+    // No bounds yet. Once the imagery has stalled the notice says the list is live,
+    // so it lists the chosen city instead.
+    if (!mapReady || !map) {
+      if (!tilesStalled) return []
+      return citySlug === ALL_CITIES ? filtered : filtered.filter((l) => l.citySlug === citySlug)
+    }
     const bounds = map.getBounds()
     return filtered.filter((l) => bounds.contains([l.lng, l.lat]))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtered, map, mapReady, viewNonce])
+  }, [filtered, map, mapReady, tilesStalled, citySlug, viewNonce])
   // The list is capped (LIST_LIMIT); the count above it is not, so the whole
   // country reads as every business, not the first 60.
   const inView = useMemo(
@@ -455,7 +460,9 @@ export function MapExplore() {
     listings: inView,
     hoverId,
     inViewCount: visible.length,
-    loading,
+    // Nothing is in view until the map can say what its bounds are. Without this the
+    // list says "No businesses" for a moment, and the phone sheet jumps (ticket 272).
+    loading: !loadError && (loading || (!mapReady && !tilesStalled)),
     loadError,
     selectedId,
     onHover: setHoverId,
@@ -485,7 +492,7 @@ export function MapExplore() {
         {message && (
           <p
             role="status"
-            className="absolute right-4 top-4 z-30 max-w-[280px] rounded-xl bg-ground px-3.5 py-2.5 text-xs text-white shadow-lg max-lg:top-auto max-lg:bottom-72 max-lg:left-4"
+            className="absolute right-4 top-4 z-30 max-w-[280px] rounded-xl bg-ground px-3.5 py-2.5 text-xs text-white shadow-lg max-lg:top-auto max-lg:bottom-[calc(var(--map-sheet-h,22rem)+0.75rem)] max-lg:left-4"
           >
             {message}
           </p>
