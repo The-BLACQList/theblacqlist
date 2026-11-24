@@ -54,7 +54,7 @@ const ROWS: Row[] = [
   },
   {
     title: 'Your Story and Photos',
-    body: 'Your story in your own words, and add up to 3 photos.',
+    body: 'Your story in your own words, and up to 3 photos.',
     plan: 'free',
   },
   {
@@ -73,7 +73,7 @@ const ROWS: Row[] = [
     // Ticket 244 (founder, 2026-11-21): gated as `map_logo_pin`. Only the look
     // is paid; the order of pins on the map stays trust-based.
     title: 'Your Logo on the Map',
-    body: 'Your logo as your map pin, once your page is claimed. Where you sit on the map still comes from trust, not your plan.',
+    body: "Your logo as your map pin, once your page is claimed. Your plan doesn't change where you sit on the map.",
     plan: 'starter',
   },
   {
