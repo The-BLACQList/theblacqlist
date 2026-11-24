@@ -1,6 +1,6 @@
 # Ticket 273: Included Job Postings Before $9.99
 
-**Status:** In review. Not merged.
+**Status:** Merged #404, 2026-11-24.
 
 ## Why
 

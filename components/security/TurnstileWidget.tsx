@@ -3,6 +3,8 @@
 import { useEffect, useRef } from 'react'
 import Script from 'next/script'
 
+import { cn } from '@/lib/utils'
+
 // Cloudflare Turnstile widget.
 //
 // Renders nothing when NEXT_PUBLIC_TURNSTILE_SITE_KEY is unset — same
@@ -125,7 +127,9 @@ export function TurnstileWidget({ onToken, theme = 'light', className, resetKey 
         src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"
         strategy="lazyOnload"
       />
-      <div ref={containerRef} className={className} />
+      {/* The room the widget takes once it draws (a 65px box on a line of text), so the
+          form does not jump when it arrives (ticket 272). */}
+      <div ref={containerRef} className={cn('min-h-[73px]', className)} />
     </>
   )
 }

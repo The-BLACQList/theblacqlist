@@ -102,8 +102,16 @@ function FallbackReply({ ask, reply, onAsk }: { ask: string; reply: Fallback; on
  * Cue's at a glance next to the visitor's gold bubbles. The home bar's answer
  * box is Cue's already.
  */
-function CueVoice({ layout, children }: { layout: AnswerLayout; children: React.ReactNode }) {
-  if (layout !== 'panel') return <div className="space-y-3">{children}</div>
+function CueVoice({
+  layout,
+  className,
+  children,
+}: {
+  layout: AnswerLayout
+  className?: string
+  children: React.ReactNode
+}) {
+  if (layout !== 'panel') return <div className={cn('space-y-3', className)}>{children}</div>
   return (
     <div className="flex gap-2.5">
       <GoldBrandMark className="size-5 mt-0.5 shrink-0" />
@@ -161,6 +169,13 @@ function CueDots() {
 }
 
 /**
+ * The status row plus the skeleton (cards in 1, 2, then 3 columns). Without it
+ * the box shrank when the first words replaced the cards, then grew back, and
+ * the page under it moved twice (ticket 272).
+ */
+const STREAMING_MIN_H = 'min-h-[292px] sm:min-h-[220px] lg:min-h-[148px]'
+
+/**
  * Cue at work, laid out like the finished reply so nothing jumps when it
  * lands. Before any words: the status line with the dots, over a skeleton.
  * Once words arrive: a small status line, then the words. The words are hidden
@@ -183,7 +198,7 @@ export function CueStreaming({
 }) {
   const words = settledCueText(text)
   return (
-    <CueVoice layout={layout}>
+    <CueVoice layout={layout} className={layout === 'page' ? STREAMING_MIN_H : undefined}>
       <div className="flex items-center justify-between gap-2">
         <p
           className={cn(

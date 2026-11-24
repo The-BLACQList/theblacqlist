@@ -159,7 +159,8 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
   if (canonical !== null) redirect(`/discover${canonical}`)
 
   return (
-    <>
+    // As tall as its loader, so the footer never jumps in on a short page (ticket 272).
+    <div className="min-h-screen">
       {/* Avenue banner — swaps with the selected type */}
       <DiscoverBanner type={typeof params.type === 'string' ? params.type : null} />
 
@@ -181,6 +182,6 @@ export default async function DiscoverPage({ searchParams }: DiscoverPageProps) 
           <DiscoverContent searchParams={searchParams} />
         </Suspense>
       </Container>
-    </>
+    </div>
   )
 }
