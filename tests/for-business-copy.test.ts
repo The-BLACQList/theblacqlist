@@ -14,6 +14,18 @@ import { canAccess, photoLimit } from '@/lib/stripe/features'
 
 const page = readFileSync(path.join(process.cwd(), 'app/(public)/for-business/page.tsx'), 'utf8')
 
+// Ticket 276: the trust page said every claimed page can reply to reviews.
+describe('/about/trust copy', () => {
+  const trust = readFileSync(path.join(process.cwd(), 'app/(public)/about/trust/page.tsx'), 'utf8')
+
+  it('says replying to reviews needs Starter and up, matching features.ts', () => {
+    expect(canAccess('free', 'review_response')).toBe(false)
+    expect(canAccess('starter', 'review_response')).toBe(true)
+    expect(trust).toContain('On Starter and up, they can also reply to reviews.')
+    expect(trust).not.toContain('respond to reviews')
+  })
+})
+
 describe('/for-business copy', () => {
   it('has no em dashes anywhere in the file', () => {
     expect(page).not.toContain('—')
@@ -63,7 +75,7 @@ describe('/for-business copy', () => {
     expect(photoLimit('free')).toBe(3)
     expect(photoLimit('starter')).toBe(10)
     expect(page).toMatch(
-      /title: 'Your Story and Photos',[\s\S]{0,160}add up to 3 photos\.[\s\S]{0,80}plan: 'free'/
+      /title: 'Your Story and Photos',[\s\S]{0,160}in your own words, and up to 3 photos\.[\s\S]{0,80}plan: 'free'/
     )
   })
 
@@ -73,12 +85,13 @@ describe('/for-business copy', () => {
     expect(page).toMatch(/title: 'The Full Page Layout',[\s\S]{0,200}chapters\.',\s*plan: 'starter'/)
   })
 
-  // Ticket 244: the logo pin is Starter and up; the row says order stays trust.
+  // Ticket 244: the logo pin is Starter and up. Ticket 276: the row says only
+  // that the plan doesn't change the order (sponsored and featured pages do).
   it('marks the logo map pin Starter and up, matching features.ts', () => {
     expect(canAccess('free', 'map_logo_pin')).toBe(false)
     expect(canAccess('starter', 'map_logo_pin')).toBe(true)
     expect(page).toMatch(
-      /title: 'Your Logo on the Map',[\s\S]{0,120}Your logo as your map pin[\s\S]{0,160}comes from trust, not your plan\.',\s*plan: 'starter'/
+      /title: 'Your Logo on the Map',[\s\S]{0,120}Your logo as your map pin[\s\S]{0,160}Your plan doesn't change where you sit on the map\.\",\s*plan: 'starter'/
     )
   })
 

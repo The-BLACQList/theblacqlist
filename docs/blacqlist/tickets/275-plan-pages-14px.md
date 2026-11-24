@@ -1,6 +1,6 @@
 # Ticket 275: 14px Minimum on Pricing and Upgrade
 
-**Status:** In review, 2026-11-24.
+**Status:** Merged #408, 2026-11-24.
 
 ## Why
 

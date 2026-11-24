@@ -32,7 +32,7 @@ const LADDER = [
   {
     tier: 'Claimed',
     who: 'The owner has stepped forward',
-    body: 'Someone has claimed the business and we approved that claim. They can now edit the page, respond to reviews, and keep the details current. Claimed means an owner is present — not that we have verified their paperwork.',
+    body: 'Someone has claimed the business and we approved that claim. They can now edit the page and keep the details current. On Starter and up, they can also reply to reviews. Claimed means an owner is present — not that we have verified their paperwork.',
   },
   {
     tier: 'Verified',
