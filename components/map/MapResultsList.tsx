@@ -67,7 +67,7 @@ export function MapResultsList({
       <div
         className={cn(
           variant === 'strip' &&
-            '[@media(min-height:600px)]:grid [@media(min-height:600px)]:min-h-[271px] [@media(min-height:600px)]:place-items-center',
+            '[@media(min-height:700px)]:grid [@media(min-height:700px)]:min-h-[271px] [@media(min-height:700px)]:place-items-center',
           className
         )}
       >

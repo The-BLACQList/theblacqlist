@@ -13,7 +13,10 @@ const SIZES = [
   { name: 'phone', width: 390, height: 844 },
 ]
 
-const PAGES = ['/flow-map', '/map', '/discover', '/jobs']
+const PAGES = ['/flow-map', '/map', '/discover', '/jobs', '/events', '/search']
+
+/** Home may have no link to these two. */
+const FROM_HOME = ['/flow-map', '/map', '/discover', '/jobs']
 
 /** Pages whose own HTML carries the loader. /map shows it only on the way from another page. */
 const STREAMED = ['/flow-map', '/discover', '/jobs']
@@ -71,6 +74,22 @@ async function watchShifts(page: Page) {
   })
 }
 
+/** Proof the page itself arrived, so a cover or an error page cannot pass. */
+const ARRIVED: Record<string, string> = {
+  '/flow-map': '.silo-stage',
+  '/map': '[data-tour="map"] canvas',
+  '/discover': 'h1',
+  '/jobs': 'h1:text-is("Jobs")',
+  '/events': 'h1:has-text("Events")',
+  '/search': 'h1',
+}
+
+async function settled(page: Page, path: string) {
+  await expect(page.locator(ARRIVED[path]!).first()).toBeVisible({ timeout: 60_000 })
+  await expect(page.locator('.blacq-loader')).toHaveCount(0)
+  await page.waitForTimeout(4000)
+}
+
 const readCls = (page: Page) => page.evaluate(() => (window as unknown as { __cls: number }).__cls)
 
 for (const size of SIZES) {
@@ -94,11 +113,12 @@ for (const size of SIZES) {
       test(`${path}: a direct load holds still`, async ({ page }) => {
         await watchShifts(page)
         await page.goto(path)
-        await expect(page.locator('.blacq-loader')).toHaveCount(0, { timeout: 60_000 })
-        await page.waitForTimeout(4000)
+        await settled(page, path)
         expect(await readCls(page)).toBeLessThanOrEqual(LIMIT)
       })
+    }
 
+    for (const path of FROM_HOME) {
       test(`${path}: a click from Home holds still`, async ({ page }) => {
         await watchShifts(page)
         await page.goto('/')
@@ -108,8 +128,7 @@ for (const size of SIZES) {
         await page.evaluate(() => (window as unknown as { __resetCls: () => void }).__resetCls())
         await link.evaluate((el: HTMLElement) => el.click())
         await page.waitForURL(`**${path}`)
-        await expect(page.locator('.blacq-loader')).toHaveCount(0, { timeout: 60_000 })
-        await page.waitForTimeout(4000)
+        await settled(page, path)
         expect(await readCls(page)).toBeLessThanOrEqual(LIMIT)
       })
     }

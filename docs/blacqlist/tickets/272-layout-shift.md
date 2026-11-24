@@ -26,7 +26,7 @@ Two smaller causes: the phone map sheet changed height twice while loading, part
 
 1. `PageLoader`: as tall as the screen under the header.
 2. Discover, Events, Jobs and Search: `min-h-screen`, as Guides, Collections, Vendors and Marketplace already had. Without it a nearly empty page pulled the footer back into view after the taller loader. Visible effect: on those four pages the footer starts below the fold when there is little on them.
-3. Map: the list counts as loading until the map is ready. Loading cards are the real card's shape. The phone strip's empty and error messages are as tall as a card (not on screens under 600px tall). If the imagery stalls, the list shows every business, which is what the notice already promised.
+3. Map: the list counts as loading until the map is ready. Loading cards are the real card's shape. The phone strip's empty and error messages are as tall as a card (not on screens under 700px tall). If the imagery stalls, the list shows the chosen city (or every business), which is what the notice already promised.
 4. `TurnstileWidget`: keeps 73px (the box measures 72.6px).
 5. `e2e/layout-shift.spec.ts`: where the footer sits under the loader, and CLS ≤ 0.1 on direct loads and on clicks from Home, at 1440 and 390. 22 pass; with the old loader 11 fail.
 

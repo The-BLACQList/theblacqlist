@@ -45,7 +45,7 @@ export function MapPanel(props: Props) {
             {CITY_CHOICES.find((c) => c.slug === citySlug)?.label ?? 'The Map'}
           </h1>
           <p className="mt-2 text-[15px] text-charcoal">
-            {loading
+            {loading && cityTotal === 0
               ? 'Loading businesses'
               : `${cityTotal} Black-owned ${cityTotal === 1 ? 'business' : 'businesses'}`}
           </p>
@@ -86,7 +86,11 @@ export function MapPanel(props: Props) {
           <div aria-live="polite">
             <p className="text-[13px] text-charcoal">
               <span className="font-headline text-[17px] text-ink">
-                {filters.near ? `${inViewCount} within ${filters.near.radiusMiles} mi` : `${inViewCount} in view`}
+                {loading
+                  ? 'Businesses'
+                  : filters.near
+                    ? `${inViewCount} within ${filters.near.radiusMiles} mi`
+                    : `${inViewCount} in view`}
               </span>
               {filters.near ? ' · nearest first' : ' · trusted first'}
             </p>
