@@ -12,8 +12,9 @@
 //     last thing in it.
 //   - Every section heading starts on the same left edge as the hero's h1.
 //   - No horizontal scroll, and axe finds no serious or critical violation.
-// The shared plan cards ([data-fb-plans]) are left out of the text audit: they
-// are /pricing's component with its own sizes. axe still scans them.
+// The shared plan cards ([data-fb-plans]) are held to the 14px minimum too
+// (ticket 274). Their faces and colours are /pricing's, so the rest of the text
+// audit leaves them out. axe still scans them.
 // =============================================================================
 
 import AxeBuilder from '@axe-core/playwright'
@@ -82,17 +83,19 @@ function auditText(page: Page): Promise<Audit> {
       const el = n.parentElement
       if (!el || !n.textContent?.trim() || seen.has(el)) continue
       seen.add(el)
-      if (el.closest('[data-fb-plans], .sr-only, [hidden], script, style')) continue
+      if (el.closest('.sr-only, [hidden], script, style')) continue
       const cs = getComputedStyle(el)
       const box = el.getBoundingClientRect()
       if (box.width <= 1 || cs.visibility === 'hidden' || cs.display === 'none') continue
 
       out.checked++
       const t = `"${n.textContent.trim().slice(0, 40)}"`
+      if (parseFloat(cs.fontSize) < 14) out.size.push(`${t} is ${cs.fontSize}`)
+      if (el.closest('[data-fb-plans]')) continue
+
       const face = cs.fontFamily.split(',')[0] ?? ''
       const want = el.closest('h1, h2, h3') ? /jost/i : /inter/i
       if (!want.test(face)) out.font.push(`${t} is set in ${cs.fontFamily}`)
-      if (parseFloat(cs.fontSize) < 14) out.size.push(`${t} is ${cs.fontSize}`)
 
       const bg = surface(el)
       const fg = over(rgba(cs.color), bg)
@@ -132,6 +135,17 @@ for (const width of WIDTHS) {
       expect(a.floor, 'no grey lighter than #6b6b6b on light').toEqual([])
       expect(a.gold, 'no gold on light').toEqual([])
       expect(a.contrast, 'all text at least 4.5:1').toEqual([])
+    })
+
+    test('plan cards keep 14px on the yearly view too', async ({ page }) => {
+      await open(page)
+      await page.getByRole('radio', { name: /Annual/ }).click()
+      await expect(page.getByText('2 months free').first()).toBeVisible()
+      expect((await auditText(page)).size, 'nothing under 14px').toEqual([])
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth),
+        'no horizontal scroll'
+      ).toBe(false)
     })
 
     test('the audit catches a planted fault', async ({ page }) => {
