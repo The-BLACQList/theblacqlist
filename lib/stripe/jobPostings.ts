@@ -119,32 +119,49 @@ type AnyClient = SupabaseClient | { from: SupabaseClient['from'] }
  */
 export type ReadResult<T> = { ok: true; value: T } | { ok: false; error: string }
 
+type SubscriptionPlanRow = {
+  plans: { plan_key: string | null } | { plan_key: string | null }[] | null
+}
+
 /**
- * The owner's effective plan tier: the highest tier across every listing they
- * own.
+ * The owner's effective plan tier: the highest of the plan they pay for and the
+ * tier on every listing they own.
  *
- * `[Assumption]` — worth naming, because the schema does not settle it. Tier
- * lives on `listings`, not on the user, so "the owner's tier" is not a stored
- * fact. An event is itself a listing, and it is always created at `tier: 'free'`
- * (`createListing.ts`), so reading the event's own tier would give every owner a
- * limit of 0 and make the Growth entitlement unreachable — clearly not what the
- * pricing page promises. Highest-tier-wins is the reading that matches the copy:
- * a Growth subscriber gets Growth's event allowance.
+ * Both are read (ticket 273). Since ticket 238 a plan belongs to the owner and is
+ * copied onto the pages it covers, but that copy is made when Stripe or the owner
+ * changes something. An owner whose covered page was deleted or moved, and who
+ * then added a new one, pays for Growth while every page reads Free, and was asked
+ * to buy a posting their plan includes. The listing tiers still count on their own
+ * because a comped page has no subscription behind it.
+ *
+ * Highest wins because an event or job is itself a listing created at
+ * `tier: 'free'` (`createListing.ts`); reading its own tier would give every owner
+ * a limit of 0.
  */
 export async function ownerPlanTier(
   supabase: AnyClient,
   userId: string
 ): Promise<ReadResult<PlanSlug | 'free'>> {
-  const { data, error } = await supabase
-    .from('listings')
-    .select('tier')
-    .eq('owner_user_id', userId)
-    .is('deleted_at', null)
+  const [{ data, error }, { data: subs, error: subsError }] = await Promise.all([
+    supabase
+      .from('listings')
+      .select('tier')
+      .eq('owner_user_id', userId)
+      .is('deleted_at', null),
+    // Owner-only RLS on `subscriptions`. Same live statuses as
+    // sync_owner_plan_tiers: a failed card keeps the plan while Stripe retries.
+    supabase
+      .from('subscriptions')
+      .select('status, plans(plan_key)')
+      .eq('user_id', userId)
+      .in('status', ['active', 'trialing', 'past_due']),
+  ])
 
   // ⚠ Do NOT fall back to 'free' here. A transient read failure would tell a
   // Premium owner they are at their limit and ask them to pay $9.99 for a
   // posting their plan already includes.
   if (error) return { ok: false, error: error.message }
+  if (subsError) return { ok: false, error: subsError.message }
 
   const rank = (tier: string | null | undefined): number => TIER_RANK[tier ?? 'free'] ?? 0
 
@@ -152,6 +169,19 @@ export async function ownerPlanTier(
   for (const row of data ?? []) {
     const tier = (row as { tier: string | null }).tier
     if (rank(tier) > rank(best)) best = (tier ?? 'free') as PlanSlug
+  }
+
+  let unresolved = false
+  for (const row of (subs ?? []) as unknown as SubscriptionPlanRow[]) {
+    const plan = Array.isArray(row.plans) ? row.plans[0] : row.plans
+    const key = plan?.plan_key ?? null
+    if (key === null || !(key in TIER_RANK)) unresolved = true
+    else if (rank(key) > rank(best)) best = key as PlanSlug
+  }
+  // They pay for something we can't name and no page says what. Free would charge
+  // them for what they may already have, so this is a failed read instead.
+  if (unresolved && best === 'free') {
+    return { ok: false, error: 'subscription plan could not be resolved' }
   }
   return { ok: true, value: best }
 }
@@ -226,6 +256,8 @@ export type JobQuota = {
   used: number
   /** True when the next posting would have to be purchased. */
   atLimit: boolean
+  /** When an included posting next opens up. Null unless one is in use and will. */
+  nextOpensAt: string | null
   tier: PlanSlug | 'free'
 }
 
@@ -247,11 +279,8 @@ export type JobQuota = {
  * feature existed. The grandfather check belongs on the job listing's own
  * `created_at`, at the call site, before this function is reached.
  *
- * Inherits {@link ownerPlanTier}'s named `[Assumption]` — tier lives on
- * `listings`, not on the user, and a job is itself a listing created at
- * `tier: 'free'`, so reading the job's own tier would give every owner a limit of
- * 0 and make the Growth entitlement unreachable. Highest-tier-wins is the reading
- * that matches the pricing copy.
+ * The tier is the owner's ({@link ownerPlanTier}), never the job's own: a job is
+ * created at `tier: 'free'`.
  */
 export async function jobQuotaFor(
   supabase: AnyClient,
@@ -263,11 +292,11 @@ export async function jobQuotaFor(
   const limit = jobLimit(tier)
 
   if (limit === null) {
-    return { ok: true, value: { limit: null, used: 0, atLimit: false, tier } }
+    return { ok: true, value: { limit: null, used: 0, atLimit: false, nextOpensAt: null, tier } }
   }
   if (limit === 0) {
     // Nothing to count — free and starter have no allowance to spend.
-    return { ok: true, value: { limit: 0, used: 0, atLimit: true, tier } }
+    return { ok: true, value: { limit: 0, used: 0, atLimit: true, nextOpensAt: null, tier } }
   }
 
   const { data, error } = await supabase
@@ -283,12 +312,21 @@ export async function jobQuotaFor(
   if (error) return { ok: false, error: error.message }
 
   const now = Date.now()
-  const used = (data ?? []).filter((row) => {
-    const expiresAt = (row as { expires_at: string | null }).expires_at
-    return !expiresAt || new Date(expiresAt).getTime() > now
-  }).length
+  const open = (data ?? [])
+    .map((row) => (row as { expires_at: string | null }).expires_at)
+    .filter((expiresAt) => !expiresAt || new Date(expiresAt).getTime() > now)
+  const used = open.length
+  const atLimit = used >= limit
 
-  return { ok: true, value: { limit, used, atLimit: used >= limit, tier } }
+  // The slot that brings `used` back under the limit. After a downgrade an owner
+  // can hold more open postings than the plan includes, so it isn't always the
+  // earliest. A posting with no end never opens its slot.
+  const ends = open
+    .filter((expiresAt): expiresAt is string => !!expiresAt)
+    .sort((a, b) => new Date(a).getTime() - new Date(b).getTime())
+  const nextOpensAt = atLimit ? (ends[used - limit] ?? null) : null
+
+  return { ok: true, value: { limit, used, atLimit, nextOpensAt, tier } }
 }
 
 /**

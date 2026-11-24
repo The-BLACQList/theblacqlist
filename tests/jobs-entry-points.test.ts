@@ -76,8 +76,15 @@ describe('home tile', () => {
 describe('postJobQuotaLine', () => {
   it('counts what is left for an included plan', () => {
     expect(postJobQuotaLine({ limit: 1, used: 0 })).toBe('1 of 1 included postings left')
-    expect(postJobQuotaLine({ limit: 1, used: 1 })).toBe('0 of 1 included postings left')
-    expect(postJobQuotaLine({ limit: 3, used: 5 })).toBe('0 of 3 included postings left')
+    expect(postJobQuotaLine({ limit: 3, used: 2 })).toBe('1 of 3 included postings left')
+  })
+  it('names the next opening and the price once they are used (273)', () => {
+    expect(postJobQuotaLine({ limit: 1, used: 1, nextOpensAt: '2026-12-03T17:00:00Z' })).toBe(
+      'No included postings left. Your next one opens Dec 3. Posting now is $9.99 for 30 days.'
+    )
+    expect(postJobQuotaLine({ limit: 3, used: 5, nextOpensAt: null })).toBe(
+      'No included postings left. Posting now is $9.99 for 30 days.'
+    )
   })
   it('names the price when nothing is included', () => {
     expect(postJobQuotaLine({ limit: 0, used: 0 })).toBe('Each role is $9.99 for 30 days')

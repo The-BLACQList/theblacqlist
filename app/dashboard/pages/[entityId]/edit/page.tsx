@@ -5,6 +5,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/server'
 import { isFeatureEnabled } from '@/lib/env'
 import { requireOwner } from '@/lib/dashboard/guard'
+import { buildJobPriceLine, type JobPriceLine } from '@/lib/listings/jobPriceLine'
 import {
   hasPaidJobPosting,
   jobQuotaFor,
@@ -178,40 +179,28 @@ export default async function EditPage({ params, searchParams }: Props) {
         }
       : null
 
-    // E-2 Model C — the "N of M included postings used" line above the submit
-    // button. Deliberately mirrors the ladder in `submitListingForReviewAction`
-    // minus the writes: same flag, same grandfather cutoff, same already-paid
-    // check, same quota call. Each rung that skips the line is a rung where
-    // submitting costs nothing and there is nothing to warn about. If the two
-    // ever disagree, this file is the one that is wrong — the action is the
-    // enforcement boundary and re-derives all of it before granting or charging.
-    let jobQuota:
-      | { limit: number; used: number; atLimit: boolean; priceDisplay: string }
-      | undefined
+    // E-2 Model C — the cost line above the submit button. Deliberately mirrors
+    // the ladder in `submitJobForReview` minus the writes: same flag, same
+    // grandfather cutoff, same already-paid check, same quota call. A rung where
+    // submitting costs nothing has no line. If the two ever disagree, this file
+    // is the one that is wrong — the action re-derives all of it, and refuses to
+    // open checkout unless the line here said there is a charge (ticket 273).
+    let jobPrice: JobPriceLine | undefined
     if (isFeatureEnabled('paidPostings') && listing.status === 'draft') {
       const grandfathered =
         !!listing.created_at && new Date(listing.created_at) < new Date(JOB_LIMIT_ENFORCED_FROM)
-
-      // ⚠ Either read can fail. Here the fail-closed answer is to say nothing:
-      // this line is informational, the action re-derives all of it before
-      // granting or charging, and a wrong "0 of 1 used" is worse than no line at
-      // all. `[Debt ⑮ — fixed 2026-08-24]`
       const paidRead = grandfathered
         ? ({ ok: true, value: true } as const)
         : await hasPaidJobPosting(supabase, listing.id)
 
-      if (paidRead.ok && !paidRead.value) {
-        const quotaRead = await jobQuotaFor(supabase, owner.user.id)
-        // `limit === null` is "unlimited" — no tier is, but the type allows it
-        // and an unlimited allowance has nothing to tell the owner.
-        if (quotaRead.ok && quotaRead.value.limit !== null) {
-          jobQuota = {
-            limit: quotaRead.value.limit,
-            used: quotaRead.value.used,
-            atLimit: quotaRead.value.atLimit,
-            priceDisplay: JOB_POSTING_PRICE_DISPLAY,
-          }
-        }
+      // A failed read says the cost comes later; it never guesses a price.
+      if (!paidRead.ok) jobPrice = buildJobPriceLine(null, JOB_POSTING_PRICE_DISPLAY, true)
+      else if (!paidRead.value) {
+        jobPrice = buildJobPriceLine(
+          await jobQuotaFor(supabase, owner.user.id),
+          JOB_POSTING_PRICE_DISPLAY,
+          true
+        )
       }
     }
 
@@ -252,7 +241,7 @@ export default async function EditPage({ params, searchParams }: Props) {
           status={listing.status}
           trustTier={listing.trust_tier}
           entityType={listing.entity_type}
-          jobQuota={jobQuota}
+          jobPrice={jobPrice}
         />
 
         <BasicInfoSection listingId={listing.id} name={listing.name} tagline={listing.tagline} />

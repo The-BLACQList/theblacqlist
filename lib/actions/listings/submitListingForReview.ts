@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { isFeatureEnabled } from '@/lib/env'
 import { transitionToPendingReview } from '@/lib/listings/submitForReview'
+import type { JobPriceLine } from '@/lib/listings/jobPriceLine'
 import { submitJobForReview } from '@/lib/services/listings/submitJobForReview'
 import { eventCapMessage, eventQuotaFor, EVENTS_NEED_GROWTH_MESSAGE } from '@/lib/stripe/jobPostings'
 
@@ -11,6 +12,8 @@ export type SubmitForReviewState =
   | { success: true }
   /** The listing is a job that has not been paid for. The client redirects here. */
   | { requiresPayment: true; checkoutUrl: string }
+  /** The job costs money and the page hadn't said so. Show the price, then ask again. */
+  | { confirmPrice: true; notice: string; priceLine: JobPriceLine }
   | null
 
 export async function submitListingForReviewAction(
@@ -53,9 +56,11 @@ export async function submitListingForReviewAction(
   // Jobs run the shared ladder (grandfather, already paid, allowance, checkout)
   // and the service-role transition. Same code the four step flow uses (ticket 152).
   if (listing.entity_type === 'job') {
-    const result = await submitJobForReview(supabase, user, listing)
+    const result = await submitJobForReview(supabase, user, listing, {
+      chargeShown: formData.get('charge_shown') === '1',
+    })
     if ('error' in result) return { error: result.error }
-    if ('requiresPayment' in result) return result
+    if ('requiresPayment' in result || 'confirmPrice' in result) return result
     return { success: true }
   }
 

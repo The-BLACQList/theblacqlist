@@ -246,6 +246,80 @@ describe('ownerPlanTier', () => {
   })
 })
 
+// ── Ticket 273: the plan they pay for counts even when no page carries it ────
+
+const sub = (plan_key: string | null, over: Row = {}): Row => ({
+  user_id: 'u1',
+  status: 'active',
+  plans: plan_key ? { plan_key } : null,
+  ...over,
+})
+
+describe('ownerPlanTier reads the subscription too (273)', () => {
+  const freePage = { owner_user_id: 'u1', tier: 'free' }
+
+  it('gives a Growth subscriber Growth when every page reads Free', async () => {
+    const { client } = makeClient({ listings: [freePage], subscriptions: [sub('growth')] })
+    expect(ok(await ownerPlanTier(client, 'u1'))).toBe('growth')
+    const quota = ok(await jobQuotaFor(client, 'u1'))
+    expect(quota.limit).toBe(1)
+    expect(quota.atLimit).toBe(false)
+  })
+
+  it('reads the plan from an array embed as well', async () => {
+    const { client } = makeClient({
+      listings: [freePage],
+      subscriptions: [sub(null, { plans: [{ plan_key: 'premium' }] })],
+    })
+    expect(ok(await ownerPlanTier(client, 'u1'))).toBe('premium')
+  })
+
+  it.each(['active', 'trialing', 'past_due'])('counts a %s subscription', async (status) => {
+    const { client } = makeClient({ listings: [freePage], subscriptions: [sub('growth', { status })] })
+    expect(ok(await ownerPlanTier(client, 'u1'))).toBe('growth')
+  })
+
+  it.each(['inactive', 'canceled', 'incomplete'])('does not count a %s one', async (status) => {
+    const { client } = makeClient({ listings: [freePage], subscriptions: [sub('growth', { status })] })
+    expect(ok(await ownerPlanTier(client, 'u1'))).toBe('free')
+  })
+
+  it("does not count another owner's subscription", async () => {
+    const { client } = makeClient({
+      listings: [freePage],
+      subscriptions: [sub('premium', { user_id: 'u2' })],
+    })
+    expect(ok(await ownerPlanTier(client, 'u1'))).toBe('free')
+  })
+
+  it('keeps a comped page that outranks the subscription', async () => {
+    const { client } = makeClient({
+      listings: [{ owner_user_id: 'u1', tier: 'premium' }],
+      subscriptions: [sub('starter')],
+    })
+    expect(ok(await ownerPlanTier(client, 'u1'))).toBe('premium')
+  })
+
+  it('refuses to answer when the subscription read fails, rather than quoting $9.99', async () => {
+    const { client } = makeClient({ listings: [freePage] }, { subscriptions: 'statement timeout' })
+    expect((await ownerPlanTier(client, 'u1')).ok).toBe(false)
+    expect((await jobQuotaFor(client, 'u1')).ok).toBe(false)
+  })
+
+  it('refuses to call a paying owner Free when their plan cannot be named', async () => {
+    const { client } = makeClient({ listings: [freePage], subscriptions: [sub(null)] })
+    expect((await ownerPlanTier(client, 'u1')).ok).toBe(false)
+  })
+
+  it('uses the page tier when the plan cannot be named but a page carries one', async () => {
+    const { client } = makeClient({
+      listings: [{ owner_user_id: 'u1', tier: 'growth' }],
+      subscriptions: [sub(null)],
+    })
+    expect(ok(await ownerPlanTier(client, 'u1'))).toBe('growth')
+  })
+})
+
 // ── The events cap ───────────────────────────────────────────────────────────
 
 describe('eventQuotaFor', () => {
@@ -427,6 +501,23 @@ function entitlement(over: Row = {}): Row {
 }
 
 describe('jobQuotaFor', () => {
+  it('says when the next included posting opens, and only at the limit (273)', async () => {
+    const day = (n: number) => new Date(Date.now() + n * 86_400_000).toISOString()
+    const read = async (tier: string, ends: (string | null)[]) => {
+      const { client } = makeClient({
+        listings: [{ owner_user_id: 'u1', tier }],
+        job_posting_purchases: ends.map((expires_at) => entitlement({ expires_at })),
+      })
+      return ok(await jobQuotaFor(client, 'u1')).nextOpensAt
+    }
+    const [d3, d9, d20] = [day(3), day(9), day(20)]
+    expect(await read('premium', [d9])).toBeNull()
+    expect(await read('premium', [d20, d3, d9])).toBe(d3)
+    // Premium to Growth with three open: two must end before Growth's one is free.
+    expect(await read('growth', [d20, d3, d9])).toBe(d20)
+    expect(await read('growth', [null])).toBeNull()
+  })
+
   it('gives a free owner no allowance at all — every posting is a purchase', async () => {
     const { client } = makeClient({ listings: [{ owner_user_id: 'u1', tier: 'free' }] })
     const quota = ok(await jobQuotaFor(client, 'u1'))

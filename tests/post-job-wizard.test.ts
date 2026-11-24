@@ -23,7 +23,7 @@ const values: PostJobValues = {
   applyEmail: 'a@example.com',
   description: 'Run the grill during dinner service.',
 }
-const priceLine = { kind: 'included', text: 'Included with your plan.', button: 'Submit for review' } as const
+const priceLine = { kind: 'included', text: 'Included with your plan.', button: 'Submit for Review' } as const
 
 const html = (el: Parameters<typeof renderToStaticMarkup>[0]) => renderToStaticMarkup(el)
 const all = [
