@@ -1,6 +1,6 @@
 # Ticket 272: Layout Shift
 
-**Status:** In review. #405 (pages) and #406 (Cue answer box). Slow clicks on The Collective: cause found, waiting on a founder choice.
+**Status:** Merged 2026-11-24: #405 (pages) and #406 `e7619b6` (Cue answer box). Slow clicks on The Collective: cause found, no change; the founder rejected a softer picture.
 
 ## Why
 
@@ -49,7 +49,7 @@ The clicks are not slow because of their handlers. A click on the plain heading,
 | 1.5×, 2 samples | 17 ms | 56–72 ms |
 | 1×, 4 samples | 17 ms | 56–72 ms |
 
-Every option changes the look a little, and earlier notes on the glow and thin lines were the founder's, so this waits for a choice.
+Every option changes the look a little. Founder 2026-11-24: "Reject the softer collective." The scene stays as it is.
 
 ## Not proven
 
