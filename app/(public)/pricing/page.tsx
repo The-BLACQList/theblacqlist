@@ -197,7 +197,7 @@ export default async function PricingPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 max-w-3xl">
           {/* Sponsored Spotlight */}
           <div className="rounded-xl border border-charcoal/15 bg-white p-6">
-            <span className="inline-block rounded-full bg-amber-gold/15 text-amber text-xs font-subhead font-semibold px-2.5 py-1 mb-3">
+            <span className="inline-block rounded-full bg-amber-gold/15 text-amber text-sm font-subhead font-semibold px-2.5 py-1 mb-3">
               Coming Soon
             </span>
             <h3 className="font-headline text-lg text-brand-black mb-1">Sponsored Spotlight</h3>
@@ -215,7 +215,7 @@ export default async function PricingPage() {
 
           {/* BLACQ Boost */}
           <div className="rounded-xl border border-charcoal/15 bg-white p-6">
-            <span className="inline-block rounded-full bg-pale-lavender text-brand-black text-xs font-subhead font-semibold px-2.5 py-1 mb-3">
+            <span className="inline-block rounded-full bg-pale-lavender text-brand-black text-sm font-subhead font-semibold px-2.5 py-1 mb-3">
               Coming Soon
             </span>
             <h3 className="font-headline text-lg text-brand-black mb-1">BLACQ Boost</h3>
@@ -263,7 +263,7 @@ export default async function PricingPage() {
       {/* Sponsor teaser */}
       <section className="bg-deep-bg" aria-labelledby="sponsor-teaser-heading">
         <Container className="py-16 md:py-20 text-center">
-          <p className="font-subhead text-gold text-xs uppercase tracking-[0.2em] mb-3">
+          <p className="font-subhead text-gold text-sm uppercase tracking-[0.2em] mb-3">
             For Brands & Organizations
           </p>
           <h2

@@ -46,7 +46,7 @@ export function FreeMonthPagePicker({ pages }: Props) {
                 />
                 <span className="font-body text-sm text-brand-black">{p.listingName}</span>
                 {p.paid && (
-                  <span className="ml-auto font-body text-xs text-charcoal-faint">
+                  <span className="ml-auto font-body text-sm text-charcoal-faint">
                     Has a plan: 30 days of a bigger one free
                   </span>
                 )}
@@ -62,7 +62,7 @@ export function FreeMonthPagePicker({ pages }: Props) {
           aria-label={`Plans for ${page.listingName}`}
         >
           {page.tiers.length === 0 && (
-            <li className="font-body text-xs text-charcoal-soft sm:col-span-3">
+            <li className="font-body text-sm text-charcoal-soft sm:col-span-3">
               This page is already on our top plan. Pick another page.
             </li>
           )}
@@ -80,7 +80,7 @@ export function FreeMonthPagePicker({ pages }: Props) {
                   listingId={page.listingId}
                 />
               ) : (
-                <p className="font-body text-xs text-charcoal-faint">
+                <p className="font-body text-sm text-charcoal-faint">
                   Coming soon. Your free month will wait.
                 </p>
               )}

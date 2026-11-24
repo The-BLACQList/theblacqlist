@@ -134,12 +134,12 @@ export function PlanPages({
               <div className="min-w-0 flex-1">
                 <p className="truncate font-body text-sm font-semibold text-brand-black">{page.name}</p>
                 {page.covered && (
-                  <span className="mt-1 inline-block rounded-full border border-amber-gold/60 px-2 py-0.5 font-subhead text-xs text-brand-black">
+                  <span className="mt-1 inline-block rounded-full border border-amber-gold/60 px-2 py-0.5 font-subhead text-sm text-brand-black">
                     On Your Plan
                   </span>
                 )}
                 {isConfirming && (
-                  <p className="mt-1 font-body text-xs text-charcoal-soft">
+                  <p className="mt-1 font-body text-sm text-charcoal-soft">
                     {page.covered
                       ? `${page.name} loses ${planName} features.`
                       : `${onlyCovered?.name ?? 'Your other page'} loses ${planName} features.`}
@@ -167,7 +167,7 @@ export function PlanPages({
       </ul>
 
       {count >= cap && cap > 1 && pages.some((p) => !p.covered) && (
-        <p className="mt-2 font-body text-xs text-charcoal-soft">
+        <p className="mt-2 font-body text-sm text-charcoal-soft">
           To add another page, remove one first.
         </p>
       )}

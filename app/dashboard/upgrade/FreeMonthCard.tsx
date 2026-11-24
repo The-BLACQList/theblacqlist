@@ -121,7 +121,7 @@ function Body({ state, availability, primaryListingId }: Props) {
                   listingId={attachTo}
                 />
               ) : (
-                <p className="font-body text-xs text-charcoal-faint">
+                <p className="font-body text-sm text-charcoal-faint">
                   Coming soon. Your free month will wait.
                 </p>
               )}

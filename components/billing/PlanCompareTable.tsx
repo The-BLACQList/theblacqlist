@@ -42,7 +42,7 @@ export function PlanCompareTable({ open, currentTier, className }: Props) {
           <tr className="border-b border-charcoal/15">
             <th
               scope="col"
-              className="sticky left-0 z-10 bg-white px-4 py-3 font-subhead text-xs font-semibold text-charcoal-soft"
+              className="sticky left-0 z-10 bg-white px-4 py-3 font-subhead text-sm font-semibold text-charcoal-soft"
             >
               Compare Plans
             </th>
@@ -59,11 +59,11 @@ export function PlanCompareTable({ open, currentTier, className }: Props) {
                   {names[tier]}
                 </span>
                 {!open[tier] ? (
-                  <span className="block font-subhead text-[11px] text-charcoal-faint">
+                  <span className="block font-subhead text-sm text-charcoal-faint">
                     Coming Soon
                   </span>
                 ) : tier === currentTier ? (
-                  <span className="block font-subhead text-[11px] text-amber">Your Plan</span>
+                  <span className="block font-subhead text-sm text-amber">Your Plan</span>
                 ) : null}
               </th>
             ))}
@@ -75,7 +75,7 @@ export function PlanCompareTable({ open, currentTier, className }: Props) {
               <th
                 scope="colgroup"
                 colSpan={COMPARE_TIERS.length + 1}
-                className="sticky left-0 bg-pale-lavender/60 px-4 py-2 font-subhead text-xs font-semibold uppercase tracking-wide text-brand-black"
+                className="sticky left-0 bg-pale-lavender/60 px-4 py-2 font-subhead text-sm font-semibold uppercase tracking-wide text-brand-black"
               >
                 {group.title}
               </th>
@@ -88,7 +88,7 @@ export function PlanCompareTable({ open, currentTier, className }: Props) {
                 >
                   {row.label}
                   {row.note && (
-                    <span className="mt-0.5 block text-[11px] leading-snug text-charcoal-faint">
+                    <span className="mt-0.5 block text-sm leading-snug text-charcoal-faint">
                       {row.note}
                     </span>
                   )}
