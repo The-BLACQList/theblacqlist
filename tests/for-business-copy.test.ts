@@ -26,6 +26,30 @@ describe('/about/trust copy', () => {
   })
 })
 
+// Ticket 277: the approval email goes to every plan and the My Account claim box
+// says claiming is free, so neither may promise Starter features.
+describe('free owner promises', () => {
+  const email = readFileSync(
+    path.join(process.cwd(), 'lib/email/templates/entity-approved.tsx'),
+    'utf8'
+  )
+  const account = readFileSync(path.join(process.cwd(), 'app/account/(overview)/page.tsx'), 'utf8')
+
+  it('keeps review replies and analytics out of the approval email', () => {
+    expect(canAccess('free', 'review_response')).toBe(false)
+    expect(photoLimit('free')).toBeGreaterThan(0)
+    expect(email).toContain('You can update your details and add photos any time from')
+    expect(email).not.toMatch(/(respond|reply) to reviews|answer reviews/i)
+  })
+
+  it('keeps review replies and analytics out of the My Account claim box', () => {
+    expect(canAccess('free', 'review_response')).toBe(false)
+    expect(canAccess('free', 'analytics')).toBe(false)
+    expect(account).toContain('Keep your hours, story and photos right.')
+    expect(account).not.toMatch(/answer reviews|see who finds you/i)
+  })
+})
+
 describe('/for-business copy', () => {
   it('has no em dashes anywhere in the file', () => {
     expect(page).not.toContain('—')

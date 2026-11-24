@@ -541,7 +541,7 @@ export default async function AccountOverviewPage() {
               Claim your page. It&apos;s free.
             </h2>
             <p className="mt-2 font-body text-base leading-relaxed text-ink-soft max-w-[52ch]">
-              Keep your hours and story right, answer reviews, and see who finds you.
+              Keep your hours, story and photos right.
             </p>
           </div>
           <div className="flex w-full sm:w-auto flex-col items-center gap-1">
