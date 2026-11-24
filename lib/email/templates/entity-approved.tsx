@@ -94,7 +94,7 @@ export function EntityApprovedEmail({
             <Hr style={divider} />
 
             <Text style={paragraph}>
-              You can update your details, add photos, and respond to reviews any time from{' '}
+              You can update your details and add photos any time from{' '}
               <a href={`${siteUrl}/dashboard`} style={link}>
                 your dashboard
               </a>
