@@ -1,3 +1,4 @@
+import { nextOpensText } from '@/lib/listings/jobPriceLine'
 import { JOB_POSTING_PRICE_DISPLAY } from '@/lib/stripe/jobPostings'
 
 // Pure copy and mapping helpers for where Jobs shows up (ticket 154): the home
@@ -36,6 +37,7 @@ export function avenuesEyebrow(tiles: number): string {
 interface QuotaLike {
   limit: number | null
   used: number
+  nextOpensAt?: string | null
 }
 
 /**
@@ -47,6 +49,12 @@ export function postJobQuotaLine(quota: QuotaLike | null): string | null {
   if (quota.limit === null) return 'Your plan includes unlimited job postings'
   if (quota.limit === 0) return `Each role is ${JOB_POSTING_PRICE_DISPLAY} for 30 days`
   const left = Math.max(0, quota.limit - quota.used)
+  if (left === 0) {
+    const next = nextOpensText(quota.nextOpensAt ?? null)
+    return ['No included postings left.', next, `Posting now is ${JOB_POSTING_PRICE_DISPLAY} for 30 days.`]
+      .filter(Boolean)
+      .join(' ')
+  }
   return `${left} of ${quota.limit} included postings left`
 }
 

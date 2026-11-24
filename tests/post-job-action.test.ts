@@ -113,6 +113,21 @@ describe('postJobAction', () => {
     }
   })
 
+  it('passes on whether the poster saw a price, and assumes not (273)', async () => {
+    await postJobAction({ values, attemptId: ATTEMPT })
+    expect(h.submitJobForReview.mock.calls[0]![3]).toEqual({ chargeShown: false })
+    h.listingReads = 0
+    await postJobAction({ values, attemptId: ATTEMPT, chargeShown: true })
+    expect(h.submitJobForReview.mock.calls[1]![3]).toEqual({ chargeShown: true })
+  })
+
+  it('hands back the price instead of a checkout when it was never shown (273)', async () => {
+    const priceLine = { kind: 'paid', text: '$9.99 for 30 days.', button: 'Pay and Submit' }
+    h.submitJobForReview.mockResolvedValue({ confirmPrice: true, notice: 'Nothing has been charged.', priceLine })
+    const r = await postJobAction({ values, attemptId: ATTEMPT })
+    expect(r).toEqual({ ok: false, error: 'Nothing has been charged.', priceLine })
+  })
+
   it('stops when signed out, rate limited, or the flag is off', async () => {
     h.user = null
     expect((await postJobAction({ values, attemptId: ATTEMPT })).ok).toBe(false)

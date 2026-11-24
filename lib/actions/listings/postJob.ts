@@ -9,6 +9,7 @@ import { loadCategoryLevels } from '@/lib/listings/levelRows'
 import { levelsForCategory } from '@/lib/listings/levels'
 import { CREATOR_PARENT_SLUG } from '@/lib/listings/creatorCategories'
 import { createJobDraft } from '@/lib/services/listings/createJobDraft'
+import type { JobPriceLine } from '@/lib/listings/jobPriceLine'
 import { submitJobForReview } from '@/lib/services/listings/submitJobForReview'
 import { VALID_OWNERSHIP_LABELS } from '@/lib/constants/listing'
 import {
@@ -28,9 +29,19 @@ import {
 
 export type PostJobResult =
   | { ok: true; listingId: string; outcome: 'included' | 'checkout'; checkoutUrl?: string }
-  | { ok: false; error: string; fieldErrors?: PostJobErrors }
+  | {
+      ok: false
+      error: string
+      fieldErrors?: PostJobErrors
+      /** Ticket 273: the role costs money and the page hadn't said so. Nothing was charged. */
+      priceLine?: JobPriceLine
+    }
 
-const inputSchema = z.object({ values: postJobBaseSchema, attemptId: attemptIdSchema })
+const inputSchema = z.object({
+  values: postJobBaseSchema,
+  attemptId: attemptIdSchema,
+  chargeShown: z.boolean().optional(),
+})
 
 const RATE_LIMIT = 10
 const RATE_WINDOW_SECONDS = 60 * 60
@@ -63,7 +74,7 @@ export async function postJobAction(input: unknown): Promise<PostJobResult> {
 
   const parsedInput = inputSchema.safeParse(input)
   if (!parsedInput.success) return fail(GENERIC)
-  const { values: raw, attemptId } = parsedInput.data
+  const { values: raw, attemptId, chargeShown = false } = parsedInput.data
 
   const checked = postJobSchema.safeParse(raw)
   if (!checked.success) {
@@ -156,9 +167,13 @@ export async function postJobAction(input: unknown): Promise<PostJobResult> {
   const result = await submitJobForReview(
     supabase as unknown as SupabaseClient,
     { id: user.id, email: user.email },
-    { id: row.id, name: row.name, created_at: row.created_at }
+    { id: row.id, name: row.name, created_at: row.created_at },
+    { chargeShown }
   )
   if ('error' in result) return fail(result.error)
+  if ('confirmPrice' in result) {
+    return { ok: false, error: result.notice, priceLine: result.priceLine }
+  }
   if ('requiresPayment' in result) {
     return { ok: true, listingId: draft.listingId, outcome: 'checkout', checkoutUrl: result.checkoutUrl }
   }

@@ -49,6 +49,10 @@ export function PostJobWizardInner({
   )
   const [errors, setErrors] = useState<PostJobErrors>({})
   const [banner, setBanner] = useState<string | null>(null)
+  // Starts as the page's read; the server corrects it when it finds a charge the
+  // page hadn't shown (ticket 273).
+  const [price, setPrice] = useState(priceLine)
+  const [priceCheck, setPriceCheck] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const moved = useRef(false)
@@ -81,9 +85,15 @@ export function PostJobWizardInner({
     }
     setSubmitting(true)
     setBanner(null)
+    setPriceCheck(null)
     try {
-      const res = await postJobAction({ values, attemptId })
+      const res = await postJobAction({ values, attemptId, chargeShown: price.kind === 'paid' })
       if (!res.ok) {
+        if (res.priceLine) {
+          setPrice(res.priceLine)
+          setPriceCheck(res.error)
+          return
+        }
         const fe = (res.fieldErrors ?? {}) as PostJobErrors
         setErrors(fe)
         setBanner(res.error)
@@ -146,6 +156,16 @@ export function PostJobWizardInner({
             </button>
           </div>
         )}
+        {priceCheck && errorList.length === 0 && (
+          <div role="alert" className="mb-4 rounded-lg border border-amber-gold bg-white p-3 font-subhead text-sm text-brand-black">
+            {priceCheck} {price.text}
+          </div>
+        )}
+        {step < LAST && !noBusiness && price.kind !== 'unknown' && (
+          <p className="mb-4 rounded-lg border border-charcoal/15 bg-white p-3 font-subhead text-sm text-brand-black">
+            {price.text}
+          </p>
+        )}
         <fieldset disabled={submitting} className="min-w-0">
           <legend className="sr-only">{POST_JOB_STEPS[step]}</legend>
           <h2 ref={headingRef} tabIndex={-1} className="font-headline text-2xl text-brand-black mb-5 focus:outline-none">
@@ -155,7 +175,7 @@ export function PostJobWizardInner({
           {step === 1 && <StepPayPlace values={values} errors={errors} set={set} business={business} />}
           {step === 2 && <StepApply values={values} errors={errors} set={set} />}
           {step === 3 && (
-            <StepReview values={values} business={business} categoryName={categoryName} priceLine={priceLine} onEdit={setStep} />
+            <StepReview values={values} business={business} categoryName={categoryName} priceLine={price} onEdit={setStep} />
           )}
         </fieldset>
 
@@ -194,7 +214,7 @@ export function PostJobWizardInner({
             </button>
           ) : (
             <button type="submit" disabled={submitting || noBusiness} className={`${btn} bg-amber-gold text-brand-black`}>
-              {submitting ? 'Submitting…' : priceLine.button}
+              {submitting ? 'Submitting…' : price.button}
             </button>
           )}
         </div>

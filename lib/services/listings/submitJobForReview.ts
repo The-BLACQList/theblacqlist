@@ -3,12 +3,14 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createServiceClient } from '@/lib/supabase/server'
 import { isFeatureEnabled } from '@/lib/env'
 import { transitionToPendingReview } from '@/lib/listings/submitForReview'
+import { buildJobPriceLine, PRICE_CHECK, type JobPriceLine } from '@/lib/listings/jobPriceLine'
 import { createJobPostingCheckoutSession } from '@/lib/stripe/jobPostingCheckout'
 import {
   grantIncludedJobPosting,
   hasPaidJobPosting,
   jobQuotaFor,
   JOB_LIMIT_ENFORCED_FROM,
+  JOB_POSTING_PRICE_DISPLAY,
 } from '@/lib/stripe/jobPostings'
 
 // Extracted unchanged from submitListingForReviewAction (ticket 152) so the
@@ -21,11 +23,15 @@ export type JobSubmitResult =
   | { success: true; outcome: 'included' }
   /** Not paid for yet. The caller sends the user to Stripe. */
   | { requiresPayment: true; checkoutUrl: string }
+  /** It costs money and the poster was never shown that. Nothing was charged or opened. */
+  | { confirmPrice: true; notice: string; priceLine: JobPriceLine }
 
 export async function submitJobForReview(
   supabase: SupabaseClient,
   user: { id: string; email?: string | null },
-  listing: { id: string; name: string; created_at: string | null }
+  listing: { id: string; name: string; created_at: string | null },
+  /** Ticket 273: true only when the page showed the price before the button was pressed. */
+  opts: { chargeShown: boolean }
 ): Promise<JobSubmitResult> {
   const listingId = listing.id
 
@@ -78,6 +84,16 @@ export async function submitJobForReview(
           return { error: 'Could not apply your included job posting. Please try again.' }
         }
       } else {
+        // Ticket 273: nobody lands on a payment page they weren't told about. The
+        // page's own read can fail or go stale (the last included posting used in
+        // another tab), and its button then reads Submit for Review.
+        if (!opts.chargeShown) {
+          return {
+            confirmPrice: true,
+            notice: PRICE_CHECK,
+            priceLine: buildJobPriceLine(quotaRead, JOB_POSTING_PRICE_DISPLAY, true),
+          }
+        }
         const checkout = await createJobPostingCheckoutSession({
           listingId,
           listingName: listing.name,

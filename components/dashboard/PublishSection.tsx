@@ -12,6 +12,7 @@ import {
   type SubmitForReviewState,
 } from '@/lib/actions/listings/submitListingForReview'
 import { useProfileSave } from '@/components/listings/finish/ProfileSave'
+import type { JobPriceLine } from '@/lib/listings/jobPriceLine'
 import { SUPPORT_EMAIL } from '@/lib/email/support'
 
 interface Props {
@@ -36,11 +37,10 @@ interface Props {
    * `submitListingForReviewAction` before anything is granted or charged; a
    * tampered prop changes the sentence and nothing else.
    *
-   * `priceDisplay` is passed in rather than imported so this client component
-   * never pulls `lib/stripe/jobPostings.ts` into the browser bundle. The
-   * constant stays single-source on the server.
+   * The same line /add-job shows (ticket 273), so the two never tell an owner
+   * different things about one posting.
    */
-  jobQuota?: { limit: number; used: number; atLimit: boolean; priceDisplay: string }
+  jobPrice?: JobPriceLine
 }
 
 export function PublishSection({
@@ -48,7 +48,7 @@ export function PublishSection({
   status: initialStatus,
   trustTier,
   entityType,
-  jobQuota,
+  jobPrice,
 }: Props) {
   // Inside the finish view, publishing or sending for review saves every
   // changed card first (ticket 140). A failed save stops here; the save bar
@@ -77,6 +77,11 @@ export function PublishSection({
       window.location.href = submitState.checkoutUrl
     }
   }, [submitState])
+
+  // The server found a charge this page hadn't shown: show it, and only then can
+  // the next press go to checkout (ticket 273).
+  const priceCheck = submitState !== null && 'confirmPrice' in submitState
+  const price = priceCheck ? submitState.priceLine : jobPrice
 
   const submitted = submitState !== null && 'success' in submitState
 
@@ -186,27 +191,21 @@ export function PublishSection({
             Submit it and The BLACQList team will review it before it goes live.
           </p>
         )}
-        {isDraftSelfSubmit && jobQuota && (
-          <p className="font-body text-sm text-charcoal-soft leading-relaxed">
-            {jobQuota.limit === 0 ? (
+        {isDraftSelfSubmit && price && (
+          <p
+            role={priceCheck ? 'alert' : undefined}
+            className="font-body text-sm text-charcoal-soft leading-relaxed"
+          >
+            {priceCheck && `${submitState.notice} `}
+            {price.text}
+            {price.kind === 'paid' && ' Submitting takes you to checkout.'}
+            {price.noAllowance && (
               <>
-                Job postings are {jobQuota.priceDisplay} for 30 days. Submitting takes you to
-                checkout.{' '}
+                {' '}
                 <Link href="/dashboard/upgrade" className="underline hover:text-brand-black">
                   Growth and Premium plans include free postings
                 </Link>
                 .
-              </>
-            ) : jobQuota.atLimit ? (
-              <>
-                {jobQuota.used} of {jobQuota.limit} included postings used in the last 30 days ·
-                additional postings {jobQuota.priceDisplay} for 30 days. Submitting takes you to
-                checkout.
-              </>
-            ) : (
-              <>
-                {jobQuota.used} of {jobQuota.limit} included postings used in the last 30 days ·
-                this one is included. It stays live for 30 days.
               </>
             )}
           </p>
@@ -225,13 +224,14 @@ export function PublishSection({
             )}
             <form action={submitAction}>
               <input type="hidden" name="listing_id" value={listingId} />
+              {price?.kind === 'paid' && <input type="hidden" name="charge_shown" value="1" />}
               <button
                 type="submit"
                 disabled={isSubmitting}
                 className="inline-flex items-center gap-2 h-9 px-5 rounded-lg bg-amber-gold text-brand-black font-subhead font-bold text-sm hover:bg-light-gold disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {isSubmitting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-                {isSubmitting ? 'Submitting…' : 'Submit for Review'}
+                {isSubmitting ? 'Submitting…' : (price?.button ?? 'Submit for Review')}
               </button>
             </form>
           </>
