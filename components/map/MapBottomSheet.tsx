@@ -14,7 +14,7 @@ interface Props extends MapResultsProps {
  * lifts the sheet and stacks the cards so every business is reachable by scroll.
  */
 export function MapBottomSheet(props: Props) {
-  const { reduceMotion, selectedId, inViewCount, loadError, near } = props
+  const { reduceMotion, selectedId, inViewCount, loading, loadError, near } = props
   const [expanded, setExpanded] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
   const sheetRef = useRef<HTMLElement>(null)
@@ -57,7 +57,7 @@ export function MapBottomSheet(props: Props) {
         <div className="min-w-0">
           <span aria-hidden="true" className="mb-2 block h-1 w-10 rounded-full bg-hairline" />
           <h2 className="font-headline text-[20px] font-medium text-ink" aria-live="polite">
-            {loadError
+            {loadError || loading
               ? 'Businesses'
               : near
                 ? `${inViewCount} within ${near.radiusMiles} mi`

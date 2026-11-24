@@ -6,6 +6,10 @@ import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
  * footer come from the root layout and stay put. Nodes appear around the gold Q,
  * connect, then light up while the page streams in (keyframes in globals.css).
  *
+ * It is as tall as the screen under the header (56px, 64px from md), so the footer
+ * is never in view to be pushed away when the page arrives (ticket 272). `lvh`, so a
+ * phone toolbar sliding away does not uncover it.
+ *
  * Used by app/(public)/loading.tsx and app/[citySlug]/loading.tsx. The dashboard,
  * admin, and cities routes keep their own skeletons.
  */
@@ -14,7 +18,7 @@ export function PageLoader() {
     <div
       role="status"
       aria-live="polite"
-      className="blacq-loader grid min-h-[70vh] place-items-center bg-ground px-4 py-10"
+      className="blacq-loader grid min-h-[calc(100lvh-3.5rem)] place-items-center bg-ground px-4 py-10 md:min-h-[calc(100lvh-4rem)]"
     >
       <NodeConstellation variant="animate" style={{ width: 'min(88vw, 520px, 62vh)' }}>
         <GoldBrandMark preload className="relative h-14 w-14 md:h-16 md:w-16" />

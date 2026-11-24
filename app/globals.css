@@ -727,14 +727,14 @@ body:has([data-assistant='on']) .stack-over-assistant {
 
 /* On /map, a phone's card sheet (MapBottomSheet) fills the bottom edge, so the
    Ask button rides just above it and moves with it when the list opens. The
-   sheet writes its height to --map-sheet-h; 16rem is the closed strip. */
+   sheet writes its height to --map-sheet-h; 25rem is the closed strip. */
 @media (width < 48rem) {
   body:has([data-map-sheet]) .lift-over-map-sheet {
-    bottom: calc(var(--map-sheet-h, 16rem) + 0.75rem);
+    bottom: calc(var(--map-sheet-h, 25rem) + 0.75rem);
     transition: bottom 200ms ease-out;
   }
   body:has([data-map-sheet]):has([data-assistant='on']) .stack-over-assistant {
-    bottom: calc(var(--map-sheet-h, 16rem) + 4.5rem);
+    bottom: calc(var(--map-sheet-h, 25rem) + 4.5rem);
   }
 }
 /* On The Collective, a sideways phone has floors down the left edge and the card

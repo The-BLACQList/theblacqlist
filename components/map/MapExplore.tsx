@@ -141,11 +141,12 @@ export function MapExplore() {
   const filtered = useMemo(() => filterListings(listings, filters), [listings, filters])
   // moveend and zoomend bump viewNonce, which re-reads the viewport bounds.
   const visible = useMemo(() => {
-    if (!mapReady || !map) return []
+    // No bounds yet. Once the imagery has stalled the notice says the list is live, so it is.
+    if (!mapReady || !map) return tilesStalled ? filtered : []
     const bounds = map.getBounds()
     return filtered.filter((l) => bounds.contains([l.lng, l.lat]))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtered, map, mapReady, viewNonce])
+  }, [filtered, map, mapReady, tilesStalled, viewNonce])
   // The list is capped (LIST_LIMIT); the count above it is not, so the whole
   // country reads as every business, not the first 60.
   const inView = useMemo(
@@ -455,7 +456,9 @@ export function MapExplore() {
     listings: inView,
     hoverId,
     inViewCount: visible.length,
-    loading,
+    // Nothing is in view until the map can say what its bounds are. Without this the
+    // list says "No businesses" for a moment, and the phone sheet jumps (ticket 272).
+    loading: !loadError && (loading || (!mapReady && !tilesStalled)),
     loadError,
     selectedId,
     onHover: setHoverId,

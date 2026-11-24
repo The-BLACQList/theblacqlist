@@ -107,7 +107,8 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const canPost = isFeatureEnabled('postingSubmissions')
 
   return (
-    <>
+    // As tall as its loader, so the footer never jumps in on a short page (ticket 272).
+    <div className="min-h-screen">
       <div className="border-b border-charcoal/10 bg-white">
         <Container className="py-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -134,6 +135,6 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
           <EventResults searchParams={searchParams} />
         </Suspense>
       </Container>
-    </>
+    </div>
   )
 }
