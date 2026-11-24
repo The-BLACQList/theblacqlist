@@ -55,7 +55,7 @@ export function UpgradePlans({
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         {PLANS.map((plan) => {
           const isFree = plan.slug === 'free'
           const rank = TIER_ORDER.indexOf(plan.slug)
@@ -90,13 +90,13 @@ export function UpgradePlans({
               )}
             >
               {isCurrent ? (
-                <span className="absolute -top-3 left-4 inline-block rounded-full bg-amber-gold text-brand-black text-xs font-subhead font-bold px-3 py-0.5">
+                <span className="absolute -top-3 left-4 inline-block rounded-full bg-amber-gold text-brand-black text-sm font-subhead font-bold px-3 py-0.5">
                   Current Plan
                 </span>
               ) : (
                 plan.highlighted &&
                 !withheld && (
-                  <span className="absolute -top-3 left-4 inline-block rounded-full bg-amber-gold text-brand-black text-xs font-subhead font-bold px-3 py-0.5">
+                  <span className="absolute -top-3 left-4 inline-block rounded-full bg-amber-gold text-brand-black text-sm font-subhead font-bold px-3 py-0.5">
                     Most Popular
                   </span>
                 )
@@ -106,10 +106,10 @@ export function UpgradePlans({
                 <h3 className="font-headline text-lg text-brand-black mb-1">{plan.name}</h3>
                 <div className="flex items-baseline gap-1">
                   <span className="font-headline text-2xl text-brand-black">{price}</span>
-                  <span className="font-subhead text-xs text-charcoal-faint">{period}</span>
+                  <span className="font-subhead text-sm text-charcoal-faint">{period}</span>
                 </div>
                 {!isFree && cycle === 'annual' && (
-                  <p className="font-subhead text-xs text-amber mt-0.5">2 months free</p>
+                  <p className="font-subhead text-sm text-amber mt-0.5">2 months free</p>
                 )}
               </div>
 
@@ -120,7 +120,7 @@ export function UpgradePlans({
                   {/* Ticket 239: the lead-in makes the bullets read as what
                       this plan adds over the one before it. */}
                   {leadIn(plan.features) && (
-                    <p className="font-subhead text-xs font-semibold text-brand-black mb-1.5">
+                    <p className="font-subhead text-sm font-semibold text-brand-black mb-1.5">
                       {leadIn(plan.features)}, plus:
                     </p>
                   )}
@@ -128,10 +128,10 @@ export function UpgradePlans({
                     {addedLines(plan.features).map((f) => (
                       <li
                         key={f}
-                        className="flex items-start gap-1.5 font-subhead text-xs text-charcoal-soft"
+                        className="flex items-start gap-1.5 font-subhead text-sm text-charcoal-soft"
                       >
                         <span
-                          className="mt-[5px] h-1 w-1 shrink-0 rounded-full bg-amber-gold"
+                          className="mt-2 h-1 w-1 shrink-0 rounded-full bg-amber-gold"
                           aria-hidden="true"
                         />
                         {f}
@@ -139,13 +139,13 @@ export function UpgradePlans({
                     ))}
                   </ul>
                   {/* Ticket 242: how often AI help can be used, as small print. */}
-                  {plan.finePrint && <p className="font-subhead text-[11px] text-charcoal-soft mt-2">{plan.finePrint}</p>}
+                  {plan.finePrint && <p className="font-subhead text-sm text-charcoal-soft mt-2">{plan.finePrint}</p>}
                 </div>
               )}
 
               {isCurrent ? (
                 <div className="flex flex-col gap-2">
-                  <span className="font-subhead text-xs text-charcoal-faint">
+                  <span className="font-subhead text-sm text-charcoal-faint">
                     Your current plan
                   </span>
                   {!isFree && canManage && (
@@ -160,14 +160,14 @@ export function UpgradePlans({
                   Use Your Free Month
                 </a>
               ) : isPurchasable && freeMonthHold === 'waiting' ? (
-                <p className="font-subhead text-xs text-charcoal-soft">
+                <p className="font-subhead text-sm text-charcoal-soft">
                   Your first month is free. It will be ready once your page is live.
                 </p>
               ) : isPurchasable ? (
                 <div className="flex flex-col gap-2">
                   {/* Ticket 144: the renewal terms sit above the button, never
                       behind a link, and match the cycle the toggle shows. */}
-                  <p className="font-subhead text-xs text-charcoal-soft">
+                  <p className="font-subhead text-sm text-charcoal-soft">
                     {renewalLine(plan.slug, cycle)}{' '}
                     <Link href={`/terms#${TERMS_PAID_PLANS.anchor}`} className="underline underline-offset-2 hover:text-brand-black">
                       See our Terms.
@@ -190,7 +190,7 @@ export function UpgradePlans({
                   Coming Soon
                 </button>
               ) : (
-                <span className="font-subhead text-xs text-charcoal-faint">
+                <span className="font-subhead text-sm text-charcoal-faint">
                   Included in your plan
                 </span>
               )}
