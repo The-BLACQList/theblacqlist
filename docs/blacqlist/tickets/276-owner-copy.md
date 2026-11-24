@@ -1,6 +1,6 @@
 # Ticket 276: For Business and Trust Page Copy
 
-**Status:** In review, 2026-11-24.
+**Status:** Merged #409, 2026-11-24.
 
 ## Why
 
@@ -20,7 +20,7 @@ Three lines didn't match how the site works or read badly. The founder approved 
 ## Not Changed
 
 - The compare-table note "Where you sit on the map still comes from trust" (`lib/stripe/planCompare.ts`).
-- The approval email (`lib/email/templates/entity-approved.tsx`) still tells every owner they can "respond to reviews any time". That needs its own founder decision.
+- The approval email (`lib/email/templates/entity-approved.tsx`) still tells every owner they can "respond to reviews any time". Fixed in ticket 277.
 
 ## Checks
 
