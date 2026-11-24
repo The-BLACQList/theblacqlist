@@ -319,7 +319,7 @@ export function AiGuide({
         <div ref={answerRef} tabIndex={-1} className="mt-5 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
           {pending ? (
             assistant ? (
-              <div className="min-h-32 rounded-2xl border border-gold/30 bg-brand-black/85 backdrop-blur-sm p-3 sm:p-4">
+              <div className="rounded-2xl border border-gold/30 bg-brand-black/85 backdrop-blur-sm p-3 sm:p-4">
                 <CueStreaming
                   status={cuePending?.status ?? CUE_LOOKING}
                   text={cuePending?.text ?? ''}

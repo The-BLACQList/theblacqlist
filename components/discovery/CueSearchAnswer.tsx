@@ -449,9 +449,7 @@ export function AnswerThreadView({
               className={cn('space-y-3 scroll-mt-24', turns.length > 0 && 'border-t border-white/10 pt-5')}
             >
               {turns.length > 0 && <AskBubble ask={pending.ask} />}
-              <div className="min-h-24">
-                <CueStreaming status={pending.status} text={pending.text} layout="page" onStop={onStop} />
-              </div>
+              <CueStreaming status={pending.status} text={pending.text} layout="page" onStop={onStop} />
             </li>
           )}
         </ol>
