@@ -30,8 +30,9 @@ export const revalidate = false
  * typed, so the number in this promise and the number in the query cannot
  * disagree. ADMIN_FALLBACK_DAYS is interpolated for the same reason.
  *
- * Who reviews a receipt is worded with "can", so it stays true whether owner
- * review (FEATURE_OWNER_RECEIPT_REVIEW) is on or off (ticket 279).
+ * Who reviews a receipt is worded so it stays true whether owner review
+ * (FEATURE_OWNER_RECEIPT_REVIEW) is on or off: "the business or our team can",
+ * and "when the business reviews" (ticket 279).
  */
 export default function FlowMapMethodologyPage() {
   return (
@@ -79,12 +80,12 @@ export default function FlowMapMethodologyPage() {
               </li>
               <li>
                 <span className="font-semibold">It is approved or rejected.</span> The business
-                named on the receipt can approve or reject it. A business owner cannot approve a
-                receipt they submitted themselves. Our team reviews receipts for businesses no one
-                has claimed and any still waiting after {ADMIN_FALLBACK_DAYS} days, and can review
-                any other. A rejected receipt contributes nothing unless you fix it and send it back
-                for review, where it starts over. A receipt still waiting for review contributes
-                nothing either.{' '}
+                named on the receipt or our team can approve or reject it. An owner cannot approve a
+                receipt submitted from their own account. Our team reviews receipts for businesses
+                no one has claimed and any still waiting after {ADMIN_FALLBACK_DAYS} days, and can
+                review any other. A rejected receipt contributes nothing unless you fix it and send
+                it back for review, where it starts over. A receipt still waiting for review
+                contributes nothing either.{' '}
                 <span className="font-semibold">
                   Every public figure here is a figure about approved receipts only.
                 </span>
@@ -117,11 +118,13 @@ export default function FlowMapMethodologyPage() {
               moment a receipt is approved.
             </p>
             <p>
-              <span className="font-semibold">From 13 November 2026, the totals went down.</span>{' '}
+              <span className="font-semibold">
+                From 13 November 2026, we count less in the totals.
+              </span>{' '}
               Before that date, a receipt from a business we don&rsquo;t list could be approved, and
-              its amount was added to the community-wide totals (never to a named business or city).
-              We now leave that older spend out of every public figure, so the totals only ever
-              describe businesses on The BLACQList.
+              its amount was added to the community-wide totals, and never to a named business or
+              city. We now leave that older spend out of every public figure, so the totals only
+              ever describe businesses on The BLACQList.
             </p>
           </section>
 
@@ -155,20 +158,20 @@ export default function FlowMapMethodologyPage() {
               <ul className="space-y-2 text-sm">
                 <li>
                   <span className="font-semibold">Spent with Black-owned businesses,</span> not
-                  circulated &mdash; one hop, not velocity.
+                  circulated: one hop, not velocity.
                 </li>
                 <li>
-                  <span className="font-semibold">Reported spend,</span> not verified spend &mdash;
-                  the business or our team approved a receipt; nothing reconciled it against a bank
+                  <span className="font-semibold">Reported spend,</span> not verified spend: the
+                  business or our team approved a receipt, and nothing reconciled it against a bank
                   or a card processor.
                 </li>
                 <li>
-                  <span className="font-semibold">Tracked purchases,</span> not transactions &mdash;
+                  <span className="font-semibold">Tracked purchases,</span> not transactions:
                   &ldquo;transaction&rdquo; implies a payment record we do not hold.
                 </li>
                 <li>
                   <span className="font-semibold">Businesses supported,</span> not businesses
-                  reached &mdash; we know money was reported to them, not what it did for them.
+                  reached: we know money was reported to them, not what it did for them.
                 </li>
               </ul>
             </div>
@@ -180,29 +183,29 @@ export default function FlowMapMethodologyPage() {
             </h2>
             <ul className="list-disc list-outside space-y-2 pl-5">
               <li>
-                <span className="font-semibold">Total spent with Black-owned businesses</span>
-                &nbsp;&mdash; every approved receipt from a business on The BLACQList added
-                together, excluding receipts whose submitter asked to be left out of community
-                figures. The Collective calls it Spent.
+                <span className="font-semibold">Total spent with Black-owned businesses:</span>{' '}
+                every approved receipt from a business on The BLACQList added together, excluding
+                receipts whose submitter asked to be left out of community figures. The Collective
+                calls it Spent.
               </li>
               <li>
-                <span className="font-semibold">Tracked purchases</span> &mdash; how many receipts
-                are behind that total. The Collective calls it Receipts.
+                <span className="font-semibold">Tracked purchases:</span> how many receipts are
+                behind that total. The Collective calls it Receipts.
               </li>
               <li>
-                <span className="font-semibold">Businesses supported</span> &mdash; how many
-                distinct businesses on The BLACQList those receipts name.
+                <span className="font-semibold">Businesses supported:</span> how many distinct
+                businesses on The BLACQList those receipts name.
               </li>
               <li>
-                <span className="font-semibold">Links</span> &mdash; on The Collective, how many
-                published businesses have a line because at least one counted receipt is behind
-                them. It can differ from businesses supported, because a business that is no longer
-                published keeps its past receipts in the totals and has no line.
+                <span className="font-semibold">Links:</span> on The Collective, how many published
+                businesses have a line, which takes at least one counted receipt. This can differ
+                from Businesses supported, because a business that is no longer published keeps its
+                past receipts in the totals but has no line.
               </li>
               <li>
-                <span className="font-semibold">Business and city totals</span> &mdash; running
-                totals for a single named business or city, published only once they clear the
-                privacy rule below.
+                <span className="font-semibold">Business and city totals:</span> running totals for
+                a single named business or city, published only once they clear the privacy rule
+                below.
               </li>
             </ul>
             <p>
@@ -224,29 +227,34 @@ export default function FlowMapMethodologyPage() {
               the number, so we withhold it rather than round it.
             </p>
             <p>
-              The community-wide totals at the top are deliberately not held to that rule. They are
-              one sum across everything reported and they name no one, so suppressing them would
-              cost the headline and buy nobody any privacy.
+              The community-wide totals are not held to that rule. They are one sum across
+              everything reported and they name no one. While few receipts are counted, someone
+              comparing a total with the Latest list could work out the amount of a single receipt.
             </p>
             <p>
-              Receipt photos, the amount on any one receipt, and the identity of whoever submitted
-              it are never part of any public view. The anonymous record described in section 2
-              carries no account, so there is no path from a published figure back to a person.
+              We never publish a receipt photo, the amount on a single receipt, or who submitted it.
+              The record described in section 2 carries no account. Until you delete your account,
+              we can still match it to your receipt.
             </p>
             <p>
-              On The Collective map, every published business on the list shows as a dot from day
-              one, so you can see how the list is spread out. Each dot shows the business by name,
-              because its page on the list is already public. Once one counted receipt is behind a
-              business, it gets a line, so you can see money reach it. Every line under the rule
-              looks the same: it says someone shopped there, never how much. The dollar figure and
-              the receipt count still wait for {AGGREGATE_MIN_TRANSACTIONS} or more purchases. The
-              Latest list on The Collective names the businesses behind the three newest counted
-              receipts, and the day each was counted. It never shows an amount or a shopper.
+              When the business reviews a receipt, its owner can see the photo, the amount, the
+              date, and your first name and last initial. They can open the photo only until the
+              receipt is reviewed.
             </p>
             <p>
-              A receipt you add shows on your own map straight away as a dashed line to that
-              business. Only you can see it. It turns into a regular line once it&rsquo;s approved
-              and counted.
+              On The Collective map, every published business on The BLACQList shows as a dot from
+              day one, so you can see how they are spread out. Each dot shows the business by name,
+              because its Page is already public. Once one counted receipt is behind a business, it
+              gets a line, so you can see money reach it. Every line under the rule looks the same:
+              it says someone shopped there, never how much. The dollar figure and the receipt count
+              still wait for {AGGREGATE_MIN_TRANSACTIONS} or more purchases. The Latest list on The
+              Collective names the businesses behind the three newest counted receipts, and the day
+              each was counted. It never shows an amount or a shopper.
+            </p>
+            <p>
+              A receipt you add for a business on The BLACQList shows on your own map straight away
+              as a dashed line to that business, unless you keep it out of community figures. Only
+              you can see it. It turns into a regular line once it&rsquo;s approved and counted.
             </p>
             <p>
               When you add a receipt you can choose to keep it out of community figures. Section 8
@@ -283,8 +291,8 @@ export default function FlowMapMethodologyPage() {
               </li>
               <li>
                 <span className="font-semibold">A business can be confirming its own sale.</span>{' '}
-                When the business named on a receipt approves it, that approval comes from the one
-                that received the money, not from an independent check.
+                When the business named on a receipt approves it, the approval comes from the
+                business that received the money. It is not an independent check.
               </li>
               <li>
                 <span className="font-semibold">Coverage is voluntary and partial.</span> This
@@ -294,9 +302,8 @@ export default function FlowMapMethodologyPage() {
               </li>
               <li>
                 <span className="font-semibold">Downloads can be older than the pages.</span> Pages
-                work out their figures when you open them. The files in section 10 are saved copies,
-                usually less than an hour old and at most about a day. Nothing here is live to the
-                second.
+                work out their figures when you open them. The files in section 10 are saved copies
+                and can be about a day old. Nothing here is live to the second.
               </li>
             </ul>
           </section>
@@ -311,15 +318,14 @@ export default function FlowMapMethodologyPage() {
             </p>
             <p>
               <span className="font-semibold">
-                Older per-business and per-city totals still include spend that was opted out.
+                Older per-business and per-city totals may still include spend that was opted out.
               </span>{' '}
               From 16 August 2026, a receipt whose submitter opted out is kept out of the named
-              business and city totals as well as the headline. Totals built up before that date
-              were not, and no change to our code corrects a number that is already stored &mdash;
-              that takes a deliberate recalculation, which has not been done. Until it is, treat the
-              named business and city figures as possibly including spend its submitter asked us to
-              leave out. The community-wide totals at the top of the page have always honored the
-              opt-out.
+              business and city totals as well as the community-wide totals. Totals built up before
+              that date were not, and no change to our code corrects a number that is already
+              stored. That takes a deliberate recalculation, which has not been done. Until it is,
+              the named business and city figures may include spend its submitter asked us to leave
+              out. The community-wide totals have always honored the opt-out.
             </p>
             <p>
               <span className="font-semibold">
@@ -346,8 +352,8 @@ export default function FlowMapMethodologyPage() {
             <p>
               Your receipts and the images you uploaded are deleted with your account. The anonymous
               records described in section 2 remain, because they never carried your identity in the
-              first place &mdash; what is left is an amount, a date, and a business, with no path
-              back to you.
+              first place. What is left is an amount, a date, and a business, with no path back to
+              you.
             </p>
             <p>
               Put plainly: the receipts go, the anonymous dollar figure stays. That is also what our{' '}
@@ -361,7 +367,7 @@ export default function FlowMapMethodologyPage() {
           <section id="download" className="space-y-3">
             <h2 className="font-headline text-xl text-brand-black">10. Download the Data</h2>
             <p>
-              Check our numbers yourself. Each file is a spreadsheet (CSV) listing every business or
+              Check our numbers yourself. Each file is a CSV spreadsheet listing every business or
               city with {AGGREGATE_MIN_TRANSACTIONS} or more counted purchases behind its total,
               with that total in dollars and in cents. Anything below that line is left out, so
               these files add up to less than the community-wide figures. That gap is the privacy
@@ -373,14 +379,14 @@ export default function FlowMapMethodologyPage() {
                 download
                 className="font-semibold text-amber hover:underline"
               >
-                Businesses (CSV)
+                Businesses CSV
               </a>
               <a
                 href="/api/flow-map/export?dataset=cities"
                 download
                 className="font-semibold text-amber hover:underline"
               >
-                Cities (CSV)
+                Cities CSV
               </a>
             </p>
           </section>
@@ -393,7 +399,7 @@ export default function FlowMapMethodologyPage() {
               <Link href="/contact" className="text-amber hover:underline">
                 Get in touch
               </Link>
-              . You can see the figures themselves on the{' '}
+              . You can see the figures themselves on{' '}
               <Link href="/flow-map" className="text-amber hover:underline">
                 The Collective map
               </Link>

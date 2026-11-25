@@ -40,7 +40,7 @@ Nothing at this stage reaches any public figure.
 
 `[Decision — founder, 2026-11-13]` (ticket 183): the business a receipt names verifies it from `/dashboard/receipts` (`lib/actions/owner/verifyReceipt.ts`, `lib/actions/owner/rejectReceipt.ts`). Admins review receipts for unclaimed businesses and anything a business hasn't reviewed in 7 days (`lib/actions/spend/approveReceipt.ts`, `lib/actions/spend/rejectReceipt.ts`). An owner can never verify their own receipt. Both paths write through `lib/spend/applyReceiptReview.ts`, which only changes a receipt that is still `'pending_review'`, so a receipt is counted once even if both press at the same moment. `receipt_uploads.verified_by_role` records which one did.
 
-Owner review sits behind `FEATURE_OWNER_RECEIPT_REVIEW`. With it off, admins review everything. The public page says what the business *can* do, so its wording holds either way (ticket 279).
+Owner review sits behind `FEATURE_OWNER_RECEIPT_REVIEW`. With it off, admins review everything. The public page says the business *or our team* can approve, and what an owner sees *when the business reviews* a receipt, so its wording holds either way (ticket 279).
 
 Two outcomes:
 
@@ -155,7 +155,7 @@ Three properties worth stating plainly, because each one is a way a reader could
 
 **Lines on The Collective (ticket 250, founder 2026-11-21).** `/flow-map` draws a business's connection line from `LINK_MIN_TRANSACTIONS = 1` counted receipt, so a shopper sees their connection without waiting for four strangers. A line carries no amount and no count, and every linked business under the threshold is drawn at one size, so nothing drawn encodes a sub-threshold amount. `buildSiloBusinesses` zeroes `amountCents` and `transactionCount` (and drops amount ordering) for any business under `AGGREGATE_MIN_TRANSACTIONS` before the rows leave the server; the card says "Receipts are counted here. The total shows once 5 are in." What a 1-receipt line does disclose: that someone had a receipt approved at that business, and the ticker shows the business name with the day. No other surface (summary API, exports, community-spend) reads at the line bar; `tests/aggregate-privacy.test.ts` pins that. The reader's own receipts still in `pending_review` draw a dashed line on their own page only.
 
-**What it deliberately does not gate:** the community-wide totals. Those are one sum across everything reported and name no one; suppressing them would cost the headline figures and buy no privacy. That absence is pinned by a test so a future change cannot quietly "harden" it to zero.
+**What it deliberately does not gate:** the community-wide totals. Those are one sum across everything reported and name no one. That is not the same as no risk: while few receipts are counted, someone comparing a total with the Latest list, or with an earlier visit, could work out a single receipt's amount, and the summary JSON gives cents. With one counted receipt, the total is that receipt. The public page says so (ticket 279). Whether to hold the list or the totals until more receipts are counted is open with the founder. [Needs professional review] That absence is pinned by a test so a future change cannot quietly "harden" it to zero.
 
 ### RLS posture
 
@@ -194,7 +194,7 @@ The threshold still applied, so no single opted-out receipt was individually exp
 
 **Half of this is now fixed.** Because `flow_nodes` has no opt-out column, the exclusion can only happen at write time, and `approveReceipt.ts` was the only writer `[Measured — repo grep of flow_nodes/flow_edges writers, 2026-08-16]` (since ticket 183 the single writer is `lib/spend/applyReceiptReview.ts`, which both the admin and owner actions call). Its step-4 guard now reads `if (spendEvent && receipt.listing_id && !receipt.aggregate_opt_out)`, so **no new opted-out spend enters the graph**.
 
-**The other half is still open and is a GATE-DATA decision.** Node and edge totals accumulated before that guard landed still contain opted-out spend, and no code change corrects a stored sum. Until a recompute is approved and run, the named per-business and per-city figures on `/flow-map`, `/api/flow-map/summary`, `/api/community-spend` and `/account/community-spend` include historical opted-out spend. **Do not cite the opt-out as fully implemented on the strength of the code fix alone.**
+**The other half is still open and is a GATE-DATA decision.** Node and edge totals accumulated before that guard landed still contain opted-out spend, and no code change corrects a stored sum. Until a recompute is approved and run, the named per-business and per-city figures on `/flow-map`, `/api/flow-map/summary`, `/api/community-spend` and `/account/community-spend` may include historical opted-out spend (the amount, and whether there is any, has not been measured). **Do not cite the opt-out as fully implemented on the strength of the code fix alone.**
 
 ### 5.2 "At any time" is not supported — the window closes at approval
 
@@ -222,7 +222,7 @@ So the flag is a **revocable preference until approval and a fixed fact after it
 
 | What | How old it can be |
 |---|---|
-| `/flow-map`, `/` and `/account/community-spend` | Computed when opened. `/flow-map` and `/` declare `revalidate`, but both build as dynamic (ƒ) because they read cookies `[Measured — next build, 2026-11-24]` |
+| `/flow-map`, `/` and `/account/community-spend` | Computed when opened. `/flow-map` and `/` declare `revalidate`, but both build as dynamic (ƒ) because they read cookies, and neither caches its database reads `[Measured — next build, then three page loads each against a stand-in database, 2026-11-24]` |
 | `/api/flow-map/summary`, `/api/community-spend` | `revalidate = 3600`: about an hour, or longer if nobody has asked for it lately |
 | `/api/flow-map/export` (the CSV files) | `s-maxage=3600, stale-while-revalidate=86400` (`lib/spend/impact-report.ts`): usually under an hour, at most about a day |
 

@@ -44,7 +44,12 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
-import { needsAdminReview, ownerCanReview } from '@/lib/spend/owner-receipts'
+import {
+  canViewReceiptFile,
+  maskBuyerName,
+  needsAdminReview,
+  ownerCanReview,
+} from '@/lib/spend/owner-receipts'
 import { parseReceiptFields } from '@/lib/spend/receipt-input'
 
 function read(file: string): string {
@@ -116,7 +121,7 @@ describe('the privacy promise cannot drift from the query that enforces it', () 
     expect(copy).toContain('or more separate purchases')
     // The community-wide figures are deliberately ungated. Saying so is the
     // difference between a threshold and an inconsistency.
-    expect(copy).toContain('deliberately not held to that rule')
+    expect(copy).toContain('The community-wide totals are not held to that rule.')
   })
 })
 
@@ -164,12 +169,12 @@ describe('section 8 — the limitations a tidy-up would quietly delete', () => {
   it('still discloses that older per-business totals include opted-out spend', () => {
     const copy = renderedCopy(METHODOLOGY)
     expect(copy).toContain(
-      'Older per-business and per-city totals still include spend that was opted out.'
+      'Older per-business and per-city totals may still include spend that was opted out.'
     )
     // The date the write-side fix landed. Without it the reader cannot tell
     // which figures are affected, which makes the disclosure unusable.
     expect(copy).toContain('From 16 August 2026')
-    expect(copy).toContain('The community-wide totals at the top of the page have always')
+    expect(copy).toContain('The community-wide totals have always honored the opt-out')
   })
 
   it('still discloses that the opt-out closes at approval', () => {
@@ -252,10 +257,10 @@ describe('who approves a receipt', () => {
       'own_receipt'
     )
     expect(read('lib/actions/owner/verifyReceipt.ts')).toContain("role: 'owner'")
-    expect(words()).toContain('The business named on the receipt can approve or reject it.')
     expect(words()).toContain(
-      'A business owner cannot approve a receipt they submitted themselves.'
+      'The business named on the receipt or our team can approve or reject it.'
     )
+    expect(words()).toContain('An owner cannot approve a receipt submitted from their own account.')
   })
 
   it('our team has unclaimed businesses, and anything past the fallback', () => {
@@ -275,6 +280,21 @@ describe('who approves a receipt', () => {
     expect(read(NOTE)).not.toMatch(/approved by an admin, is|an admin approves that receipt/)
   })
 
+  it('says what an owner sees, and when the photo closes to them', () => {
+    const owner = { viewerId: 'owner', isAdmin: false, listingOwnerId: 'owner' }
+    const receipt = { user_id: 'shopper', listing_id: 'l' }
+    const canView = (status: string) =>
+      canViewReceiptFile({ ...owner, receipt: { ...receipt, status } })
+    expect(canView('pending_review')).toBe(true)
+    expect(canView('approved')).toBe(false)
+    expect(canView('rejected')).toBe(false)
+    expect(maskBuyerName('Jordan Smith')).toBe('Jordan S.')
+    expect(words()).toContain(
+      'its owner can see the photo, the amount, the date, and your first name and last initial.'
+    )
+    expect(words()).toContain('They can open the photo only until the receipt is reviewed.')
+  })
+
   it('says a business may be confirming its own sale', () => {
     expect(words()).toContain('A business can be confirming its own sale.')
   })
@@ -290,6 +310,11 @@ describe('what the figures leave out', () => {
   it("discloses the map's Latest list, which shows a day and never an amount", () => {
     expect(read(FLOW_MAP)).toContain('when: dayLabel(r.created_at)')
     expect(words()).toContain('It never shows an amount or a shopper.')
+  })
+
+  it('does not promise that no single amount can be worked out', () => {
+    expect(words()).toContain('could work out the amount of a single receipt')
+    expect(words()).not.toMatch(/buy nobody any privacy|no path from a published figure/)
   })
 
   it('does not say the recalculation is scheduled, and does not say pages are an hour old', () => {
