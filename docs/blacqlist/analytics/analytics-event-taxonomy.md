@@ -222,23 +222,28 @@ No properties beyond `entity_id` (the listing UUID).
 
 #### `claim_submitted`
 
-Fired when a claim form is successfully submitted.
+Fired when a claim form is successfully submitted. Not saved before ticket 281.
 
-No properties beyond `entity_id` (the listing UUID).
+| Property                 | Type    | Notes                                   |
+| ------------------------ | ------- | --------------------------------------- |
+| `listing_id`             | string  | UUID of the claimed listing             |
+| `has_verification_email` | boolean | Always true; the form asks for an email |
+
+**entity_id:** UUID of the claim.
 
 ---
 
 #### `listing_submitted`
 
-Fired when a new listing submission is successfully created.
+Fired each time a listing is sent for review: a page, an event or a job. The same listing sent twice fires twice, so count distinct `entity_id`. Not saved before ticket 281; `moderation_queue` rows with `queue_type = 'new_submission'` hold the earlier history.
 
-| Property      | Type   | Notes                         |
-| ------------- | ------ | ----------------------------- |
-| `entity_type` | string | Type of entity submitted      |
-| `category_id` | string | UUID of the selected category |
-| `city_id`     | string | UUID of the selected city     |
+| Property | Type   | Notes             |
+| -------- | ------ | ----------------- |
+| `source` | string | Always `web_form` |
 
-**entity_id:** UUID of the newly created listing.
+**entity_id:** UUID of the listing. Join `listings.entity_type` to tell pages from events and jobs.
+
+`submitListingAction` also sends `entity_type` and `category_id`, but no page calls it.
 
 ---
 

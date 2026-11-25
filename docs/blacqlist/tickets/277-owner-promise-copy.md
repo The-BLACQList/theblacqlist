@@ -1,6 +1,6 @@
 # Ticket 277: Free Owner Promises
 
-**Status:** In review, 2026-11-24.
+**Status:** Merged #410, 2026-11-24.
 
 ## Why
 
