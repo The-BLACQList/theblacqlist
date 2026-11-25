@@ -50,10 +50,20 @@ This device remembers the first path, first visit, ended and completed dates (`b
 - `tests/site-tour.test.ts`, `tests/site-tour-anchors.test.ts`.
 - `e2e/site-tour.spec.ts`, 25 tests. It skips unless the tour is on for that server: the config doesn't turn it on, because it would open over every other spec's first page.
 
+## Known Problems
+
+- **Phone keyboard:** no `visualViewport` handling, so on step 1 the keyboard can cover the bar or the sheet. Not tested on a real phone.
+- **Very small windows:** Creative's reviews found steps where the sheet leaves little or nothing lit.
+- **Open accessibility failures in the design:** AX5-05 (DR-022, proposed) and AX6-01 (a scroll exception the founder has not seen). Neither is built.
+- **Chapter label:** "Start with a Search" passes the Title Case guard; the founder approved "Start With a Search" (DR-015). Founder to decide.
+
+Built to Creative's V31 drawings: the founder approved Look A (DR-007) and specific decisions, not V31 as a whole.
+
 ## Before the Flag Goes On
 
 1. Walk both paths on a Preview with the flag on, desktop and phone.
 2. Production, signed out: searching a known business name finds it, and the example ask returns a real Detroit answer.
 3. Starter can be bought.
 4. The owner's Collective step needed 278 (#413, merged 2026-11-24): check it on real data.
-5. The coming-soon page is off (it doesn't use up a first visit).
+5. Decide the known problems above; test the keyboard on a real phone.
+6. The coming-soon page is off (it doesn't use up a first visit).
