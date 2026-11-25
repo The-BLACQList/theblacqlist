@@ -99,7 +99,8 @@ export const SITE_TOUR_STEPS: readonly SiteTourStep[] = [
     radius: 0,
     pad: 0,
     live: ['[data-tour="map"]'],
-    off: ['[aria-label="Near me, use my location"]'],
+    // Dimmed, or under the card: only the map itself is live.
+    off: ['[aria-label="Near me, use my location"]', '[data-map-phonebar]', '[data-map-sheet]'],
     fixed: true,
     caption: 'side-left',
     fits: mapStepFits,

@@ -238,9 +238,26 @@ test.describe('Site tour', () => {
     await page.setViewportSize({ width: 390, height: 664 })
     await press(page, 'Try an Example')
     await expect(page).toHaveURL(/\/map/, { timeout: 25_000 })
-    await expect(page.locator('.blq-tour-ring')).toHaveAttribute('d', /^M/, { timeout: 15_000 })
-    await page.setViewportSize({ width: 568, height: 320 })
-    await expect(page.locator('.blq-tour-ring')).not.toHaveAttribute('d', /^M/)
+    const ring = page.locator('.blq-tour-ring')
+    await expect(ring).toHaveAttribute('d', /^M/, { timeout: 15_000 })
+    // Only the map is lit: the search row and chips stay dimmed and off (DR-006).
+    const chips = page.locator('[data-map-chips]')
+    const chipsBottom = await chips.evaluate((el) => el.getBoundingClientRect().bottom)
+    const lightTop = await page
+      .locator('.blq-tour-shade')
+      .evaluate((el) => Number(el.getAttribute('d')?.match(/ZM[\d.]+ ([\d.]+)/)?.[1]))
+    expect(lightTop).toBeGreaterThanOrEqual(chipsBottom)
+    await expect(page.locator('[data-map-phonebar]')).toHaveAttribute('inert', '')
+    await expect(page.locator('[data-tour="map"]')).not.toHaveAttribute('inert', '')
+    // Turned, the light starts below the one row; smaller still, there is none.
+    await page.setViewportSize({ width: 844, height: 390 })
+    await expect(ring).toHaveAttribute('d', /^M-3 1[23]/)
+    await page.setViewportSize({ width: 390, height: 664 })
+    await expect(ring).toHaveAttribute('d', /^M/)
+    for (const size of [{ width: 667, height: 375 }, { width: 568, height: 320 }]) {
+      await page.setViewportSize(size)
+      await expect(ring).not.toHaveAttribute('d', /^M/)
+    }
     await expect(page).toHaveURL(/\/map/)
     await expect(tour(page).getByRole('dialog')).toHaveAttribute('aria-modal', 'true')
     await context.close()

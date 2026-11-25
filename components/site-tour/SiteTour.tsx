@@ -24,6 +24,7 @@ import {
   captionMode,
   inflate,
   lightPath,
+  mapLight,
   mapRoom,
   scrollFor,
   union,
@@ -614,6 +615,10 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
   const isCollective = target?.caption === 'collective'
   const isMap = key === 'map'
   const roomyRef = useRef(false)
+  const turnedRef = useRef(false)
+  useEffect(() => {
+    roomyRef.current = false
+  }, [key])
   useLayoutEffect(() => {
     if (view !== 'item' || !ready || !target || full) return
     let frame = 0
@@ -632,10 +637,30 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
           ? { x: rect ? rect.right + 24 : 480, y: head, w: Math.max(0, vw - (rect ? rect.right + 24 : 480)), h: vh - head }
           : { x: 0, y: head, w: vw, h: Math.max(0, (low ? cardTop : vh) - head) }
 
+      // Where there are phone controls, only the map below them is the light (DR-006).
+      let mapBox: Box | null = null
       let roomy = true
       if (isMap) {
-        const bar = [...document.querySelectorAll(MAP_BAR)].map((el) => el.getBoundingClientRect().bottom)
-        roomy = !low || mapRoom(cardTop - Math.max(head, ...bar), roomyRef.current)
+        const turned = vw > vh
+        if (turned !== turnedRef.current) roomyRef.current = false
+        turnedRef.current = turned
+        // Where the card comes to rest: it is still sliding in on the first reads.
+        const restTop = low && card.current ? vh - card.current.offsetHeight : vh
+        const boxes = (selector: string) => findAll([selector]).map(boxOf)
+        const controls = [...document.querySelectorAll(MAP_BAR)].map((el) => el.getBoundingClientRect().bottom)
+        const mapArea = boxes('[data-tour="map"]')[0]
+        if (mapArea && controls.length > 0) {
+          mapBox = mapLight({
+            map: mapArea,
+            controlsBottom: Math.max(head, ...controls),
+            locateTop: boxes('[data-map-locate]')[0]?.y ?? null,
+            listTop: boxes('[data-map-sheet]')[0]?.y ?? vh,
+            cardTop: restTop,
+          })
+        }
+        if (mapBox) roomy = mapRoom(mapBox.h, roomyRef.current)
+        // Wide and low has no phone controls. Narrower, they are still loading.
+        else if (low) roomy = vw >= 1024 && mapRoom(restTop - head, roomyRef.current)
         roomyRef.current = roomy
         setCramped(!roomy)
       }
@@ -662,6 +687,9 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
           }
           holes = [...holes, ...bar]
         }
+      } else if (lit && mapBox && roomy) {
+        holes = [{ box: mapBox, r: 0 }]
+        rings = [...holes]
       } else if (lit && roomy) {
         holes = findAll(target.selectors).map((el) => ({
           box: inflate(boxOf(el), target.pad),

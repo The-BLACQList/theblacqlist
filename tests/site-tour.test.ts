@@ -16,7 +16,7 @@ import {
   SITE_TOUR_QUIT_NOTE,
   SITE_TOUR_WAIT,
 } from '@/lib/site-tour/copy'
-import { captionMode, clip, lightPath, mapRoom, scrollFor, union } from '@/lib/site-tour/layout'
+import { captionMode, clip, lightPath, mapLight, mapRoom, scrollFor, union } from '@/lib/site-tour/layout'
 import { siteTourTotals } from '@/lib/site-tour/report'
 import { countsAsVisit, isSiteTourHiddenPath } from '@/lib/site-tour/routes'
 import {
@@ -162,6 +162,16 @@ describe('paths', () => {
     expect(mapRoom(52, false)).toBe(true)
     expect(mapRoom(44, true)).toBe(true)
     expect(mapRoom(43, true)).toBe(false)
+  })
+
+  it('lights only the map between the phone controls and the list or the card (DR-006)', () => {
+    const map = { x: 0, y: 56, w: 390, h: 788 }
+    const at = { map, controlsBottom: 176, locateTop: 184, listTop: 493, cardTop: 610 }
+    expect(mapLight(at)).toEqual({ x: 0, y: 184, w: 390, h: 309 })
+    expect(mapLight({ ...at, listTop: 492, cardTop: 430 })).toEqual({ x: 0, y: 184, w: 390, h: 234 })
+    // Very small windows have no location button.
+    expect(mapLight({ ...at, locateTop: null }).y).toBe(184)
+    expect(mapLight({ ...at, cardTop: 150 }).h).toBe(0)
   })
 })
 

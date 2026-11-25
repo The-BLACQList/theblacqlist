@@ -861,6 +861,7 @@ body[data-site-tour-on] .stack-over-assistant {
   font-size: 24px;
 }
 .blq-tour-card.is-sheet .blq-tour-body {
+  max-width: none;
   margin-top: 6px;
   font-size: 16px;
   line-height: 1.45;
