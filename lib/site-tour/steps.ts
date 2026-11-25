@@ -13,6 +13,20 @@ export interface SiteTourContext {
   ownerReview: boolean
 }
 
+export interface WindowSize {
+  width: number
+  height: number
+}
+
+/**
+ * The map step needs map above its card: a sideways phone or a very zoomed-in
+ * page shows a sliver (ticket 285). The search bar and chips go at 1024px.
+ */
+export function mapStepFits({ width, height }: WindowSize): boolean {
+  if (width < 300) return height >= 700
+  return height >= (width < 1024 ? 500 : 400)
+}
+
 export interface SiteTourTarget {
   /** Where the step happens. `view=live` is the owner's Collective. */
   href: string
@@ -41,6 +55,8 @@ export interface SiteTourStep extends SiteTourTarget {
   /** Built but not shown: waiting on the founder (ticket 280, "Held"). */
   held?: boolean
   needs?: (ctx: SiteTourContext) => boolean
+  /** Windows it has room in. Asked on the press that leads to it (DR-023). */
+  fits?: (size: WindowSize) => boolean
 }
 
 const BAR = '[data-site-tour="cue-field"]'
@@ -86,6 +102,7 @@ export const SITE_TOUR_STEPS: readonly SiteTourStep[] = [
     off: ['[aria-label="Near me, use my location"]'],
     fixed: true,
     caption: 'side-left',
+    fits: mapStepFits,
   },
   {
     key: 'sample-page',
@@ -219,10 +236,34 @@ export function buildItems(path: SiteTourPath, ctx: SiteTourContext): SiteTourIt
   return items
 }
 
+/** A step, its chapter card or the end: the name a run is saved under. */
+export function itemKey(item: SiteTourItem | undefined): string {
+  if (!item) return 'welcome'
+  if (item.kind === 'step') return item.step.key
+  return item.kind === 'end' ? 'end' : item.chapter
+}
+
+function itemFits(items: readonly SiteTourItem[], index: number, size: WindowSize): boolean {
+  const item = items[index]
+  if (item?.kind === 'step') return item.step.fits?.(size) ?? true
+  if (item?.kind !== 'chapter') return true
+  // A chapter card goes with its steps.
+  return items.some(
+    (one) => one.kind === 'step' && one.step.chapter === item.chapter && (one.step.fits?.(size) ?? true)
+  )
+}
+
+/** What Next leads to in this window. A skipped step leaves a gap in the numbers. */
+export function nextIndex(items: readonly SiteTourItem[], index: number, size: WindowSize): number {
+  for (let i = index + 1; i < items.length; i++) if (itemFits(items, i, size)) return i
+  return items.length - 1
+}
+
 /** The step before this one; -1 when the one before is the question. */
-export function previousIndex(items: readonly SiteTourItem[], index: number): number {
+export function previousIndex(items: readonly SiteTourItem[], index: number, size: WindowSize): number {
   for (let i = index - 1; i >= 0; i--) {
     const item = items[i]
+    if (!itemFits(items, i, size)) continue
     // Cue's answer is gone once the visitor leaves the home page, so Back from
     // a later page goes to the bar, not to an empty answer.
     if (item?.kind === 'step' && item.step.key !== 'answer') return i
@@ -231,11 +272,14 @@ export function previousIndex(items: readonly SiteTourItem[], index: number): nu
 }
 
 /** The step after the answer: where Next and a timed-out wait go. */
-export function indexAfterAnswer(items: readonly SiteTourItem[], index: number): number {
-  let next = index + 1
-  const item = items[next]
-  if (item?.kind === 'step' && item.step.key === 'answer') next++
-  return Math.min(next, items.length - 1)
+export function indexAfterAnswer(items: readonly SiteTourItem[], index: number, size: WindowSize): number {
+  const next = nextIndex(items, index, size)
+  return itemKey(items[next]) === 'answer' ? nextIndex(items, next, size) : next
+}
+
+/** Where a saved run is now; its first item when that part is switched off. */
+export function indexOfKey(items: readonly SiteTourItem[], key: string): number {
+  return Math.max(0, items.findIndex((item) => itemKey(item) === key))
 }
 
 export function pathOf(href: string): string {

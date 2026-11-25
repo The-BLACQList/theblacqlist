@@ -27,6 +27,14 @@ export function captionMode(
   return want
 }
 
+/**
+ * Enough map above the card to light (DR-023). Two edges, so a window resting on
+ * one doesn't blink.
+ */
+export function mapRoom(room: number, was: boolean): boolean {
+  return room >= (was ? 44 : 52)
+}
+
 export function inflate(box: Box, by: number): Box {
   return { x: box.x - by, y: box.y - by, w: box.w + by * 2, h: box.h + by * 2 }
 }
