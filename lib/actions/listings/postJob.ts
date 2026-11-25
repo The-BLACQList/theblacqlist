@@ -70,7 +70,10 @@ export async function postJobAction(input: unknown): Promise<PostJobResult> {
   }
 
   // Server Action ids are callable without the page, so the flag is checked here too.
-  if (!isFeatureEnabled('postingSubmissions')) return fail('Job submissions are not open yet.')
+  // Both switches, the same rule as PostJobCard (ticket 282).
+  if (!isFeatureEnabled('jobsOpen') || !isFeatureEnabled('postingSubmissions')) {
+    return fail('Job submissions are not open yet.')
+  }
 
   const parsedInput = inputSchema.safeParse(input)
   if (!parsedInput.success) return fail(GENERIC)

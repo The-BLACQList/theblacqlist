@@ -1,6 +1,7 @@
 'use server'
 
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { trackServerEvent } from '@/lib/analytics/server'
+import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit } from '@/lib/security/rate-limit'
 import { VALID_CTA_TYPES, VALID_ENTITY_TYPES, VALID_LOCATION_TYPES } from '@/lib/constants/listing'
 import { queueNewSubmission } from '@/lib/listings/submitForReview'
@@ -249,14 +250,12 @@ export async function submitListingAction(
   }
 
   // ── Moderation queue entry (service role — queue is admin-only) ────────────
-  const serviceClient = await createServiceClient()
-
   if (!(await queueNewSubmission(listing.id))) {
     console.error(JSON.stringify({ level: 'error', op: 'submit_listing_queue', listingId: listing.id }))
   }
 
-  // ── Analytics event (fire-and-forget, service role) ────────────────────────
-  void serviceClient.from('analytics_events').insert({
+  // ── Analytics event (after the response, best effort) ──────────────────────
+  trackServerEvent({
     event_name: 'listing_submitted',
     entity_id: listing.id,
     entity_type: 'listing',

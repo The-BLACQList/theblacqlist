@@ -102,6 +102,11 @@ export async function createListingAction(
     return { error: 'Event and job submissions are not open yet.' }
   }
 
+  // Jobs has its own switch on top (ticket 282). Events don't.
+  if (entityType === 'job' && !isFeatureEnabled('jobsOpen')) {
+    return { error: 'Job submissions are not open yet.' }
+  }
+
   // Creators come through the business path with three differences (ticket
   // 132): an "I'm 18 or older" attestation is required, the category must be a
   // Creators subcategory, and the page is always listed as online ('virtual').

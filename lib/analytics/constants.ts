@@ -94,6 +94,9 @@ export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
  *            share_initiated, claim_submitted, listing_submitted,
  *            hero_cta_click, action_bar_cta_click
  *            + the three SERVER_ONLY_EVENTS above.
+ *   claim_submitted and listing_submitted were never saved before ticket 281
+ *            (a lazy `void` insert), so a count that starts before it shipped
+ *            is short. claims and moderation_queue hold the earlier history.
  *   post_view and post_click (part F, 2026-11-13, behind happeningNow):
  *            post_view when a live post is on a business page (the one the
  *            banner shows) or in the city/category strip; post_click from

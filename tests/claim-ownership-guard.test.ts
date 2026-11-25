@@ -66,6 +66,7 @@ const h = vi.hoisted(() => {
     createServiceClient: vi.fn(() => makeClient()),
     getAdminSession: vi.fn(async () => ({ user: { id: 'admin-1' } })),
     writeAuditLog: vi.fn(async () => undefined),
+    trackServerEvent: vi.fn(),
   }
 })
 
@@ -73,6 +74,7 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: h.createClient,
   createServiceClient: h.createServiceClient,
 }))
+vi.mock('@/lib/analytics/server', () => ({ trackServerEvent: h.trackServerEvent }))
 vi.mock('@/lib/security/turnstile', () => ({
   TURNSTILE_ERROR: 'turnstile',
   verifyTurnstileFormData: vi.fn(async () => true),
@@ -147,6 +149,7 @@ describe('createClaimAction refuses pages that already have an owner', () => {
     const result = await createClaimAction(null, claimForm())
     expect(result).toEqual({ error: 'You already manage this page. Find it in your dashboard.' })
     expect(h.writes).toHaveLength(0)
+    expect(h.trackServerEvent).not.toHaveBeenCalled()
   })
 
   it('still accepts a claim on a page with no owner', async () => {
@@ -155,6 +158,16 @@ describe('createClaimAction refuses pages that already have an owner', () => {
     expect(result).not.toHaveProperty('error')
     const claimInsert = h.writes.find((w) => w.table === 'claims' && w.op === 'insert')
     expect(claimInsert?.row.claimant_user_id).toBe(STRANGER)
+    // Ticket 281: the event goes through trackServerEvent, which really saves it.
+    expect(h.trackServerEvent).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({
+        event_name: 'claim_submitted',
+        entity_id: 'new-claim',
+        entity_type: 'claim',
+        user_id: STRANGER,
+        properties: { listing_id: LISTING_ID, has_verification_email: true },
+      })
+    )
   })
 })
 
