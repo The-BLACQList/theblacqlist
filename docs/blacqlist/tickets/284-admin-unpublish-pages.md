@@ -82,7 +82,7 @@ A migration (the mark table, the function, the review rule) on staging and then 
 Written during the build, 2026-11-25.
 
 - **Migration first.** `20261207000000_admin_page_unpublish.sql` works with the code before this ticket. Until it is applied, the new buttons report an error, review of a new Page says the marks couldn't be checked, and `seed-launch-listings.ts` stops, so apply it before the merge.
-- **Mark on by default for Owner Asked,** off for the other reasons. The admin can change it either way. Reason list as in Scope. Photos unchanged. All three still wait on the founder.
+- **Mark on by default for Owner Asked,** off for the other reasons. The admin can change it either way. Reason list as in Scope. Photos unchanged. The founder kept all three on 2026-11-25 ("keep the defaults").
 - **The table refuses a marked Page.** Once a marked Page is fully deleted, a published row with its slug can't be inserted. A SQL seed file that still holds it stops with an error. The app never inserts a published row. While the hidden Page exists, seeds skip it as before.
 - **Reviewer names** (`review_author_names`) follow the new review rule. Page owners and review authors keep reading what is theirs; the names list is for owners only while hidden.
 - **The note stays in the audit log.** `moderation_notes` isn't written, since owners can read it.
@@ -96,7 +96,14 @@ Written during the build, 2026-11-25.
 - Unit tests for the actions, mark matching, plan notice, approval refusal, owner card and the launch seed (the real script against a fake client).
 - The two forms and the warning at 375px and 1280px by keyboard, in a throwaway local page with made-up data.
 
+- **Staging, 2026-11-25.** Migration applied; row counts unchanged; signed-out and signed-in users can't read the marks or call the functions. One made-up Page was hidden, put back and fully deleted:
+  - Hidden: its page 404s; gone from search, the map, the sitemap and its city page. Its review and reviewer name aren't readable by the public; its author still reads the review, its owner reads both. The 15 other staging reviews stay readable.
+  - Put back: live everywhere again, same `published_at`, mark cleared.
+  - Owner: sees Taken Down with the support address at 375px and 1280px, no publish button, not the admin's note, and can't change the status.
+  - Launch seed (the real script, with a made-up one-city file): hidden without a mark, the slug is skipped; hidden with a mark, or fully deleted with a mark, both the slug and a respelled name are skipped. After the full delete, inserting it published stops with an error.
+  - Test data removed. Seven audit rows stay, since the audit log can't be changed.
+  - The app ran locally in dev mode, so production caching (the map's hour) wasn't measured. The real city files weren't seeded.
+
 ### Not Checked Yet
 
-- Staging hide and put back, signed-out checks and the seed run (see Checks for the Build). Needs the staging migration.
-- The admin page itself, signed in.
+- The admin page itself, signed in, on staging. No admin account was made for the test.
