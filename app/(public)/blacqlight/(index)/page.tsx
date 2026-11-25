@@ -63,18 +63,20 @@ export default async function BLACQLightPage({ searchParams }: Props) {
     <main className="min-h-screen bg-off-white">
       {/* 1. Header */}
       <section className="bg-deep-bg" aria-labelledby="blacqlight-heading">
-        <Container className="pt-14 md:pt-20 pb-10 md:pb-14 flex flex-col gap-4">
-          <p className={`${eyebrow} text-gold`}>Stories from the list</p>
-          <h1
-            id="blacqlight-heading"
-            className="font-headline font-medium text-[clamp(48px,9vw,112px)] leading-[0.95] tracking-[-0.02em] text-off-white"
-          >
-            The BLACQLight
-          </h1>
-          <p className="font-body text-lg leading-relaxed text-ink-soft max-w-[56ch]">
-            The people behind the businesses, the movements around them, and guides to spending on
-            purpose.
-          </p>
+        <Container className="pt-14 md:pt-20 pb-10 md:pb-14">
+          <div data-site-tour="blacqlight-title" className="flex flex-col gap-4">
+            <p className={`${eyebrow} text-gold`}>Stories from the list</p>
+            <h1
+              id="blacqlight-heading"
+              className="font-headline font-medium text-[clamp(48px,9vw,112px)] leading-[0.95] tracking-[-0.02em] text-off-white"
+            >
+              The BLACQLight
+            </h1>
+            <p className="font-body text-lg leading-relaxed text-ink-soft max-w-[56ch]">
+              The people behind the businesses, the movements around them, and guides to spending on
+              purpose.
+            </p>
+          </div>
         </Container>
       </section>
 

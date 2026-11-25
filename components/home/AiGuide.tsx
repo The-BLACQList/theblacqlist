@@ -9,6 +9,15 @@ import { askGuide, type GuideResponse } from '@/lib/actions/ai/guide'
 import type { CueReply } from '@/lib/ai/assistant-limits'
 import { streamCue } from '@/lib/assistant/ask'
 import { getNearPoint, wantsNearMe } from '@/lib/assistant/near'
+import {
+  CUE_ANSWERED,
+  CUE_ASKED,
+  CUE_COMMAND,
+  CUE_FALLBACK,
+  CUE_STOPPED,
+  signal,
+  type CueCommand,
+} from '@/lib/site-tour/signals'
 import { addTurn, openAssistantFrom, setHomeBarInView, type AssistantTurn } from '@/lib/assistant/store'
 import {
   ASSISTANT_LINK,
@@ -103,6 +112,30 @@ export function AiGuide({
     }
   }, [assistant])
 
+  // The site tour's handle on the bar (ticket 280): send an example, or stop an
+  // answer without taking focus. `ask` is new each render, so the ref keeps it
+  // fresh. With the tour off nothing sends these.
+  const quietStop = useRef(false)
+  const onCommand = useRef<(command: CueCommand) => void>(() => {})
+  useEffect(() => {
+    onCommand.current = (command) => {
+      if (command.type === 'stop') {
+        quietStop.current = true
+        stopRef.current?.abort()
+        return
+      }
+      if (pending) return
+      setText(command.words)
+      ask(command.words, near)
+    }
+  })
+  useEffect(() => {
+    if (!assistant) return
+    const listen = (event: Event) => onCommand.current((event as CustomEvent<CueCommand>).detail)
+    window.addEventListener(CUE_COMMAND, listen)
+    return () => window.removeEventListener(CUE_COMMAND, listen)
+  }, [assistant])
+
   // Leaving the page ends Cue's request, so it stops spending.
   useEffect(() => () => stopRef.current?.abort(), [])
 
@@ -152,6 +185,8 @@ export function AiGuide({
     focusAnswer.current = false
     setStatus(CUE_LOOKING)
     setCuePending({ status: CUE_LOOKING, text: '' })
+    quietStop.current = false
+    signal(CUE_ASKED)
     const stop = new AbortController()
     stopRef.current = stop
     const reply = await streamCue(words, {
@@ -168,10 +203,16 @@ export function AiGuide({
     // Stopped before Cue wrote anything: their words are still in the bar.
     if (!reply) {
       setStatus('Stopped.')
-      inputRef.current?.focus()
+      if (!quietStop.current) inputRef.current?.focus()
+      signal(CUE_STOPPED, { quiet: quietStop.current })
       return
     }
     if (reply.kind === 'fallback') {
+      // The site tour stays on its own path instead (ticket 280).
+      if (!signal(CUE_FALLBACK, { href: reply.href }, true)) {
+        setStatus('')
+        return
+      }
       setStatus(FALLBACK_STATUS)
       router.push(reply.href)
       return
@@ -180,6 +221,8 @@ export function AiGuide({
     setKept(false)
     setAssistantAnswer({ ask: words, reply })
     setStatus(replyStatus(reply))
+    // A partial answer, when they pressed Stop, is not the answer (ticket 280).
+    signal(CUE_ANSWERED, { stopped: stop.signal.aborted })
   }
 
   function onStop() {
@@ -251,6 +294,7 @@ export function AiGuide({
         onSubmit={onSubmit}
         className="flex flex-row items-end gap-2 sm:gap-3"
         role="search"
+        data-site-tour={assistant ? 'cue-form' : undefined}
         aria-label={assistant ? 'Ask Cue' : 'Ask the guide'}
       >
         <div className="flex-1 min-w-0">
@@ -270,7 +314,7 @@ export function AiGuide({
             )}
             <span className="sr-only">(answered with AI)</span>
           </label>
-          <div className="relative">
+          <div className="relative" data-site-tour={assistant ? 'cue-field' : undefined}>
             <GoldBrandMark className="absolute left-3.5 top-1/2 -translate-y-1/2 size-5 pointer-events-none" />
             <input
               id="ai-guide-input"
@@ -296,6 +340,7 @@ export function AiGuide({
         {/* A round arrow on phones keeps the chips and answers above the fold. */}
         <button
           type="submit"
+          data-site-tour={assistant ? 'cue-button' : undefined}
           aria-disabled={pending || undefined}
           className="shrink-0 inline-flex items-center justify-center gap-2 size-14 sm:w-auto sm:px-6 rounded-full bg-gold text-brand-black font-subhead text-sm font-bold hover:bg-light-gold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white aria-disabled:opacity-70 aria-disabled:cursor-wait"
         >
@@ -311,12 +356,17 @@ export function AiGuide({
       <HeroQuickFilters filters={filters} onPick={onPick} onNear={onNear} nearOn={near !== null} />
 
       {/* Always mounted, so screen readers hear each short status once. */}
-      <p role="status" className="sr-only">
+      <p role="status" data-site-tour={assistant ? 'cue-status' : undefined} className="sr-only">
         {status}
       </p>
 
       {(pending || answer || assistantAnswer) && (
-        <div ref={answerRef} tabIndex={-1} className="mt-5 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+        <div
+          ref={answerRef}
+          tabIndex={-1}
+          data-site-tour={assistant ? 'cue-answer' : undefined}
+          className="mt-5 rounded-2xl focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+        >
           {pending ? (
             assistant ? (
               <div className="rounded-2xl border border-gold/30 bg-brand-black/85 backdrop-blur-sm p-3 sm:p-4">
@@ -349,6 +399,7 @@ export function AiGuide({
               />
               <button
                 type="button"
+                data-site-tour="keep-chatting"
                 onClick={(event) => {
                   // Once per answer, so a second tap only reopens the panel.
                   if (!kept) addTurn(assistantAnswer.ask, assistantAnswer.reply)
@@ -360,6 +411,20 @@ export function AiGuide({
                 <MessageCircle className="size-4" aria-hidden="true" />
                 Keep Chatting with Cue
               </button>
+              {/* The same line as Cue's panel (DR-010, founder 2026-11-24). A new
+                  tab, so the answer is still here when they come back. */}
+              <p className="mt-1 font-body text-sm leading-snug text-ink-soft">
+                Cue uses AI to answer from our listings and can get things wrong.{' '}
+                <a
+                  href="/privacy#cue"
+                  target="_blank"
+                  rel="noopener"
+                  className="relative underline underline-offset-2 hover:text-off-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white rounded-sm after:absolute after:left-1/2 after:top-1/2 after:size-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
+                >
+                  Privacy
+                  <span className="sr-only"> (opens in a new tab)</span>
+                </a>
+              </p>
             </div>
           ) : (
             answer && <GuideAnswer answer={answer} />

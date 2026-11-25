@@ -519,6 +519,24 @@ export default async function AdminAnalyticsPage() {
           </div>
         </Link>
       </div>
+
+      {/* Site tour totals (ticket 280). `download` because it is a file, not a page. */}
+      <div>
+        <SectionHeading>Site Tour</SectionHeading>
+        <a href={'/api/admin/analytics/site-tour/export?period=30d'} download>
+          <div className="rounded-xl border border-charcoal/10 bg-white px-5 py-4 hover:border-amber-gold/40 hover:bg-[#fdfaf4] transition-colors flex items-center justify-between cursor-pointer">
+            <div>
+              <p className="font-subhead text-sm font-semibold text-brand-black">
+                Site Tour CSV
+              </p>
+              <p className="font-body text-xs text-charcoal-soft mt-0.5">
+                Daily totals by path, step and button, last 30 days
+              </p>
+            </div>
+            <ChevronRight className="size-4 text-charcoal-faint shrink-0" aria-hidden="true" />
+          </div>
+        </a>
+      </div>
     </div>
   )
 }

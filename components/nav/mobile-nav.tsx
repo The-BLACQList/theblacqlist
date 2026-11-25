@@ -17,6 +17,7 @@ import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
 import { cn } from '@/lib/utils'
 import { signOutAction } from '@/lib/actions/auth/signOut'
 import { SoonPill } from '@/components/ui/soon-pill'
+import { TakeTheTourLink } from '@/components/site-tour/TakeTheTourLink'
 import { MAIN_NAV_LINKS, type NavLink } from '@/components/nav/nav-links'
 
 interface Props {
@@ -27,9 +28,11 @@ interface Props {
   accountLinks?: NavLink[]
   /** The Collective isn't open yet (ticket 122). Its link stays, with a "Soon" pill. */
   collectiveSoon: boolean
+  /** The site tour is on (ticket 280); the date this account first saw it. */
+  tour?: { seenAt: string | null } | null
 }
 
-export function MobileNav({ isSignedIn, isAdmin, accountLinks = [], collectiveSoon }: Props) {
+export function MobileNav({ isSignedIn, isAdmin, accountLinks = [], collectiveSoon, tour = null }: Props) {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
   const prevPathname = useRef(pathname)
@@ -148,6 +151,19 @@ export function MobileNav({ isSignedIn, isAdmin, accountLinks = [], collectiveSo
                         </Link>
                       </li>
                     ))}
+                    {tour && (
+                      <TakeTheTourLink
+                        as="li"
+                        from="menu"
+                        accountSeenAt={tour.seenAt}
+                        onStart={() => setIsOpen(false)}
+                        className={cn(
+                          'flex w-full items-center min-h-[48px] px-2 rounded-md text-left font-subhead text-base transition-colors',
+                          'text-cream hover:text-gold hover:bg-white/5',
+                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold'
+                        )}
+                      />
+                    )}
                   </ul>
                 </section>
                 <form action={signOutAction} onSubmit={() => setIsOpen(false)}>

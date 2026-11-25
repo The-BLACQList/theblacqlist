@@ -6,6 +6,7 @@ import { PublicHeader } from '@/components/nav/public-header'
 import { PublicFooter } from '@/components/nav/public-footer'
 import { ChromeGate } from '@/components/layout/chrome-gate'
 import { PreviewBanner } from '@/components/layout/PreviewBanner'
+import { SiteTourMount } from '@/components/site-tour/SiteTourMount'
 import { TourRailMount } from '@/components/tour/TourRailMount'
 import { ReportProblemMount } from '@/components/feedback/ReportProblemMount'
 import { AssistantMount } from '@/components/assistant/AssistantMount'
@@ -111,6 +112,11 @@ export default function RootLayout({
         {/* Site assistant (ticket 147) — renders nothing unless its flag is
             on; hides itself on non-public pages. */}
         <AssistantMount />
+        {/* Site tour for first-time visitors (ticket 280) — renders nothing
+            unless its flag is on. */}
+        <Suspense fallback={null}>
+          <SiteTourMount />
+        </Suspense>
         <Analytics />
         <SpeedInsights />
       </body>
