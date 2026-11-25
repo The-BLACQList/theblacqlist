@@ -270,3 +270,4 @@
 | [278](278-collective-map-limit.md) | The Collective: every published business has a spot; spend totals read in full past the row cap | V1.5 | P1 | 171, 183 | Not started | Founder 2026-11-24 (ticket only); Creative DR-014: before the site tour's owner step |
 | [279](279-collective-method-page.md) | The Collective's method page: receipt photo is required, owners can approve, unlisted receipts don't count | V1.5 | P1 | 162, 183 | Not started | Founder 2026-11-24 (ticket only); wording needs Author, Marketing and founder |
 | [281](281-review-events.md) | `listing_submitted` and `claim_submitted` analytics events save (lazy `void` inserts never sent) | V1.5 | P2 | 241 | In review | Founder 2026-11-24; 280 is the site tour |
+| [282](282-jobs-switch.md) | Jobs switched off stops new job drafts, submissions and charges on the server, not only on the page | V1.5 | P1 | 122, 152, 273 | In review | Founder 2026-11-24; paid jobs still go through |

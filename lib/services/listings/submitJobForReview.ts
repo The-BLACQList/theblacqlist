@@ -26,6 +26,9 @@ export type JobSubmitResult =
   /** It costs money and the poster was never shown that. Nothing was charged or opened. */
   | { confirmPrice: true; notice: string; priceLine: JobPriceLine }
 
+/** Shown when Jobs is switched off. The draft itself is untouched. */
+export const JOBS_CLOSED_MESSAGE = 'Job submissions are not open yet. Your draft is saved.'
+
 export async function submitJobForReview(
   supabase: SupabaseClient,
   user: { id: string; email?: string | null },
@@ -34,6 +37,20 @@ export async function submitJobForReview(
   opts: { chargeShown: boolean }
 ): Promise<JobSubmitResult> {
   const listingId = listing.id
+
+  // Ticket 282: FEATURE_JOBS_OPEN covers /add-job, but the dashboard's Submit
+  // button lands here too. Off, nothing new is granted, charged or moved. A
+  // posting already bought or granted still goes through: that promise was made
+  // while Jobs was open. Being grandfathered is not a purchase, so it does not
+  // count, and a failed read is not a yes. The Stripe webhook does not come
+  // through here, so a payment already under way still lands.
+  if (!isFeatureEnabled('jobsOpen')) {
+    const covered = await hasPaidJobPosting(supabase, listingId)
+    if (!covered.ok) {
+      return { error: 'Could not check this job posting right now. Please try again.' }
+    }
+    if (!covered.value) return { error: JOBS_CLOSED_MESSAGE }
+  }
 
   // The job ladder, in this order for reasons that are not interchangeable:
   //   1. grandfather  — so a pre-cutoff draft never burns an allowance
