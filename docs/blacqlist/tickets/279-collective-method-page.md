@@ -1,6 +1,6 @@
 # Ticket 279: The Collective's Method Page Matches How Receipts Work
 
-**Status:** Not started. The founder approved writing this ticket on 2026-11-24; the wording, the merge and the deploy each need their own OK.
+**Status:** In review. Founder 2026-11-24: "build 278 and 279". The wording, the merge and the deploy each still need their own OK.
 
 ## Why
 
@@ -24,6 +24,27 @@ Found while writing this ticket: the section 4 line and the section 7 point.
 ## Production, 2026-11-24
 
 `FEATURE_OWNER_RECEIPT_REVIEW` is present in Vercel Production, last set 11 days ago. That matches the 2026-11-13 entry that set it to `true`. The value is stored as Sensitive, so it could not be read back. If the flag is ever off, admins review everything, so the wording must be true in both states or follow the flag.
+
+## Also Found and Fixed
+
+Every sentence was checked against main `6b63064`. Besides the rows above:
+
+| Section | Page said | Now |
+|---|---|---|
+| 3 | No business-to-business data (true), but nothing about the Demo view | Says the Demo view's businesses, amounts and links are made up (ticket 249) |
+| 4 | Filters, "three figures at the top" and business tables that no longer exist (ticket 167) | Names what is on screen: Spent, Receipts, Links |
+| 5 | "Individual receipts … never part of any public view" | The Latest list shows a business and a day for single receipts (ticket 171b, 250). The page says so: no amount, no shopper |
+| 7 | "Figures can be up to an hour old" | Pages are computed when opened; the CSV files can be about a day old (`IMPACT_EXPORT_CACHE_CONTROL`) |
+| 8 | The recalculation "is scheduled"; "a small amount" of opted-out spend | Not done and not scheduled (open GATE-DATA); the amount has not been measured |
+| Headings | Sentence case | Title Case |
+
+The internal note also said a rejected receipt is final and that the Privacy Policy and Terms still promise an opt-out "at any time". Both are out of date and corrected.
+
+## Found, Not Changed
+
+- **Privacy Policy section 4** says individual receipt data, including dates and businesses visited, "is not shown publicly". The Latest list shows a business and a day. [Needs professional review]: the policy wording, or the list.
+- **The CSV export** asks for 5,000 rows, but Max Rows is 1,000 (ticket 278), so "every business" stops being true past 1,000 businesses with 5 receipts each.
+- **Section 5's "no path from a published figure back to a person"**: true of the figures. Until an account is deleted, the stored record can still be matched to its receipt by us.
 
 ## Steps
 

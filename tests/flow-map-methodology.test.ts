@@ -44,6 +44,8 @@ import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
+import { needsAdminReview, ownerCanReview } from '@/lib/spend/owner-receipts'
+import { parseReceiptFields } from '@/lib/spend/receipt-input'
 
 function read(file: string): string {
   return readFileSync(path.resolve(process.cwd(), file), 'utf8')
@@ -55,6 +57,7 @@ const FLOW_MAP = 'app/(public)/flow-map/page.tsx'
 // beside the map, and the privacy notes live on the methodology page itself.
 const FIRST_LOOK = 'components/flow-map/CollectiveFirstLook.tsx'
 const SILO = 'components/flow-map/silo/SiloExperience.tsx'
+const NOTE = 'docs/blacqlist/flow-map/data-sourcing-and-methodology.md'
 const EDIT_ACTION = 'lib/actions/spend/updateReceiptSubmission.ts'
 
 /**
@@ -155,7 +158,7 @@ describe('section 8 — the limitations a tidy-up would quietly delete', () => {
   it('exists at all', () => {
     const copy = renderedCopy(METHODOLOGY)
     expect(copy).toContain('id="gaps"')
-    expect(copy).toContain('Where this currently falls short')
+    expect(copy).toContain('Where This Currently Falls Short')
   })
 
   it('still discloses that older per-business totals include opted-out spend', () => {
@@ -196,8 +199,102 @@ describe('the stated opt-out window is coupled to the guard that enforces it', (
   })
 
   it('locks at approval with a message that matches what the page promises', () => {
-    expect(read(EDIT_ACTION)).toContain('This receipt has been approved and can no longer be edited.')
+    expect(read(EDIT_ACTION)).toContain(
+      'This receipt has been approved and can no longer be edited.'
+    )
     expect(renderedCopy(METHODOLOGY)).toContain('the receipt is locked')
+  })
+})
+
+// ── Ticket 279: the page against the code it describes ─────────────────────
+// Each case checks the rule in code first, then the sentence. If the rule
+// changes, the first half fails and the sentence has to be looked at again.
+
+/** The page's words with markup and line breaks flattened. */
+function words(): string {
+  return renderedCopy(METHODOLOGY)
+    .replace(/\{' '\}/g, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&rsquo;/g, "'")
+    .replace(/&[lr]dquo;/g, '"')
+    .replace(/&mdash;/g, '-')
+    .replace(/\s+/g, ' ')
+}
+
+describe('a receipt photo is required, and the page says so', () => {
+  it('a new receipt without a photo is refused', () => {
+    const parsed = parseReceiptFields(new FormData(), { requirePhoto: true })
+    expect(parsed.ok).toBe(false)
+    expect(!parsed.ok && parsed.fieldErrors?.receipt_file).toBeTruthy()
+    expect(read('lib/actions/spend/createReceiptSubmission.ts')).toContain(
+      'parseReceiptFields(formData, { requirePhoto: true })'
+    )
+  })
+
+  it('an older receipt with no photo needs one when it is corrected', () => {
+    expect(read(EDIT_ACTION)).toContain('!existing.file_path && !hasReceiptPhoto(fileField)')
+  })
+
+  it('the page and the note say required', () => {
+    expect(words()).toContain('A photo or PDF of the receipt is required.')
+    expect(words()).not.toMatch(/receipt is optional/)
+    expect(read(NOTE)).toContain('A receipt image or PDF is **required**')
+  })
+})
+
+describe('who approves a receipt', () => {
+  const pending = { user_id: 'shopper', status: 'pending_review' }
+
+  it('the business can approve, but never its own receipt', () => {
+    const asOwner = { listingOwnerId: 'owner', viewerId: 'owner' }
+    expect(ownerCanReview({ receipt: pending, ...asOwner })).toBe('ok')
+    expect(ownerCanReview({ receipt: { ...pending, user_id: 'owner' }, ...asOwner })).toBe(
+      'own_receipt'
+    )
+    expect(read('lib/actions/owner/verifyReceipt.ts')).toContain("role: 'owner'")
+    expect(words()).toContain('The business named on the receipt can approve or reject it.')
+    expect(words()).toContain(
+      'A business owner cannot approve a receipt they submitted themselves.'
+    )
+  })
+
+  it('our team has unclaimed businesses, and anything past the fallback', () => {
+    const now = new Date('2026-11-24T12:00:00Z')
+    const receipt = { listing_id: 'l', created_at: '2026-11-24T11:00:00Z' }
+    expect(needsAdminReview(receipt, null, now)).toBe(true)
+    expect(needsAdminReview(receipt, 'owner', now)).toBe(false)
+    expect(words()).toContain(
+      'any still waiting after {ADMIN_FALLBACK_DAYS} days, and can review any other.'
+    )
+    expect(read(METHODOLOGY)).toContain("from '@/lib/spend/owner-receipts'")
+  })
+
+  it('no sentence says only our team, or a lone reviewer, approves', () => {
+    expect(words()).not.toMatch(/\breviewer\b/i)
+    expect(words()).toContain('approved by the business it names or by a person on our team')
+    expect(read(NOTE)).not.toMatch(/approved by an admin, is|an admin approves that receipt/)
+  })
+
+  it('says a business may be confirming its own sale', () => {
+    expect(words()).toContain('A business can be confirming its own sale.')
+  })
+})
+
+describe('what the figures leave out', () => {
+  it('an unlisted receipt is never approved, and no sentence says it counts', () => {
+    expect(read('lib/spend/applyReceiptReview.ts')).toContain("reason: 'unlisted'")
+    expect(words()).not.toContain('still counts toward the total')
+    expect(words()).toContain('the receipt never counts toward a public figure')
+  })
+
+  it("discloses the map's Latest list, which shows a day and never an amount", () => {
+    expect(read(FLOW_MAP)).toContain('when: dayLabel(r.created_at)')
+    expect(words()).toContain('It never shows an amount or a shopper.')
+  })
+
+  it('does not say the recalculation is scheduled, and does not say pages are an hour old', () => {
+    expect(words()).not.toContain('which is scheduled')
+    expect(words()).not.toContain('cached for an hour')
   })
 })
 
@@ -234,7 +331,7 @@ describe('internal vocabulary has not leaked into reader-facing copy', () => {
     // why we avoid it requires saying it. What it may not do is attach it to a
     // figure — hence the explicit refusal, which tests/spend-vocabulary.test.ts
     // enforces everywhere else.
-    expect(copy).toContain('Why we do not say')
+    expect(copy).toContain('Why We Do Not Say')
     expect(copy).toContain('It just does not get to label a number.')
   })
 })

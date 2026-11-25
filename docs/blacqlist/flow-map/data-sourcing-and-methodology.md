@@ -1,6 +1,6 @@
 # Community Spend: Data Sourcing & Methodology
 
-**Status:** current as of 2026-11-13 (only listed businesses count, Stages 2–4; §5.2 corrected 2026-08-17, see the warning there)
+**Status:** current as of 2026-11-24 (ticket 279: photo required, who approves, freshness, §5.2 closed; only listed businesses count since 2026-11-13, Stages 2–4)
 **Audience:** anyone who publishes, cites, or defends a BLACQList community-spend figure
 **Companions:**
 - [`flow-map-mvp-spec.md`](flow-map-mvp-spec.md) — what the feature is. This file is where the numbers come from and what they mean.
@@ -23,14 +23,14 @@ user submits receipt   →   owner/admin approves   →   spend_event   →   fl
 
 ### Stage 1 — Submission
 
-`lib/actions/spend/createReceiptSubmission.ts`. A signed-in user enters an amount, a purchase date, and either a directory listing or a free-text business name. A receipt image or PDF is optional (JPEG / PNG / WebP / HEIC / HEIF / PDF, 10 MB cap).
+`lib/actions/spend/createReceiptSubmission.ts`. A signed-in user enters an amount, a purchase date, and either a directory listing or a free-text business name. A receipt image or PDF is **required** (ticket 162; JPEG / PNG / WebP / HEIC / HEIF / PDF, 10 MB cap). An older receipt saved without one needs one when it is corrected (`lib/actions/spend/updateReceiptSubmission.ts`).
 
 | Field | Source | Notes |
 |---|---|---|
 | `amount_cents` | user-entered dollars | `Math.round(dollars * 100)`. Must be > 0. |
 | `purchase_date` | user-entered | The date on the receipt, **not** the submission date. |
 | `listing_id` | directory selection | Optional. Null when the user typed a business name we do not have. Such a receipt is kept but **cannot be counted** until it is linked to a listed business (Stage 2). |
-| `aggregate_opt_out` | checkbox | Set once at submission. See §5. |
+| `aggregate_opt_out` | checkbox | Set at submission; can be changed until approval. See §5.2. |
 | `status` | fixed | `'pending_review'`. |
 | `client_idempotency_key` | client | `UNIQUE` — a duplicate submission returns "already submitted" rather than a second row. |
 
@@ -40,9 +40,11 @@ Nothing at this stage reaches any public figure.
 
 `[Decision — founder, 2026-11-13]` (ticket 183): the business a receipt names verifies it from `/dashboard/receipts` (`lib/actions/owner/verifyReceipt.ts`, `lib/actions/owner/rejectReceipt.ts`). Admins review receipts for unclaimed businesses and anything a business hasn't reviewed in 7 days (`lib/actions/spend/approveReceipt.ts`, `lib/actions/spend/rejectReceipt.ts`). An owner can never verify their own receipt. Both paths write through `lib/spend/applyReceiptReview.ts`, which only changes a receipt that is still `'pending_review'`, so a receipt is counted once even if both press at the same moment. `receipt_uploads.verified_by_role` records which one did.
 
-Two terminal outcomes:
+Owner review sits behind `FEATURE_OWNER_RECEIPT_REVIEW`. With it off, admins review everything. The public page says what the business *can* do, so its wording holds either way (ticket 279).
 
-- **Reject** — status becomes `'rejected'`. **No aggregate row is ever written.** A rejected receipt contributes nothing, permanently.
+Two outcomes:
+
+- **Reject** — status becomes `'rejected'`. **No aggregate row is ever written.** A rejected receipt contributes nothing unless the shopper fixes it and sends it back, when it returns to `'pending_review'` and starts over.
 - **Approve** — status becomes `'approved'` and the aggregate write happens synchronously, in the same request.
 
 A receipt sitting at `'pending_review'` contributes nothing either. **Every published community figure is a figure about approved receipts only.**
@@ -82,7 +84,7 @@ Four surfaces read these tables. All five read paths use the service-role client
 
 | Surface | File | Auth | Freshness | What it shows |
 |---|---|---|---|---|
-| `/flow-map` | `app/(public)/flow-map/page.tsx` | public | ISR, 1 hour | Community totals, top 10 businesses, top 10 cities, network graph |
+| `/flow-map` | `app/(public)/flow-map/page.tsx` | public | request-time | Community totals, every published business as a dot (totals from 5 receipts), top cities, and the latest three receipts by business and day |
 | `/api/flow-map/summary` | `app/api/flow-map/summary/route.ts` | public | ISR, 1 hour | Same, as JSON, plus up to 50 edges |
 | `/api/community-spend` | `app/api/community-spend/route.ts` | public | ISR, 1 hour | Community totals + top nodes, no edges |
 | `/account/community-spend` | `app/account/community-spend/page.tsx` | signed-in | request-time | Community aggregates (not the viewer's own rows), top 8 each |
@@ -96,9 +98,9 @@ Four surfaces read these tables. All five read paths use the service-role client
 
 ### The definition
 
-**One receipt, approved by an admin, is one unit of measured spend. It is counted once.**
+**One receipt, approved by the business it names or by an admin, is one unit of measured spend. It is counted once.**
 
-A dollar enters this dataset when a person reports paying it to a Black-owned business and an admin approves that receipt. Nothing follows the dollar after that. What the business pays its supplier, its staff, or its landlord is not observed, not modeled, and not estimated.
+A dollar enters this dataset when a person reports paying it to a Black-owned business and that receipt is approved. Nothing follows the dollar after that. What the business pays its supplier, its staff, or its landlord is not observed, not modeled, and not estimated.
 
 So the figure we publish is a **one-hop total**: consumer → business, summed. It is not velocity, not a multiplier, and not a measure of how many times a dollar changed hands.
 
@@ -106,7 +108,7 @@ So the figure we publish is a **one-hop total**: consumer → business, summed. 
 
 "Circulation" in economics means a dollar being re-spent — counted on each hop as it moves through a community. We measure one hop. Publishing a one-hop sum under a word that means multi-hop velocity overstates the finding, and it is the kind of overstatement that gets checked the first time the number matters.
 
-The schema makes this concrete: it cannot represent multi-hop flow **even in principle**. `flow_nodes.node_type` carries a `CHECK` permitting `'business' | 'city'` and nothing else, so `business → city` is the only edge that exists (§1, Stage 4). There is no business-to-business edge to accumulate, because there is no business-to-business data.
+The schema makes this concrete: it cannot represent multi-hop flow **even in principle**. `flow_nodes.node_type` carries a `CHECK` permitting `'business' | 'city'` and nothing else, so `business → city` is the only edge that exists (§1, Stage 4). There is no business-to-business edge to accumulate, because there is no business-to-business data. The Demo view's Follow a Dollar trail (ticket 249) is made-up sample data and reaches no figure.
 
 **`[Decision — founder, 2026-08-16]`** Published figures are labeled for what they measure — *spent with Black-owned businesses*, *directed to Black-owned businesses*. **"Circulation" remains the mission language** in the product vision, the PRD, the pitch and the partner materials, where it describes what the platform is *for*. It does not label a number.
 
@@ -115,7 +117,7 @@ The schema makes this concrete: it cannot represent multi-hop flow **even in pri
 | Say this | Not this | Because |
 |---|---|---|
 | spent with Black-owned businesses | circulated | one hop, not velocity |
-| reported spend | verified spend | an admin approved a receipt; nothing reconciled it against a processor |
+| reported spend | verified spend | the business or an admin approved a receipt; nothing reconciled it against a processor |
 | tracked purchases | transactions | "transaction" implies a payment record we do not hold |
 | businesses supported | businesses reached | we know money was reported to them, not what it did for them |
 
@@ -132,12 +134,12 @@ It must never appear beside one of our figures in a way that implies we measured
 | Total dollars spent with Black-owned businesses | `SUM(amount_cents)` over `spend_events` where `aggregate_opt_out = false` and `listing_id IS NOT NULL` | Pending, rejected, opted-out, businesses not on The BLACQList |
 | Tracked purchases | `COUNT(*)` of the same rows | Same |
 | Unique businesses | `COUNT(DISTINCT listing_id)` of the same rows | Same (no row has a null `listing_id`) |
-| Top businesses / cities | `flow_nodes` rows with `transaction_count >= 5`, ordered by `total_amount_cents`, limit 10 (8 on the account page) | Anything under the threshold — **but not opted-out spend, see §5** |
+| Top businesses / cities | `flow_nodes` rows with `transaction_count >= 5`, ordered by `total_amount_cents`, limit 10 in the two JSON endpoints, 8 on the account page. `/flow-map` shows every business and 8 cities; the CSVs list them all, up to their cap | Anything under the threshold — **but not opted-out spend, see §5** |
 | Edges | `flow_edges` rows with `transaction_count >= 5`, limit 50 | Same |
 
 Three properties worth stating plainly, because each one is a way a reader could over-read a number:
 
-1. **Amounts are self-reported.** An admin reviews the receipt; nothing reconciles it against a payment processor. A figure here is "what the community reported and an admin accepted," never "what was transacted."
+1. **Amounts are self-reported.** The business or an admin looks at the receipt; nothing reconciles it against a payment processor. A figure here is "what the community reported and the business or our team accepted," never "what was transacted." When the business approves, it is confirming its own sale, not giving an independent check.
 2. **Coverage is opt-in and partial.** This measures receipts people chose to upload. It is not a sample designed to represent anything, and it should never be extrapolated to total community spend.
 3. **Totals are cumulative from launch,** not windowed. There is no date filter on any published total.
 
@@ -178,15 +180,15 @@ Consequences, all of them intentional:
 
 ## 5. Known gaps — read this before citing the opt-out
 
-Two findings, both measured against `9e55a8e`, both unresolved at the time of writing. They are recorded here rather than left for rediscovery.
+Two findings, both measured against `9e55a8e`. 5.1's data half is still open; 5.2 is closed. They are recorded here rather than left for rediscovery.
 
 ### 5.1 The opt-out does not reach `flow_nodes` or `flow_edges` — code fixed, existing totals not
 
-`/flow-map` tells the community: *"Users can opt out of community aggregates at any time."*
+`/flow-map` used to tell the community: *"Users can opt out of community aggregates at any time."*
 
 **The defect, as it stood.** The opt-out was honored on `spend_events` — every community-wide total filters `.eq('aggregate_opt_out', false)` — and **not** on the flow graph. `approveReceipt.ts` upserted the business node, the city node and the edge without checking the flag, and neither `flow_nodes` nor `flow_edges` has a column to carry it.
 
-So an opted-out receipt was excluded from the anonymous headline sums and **included** in the named per-business and per-city totals. That is the inverse of the intended protection: the opt-out failed in exactly the place where a name sits next to a dollar figure. On `/flow-map` the two rules render on one screen — the headline reads `spend_events` filtered, the top-business table directly beneath it reads `flow_nodes` unfiltered.
+So an opted-out receipt was excluded from the anonymous headline sums and **included** in the named per-business and per-city totals. That is the inverse of the intended protection: the opt-out failed in exactly the place where a name sits next to a dollar figure. On `/flow-map` the two rules render on one screen: the headline reads `spend_events` filtered, and the business list reads `flow_nodes` unfiltered.
 
 The threshold still applied, so no single opted-out receipt was individually exposed. The gap was that opted-out spend was silently counted in a figure the user was told it would be withheld from.
 
@@ -202,23 +204,15 @@ What is actually true:
 
 | Receipt status | Can the opt-out be changed? | Enforced by |
 |---|---|---|
-| `pending_review` | **Yes**, by the owner, from Account → Receipts | the form; the write re-asserts `.eq('status','pending_review')` |
-| `approved` | **No** — *"This receipt has been approved and can no longer be edited."* | `updateReceiptSubmission.ts:67-74` |
-| `rejected` | No — terminal; the path is a new submission | same guard |
+| `pending_review` | **Yes**, by the shopper, from Account → Receipts | the form; the write re-asserts `.eq('status', existing.status)`. A receipt that stopped waiting for an unlisted business (Stage 2) can't be edited |
+| `rejected` | **Yes**, while fixing it. Saving sends it back to `pending_review` | same guard |
+| `approved` | **No** — *"This receipt has been approved and can no longer be edited."* | the status guard in `updateReceiptSubmission.ts` |
 
 So the flag is a **revocable preference until approval and a fixed fact after it**. The reason is sound and is stated in the action's own header: an approved receipt has already written a `spend_events` row and folded its amount into `flow_nodes` / `flow_edges`, so reversing it is a recompute, not a form write.
 
-**What remains false in public copy** — three places still promise more than this:
+**Closed.** The Privacy Policy, the Terms and `/flow-map` once promised more than this ("at any time", "in your account settings"). All are corrected and `tests/opt-out-copy.test.ts` guards them.
 
-| File | Claim | Wrong how |
-|---|---|---|
-| `app/(public)/privacy/page.tsx:117` | *"opt out … at any time through your account settings"* | not "at any time" (approval closes it); not "account settings" (per-receipt edit) |
-| `app/(public)/privacy/page.tsx:276` | *"Opt your spend data out … at any time from your account settings"* | same |
-| `app/(public)/terms/page.tsx:178` | *"unless you opt out in your account settings"* | same |
-
-`app/(public)/flow-map/page.tsx` carried a fourth (*"Users can opt out of community aggregates at any time"*) and **is corrected in this PR**. The remaining three are a **Privacy Policy and Terms edit** — a legal document, so a founder decision plus `[Needs professional review]`, not a copy tidy-up. Filed in `next-actions.md`. Until it is settled, `/flow-map`, `/flow-map/methodology` and the Privacy Policy **disagree with each other in public**, and the policy is the wrong one.
-
-**5.1 and 5.2 are corrections to make, not language to soften.** 5.1's code half has landed (the write-time guard above); its data half — recomputing existing node and edge totals — is a **GATE-DATA** decision of its own and is still open. Closing 5.2 means either widening the window (an account-level switch plus a decision about what "withdraw" means for spend already summed into a node) or correcting the two documents to describe the window that exists.
+**5.1 is a correction to make, not language to soften.** Its code half has landed (the write-time guard above). Its data half, recomputing existing node and edge totals, is a **GATE-DATA** decision of its own. It is open and has not been scheduled.
 
 ### 5.3 Node and edge upserts are not concurrency-safe
 
@@ -226,7 +220,13 @@ So the flag is a **revocable preference until approval and a fixed fact after it
 
 ### 5.4 Freshness
 
-Both public JSON endpoints and `/flow-map` are `revalidate = 3600`. A figure read from them can be up to an hour behind the database. `/account/community-spend` and the homepage compute at request time and are current. Nothing here is real-time.
+| What | How old it can be |
+|---|---|
+| `/flow-map`, `/` and `/account/community-spend` | Computed when opened. `/flow-map` and `/` declare `revalidate`, but both build as dynamic (ƒ) because they read cookies `[Measured — next build, 2026-11-24]` |
+| `/api/flow-map/summary`, `/api/community-spend` | `revalidate = 3600`: about an hour, or longer if nobody has asked for it lately |
+| `/api/flow-map/export` (the CSV files) | `s-maxage=3600, stale-while-revalidate=86400` (`lib/spend/impact-report.ts`): usually under an hour, at most about a day |
+
+Nothing here is real-time.
 
 ---
 
