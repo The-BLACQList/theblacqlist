@@ -19,9 +19,11 @@
  *   once at least `AGGREGATE_MIN_TRANSACTIONS` spend events point at it. Naming
  *   an entity next to a dollar figure is the disclosure that matters; below the
  *   threshold it approaches "here is one person's receipt."
- * - **Community-wide totals are not gated, deliberately.** The headline figures
- *   are a single sum across the whole corpus and identify no one. Suppressing
- *   them would not add privacy; it would only make the page empty.
+ * - **Community-wide totals wait for the same number (ticket 286, founder
+ *   2026-11-25).** A total names no one, but with one counted receipt the total
+ *   IS that receipt. Until `AGGREGATE_MIN_TRANSACTIONS` receipts are counted
+ *   site-wide, Spent, Receipts and the Latest list are not published anywhere.
+ *   `communityTotals` is the only way a surface turns counted rows into totals.
  *
  * One honest limit, stated rather than implied: `transaction_count` counts spend
  * events, not distinct contributors. Five receipts from one person clear this bar.
@@ -65,6 +67,31 @@ export function meetsAggregateThreshold(row: CountedRow): boolean {
 export function meetsLinkThreshold(row: CountedRow): boolean {
   return row.transaction_count >= LINK_MIN_TRANSACTIONS
 }
+
+export interface CommunityTotals {
+  amountCents: number
+  receipts: number
+  businesses: number
+}
+
+/**
+ * The community-wide totals, or `null` while too few receipts are counted to
+ * publish them (ticket 286). `null` means "not published yet". Never show it
+ * as 0 or $0: receipts may be counted.
+ */
+export function communityTotals(
+  rows: readonly { amount_cents: number; listing_id: string | null }[]
+): CommunityTotals | null {
+  if (rows.length < AGGREGATE_MIN_TRANSACTIONS) return null
+  return {
+    amountCents: rows.reduce((sum, r) => sum + r.amount_cents, 0),
+    receipts: rows.length,
+    businesses: new Set(rows.map((r) => r.listing_id).filter(Boolean)).size,
+  }
+}
+
+/** The held-state words, so the number always comes from the constant (ticket 286). */
+export const TOTALS_HELD_NOTE = `Totals show once ${AGGREGATE_MIN_TRANSACTIONS} receipts are counted.`
 
 /** Drops every per-entity row that has not cleared the threshold. */
 export function filterToPublishable<T extends CountedRow>(rows: readonly T[]): T[] {

@@ -32,6 +32,8 @@ import {
   meetsAggregateThreshold,
   filterToPublishable,
   applyAggregateThreshold,
+  communityTotals,
+  TOTALS_HELD_NOTE,
 } from '@/lib/spend/aggregate-privacy'
 
 // ── The threshold itself ────────────────────────────────────────────────────
@@ -136,6 +138,14 @@ describe('per-entity aggregate queries are gated at the threshold', () => {
     'app/account/community-spend/page.tsx',
   ] as const
 
+  const TOTAL_SURFACES = [
+    'app/(public)/flow-map/page.tsx',
+    'app/api/flow-map/summary/route.ts',
+    'app/api/community-spend/route.ts',
+    'app/account/community-spend/page.tsx',
+    'app/page.tsx',
+  ] as const
+
   it.each(SURFACES)('%s imports the shared threshold', (file) => {
     expect(source(file)).toContain("from '@/lib/spend/aggregate-privacy'")
   })
@@ -207,22 +217,43 @@ describe('per-entity aggregate queries are gated at the threshold', () => {
     }
   })
 
-  it('community-wide totals stay ungated — suppressing them adds no privacy', () => {
-    // spend_events is summed across the whole corpus and names no entity. If a
-    // future change gates it too, the headline figures go to zero for no gain,
-    // so the absence of a threshold here is deliberate and pinned.
-    const spendRead = source('lib/spend/counted-spend.ts')
-    expect(spendRead).toContain("from('spend_events')")
-    expect(spendRead).not.toContain('transaction_count')
-    for (const file of ['app/api/flow-map/summary/route.ts', 'app/api/community-spend/route.ts']) {
-      const src = source(file)
-      const spendBlock = src.slice(
-        src.indexOf('await readCountedSpend('),
-        src.indexOf("from('flow_nodes')")
-      )
-      expect(spendBlock.length).toBeGreaterThan(0)
-      expect(spendBlock).not.toContain('transaction_count')
-    }
+  // Ticket 286: with one counted receipt, the total IS that receipt.
+  it.each([...TOTAL_SURFACES])('%s adds up counted rows only through communityTotals', (file) => {
+    const src = source(file)
+    expect(src).toContain('readCountedSpend(')
+    expect(src).toMatch(/communityTotals\(\w+(\.data)?\)/)
+    // No second sum, count or fallback figure beside the helper.
+    expect(src).not.toMatch(/\.reduce\([^)]*amount_cents/)
+    expect(src).not.toMatch(/(spendRows|spendData|totalData|spendRes\.data|rows)\.length/)
+    expect(src).not.toMatch(/totals\??\.\w+ \?\? 0/)
+  })
+
+  it('the Latest list and the category totals are held with the totals', () => {
+    expect(source('app/(public)/flow-map/page.tsx')).toContain('(totals ? spendData : [])')
+    expect(source('app/account/community-spend/page.tsx')).toContain(
+      'if (totals && spentListingIds.length > 0)'
+    )
+  })
+})
+
+describe('communityTotals (ticket 286)', () => {
+  const rows = (n: number) =>
+    Array.from({ length: n }, (_, i) => ({ amount_cents: 1000 + i, listing_id: `b${i % 2}` }))
+
+  it.each([0, 1, AGGREGATE_MIN_TRANSACTIONS - 1])('is null, never zero, at %i receipts', (n) => {
+    expect(communityTotals(rows(n))).toBeNull()
+  })
+
+  it('publishes at the bar', () => {
+    expect(communityTotals(rows(AGGREGATE_MIN_TRANSACTIONS))).toEqual({
+      amountCents: 5010,
+      receipts: AGGREGATE_MIN_TRANSACTIONS,
+      businesses: 2,
+    })
+  })
+
+  it('takes the number in the held words from the constant', () => {
+    expect(TOTALS_HELD_NOTE).toContain(String(AGGREGATE_MIN_TRANSACTIONS))
   })
 })
 

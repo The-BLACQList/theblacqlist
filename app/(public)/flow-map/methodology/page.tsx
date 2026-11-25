@@ -227,9 +227,12 @@ export default function FlowMapMethodologyPage() {
               the number, so we withhold it rather than round it.
             </p>
             <p>
-              The community-wide totals are not held to that rule. They are one sum across
-              everything reported and they name no one. While few receipts are counted, someone
-              comparing a total with the Latest list could work out the amount of a single receipt.
+              The community-wide totals wait too. Spent and Receipts show once{' '}
+              {AGGREGATE_MIN_TRANSACTIONS} or more receipts are counted across The Collective. They
+              add up every counted receipt and name no one. Once they show, someone who watches a
+              total change over time, or compares it with the totals of single businesses, could
+              still work out the amount of a single receipt. The Latest list could also help tie
+              that amount to a business and a day.
             </p>
             <p>
               We never publish a receipt photo, the amount on a single receipt, or who submitted it.
@@ -248,8 +251,9 @@ export default function FlowMapMethodologyPage() {
               gets a line, so you can see money reach it. Every line under the rule looks the same:
               it says someone shopped there, never how much. The dollar figure and the receipt count
               still wait for {AGGREGATE_MIN_TRANSACTIONS} or more purchases. The Latest list on The
-              Collective names the businesses behind the three newest counted receipts, and the day
-              each was counted. It never shows an amount or a shopper.
+              Collective appears once {AGGREGATE_MIN_TRANSACTIONS} or more receipts are counted. It
+              names the businesses behind the three newest counted receipts, and the day each was
+              counted. It never shows an amount or a shopper.
             </p>
             <p>
               A receipt you add for a business on The BLACQList shows on your own map straight away
@@ -369,9 +373,9 @@ export default function FlowMapMethodologyPage() {
             <p>
               Check our numbers yourself. Each file is a CSV spreadsheet listing every business or
               city with {AGGREGATE_MIN_TRANSACTIONS} or more counted purchases behind its total,
-              with that total in dollars and in cents. Anything below that line is left out, so
-              these files add up to less than the community-wide figures. That gap is the privacy
-              rule in section 5 doing its job.
+              with that total in dollars and in cents. Anything below that line is left out, so once
+              the community-wide totals show, these files can add up to less than those totals. That
+              gap comes from the privacy rule in section 5.
             </p>
             <p className="flex flex-wrap gap-x-6 gap-y-2">
               <a

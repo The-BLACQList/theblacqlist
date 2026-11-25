@@ -12,6 +12,7 @@ import {
   PULSE_MAX_MS,
   PULSE_MIN_MS,
   SILO_FLOORS,
+  SPENT_HELD_TEXT,
   anonymousBusinessLabel,
   buildFloors,
   buildSiloBusinesses,
@@ -113,6 +114,18 @@ describe('buildFloors', () => {
     const floors = buildFloors(0)
     expect(floors[0]!.barShare).toBe(0)
     expect(floorValueText(floors[0]!)).toBe('$0 spent')
+  })
+
+  it('never shows a held total as $0 or as not tracked (ticket 286)', () => {
+    const floor = buildFloors(null)[0]!
+    expect(floor.tracked).toBe(true)
+    expect(floor.amountCents).toBeNull()
+    expect(floor.barShare).toBe(0)
+    expect(floorValueText(floor)).toBe(SPENT_HELD_TEXT)
+    expect(SPENT_HELD_TEXT).toContain(String(AGGREGATE_MIN_TRANSACTIONS))
+    expect(floorSpokenLabel(floor, 0)).toBe(
+      `Shoppers: spending shows once ${AGGREGATE_MIN_TRANSACTIONS} receipts are counted`
+    )
   })
 
   it('reads every floor aloud in words, with "spent" and never "circulated"', () => {

@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { communityTotals } from '@/lib/spend/aggregate-privacy'
+import { closeUpLinesFor } from '@/lib/spend/collective-closeup'
 import { readCountedSpend } from '@/lib/spend/counted-spend'
 import { NESTED_SELECT, mapRow, type RawRow } from '@/lib/listings/query'
 import { attachLevels } from '@/lib/listings/levelRows'
@@ -207,10 +209,9 @@ export default async function HomePage() {
     tagline: l.tagline ?? '',
   }))
 
-  const spendRows = spendRes.data
   const collectiveSoon = isCovered('collective')
-  const totalAmountCents = spendRows.reduce((sum, r) => sum + (r.amount_cents ?? 0), 0)
-  const uniqueBusinesses = new Set(spendRows.map((r) => r.listing_id)).size
+  // Null until enough receipts are counted site-wide (ticket 286).
+  const communityTotal = communityTotals(spendRes.data)
 
   // The newest article anchors the hero; everything after it falls into the rail.
   const articleRows = articlesRes.data ?? []
@@ -272,9 +273,8 @@ export default async function HomePage() {
       </Reveal>
       <Reveal>
         <ImpactBand
-          totalAmountCents={totalAmountCents}
-          totalTransactions={spendRows.length}
-          uniqueBusinesses={uniqueBusinesses}
+          totals={communityTotal}
+          artLines={closeUpLinesFor(spendRes.data)}
           covered={collectiveSoon}
         />
       </Reveal>

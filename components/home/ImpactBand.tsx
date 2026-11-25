@@ -3,11 +3,13 @@ import Link from 'next/link'
 import { CollectiveCloseUp } from '@/components/home/CollectiveCloseUp'
 import { LaunchWaitlist } from '@/components/marketing/LaunchWaitlist'
 import { SOON_FEATURES } from '@/lib/features/opening-soon'
+import { TOTALS_HELD_NOTE, type CommunityTotals } from '@/lib/spend/aggregate-privacy'
 
 interface Props {
-  totalAmountCents: number
-  totalTransactions: number
-  uniqueBusinesses: number
+  /** Null while too few receipts are counted to publish them (ticket 286). */
+  totals: CommunityTotals | null
+  /** Lines lit in the drawing. Shows from the first receipt, even while totals are held. */
+  artLines: number
   /**
    * The Collective isn't open yet (ticket 122). The band keeps its place on the
    * homepage but trades the receipt and map buttons, and the live totals, for a
@@ -26,17 +28,11 @@ function formatDollars(cents: number): string {
 /**
  * The Collective band, wired to the LIVE flow-map data. It leads with
  * tracking a receipt (joining) and links out to The Collective map, beside a
- * close-up of the Silo that lights up as receipts come in. With no tracked
- * spend yet, it invites the first receipt instead of showing zeros.
+ * close-up of the Silo that lights up as receipts come in. While the totals are
+ * held (ticket 286) it says when they show, never zeros. The art lights from the
+ * first receipt: at most 3 lines under 5 receipts, with no figure.
  */
-export function ImpactBand({
-  totalAmountCents,
-  totalTransactions,
-  uniqueBusinesses,
-  covered,
-}: Props) {
-  const hasData = totalAmountCents > 0
-
+export function ImpactBand({ totals, artLines, covered }: Props) {
   if (covered) return <CoveredBand />
 
   return (
@@ -44,7 +40,7 @@ export function ImpactBand({
       aria-labelledby="impact-heading"
       className="relative bg-deep-bg overflow-hidden lg:flex lg:items-center lg:min-h-[520px]"
     >
-      <CollectiveCloseUp purchases={totalTransactions} businesses={uniqueBusinesses} />
+      <CollectiveCloseUp lineCount={artLines} />
 
       <div className="relative z-10 max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 pb-10 md:pb-14 lg:py-14">
         <div className="lg:max-w-[440px]">
@@ -75,23 +71,23 @@ export function ImpactBand({
             </Link>
           </div>
 
-          {hasData ? (
+          {totals ? (
             <dl className="flex flex-wrap gap-x-7 gap-y-4 mt-7">
-              <Stat label="spent" value={formatDollars(totalAmountCents)} />
+              <Stat label="spent" value={formatDollars(totals.amountCents)} />
               <Stat
-                label={totalTransactions === 1 ? 'purchase' : 'purchases'}
-                value={totalTransactions.toLocaleString()}
+                label={totals.receipts === 1 ? 'purchase' : 'purchases'}
+                value={totals.receipts.toLocaleString()}
               />
               <Stat
-                label={uniqueBusinesses === 1 ? 'business' : 'businesses'}
-                value={uniqueBusinesses.toLocaleString()}
+                label={totals.businesses === 1 ? 'business' : 'businesses'}
+                value={totals.businesses.toLocaleString()}
               />
             </dl>
           ) : (
             <div className="mt-7">
-              <p className="font-headline text-[20px] text-white">Waiting on its first dollar.</p>
-              <p className="font-subhead text-xs text-off-white/70 mt-0.5">
-                Add a receipt and be the first in.
+              <p className="font-headline text-[20px] text-white">{TOTALS_HELD_NOTE}</p>
+              <p className="font-subhead text-sm text-off-white/70 mt-0.5">
+                Add a receipt and help us get there.
               </p>
             </div>
           )}

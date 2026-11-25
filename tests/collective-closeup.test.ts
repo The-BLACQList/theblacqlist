@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+
 import { describe, expect, it } from 'vitest'
 import {
   CLOSE_UP_DESK,
@@ -5,6 +7,7 @@ import {
   buildCloseUp,
   closeUpFloorY,
   closeUpLineCount,
+  closeUpLinesFor,
   closeUpPulseCount,
 } from '@/lib/spend/collective-closeup'
 import { CATEGORY_FAMILIES } from '@/lib/spend/silo-layout'
@@ -29,6 +32,27 @@ describe('closeUpLineCount', () => {
     expect(closeUpLineCount(49, 6)).toBe(6)
     expect(closeUpLineCount(1_204, 12)).toBe(12)
     expect(closeUpLineCount(500, 0)).toBe(0)
+  })
+})
+
+describe('closeUpLinesFor (ticket 286)', () => {
+  const rows = (ids: (string | null)[]) => ids.map((listing_id) => ({ listing_id }))
+
+  it.each([
+    ['0 receipts', [], 0],
+    ['1 receipt', ['a'], 1],
+    ['4 receipts at one business', ['a', 'a', 'a', 'a'], 1],
+    ['4 receipts at four businesses', ['a', 'b', 'c', 'd'], 3],
+    ['receipts with no business', [null, null], 0],
+    ['10 receipts at ten businesses', [...'abcdefghij'], 8],
+  ])('%s', (_name, ids, lines) => {
+    expect(closeUpLinesFor(rows(ids))).toBe(lines)
+  })
+
+  it('gives the art the line count only, never a total', () => {
+    const band = readFileSync('components/home/ImpactBand.tsx', 'utf8')
+    expect(band).toContain('<CollectiveCloseUp lineCount={artLines} />')
+    expect(band).not.toMatch(/totals\?\.\w+ \?\? 0/)
   })
 })
 
