@@ -126,6 +126,16 @@ export function closeUpLineCount(purchases: number, businesses: number): number 
   return Math.min(step?.lines ?? 0, Math.max(0, businesses))
 }
 
+/**
+ * Lit lines from the counted rows, for the server to work out. The drawing lights
+ * from the first receipt, while the totals still wait (ticket 286, founder
+ * 2026-11-25), so only this number leaves: no amount and no receipt count.
+ */
+export function closeUpLinesFor(rows: readonly { listing_id: string | null }[]): number {
+  const businesses = new Set(rows.map((r) => r.listing_id).filter(Boolean)).size
+  return closeUpLineCount(rows.length, businesses)
+}
+
 export function closeUpPulseCount(lines: number): number {
   return lines > 0 ? Math.max(1, Math.round(lines / 4)) : 0
 }

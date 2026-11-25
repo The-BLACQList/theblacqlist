@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { communityTotals } from '@/lib/spend/aggregate-privacy'
+import { closeUpLinesFor } from '@/lib/spend/collective-closeup'
 import { readCountedSpend } from '@/lib/spend/counted-spend'
 import { NESTED_SELECT, mapRow, type RawRow } from '@/lib/listings/query'
 import { attachLevels } from '@/lib/listings/levelRows'
@@ -271,7 +272,11 @@ export default async function HomePage() {
         <FreshFinds entities={freshFinds} />
       </Reveal>
       <Reveal>
-        <ImpactBand totals={communityTotal} covered={collectiveSoon} />
+        <ImpactBand
+          totals={communityTotal}
+          artLines={closeUpLinesFor(spendRes.data)}
+          covered={collectiveSoon}
+        />
       </Reveal>
       <Reveal>
         <MicrositeShowcase items={showcaseItems} />

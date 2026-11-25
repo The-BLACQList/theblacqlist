@@ -8,6 +8,8 @@ import { TOTALS_HELD_NOTE, type CommunityTotals } from '@/lib/spend/aggregate-pr
 interface Props {
   /** Null while too few receipts are counted to publish them (ticket 286). */
   totals: CommunityTotals | null
+  /** Lines lit in the drawing. Shows from the first receipt, even while totals are held. */
+  artLines: number
   /**
    * The Collective isn't open yet (ticket 122). The band keeps its place on the
    * homepage but trades the receipt and map buttons, and the live totals, for a
@@ -27,9 +29,10 @@ function formatDollars(cents: number): string {
  * The Collective band, wired to the LIVE flow-map data. It leads with
  * tracking a receipt (joining) and links out to The Collective map, beside a
  * close-up of the Silo that lights up as receipts come in. While the totals are
- * held (ticket 286) it says when they show, never zeros, and the art stays unlit.
+ * held (ticket 286) it says when they show, never zeros. The art lights from the
+ * first receipt: at most 3 lines under 5 receipts, with no figure.
  */
-export function ImpactBand({ totals, covered }: Props) {
+export function ImpactBand({ totals, artLines, covered }: Props) {
   if (covered) return <CoveredBand />
 
   return (
@@ -37,7 +40,7 @@ export function ImpactBand({ totals, covered }: Props) {
       aria-labelledby="impact-heading"
       className="relative bg-deep-bg overflow-hidden lg:flex lg:items-center lg:min-h-[520px]"
     >
-      <CollectiveCloseUp purchases={totals?.receipts ?? 0} businesses={totals?.businesses ?? 0} />
+      <CollectiveCloseUp lineCount={artLines} />
 
       <div className="relative z-10 max-w-7xl mx-auto w-full px-5 md:px-8 lg:px-10 pb-10 md:pb-14 lg:py-14">
         <div className="lg:max-w-[440px]">

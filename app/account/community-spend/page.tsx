@@ -190,8 +190,8 @@ export default async function CommunitySpendPage() {
               </p>
               <p className="font-headline text-5xl mt-2">{formatDollars(totals.amountCents)}</p>
               <p className="font-body text-sm text-white/50 mt-2">
-                Across {totals.receipts} verified {totals.receipts === 1 ? 'receipt' : 'receipts'}{' '}
-                submitted by our community
+                Across {totals.receipts} {totals.receipts === 1 ? 'receipt' : 'receipts'} submitted
+                by our community
               </p>
             </>
           ) : (

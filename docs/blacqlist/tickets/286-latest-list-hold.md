@@ -42,11 +42,11 @@ Read from the code on main `def4a2c`; nothing was run.
 - `communityTotals()` in `lib/spend/aggregate-privacy.ts` returns `null` under 5 counted receipts. All five places use it.
 - The Collective keeps Links, and one line where Spent and Receipts were (Creative's held look, 2026-11-25). The Shoppers floor and its card say when spending shows. The headline falls back to "Where Does Our Money Go?".
 - Home and Community Spend have one state that is true at 0 to 4 receipts. "Waiting on its first dollar", "be the first in" and "Be the first to contribute" are gone: receipts may be counted.
-- Home's drawing stays unlit while held. Creative would light it from 1; not decided.
-- Community Spend's Top Categories had no bar at all. They are held with the totals. A bar of 5 per category after that is a separate founder decision.
+- Home's drawing lights from 1 counted receipt (founder 2026-11-25): at most 3 lines under 5 receipts, never more than the number of businesses. The server works out the line count; the totals stay `null`. At 1 or 2 businesses the lines match the business count.
+- Community Spend's Top Categories had no bar at all. They are held with the totals. No bar per category after that (founder 2026-11-25): a category with one receipt shows that amount.
 - The APIs return `null` for `total_amount_cents`, `total_transactions` and `unique_businesses`. No code in this repo fetches them.
 - Method page sections 5 and 10 use Author's and Marketing's wording.
-- "Verified receipts" on Community Spend contradicts the method page ("reported spend, not verified spend"). Not changed here.
+- "Verified receipts" on Community Spend contradicted the method page ("reported spend, not verified spend"). "Verified" is dropped (founder 2026-11-25). `/account/spending` still says "Verified spend" for a shopper's own receipts; not changed.
 - The site tour's owner step 4 picture needs a redraw: the held desktop column is 64px shorter. The tour is off in production.
 
 ## Not Fixed by This

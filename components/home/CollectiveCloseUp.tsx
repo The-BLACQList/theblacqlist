@@ -4,15 +4,14 @@ import {
   CLOSE_UP_DESK,
   CLOSE_UP_PHONE,
   buildCloseUp,
-  closeUpLineCount,
   type CloseUpArt,
   type CloseUpView,
 } from '@/lib/spend/collective-closeup'
 import { cn } from '@/lib/utils'
 
 interface Props {
-  purchases: number
-  businesses: number
+  /** Worked out on the server, so the art never takes a receipt or business count. */
+  lineCount: number
 }
 
 const GAP_HEX = '#ff8ccf'
@@ -30,9 +29,7 @@ const PHONE_FADE = [
  * the art is hidden from screen readers and the real totals stay in the band's
  * text. Pulses run on SVG animation, which keeps this a Server Component.
  */
-export function CollectiveCloseUp({ purchases, businesses }: Props) {
-  const lineCount = closeUpLineCount(purchases, businesses)
-
+export function CollectiveCloseUp({ lineCount }: Props) {
   return (
     <>
       <div className="group absolute inset-0 mx-auto hidden max-w-7xl lg:block">
