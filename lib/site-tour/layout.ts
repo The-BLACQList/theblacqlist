@@ -36,20 +36,21 @@ export function mapRoom(room: number, was: boolean): boolean {
 }
 
 /**
- * The map step's light where the phone controls show (DR-006): the map between
- * the controls and the list or the card, so no filter or mark is lit.
+ * The map step's light (DR-006). Where the phone controls show, it is the map
+ * between them and the list or the card, so no filter or mark is lit.
  */
 export function mapLight(input: {
   map: Box
-  controlsBottom: number
+  controlsBottom: number | null
   /** The location button is the first thing inside the light, where it shows. */
   locateTop: number | null
   listTop: number
-  cardTop: number
+  /** Where a low card comes to rest. */
+  cardTop: number | null
 }): Box {
   const { map, controlsBottom, locateTop, listTop, cardTop } = input
-  const top = Math.max(controlsBottom + 8, locateTop ?? 0)
-  const bottom = Math.min(map.y + map.h, listTop, cardTop - 12)
+  const top = controlsBottom === null ? map.y : Math.max(controlsBottom, locateTop ?? controlsBottom + 8)
+  const bottom = Math.min(map.y + map.h, listTop, (cardTop ?? Infinity) - 12)
   return { x: map.x, y: top, w: map.w, h: Math.max(0, bottom - top) }
 }
 

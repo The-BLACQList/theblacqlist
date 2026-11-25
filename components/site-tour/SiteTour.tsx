@@ -22,6 +22,7 @@ import {
 } from '@/lib/site-tour/copy'
 import {
   captionMode,
+  clip,
   inflate,
   lightPath,
   mapLight,
@@ -637,7 +638,7 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
           ? { x: rect ? rect.right + 24 : 480, y: head, w: Math.max(0, vw - (rect ? rect.right + 24 : 480)), h: vh - head }
           : { x: 0, y: head, w: vw, h: Math.max(0, (low ? cardTop : vh) - head) }
 
-      // Where there are phone controls, only the map below them is the light (DR-006).
+      // The light is the map only, never the phone controls on it (DR-006).
       let mapBox: Box | null = null
       let roomy = true
       if (isMap) {
@@ -649,18 +650,17 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
         const boxes = (selector: string) => findAll([selector]).map(boxOf)
         const controls = [...document.querySelectorAll(MAP_BAR)].map((el) => el.getBoundingClientRect().bottom)
         const mapArea = boxes('[data-tour="map"]')[0]
-        if (mapArea && controls.length > 0) {
+        // Narrower than this, no phone controls means they are still loading.
+        if (mapArea && (controls.length > 0 || vw >= 1024)) {
           mapBox = mapLight({
-            map: mapArea,
-            controlsBottom: Math.max(head, ...controls),
+            map: clip(mapArea, { ...area, h: vh - head }) ?? { ...mapArea, h: 0 },
+            controlsBottom: controls.length > 0 ? Math.max(head, ...controls) : null,
             locateTop: boxes('[data-map-locate]')[0]?.y ?? null,
             listTop: boxes('[data-map-sheet]')[0]?.y ?? vh,
-            cardTop: restTop,
+            cardTop: low ? restTop : null,
           })
         }
-        if (mapBox) roomy = mapRoom(mapBox.h, roomyRef.current)
-        // Wide and low has no phone controls. Narrower, they are still loading.
-        else if (low) roomy = vw >= 1024 && mapRoom(restTop - head, roomyRef.current)
+        roomy = mapBox !== null && mapRoom(mapBox.h, roomyRef.current)
         roomyRef.current = roomy
         setCramped(!roomy)
       }
@@ -687,10 +687,10 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
           }
           holes = [...holes, ...bar]
         }
-      } else if (lit && mapBox && roomy) {
-        holes = [{ box: mapBox, r: 0 }]
+      } else if (lit && isMap) {
+        if (mapBox && roomy) holes = [{ box: mapBox, r: 0 }]
         rings = [...holes]
-      } else if (lit && roomy) {
+      } else if (lit) {
         holes = findAll(target.selectors).map((el) => ({
           box: inflate(boxOf(el), target.pad),
           r: target.radius,
@@ -709,10 +709,12 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
         scrim.current?.setAttribute('d', `M0 0H${vw}V${vh}H0Z${light}`)
         ring.current?.setAttribute('d', line)
         const c = clear.current
-        c?.setAttribute('x', String(area.x))
-        c?.setAttribute('y', String(area.y))
-        c?.setAttribute('width', String(area.w))
-        c?.setAttribute('height', String(area.h))
+        // The map starts at the clear area's edges, so its ring sits outside them.
+        const out = isMap ? 4 : 0
+        c?.setAttribute('x', String(area.x - out))
+        c?.setAttribute('y', String(area.y - out))
+        c?.setAttribute('width', String(area.w + out))
+        c?.setAttribute('height', String(area.h + out))
         // Room at the end of the page, so nothing stays under the card.
         const pad = low && !target.fixed && rect ? rect.height : 0
         document.documentElement.style.setProperty('--blq-tour-pad', `${Math.round(pad)}px`)

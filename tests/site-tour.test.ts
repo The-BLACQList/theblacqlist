@@ -172,6 +172,10 @@ describe('paths', () => {
     // Very small windows have no location button.
     expect(mapLight({ ...at, locateTop: null }).y).toBe(184)
     expect(mapLight({ ...at, cardTop: 150 }).h).toBe(0)
+    // Desktop: the whole map, or down to 12px above a low card.
+    const wide = { map: { x: 480, y: 64, w: 960, h: 836 }, controlsBottom: null, locateTop: null, listTop: 900 }
+    expect(mapLight({ ...wide, cardTop: null })).toEqual(wide.map)
+    expect(mapLight({ ...wide, cardTop: 212 }).h).toBe(136)
   })
 })
 

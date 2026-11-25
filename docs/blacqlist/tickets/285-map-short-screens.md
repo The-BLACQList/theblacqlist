@@ -22,8 +22,8 @@ At 1024px and wider, nothing changes. At 390 × 844, the sheet is the same 351px
 
 - `mapStepFits` leaves step 3 out below 500px tall under 1024px wide, below 400px tall on wide windows, and below 700px tall under 300px wide. It is asked on each press that could lead there (Next, Back, an answer, a chapter card). Step numbers and the total stay, so there is a gap.
 - A chapter card goes with its only step.
-- The light is only the map below the phone controls (approved DR-006): 0/184 390 × 309 at 390 × 844. The search row, chips (Verified+ among them) and the list are dimmed and off. The first build lit the whole map area.
-- Room is the height of that light, read from where the card comes to rest. A turned phone is judged afresh against 52px, so 844 × 390 has a 54px light and 667 × 375 has none.
+- The light is only the map below the phone controls (approved DR-006): 0/184 390 × 309 at 390 × 844. The search row, chips (Verified+ among them) and the list are dimmed and off. The first build lit the whole map area. On wide windows the ring's left and top edges show (DR-005), and a low card leaves 12px.
+- Room is the height of that light, read from where the card comes to rest. A turned phone is judged afresh against 52px, so 844 × 390 has a 58px light and 667 × 375 has none.
 - The caption sheet's text has no line limit, so it takes fewer lines.
 - Turning the phone while step 3 is up keeps the step. With too little map there is no light and the map can't be used until there is room.
 - A saved run holds the step's name, not its place.
