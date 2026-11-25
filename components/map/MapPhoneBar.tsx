@@ -8,10 +8,15 @@ import { MapSearchInput } from '@/components/map/MapSearchInput'
 import { CITY_CHOICES } from '@/components/map/mapStyle'
 import { activeFilterCount } from '@/lib/map/filterListings'
 import type { MapFilterProps } from '@/lib/map/types'
+import { cn } from '@/lib/utils'
 
 interface Props extends MapFilterProps {
   onLocate: () => void
 }
+
+// A very short, narrow window has room for the search bar only. The chips, with
+// Near Me among them, come with the Filters button.
+const NO_ROOM = '[@media(max-width:639px)_and_(max-height:359px)]:hidden'
 
 /** Floating search bar, chip row and locate button over the phone map. */
 export function MapPhoneBar({ onLocate, ...filterProps }: Props) {
@@ -19,8 +24,17 @@ export function MapPhoneBar({ onLocate, ...filterProps }: Props) {
   const [extrasOpen, setExtrasOpen] = useState(false)
 
   return (
-    <div data-map-phonebar="" className="pointer-events-none absolute inset-x-3 top-3 z-20 flex flex-col gap-2">
-      <div className="pointer-events-auto flex min-h-[52px] items-center gap-2 rounded-[14px] bg-white p-1 shadow-[0_6px_20px_rgba(29,28,29,0.2)]">
+    <div
+      data-map-phonebar=""
+      className={cn(
+        'pointer-events-none absolute inset-x-3 top-3 flex flex-col gap-2',
+        // The open filters come in front of an open list.
+        extrasOpen ? 'z-30' : 'z-20',
+        // Sideways phone: the chips sit beside the search bar (ticket 285).
+        'map-tiny:sm:flex-row map-tiny:sm:flex-wrap map-tiny:sm:items-center'
+      )}
+    >
+      <div className="pointer-events-auto flex min-h-[52px] min-w-0 map-tiny:sm:flex-[1_1_20rem] items-center gap-2 rounded-[14px] bg-white p-1 shadow-[0_6px_20px_rgba(29,28,29,0.2)]">
         <label htmlFor="map-city-select" className="sr-only">
           City
         </label>
@@ -55,7 +69,7 @@ export function MapPhoneBar({ onLocate, ...filterProps }: Props) {
       {extrasOpen && (
         <div
           id="map-phone-extras"
-          className="pointer-events-auto rounded-[14px] bg-white p-3 shadow-[0_6px_20px_rgba(29,28,29,0.2)]"
+          className="pointer-events-auto rounded-[14px] bg-white p-3 map-tiny:order-last map-tiny:max-h-[calc(100dvh_-_14rem)] map-tiny:w-full map-tiny:overflow-y-auto shadow-[0_6px_20px_rgba(29,28,29,0.2)]"
         >
           <FilterExtras filters={filters} onFilters={onFilters} categories={categories} />
         </div>
@@ -63,7 +77,12 @@ export function MapPhoneBar({ onLocate, ...filterProps }: Props) {
       <div
         role="group"
         aria-label="Quick filters"
-        className="pointer-events-auto -mx-3 flex gap-2 overflow-x-auto px-3 pb-1"
+        data-map-chips=""
+        className={cn(
+          'pointer-events-auto -mx-3 flex gap-2 overflow-x-auto px-3 pb-1',
+          'map-tiny:sm:mx-0 map-tiny:sm:min-w-0 map-tiny:sm:flex-[1_1_16rem] map-tiny:sm:px-1 map-tiny:sm:pb-0',
+          !extrasOpen && NO_ROOM
+        )}
       >
         <FilterChips
           filters={filters}
@@ -78,7 +97,11 @@ export function MapPhoneBar({ onLocate, ...filterProps }: Props) {
         type="button"
         onClick={onLocate}
         aria-label="Near me, use my location"
-        className="pointer-events-auto flex size-11 items-center justify-center self-end rounded-full bg-white text-ink shadow-[0_6px_20px_rgba(29,28,29,0.2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+        data-map-locate=""
+        className={cn(
+          'pointer-events-auto flex size-11 items-center justify-center self-end map-tiny:absolute map-tiny:right-0 map-tiny:top-full map-tiny:mt-1 rounded-full bg-white text-ink shadow-[0_6px_20px_rgba(29,28,29,0.2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber',
+          NO_ROOM
+        )}
       >
         <LocateFixed className="size-5" aria-hidden="true" />
       </button>
