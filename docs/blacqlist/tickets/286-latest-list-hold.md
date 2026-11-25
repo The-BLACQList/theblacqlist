@@ -1,46 +1,58 @@
-# Ticket 286: Hold the Collective's Latest List Until 5 Receipts Are Counted
+# Ticket 286: Hold the Collective's Latest List and Totals Until 5 Receipts Are Counted
 
-**Status:** Proposed, not started. Founder 2026-11-25: "Hold until 5". That covers writing this ticket; building it needs its own OK. [Needs professional review] for the Privacy Policy question.
+**Status:** Proposed, not started. Founder 2026-11-25: "Hold until 5" (Latest list), then "yes" to holding Spent and Receipts until 5 too. Building it needs its own OK. [Needs professional review] for the Privacy Policy question.
 
 ## Why
 
-`/flow-map` shows "A receipt at {business}, {day}" for the three newest counted receipts, beside the Spent total. With one counted receipt, Spent is that receipt and the list names its business and day. Privacy Policy section 4 says individual receipt data (amounts, dates, businesses visited) is not shown publicly, and that totals can't be traced to a person (`app/(public)/privacy/PrivacyPolicy.tsx:433-439`). Found in ticket 279. The last production count on record, 2026-11-14, was 0 receipts; not read again for this ticket.
+`/flow-map` shows "A receipt at {business}, {day}" for the three newest counted receipts, beside the Spent total. With one counted receipt, Spent is that receipt and the list names its business and day. A business also gets its line at 1 counted receipt (ticket 250), so hiding the list alone would leave the business and the amount. Privacy Policy section 4 says individual receipt data (amounts, dates, businesses visited) is not shown publicly, and that totals can't be traced to a person (`app/(public)/privacy/PrivacyPolicy.tsx:433-439`). Found in ticket 279. The last production count on record, 2026-11-14, was 0 receipts; not read again for this ticket.
 
 ## The Decision
 
-The Live Latest list stays hidden until 5 receipts are counted. The number is `AGGREGATE_MIN_TRANSACTIONS` (`lib/spend/aggregate-privacy.ts:32`), never a second copy. "Counted" is everything `readCountedSpend` returns, the same rows behind the Receipts figure. The Demo view's list is made up and doesn't change.
+Until 5 receipts are counted across the site, none of these is published:
 
-## What Holding the List Does Not Fix
+1. The Live Latest list.
+2. Spent, the total in dollars.
+3. Receipts, the total count.
 
-Found while writing this ticket, from the code on main `def4a2c`. Nothing was run.
+The number is `AGGREGATE_MIN_TRANSACTIONS` (`lib/spend/aggregate-privacy.ts:32`), never a second copy. "Counted" is everything `readCountedSpend` returns. The line at 1 receipt stays (ticket 250). The Demo view is made up and doesn't change.
 
-1. **The line gives the same answer.** A business gets its line at 1 counted receipt (ticket 250). With one counted receipt, exactly one business has a line and Spent is that receipt. Hiding the list removes the day, not the business or the amount.
-2. **Watching the total.** Spent is computed each time the page opens. Someone who notes it before and after a new receipt gets that receipt's amount, and the list (or a new line) names the business. Holding at 5 doesn't stop this at receipt 6 or 600.
-3. **Other places Spent is read:** the home page, `/api/flow-map/summary`, `/api/community-spend` and `/account/community-spend`.
+## Where the Totals Are Published
 
-## For the Founder, at Build Time
+Read from the code on main `def4a2c`; nothing was run.
 
-| Option | What changes | What is left |
-|---|---|---|
-| A. Hold the list only (as decided) | List hidden under 5 counted receipts | 1 and 2 |
-| B. A, plus hold Spent and Receipts under 5 (recommended) | No dollar total anywhere while it could be one person's receipt | 2 |
-| C. B, plus name only businesses with 5 or more counted receipts in the list | The list stops pointing at small businesses' single receipts | 2, for a new line, and for a business at the bar |
-| D. Publish the totals on a delay, for example daily | Several receipts change the total at once on busy days | Quiet days with one receipt |
+| Place | File |
+|---|---|
+| The Collective: Spent, Receipts, floor heights, the Shoppers floor sentence | `app/(public)/flow-map/page.tsx`, `components/flow-map/silo/SiloExperience.tsx`, `SiloPanels.tsx:469` |
+| Home | `app/page.tsx:210-213`, `:276` |
+| Community Spend (signed in) | `app/account/community-spend/page.tsx:55-58` |
+| `GET /api/community-spend` (no sign-in) | `total_amount_cents`, `total_transactions` |
+| `GET /api/flow-map/summary` (no sign-in) | `total_amount_cents`, `total_transactions` |
 
-Recommended before launch: **B**. It changes the Spent headline while there is little to show, and the page already opens on Demo then. C and D are for counsel's answer.
+## Steps
 
-## Steps (for A)
+1. One helper in `lib/spend/aggregate-privacy.ts` turns the counted rows into totals, or `null` under the bar. Every place above uses it. Its comment says community-wide totals are not gated, deliberately; that changes with this ticket.
+2. `null` is "not published yet", never 0: $0 would be untrue. The two APIs return `null` for both fields. Check who reads them before changing the shape.
+3. The held state on the Collective, Home and Community Spend needs a look from Creative and words from Author, Marketing and the founder.
+4. The Latest rows and the totals must not reach the browser while held. `SiloTicker` already renders nothing for an empty list.
+5. Method page section 5 (the community-wide paragraph and the Latest list sentences) and section 10 change together, with the same words steps as ticket 279. Same change in `docs/blacqlist/flow-map/data-sourcing-and-methodology.md`.
+6. Tests: 0, 1, 4 and 5 counted receipts on each place; the number comes from the constant; Demo unaffected. Update `tests/aggregate-privacy.test.ts` and `tests/flow-map-methodology.test.ts`.
 
-1. In `app/(public)/flow-map/page.tsx` (the `ticker` read), return an empty list while `totalTransactions < AGGREGATE_MIN_TRANSACTIONS`. `SiloTicker` already renders nothing for an empty list. The rows must not reach the browser.
-2. Method page section 5: say when the Latest list appears. The words need Author, Marketing and the founder first, as in ticket 279. Same change in `docs/blacqlist/flow-map/data-sourcing-and-methodology.md`.
-3. Tests: 0, 1, 4 and 5 counted receipts; the number comes from the constant; the Demo list is unaffected.
+## Not Fixed by This
+
+For counsel. [Needs professional review]
+
+1. **Watching the total.** From receipt 6 on, someone who notes Spent before and after a new receipt gets its amount, and the list or a new line names the business.
+2. **Subtracting.** A business's own total shows at 5 receipts. If every other business with receipts is over the bar, Spent minus those totals is what the rest add up to. With 5 receipts at one business and 1 at another, that is one receipt, and the other business has a line. The CSV files give the same totals (method page section 10).
+3. **One person.** Five receipts from one shopper clear the bar (`aggregate-privacy.ts` notes this).
+
+Possible later answers: name only businesses with 5 or more receipts in the list, publish totals on a delay, or count distinct people.
 
 ## Done When
 
-- At 4 counted receipts the page's HTML and data carry no Latest rows; at 5 they do.
+- At 4 counted receipts no place above publishes Spent, Receipts or a Latest row, in its HTML, data or API; at 5 they all do.
 - No sentence on the method page disagrees.
 - Counsel's question (Privacy Policy section 4 against the list, the line and the totals) is on the counsel list.
 
 ## Not Included
 
-Privacy Policy wording, the 1-receipt line, distinct people instead of receipts (`aggregate-privacy.ts` notes five receipts from one person clear the bar).
+Privacy Policy wording and the 1-receipt line.
