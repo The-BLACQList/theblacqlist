@@ -78,7 +78,7 @@ The shopper's own total on `/account/receipts` still includes their past approve
 
 ### Stage 5 — Publication
 
-Four surfaces read these tables. All five read paths use the service-role client:
+Four surfaces read these tables. All five read paths use the service-role client, and all five read `spend_events` through `readCountedSpend` (`lib/spend/counted-spend.ts`, ticket 278), which reads every row in pages. The hosted API cuts any one request off at 1,000 rows without an error, so a plain select would publish a total that is too low:
 
 | Surface | File | Auth | Freshness | What it shows |
 |---|---|---|---|---|

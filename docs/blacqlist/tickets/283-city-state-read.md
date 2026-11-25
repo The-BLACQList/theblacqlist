@@ -19,9 +19,10 @@ No migration and no wording change.
 - The new test fails on the old code, naming both files, and passes on the new code.
 - The generated types have one link each for `receipt_uploads` → `listings` → `cities` → `states`.
 - RLS lets signed-in users read `states`, and the directory (`lib/listings/query.ts`) already uses the same read as the signed-in user.
+- Both final reads ran on staging on 2026-11-24 (read-only): no error, and every row with a city had a state code. Both old reads failed with 42703.
 - The staging job test on 2026-11-24 passed on `/add-job` with `cities(name)`, so without the state.
 
 ## Not Done
 
-- The final read has not been run against a database, and neither page was opened in a browser.
+- Neither page was opened in a browser with this read, and it was not run as a signed-in owner.
 - Production data was not read.
