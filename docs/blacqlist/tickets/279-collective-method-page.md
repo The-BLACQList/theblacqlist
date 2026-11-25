@@ -1,6 +1,6 @@
 # Ticket 279: The Collective's Method Page Matches How Receipts Work
 
-**Status:** Not started. The founder approved writing this ticket on 2026-11-24; the wording, the merge and the deploy each need their own OK.
+**Status:** Merged #415. Founder 2026-11-24: "build 278 and 279", then "Yes, merge #413 then #415, wording approved".
 
 ## Why
 
@@ -25,9 +25,36 @@ Found while writing this ticket: the section 4 line and the section 7 point.
 
 `FEATURE_OWNER_RECEIPT_REVIEW` is present in Vercel Production, last set 11 days ago. That matches the 2026-11-13 entry that set it to `true`. The value is stored as Sensitive, so it could not be read back. If the flag is ever off, admins review everything, so the wording must be true in both states or follow the flag.
 
+## Also Found and Fixed
+
+Every sentence was checked against main `6b63064`. Besides the rows above:
+
+| Section | Page said | Now |
+|---|---|---|
+| 3 | No business-to-business data (true), but nothing about the Demo view | Says the Demo view's businesses, amounts and links are made up (ticket 249) |
+| 4 | Filters, "three figures at the top" and business tables that no longer exist (ticket 167) | Names what is on screen: Spent, Receipts, Links |
+| 5 | "Individual receipts … never part of any public view" | The Latest list shows a business and a day for single receipts (ticket 171b, 250). The page says so: no amount, no shopper |
+| 7 | "Figures can be up to an hour old" | Pages are computed when opened (measured: `/` and `/flow-map` read the database on every load); the CSV files can be about a day old (`IMPACT_EXPORT_CACHE_CONTROL`) |
+| 8 | The recalculation "is scheduled"; "a small amount" of opted-out spend | Not done and not scheduled (open GATE-DATA); the amount has not been measured |
+| 5 | Suppressing the totals would "buy nobody any privacy"; "no path from a published figure back to a person" | Says a single amount could be worked out while few receipts are counted, and that we can match a record to its receipt until the account is deleted |
+| 5 | Nothing about what an owner sees | When the business reviews a receipt: photo, amount, date, first name and last initial; the photo closes once reviewed |
+| 5 | Every receipt you add draws a dashed line | Only for a business on The BLACQList, and not if kept out of community figures |
+| 2 | "the totals went down" | "we count less in the totals" (no before and after was measured) |
+| Headings | Sentence case | Title Case |
+
+The internal note also said a rejected receipt is final and that the Privacy Policy and Terms still promise an opt-out "at any time". Both are out of date and corrected.
+
+## Found, Not Changed
+
+- **Privacy Policy section 4** says individual receipt data, including dates and businesses visited, "is not shown publicly". The Latest list shows a business and a day. [Needs professional review]: the policy wording, or the list.
+- **The CSV export** asks for 5,000 rows, but Max Rows is 1,000 (ticket 278), so "every business" stops being true past 1,000 businesses with 5 receipts each.
+- **One receipt can be worked out while few are counted** [Needs professional review]: with one counted receipt, Spent is that receipt and the Latest list names its business. Section 5 now says so. Whether to hold the list, or the totals, until more receipts are counted is a founder choice. Privacy Policy section 4 says totals "cannot be traced back to any individual".
+- **Privacy Policy section 4 and the owner email** [Needs professional review]: the policy limits what an owner sees to while the receipt is waiting; the email keeps the shopper's first name and last initial.
+- **Terms section 7** [Needs professional review]: says receipts are "reviewed by our team"; with owner review on, the business can review them.
+
 ## Steps
 
-1. Author drafts the replacement lines; Marketing checks them; the founder approves. No wording is approved yet.
+1. Author drafts the replacement lines; Marketing checks them; the founder approves. Author and Marketing checked the page on 2026-11-24 and their edits are in. The founder approved the wording the same day.
 2. Check the remaining sentences against the code, including "there is no business-to-business data" (section 3) and "up to an hour old" (section 7).
 3. Change the page and the internal note together.
 4. Extend `tests/flow-map-methodology.test.ts` so the photo rule and the reviewer wording are tied to the code that enforces them.
