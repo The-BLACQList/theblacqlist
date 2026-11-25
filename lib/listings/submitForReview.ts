@@ -2,6 +2,7 @@ import 'server-only'
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+import { trackServerEvent } from '@/lib/analytics/server'
 import { createServiceClient } from '@/lib/supabase/server'
 
 type AnyClient = SupabaseClient | { from: SupabaseClient['from'] }
@@ -55,9 +56,9 @@ export async function transitionToPendingReview(
     return { error: 'Failed to submit listing for review. Please try again.' }
   }
 
-  const serviceClient = createServiceClient()
-
-  void serviceClient.from('analytics_events').insert({
+  // `void client.from(…).insert(…)` sends nothing: the query builder only runs
+  // once awaited. trackServerEvent awaits it after the response (ticket 281).
+  trackServerEvent({
     event_name: 'listing_submitted',
     entity_id: listingId,
     entity_type: 'listing',

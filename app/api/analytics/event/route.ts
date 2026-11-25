@@ -91,8 +91,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   // time, so nothing anywhere reported a failure.
   //
   // trackServerEvent awaits the insert inside after(), which both fires it and
-  // keeps it off the response path. Same three server actions still carry the
-  // original `void` pattern — checkpoint 1.15.
+  // keeps it off the response path. The last three `void` inserts were fixed in
+  // ticket 281.
   trackServerEvent({
     event_name,
     entity_id: (entity_id as string | null | undefined) ?? null,

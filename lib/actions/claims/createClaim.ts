@@ -1,5 +1,6 @@
 'use server'
 
+import { trackServerEvent } from '@/lib/analytics/server'
 import { getAppUrl } from '@/lib/env'
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { TURNSTILE_ERROR, verifyTurnstileFormData } from '@/lib/security/turnstile'
@@ -185,8 +186,8 @@ export async function createClaimAction(
     priority: 0,
   })
 
-  // ── Analytics event (fire-and-forget) ──────────────────────────────────────
-  void serviceClient.from('analytics_events').insert({
+  // ── Analytics event (after the response, best effort) ──────────────────────
+  trackServerEvent({
     event_name: 'claim_submitted',
     entity_id: claim.id,
     entity_type: 'claim',
