@@ -1,6 +1,6 @@
 # Ticket 283: Post a Job and Receipt Sharing Read the State Correctly
 
-**Status:** In review, 2026-11-24.
+**Status:** Merged #416 (`38e3ab2`), 2026-11-24.
 
 ## Why
 

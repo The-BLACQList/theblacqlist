@@ -1,6 +1,6 @@
 # Ticket 278: Every Published Business Has a Spot in The Collective
 
-**Status:** Built, in review. The founder started the fix on 2026-11-24 ("Max Rows is 1000, build 278 and 279"); the merge and the deploy each need their own OK.
+**Status:** Merged #413. The founder started the fix on 2026-11-24 ("Max Rows is 1000, build 278 and 279") and approved the merge the same day.
 
 ## Why
 
