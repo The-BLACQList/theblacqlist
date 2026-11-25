@@ -45,6 +45,17 @@ export const ANALYTICS_EVENTS = {
   CLAIM_SUBMITTED: 'claim_submitted',
   LISTING_SUBMITTED: 'listing_submitted',
   RECEIPT_SUBMITTED: 'receipt_submitted',
+
+  // ── Site tour (ticket 280) ────────────────────────────────────────────────
+  // No entity. Properties: { path: 'shopper' | 'owner', step, start, cta }, all
+  // from fixed lists. Never what anyone typed.
+  SITE_TOUR_SHOWN: 'site_tour_shown',
+  SITE_TOUR_PATH_CHOSEN: 'site_tour_path_chosen',
+  SITE_TOUR_STEP_VIEWED: 'site_tour_step_viewed',
+  SITE_TOUR_ENDED: 'site_tour_ended',
+  SITE_TOUR_COMPLETED: 'site_tour_completed',
+  SITE_TOUR_CTA: 'site_tour_cta',
+  SITE_TOUR_RESTARTED: 'site_tour_restarted',
 } as const
 
 /**
@@ -142,6 +153,10 @@ export const VALID_EVENT_NAMES: ReadonlySet<string> = new Set<string>(
  *            listing_id, never by this property. The marketplace cta_click
  *            below was a lazy `void` insert that never ran until the same
  *            ticket; storefront clicks before 2026-11-21 were never recorded.
+ *
+ *   site_tour_* (ticket 280, 2026-11-24, behind siteTour): sent by the browser
+ *            from components/site-tour. Rough counts, read as daily totals by
+ *            /api/admin/analytics/site-tour/export.
  *
  *   Declared, nothing emits them yet: filter_applied, collection_viewed,
  *            guide_viewed, search_performed, marketplace_cta_click,

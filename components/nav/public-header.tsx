@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getAdminRole } from '@/lib/admin/guard'
 import { signOutAction } from '@/lib/actions/auth/signOut'
 import { isCovered } from '@/lib/features/covered'
+import { SITE_TOUR_SEEN_METADATA } from '@/lib/site-tour/state'
 import { SoonPill } from '@/components/ui/soon-pill'
 import { MAIN_NAV_LINKS, accountMenuLinks } from '@/components/nav/nav-links'
 import { AccountMenu } from '@/components/nav/AccountMenu'
@@ -43,6 +44,10 @@ export async function PublicHeader() {
     isOwner: ownsPages,
     messagingOn: messagesUnread !== undefined,
   })
+  const seenAt: unknown = user?.user_metadata?.[SITE_TOUR_SEEN_METADATA]
+  const tour = isFeatureEnabled('siteTour')
+    ? { seenAt: typeof seenAt === 'string' ? seenAt : null }
+    : null
   const collectiveSoon = isCovered('collective')
   // The search icon opens Search or ask Cue when the assistant is on; a plain
   // link to /search otherwise.
@@ -106,7 +111,7 @@ export async function PublicHeader() {
                 {messagesUnread !== undefined && (
                   <MessagesNavLink unread={messagesUnread} owner={ownsPages} />
                 )}
-                <AccountMenu links={accountLinks} />
+                <AccountMenu links={accountLinks} tour={tour} />
                 <form action={signOutAction}>
                   <button
                     type="submit"
@@ -145,6 +150,7 @@ export async function PublicHeader() {
               isAdmin={isAdmin}
               accountLinks={accountLinks}
               collectiveSoon={collectiveSoon}
+              tour={tour}
             />
           </div>
         </nav>
