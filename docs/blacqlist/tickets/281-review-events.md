@@ -1,6 +1,6 @@
 # Ticket 281: Review Events Save
 
-**Status:** In review, 2026-11-24.
+**Status:** Merged #412 (`9df5f89`), 2026-11-24.
 
 ## Why
 

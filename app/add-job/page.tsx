@@ -18,13 +18,18 @@ export const metadata = {
 // the same commit would not change what this route serves. See lib/env.ts.
 export const dynamic = 'force-dynamic'
 
+interface BusinessCity {
+  name: string
+  states: { code: string } | null
+}
+
 interface BusinessRow {
   id: string
   name: string
   status: string
   entity_type: string
   logo_path: string | null
-  cities: { name: string; state_abbr: string | null } | { name: string; state_abbr: string | null }[] | null
+  cities: BusinessCity | BusinessCity[] | null
 }
 
 interface Props {
@@ -53,7 +58,8 @@ export default async function AddJobPage({ searchParams }: Props) {
       .order('display_order'),
     supabase
       .from('listings')
-      .select('id, name, status, entity_type, logo_path, cities(name, state_abbr)')
+      // `cities` has no state_abbr column: asking for it fails the whole read.
+      .select('id, name, status, entity_type, logo_path, cities(name, states(code))')
       .eq('owner_user_id', user.id)
       .in('status', ['draft', 'pending', 'published'])
       .is('deleted_at', null)
@@ -63,6 +69,7 @@ export default async function AddJobPage({ searchParams }: Props) {
     jobsOpen ? loadOpenClaims(supabase, user.id) : Promise.resolve([]),
   ])
 
+  if (ownedError) console.error('[add-job] owned pages read failed:', ownedError.message)
   const ownedRows = (owned ?? []) as unknown as BusinessRow[]
   // A failed owned read keeps today's plain empty state rather than a wrong step.
   const readiness: PostingReadiness | null =
@@ -75,7 +82,7 @@ export default async function AddJobPage({ searchParams }: Props) {
       name: b.name,
       logoUrl: resolveMediaPath(b.logo_path),
       cityName: city?.name ?? null,
-      stateAbbr: city?.state_abbr ?? null,
+      stateAbbr: city?.states?.code ?? null,
     }
   })
 

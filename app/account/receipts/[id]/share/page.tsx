@@ -52,13 +52,14 @@ export default async function SupportSharePage({
       purchase_date,
       listing_id,
       aggregate_opt_out,
-      listings ( name, slug, entity_type, cities ( name, state_abbr, slug ) )
+      listings ( name, slug, entity_type, cities ( name, slug, states ( code ) ) )
     `
     )
     .eq('id', id)
     .eq('user_id', user.id)
     .maybeSingle()
 
+  if (error) console.error('[receipts/share] receipt read failed:', error.message)
   const receipt = (data ?? null) as unknown as SupportReceipt | null
   const screen = supportScreen({ readFailed: !!error, receipt, viewerId: user.id })
 

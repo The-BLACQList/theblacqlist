@@ -34,7 +34,7 @@ function receipt(over: Partial<SupportReceipt> = {}): SupportReceipt {
       name: "Mama's Kitchen",
       slug: 'mamas-kitchen',
       entity_type: 'business',
-      cities: { name: 'Atlanta', state_abbr: 'GA', slug: 'atlanta' },
+      cities: { name: 'Atlanta', slug: 'atlanta', states: { code: 'GA' } },
     },
     ...over,
   }
