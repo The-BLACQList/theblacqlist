@@ -861,6 +861,7 @@ body[data-site-tour-on] .stack-over-assistant {
   font-size: 24px;
 }
 .blq-tour-card.is-sheet .blq-tour-body {
+  max-width: none;
   margin-top: 6px;
   font-size: 16px;
   line-height: 1.45;
@@ -1307,6 +1308,13 @@ body:has([data-assistant='on']) .stack-over-assistant {
   }
 }
 
+/* /map under the `lg` layout on a short window (ticket 285): a phone with the
+   browser's bars showing, or one turned sideways. The sizes come from CSS alone,
+   so the sheet has its height on the first paint (ticket 272).
+   map-short: the strip's cards are rows. map-tiny: the sheet is one line. */
+@custom-variant map-short (@media (width < 64rem) and (height < 760px));
+@custom-variant map-tiny (@media (width < 64rem) and (height < 500px));
+
 /* On /map, a phone's card sheet (MapBottomSheet) fills the bottom edge, so the
    Ask button rides just above it and moves with it when the list opens. The
    sheet writes its height to --map-sheet-h; 22rem is the closed strip. */
@@ -1317,6 +1325,29 @@ body:has([data-assistant='on']) .stack-over-assistant {
   }
   body:has([data-map-sheet]):has([data-assistant='on']) .stack-over-assistant {
     bottom: calc(var(--map-sheet-h, 22rem) + 4.5rem);
+  }
+}
+/* /map keeps its sheet up to `lg`, so a sideways phone needs the lift too. With
+   the list open on a short window there is no map left to ride on: Ask Cue and
+   what the list covers step out until Map is pressed (ticket 285). */
+@media (width < 64rem) {
+  body:has([data-tour='map'] [data-map-sheet]) .lift-over-map-sheet {
+    bottom: calc(var(--map-sheet-h, 22rem) + 0.75rem);
+    transition: bottom 200ms ease-out;
+  }
+  body:has([data-tour='map'] [data-map-sheet]):has([data-assistant='on']) .stack-over-assistant {
+    bottom: calc(var(--map-sheet-h, 22rem) + 4.5rem);
+  }
+}
+@media (width < 64rem) and (height < 760px) {
+  body:has([data-tour='map'] [data-map-sheet='open']) .lift-over-map-sheet,
+  [data-tour='map']:has([data-map-sheet='open']) [data-map-locate] {
+    visibility: hidden;
+  }
+}
+@media (width < 40rem) and (height < 500px) {
+  [data-tour='map']:has([data-map-sheet='open']) > [data-map-phonebar='']:not(:has(#map-phone-extras)) [data-map-chips] {
+    visibility: hidden;
   }
 }
 /* On The Collective, a sideways phone has floors down the left edge and the card

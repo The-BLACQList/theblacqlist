@@ -23,7 +23,7 @@ const memory = (page: Page) =>
   page.evaluate((key) => JSON.parse(localStorage.getItem(key) ?? '{}'), KEY)
 
 /** A tour step is up: its card and, once the page has settled, the light. */
-async function step(page: Page, title: string, count?: string) {
+async function step(page: Page, title: string, count?: string | RegExp) {
   await expect(heading(page)).toHaveText(title, { timeout: 25_000 })
   if (count) await expect(page.locator('.blq-tour-count')).toHaveText(count)
   await expect(page.locator('.blq-tour-ring')).toHaveAttribute('d', /^M/, { timeout: 15_000 })
@@ -219,6 +219,48 @@ test.describe('Site tour', () => {
     await step(page, 'Add Your Business')
     await page.reload()
     await step(page, 'Add Your Business', 'Step 2 of 4')
+  })
+
+  test('too little map: the tour goes past the map step, both ways (DR-023)', async ({ browser, baseURL }) => {
+    test.setTimeout(120_000)
+    const context = await browser.newContext({ baseURL, viewport: { width: 390, height: 664 } })
+    const page = await context.newPage()
+    // No answer, so each Try an Example goes straight on.
+    await page.route('**/api/cue', (route) => route.fulfill({ status: 503, body: '{}' }))
+    await toCue(page)
+    await page.setViewportSize({ width: 844, height: 390 })
+    await press(page, 'Try an Example')
+    await step(page, 'Read The BLACQLight', /^Step 4 of/)
+    await expect(page).toHaveURL(/\/blacqlight/)
+    await press(page, 'Back')
+    await step(page, 'Ask Cue', /^Step 1 of/)
+    // Upright again, it is back; turning while it is up keeps it, without a light.
+    await page.setViewportSize({ width: 390, height: 664 })
+    await press(page, 'Try an Example')
+    await expect(page).toHaveURL(/\/map/, { timeout: 25_000 })
+    const ring = page.locator('.blq-tour-ring')
+    await expect(ring).toHaveAttribute('d', /^M/, { timeout: 15_000 })
+    // Only the map is lit: the search row and chips stay dimmed and off (DR-006).
+    const chips = page.locator('[data-map-chips]')
+    const chipsBottom = await chips.evaluate((el) => el.getBoundingClientRect().bottom)
+    const lightTop = await page
+      .locator('.blq-tour-shade')
+      .evaluate((el) => Number(el.getAttribute('d')?.match(/ZM[\d.]+ ([\d.]+)/)?.[1]))
+    expect(lightTop).toBeGreaterThanOrEqual(chipsBottom)
+    await expect(page.locator('[data-map-phonebar]')).toHaveAttribute('inert', '')
+    await expect(page.locator('[data-tour="map"]')).not.toHaveAttribute('inert', '')
+    // Turned, the light starts below the one row; smaller still, there is none.
+    await page.setViewportSize({ width: 844, height: 390 })
+    await expect(ring).toHaveAttribute('d', /^M-3 1[23]/)
+    await page.setViewportSize({ width: 390, height: 664 })
+    await expect(ring).toHaveAttribute('d', /^M/)
+    for (const size of [{ width: 667, height: 375 }, { width: 568, height: 320 }]) {
+      await page.setViewportSize(size)
+      await expect(ring).not.toHaveAttribute('d', /^M/)
+    }
+    await expect(page).toHaveURL(/\/map/)
+    await expect(tour(page).getByRole('dialog')).toHaveAttribute('aria-modal', 'true')
+    await context.close()
   })
 
   test('Back from the first step returns to the question', async ({ page }) => {

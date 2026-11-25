@@ -27,7 +27,8 @@ export type SiteTourStart = 'home' | 'for_business' | 'prompt' | 'menu' | 'foote
 
 export interface SiteTourRun {
   path: SiteTourPath
-  index: number
+  /** The step's name, not its place: places move when a part is switched on. */
+  key: string
   start: SiteTourStart
 }
 
@@ -89,10 +90,8 @@ export function readRun(store: Store | null = session()): SiteTourRun | null {
     const parsed = JSON.parse(store.getItem(SITE_TOUR_RUN_KEY) ?? 'null') as Partial<SiteTourRun> | null
     if (!parsed) return null
     if (parsed.path !== 'shopper' && parsed.path !== 'owner') return null
-    if (typeof parsed.index !== 'number' || !Number.isInteger(parsed.index) || parsed.index < 0) {
-      return null
-    }
-    return { path: parsed.path, index: parsed.index, start: parsed.start ?? 'home' }
+    if (typeof parsed.key !== 'string') return null
+    return { path: parsed.path, key: parsed.key, start: parsed.start ?? 'home' }
   } catch {
     return null
   }

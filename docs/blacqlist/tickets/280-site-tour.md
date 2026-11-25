@@ -1,6 +1,6 @@
 # Ticket 280: Site Tour for First-Time Visitors
 
-**Status:** In review, 2026-11-24. Behind `FEATURE_SITE_TOUR`, closed by default on every deployment, Previews included.
+**Status:** Merged #417 (`def4a2c`), 2026-11-25. Step 3 on small windows: ticket 285. Behind `FEATURE_SITE_TOUR`, closed by default on every deployment, Previews included.
 
 ## Why
 

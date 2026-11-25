@@ -46,6 +46,14 @@ const ANCHORS: Record<string, { file: string; literals: readonly string[] }> = {
     file: 'components/map/MapControls.tsx',
     literals: ['aria-label="Near me, use my location"'],
   },
+  '[data-map-phonebar]': {
+    file: 'components/map/MapPhoneBar.tsx',
+    literals: ['data-map-phonebar', 'data-map-locate', 'data-map-chips'],
+  },
+  '[data-map-sheet]': {
+    file: 'components/map/MapBottomSheet.tsx',
+    literals: ['data-map-sheet'],
+  },
   '[data-site-tour="blacqlight-title"]': {
     file: 'app/(public)/blacqlight/(index)/page.tsx',
     literals: ['data-site-tour="blacqlight-title"'],

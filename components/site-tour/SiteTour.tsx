@@ -22,8 +22,11 @@ import {
 } from '@/lib/site-tour/copy'
 import {
   captionMode,
+  clip,
   inflate,
   lightPath,
+  mapLight,
+  mapRoom,
   scrollFor,
   union,
   type Box,
@@ -45,6 +48,9 @@ import {
   CUE_FORM,
   CUE_INPUT,
   indexAfterAnswer,
+  indexOfKey,
+  itemKey,
+  nextIndex,
   pathOf,
   previousIndex,
   SILO,
@@ -88,6 +94,7 @@ interface Props {
 
 const INTRO_CLASSES = ['intro-wait', 'intro-play', 'intro-skip']
 const BAR_PARTS = ['[data-site-tour="cue-field"]', '[data-site-tour="cue-button"]']
+const MAP_BAR = '[data-map-phonebar] > :not([data-map-locate])'
 /** A link was followed; show the note even if the page turns out to be this one. */
 const NOTE_AFTER_MS = 1500
 
@@ -99,11 +106,7 @@ function targetOf(items: readonly SiteTourItem[], index: number): SiteTourTarget
   return targetOf(items, index + 1)
 }
 
-function stepKey(item: SiteTourItem | undefined): string {
-  if (!item) return 'welcome'
-  if (item.kind === 'step') return item.step.key
-  return item.kind === 'end' ? 'end' : item.chapter
-}
+const windowSize = () => ({ width: window.innerWidth, height: window.innerHeight })
 
 const inRoot = (el: Element | null) => el?.closest(`#${TOUR_ROOT_ID}`) !== null && el !== null
 
@@ -118,16 +121,16 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
   const [index, setIndex] = useState(() => {
     if (open.kind !== 'resume') return 0
     const run = buildItems(open.run.path, context)
-    const at = Math.min(open.run.index, run.length - 1)
-    const item = run[at]
     // A reload loses Cue's answer, so it resumes at the bar.
-    return item?.kind === 'step' && item.step.key === 'answer' ? at - 1 : at
+    return indexOfKey(run, open.run.key === 'answer' ? 'cue' : open.run.key)
   })
   const [wait, setWaitState] = useState<Wait>('idle')
   const [ready, setReady] = useState(false)
   const [lit, setLit] = useState(false)
   const [covered, setCovered] = useState(false)
   const [live, setLive] = useState(false)
+  /** Too little map above the card: no light, and the map isn't offered. */
+  const [cramped, setCramped] = useState(false)
   const [barInUse, setBarInUse] = useState(false)
   const [mode, setMode] = useState<CaptionMode>('bar')
   const [hint, setHint] = useState('')
@@ -142,7 +145,7 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
 
   const items = useMemo(() => buildItems(path, context), [path, context])
   const item = items[index]
-  const key = stepKey(item)
+  const key = itemKey(item)
   const isCue = key === 'cue' || key === 'answer'
   const target = useMemo(() => targetOf(items, index), [items, index])
 
@@ -216,9 +219,9 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
       setPath(onPath)
       setIndex(next)
       setView('item')
-      writeRun({ path: onPath, index: next, start: start.current })
+      writeRun({ path: onPath, key: itemKey(buildItems(onPath, context)[next]), start: start.current })
     },
-    [path]
+    [path, context]
   )
 
   const goQuestion = useCallback(() => {
@@ -302,7 +305,7 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
   // Have the next page ready, so a crossing stays short.
   useEffect(() => {
     if (view !== 'item') return
-    const next = targetOf(items, index + 1)
+    const next = targetOf(items, nextIndex(items, index, windowSize()))
     if (next && !onPage(next.href)) router.prefetch(next.href)
   }, [view, items, index, router])
 
@@ -380,7 +383,7 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
       if (chapter) {
         if (here) arrived.current = true
         if (elapsed >= MOTION.chapter && (found || late)) {
-          goTo(index + 1)
+          goTo(nextIndex(items, index, windowSize()))
           return
         }
       } else if ((found && !intro) || late) {
@@ -411,7 +414,7 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
       timers.forEach((timer) => window.clearTimeout(timer))
       stopGlide()
     }
-  }, [view, item, target, index, router, goTo])
+  }, [view, item, items, target, index, router, goTo])
 
   // Leaving the step's page ends the tour.
   useEffect(() => {
@@ -497,7 +500,7 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
       if (focusInBar()) setWait('stopped')
       else {
         setWait('idle')
-        goTo(indexAfterAnswer(items, cueIndex))
+        goTo(indexAfterAnswer(items, cueIndex, windowSize()))
       }
     }
     const onFallback = (event: Event) => {
@@ -526,7 +529,7 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
       const inBar = document.activeElement?.closest(CUE_FORM) != null
       setWait(inBar ? 'stopped' : 'idle')
       sendCueCommand({ type: 'stop' })
-      if (!inBar) goTo(indexAfterAnswer(items, cueIndex))
+      if (!inBar) goTo(indexAfterAnswer(items, cueIndex, windowSize()))
     }, MOTION.wait)
     return () => window.clearTimeout(timer)
   }, [view, wait, items, cueIndex, goTo, setWait])
@@ -552,7 +555,7 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
   const running = view === 'opening' || view === 'welcome' || view === 'item'
   const full = view === 'opening' || view === 'welcome' || (view === 'item' && item?.kind === 'chapter')
   const step = item?.kind === 'step' ? item.step : null
-  const modal = !step?.live || !ready
+  const modal = !step?.live || !ready || (cramped && key === 'map')
 
   useEffect(() => {
     if (!running) return
@@ -611,6 +614,12 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
 
   const isAnswerBox = isCue && (key === 'answer' || wait !== 'idle')
   const isCollective = target?.caption === 'collective'
+  const isMap = key === 'map'
+  const roomyRef = useRef(false)
+  const turnedRef = useRef(false)
+  useEffect(() => {
+    roomyRef.current = false
+  }, [key])
   useLayoutEffect(() => {
     if (view !== 'item' || !ready || !target || full) return
     let frame = 0
@@ -629,6 +638,32 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
           ? { x: rect ? rect.right + 24 : 480, y: head, w: Math.max(0, vw - (rect ? rect.right + 24 : 480)), h: vh - head }
           : { x: 0, y: head, w: vw, h: Math.max(0, (low ? cardTop : vh) - head) }
 
+      // The light is the map only, never the phone controls on it (DR-006).
+      let mapBox: Box | null = null
+      let roomy = true
+      if (isMap) {
+        const turned = vw > vh
+        if (turned !== turnedRef.current) roomyRef.current = false
+        turnedRef.current = turned
+        // Where the card comes to rest: it is still sliding in on the first reads.
+        const restTop = low && card.current ? vh - card.current.offsetHeight : vh
+        const boxes = (selector: string) => findAll([selector]).map(boxOf)
+        const controls = [...document.querySelectorAll(MAP_BAR)].map((el) => el.getBoundingClientRect().bottom)
+        const mapArea = boxes('[data-tour="map"]')[0]
+        // Narrower than this, no phone controls means they are still loading.
+        if (mapArea && (controls.length > 0 || vw >= 1024)) {
+          mapBox = mapLight({
+            map: clip(mapArea, { ...area, h: vh - head }) ?? { ...mapArea, h: 0 },
+            controlsBottom: controls.length > 0 ? Math.max(head, ...controls) : null,
+            locateTop: boxes('[data-map-locate]')[0]?.y ?? null,
+            listTop: boxes('[data-map-sheet]')[0]?.y ?? vh,
+            cardTop: low ? restTop : null,
+          })
+        }
+        roomy = mapBox !== null && mapRoom(mapBox.h, roomyRef.current)
+        roomyRef.current = roomy
+        setCramped(!roomy)
+      }
       const typing = isAnswerBox && document.querySelector(`${CUE_FORM}:focus-within`) !== null
       setBarInUse(typing)
       let holes: { box: Box; r: number }[] = []
@@ -652,6 +687,9 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
           }
           holes = [...holes, ...bar]
         }
+      } else if (lit && isMap) {
+        if (mapBox && roomy) holes = [{ box: mapBox, r: 0 }]
+        rings = [...holes]
       } else if (lit) {
         holes = findAll(target.selectors).map((el) => ({
           box: inflate(boxOf(el), target.pad),
@@ -671,10 +709,12 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
         scrim.current?.setAttribute('d', `M0 0H${vw}V${vh}H0Z${light}`)
         ring.current?.setAttribute('d', line)
         const c = clear.current
-        c?.setAttribute('x', String(area.x))
-        c?.setAttribute('y', String(area.y))
-        c?.setAttribute('width', String(area.w))
-        c?.setAttribute('height', String(area.h))
+        // The map starts at the clear area's edges, so its ring sits outside them.
+        const out = isMap ? 4 : 0
+        c?.setAttribute('x', String(area.x - out))
+        c?.setAttribute('y', String(area.y - out))
+        c?.setAttribute('width', String(area.w + out))
+        c?.setAttribute('height', String(area.h + out))
         // Room at the end of the page, so nothing stays under the card.
         const pad = low && !target.fixed && rect ? rect.height : 0
         document.documentElement.style.setProperty('--blq-tour-pad', `${Math.round(pad)}px`)
@@ -692,7 +732,7 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
     }
     draw()
     return () => cancelAnimationFrame(frame)
-  }, [view, ready, lit, target, full, isAnswerBox, isCollective])
+  }, [view, ready, lit, target, full, isAnswerBox, isCollective, isMap])
 
   // ── What's on screen ──────────────────────────────────────────────────────
 
@@ -702,7 +742,7 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
       return
     }
     send(ANALYTICS_EVENTS.SITE_TOUR_PATH_CHOSEN, { path: answer })
-    goTo(0, { path: answer })
+    goTo(nextIndex(buildItems(answer, context), -1, windowSize()), { path: answer })
   }
 
   function onBack() {
@@ -717,14 +757,15 @@ export default function SiteTour({ open, signedIn, context, onClose }: Props) {
       goTo(cueIndex)
       return
     }
-    const back = previousIndex(items, index)
+    const back = previousIndex(items, index, windowSize())
     if (back < 0) goQuestion()
     else goTo(back)
   }
 
   function onNext() {
     setWait('idle')
-    goTo(key === 'cue' ? indexAfterAnswer(items, index) : Math.min(index + 1, items.length - 1))
+    const size = windowSize()
+    goTo(key === 'cue' ? indexAfterAnswer(items, index, size) : nextIndex(items, index, size))
   }
 
   function onChoice(choice: { href: string | null; cta: string }) {
