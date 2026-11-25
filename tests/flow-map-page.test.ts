@@ -75,7 +75,10 @@ describe('/flow-map data reads', () => {
   })
 
   it('counts only receipts that stay in community figures', () => {
-    expect(page).toMatch(/\.from\('spend_events'\)[\s\S]{0,120}\.eq\('aggregate_opt_out', false\)/)
+    expect(page).toContain('readCountedSpend(serviceClient)')
+    expect(read('lib/spend/counted-spend.ts')).toMatch(
+      /\.from\('spend_events'\)[\s\S]{0,160}\.eq\('aggregate_opt_out', false\)/
+    )
   })
 
   it("marks the reader's dots only from counted, approved receipts", () => {
@@ -93,6 +96,15 @@ describe('/flow-map data reads', () => {
     expect(page).toContain('We couldn&apos;t load The Collective.')
     expect(page).toMatch(/siloLoadFailed \?/)
     expect(page).toMatch(/href="\/flow-map"\s+prefetch=\{false\}[\s\S]{0,400}Try Again/)
+  })
+
+  // Ticket 278: no ceiling, and a failed page is a failed read, not a short map.
+  it('reads every published business, with no cap', () => {
+    expect(page).not.toContain('MAP_LIMIT')
+    expect(page).toMatch(
+      /readAllRows\(\(afterId, limit\) =>[\s\S]{0,120}\.from\('listings'\)[\s\S]{0,80}count: 'exact'[\s\S]{0,260}\.gt\('id', afterId\)\s*\.order\('id', \{ ascending: true \}\)\s*\.limit\(limit\)/
+    )
+    expect(page).toContain('!!allRes.error || !!linkedRes.error')
   })
 
   it('opens focused on the reader with ?you=1', () => {

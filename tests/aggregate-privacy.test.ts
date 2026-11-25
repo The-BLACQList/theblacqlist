@@ -191,7 +191,7 @@ describe('per-entity aggregate queries are gated at the threshold', () => {
   it('every read of the three aggregate tables goes through the service client', () => {
     const AGGREGATE_TABLES = ['spend_events', 'flow_nodes', 'flow_edges']
 
-    for (const file of [...SURFACES, 'app/page.tsx']) {
+    for (const file of [...SURFACES, 'app/page.tsx', 'lib/spend/counted-spend.ts']) {
       const src = source(file)
       for (const table of AGGREGATE_TABLES) {
         // Walk backwards from each .from('<table>') to the client it hangs off.
@@ -211,12 +211,16 @@ describe('per-entity aggregate queries are gated at the threshold', () => {
     // spend_events is summed across the whole corpus and names no entity. If a
     // future change gates it too, the headline figures go to zero for no gain,
     // so the absence of a threshold here is deliberate and pinned.
+    const spendRead = source('lib/spend/counted-spend.ts')
+    expect(spendRead).toContain("from('spend_events')")
+    expect(spendRead).not.toContain('transaction_count')
     for (const file of ['app/api/flow-map/summary/route.ts', 'app/api/community-spend/route.ts']) {
       const src = source(file)
       const spendBlock = src.slice(
-        src.indexOf("from('spend_events')"),
+        src.indexOf('await readCountedSpend('),
         src.indexOf("from('flow_nodes')")
       )
+      expect(spendBlock.length).toBeGreaterThan(0)
       expect(spendBlock).not.toContain('transaction_count')
     }
   })

@@ -4,6 +4,8 @@ import { ArrowUpRight, TrendingUp, Building2, MapPin, Tag } from 'lucide-react'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/ui/empty-state'
+import { readInBatches } from '@/lib/supabase/read-all'
+import { readCountedSpend } from '@/lib/spend/counted-spend'
 import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 
 export const metadata: Metadata = {
@@ -50,15 +52,10 @@ export default async function CommunitySpendPage() {
   // Every figure below is a community aggregate, not the signed-in user's rows.
   const serviceClient = createServiceClient()
 
-  const { data: spendRows } = await serviceClient
-    .from('spend_events')
-    .select('amount_cents, listing_id')
-    .eq('aggregate_opt_out', false)
-    // Only businesses on The BLACQList count (ticket 183).
-    .not('listing_id', 'is', null)
+  const { data: spendRows } = await readCountedSpend(serviceClient)
 
-  const totalAmountCents = (spendRows ?? []).reduce((sum, r) => sum + r.amount_cents, 0)
-  const totalTransactions = spendRows?.length ?? 0
+  const totalAmountCents = spendRows.reduce((sum, r) => sum + r.amount_cents, 0)
+  const totalTransactions = spendRows.length
 
   // Top businesses. Gated at the same threshold /flow-map publishes — this page
   // names a business next to its exact dollar total, which is the disclosure the
@@ -118,22 +115,21 @@ export default async function CommunitySpendPage() {
   // 'business' | 'city' only), and adding one would need a migration for a number
   // that a join already answers. Totals only: no user, no receipt, no listing named.
   const spentListingIds = Array.from(
-    new Set((spendRows ?? []).map((r) => r.listing_id).filter((id): id is string => Boolean(id)))
+    new Set(spendRows.map((r) => r.listing_id).filter((id): id is string => Boolean(id)))
   )
 
   let topCategories: SpendNode[] = []
   if (spentListingIds.length > 0) {
-    const { data: listingCategories } = await supabase
-      .from('listings')
-      .select('id, category_id')
-      .in('id', spentListingIds)
+    const { data: listingCategories } = await readInBatches(spentListingIds, (ids) =>
+      supabase.from('listings').select('id, category_id').in('id', ids)
+    )
 
     const categoryByListing = new Map(
-      (listingCategories ?? []).map((l) => [l.id, l.category_id as string])
+      listingCategories.map((l) => [l.id, l.category_id as string])
     )
 
     const totals = new Map<string, { amount: number; count: number }>()
-    for (const row of spendRows ?? []) {
+    for (const row of spendRows) {
       if (!row.listing_id) continue
       const categoryId = categoryByListing.get(row.listing_id)
       if (!categoryId) continue
