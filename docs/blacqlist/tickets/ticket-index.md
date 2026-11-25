@@ -266,4 +266,5 @@
 | [274](274-plan-cards-14px.md) | 14px minimum in the shared plan cards (For Business + Pricing), prices kept level four across | V1.5 | P2 | 239, 242 | Merged #407 | DR-007; Pricing compare table and dashboard Upgrade cards are 275 |
 | [275](275-plan-pages-14px.md) | 14px minimum on the Pricing compare table and labels and the dashboard Upgrade page; Upgrade cards two across until 1280px | V1.5 | P2 | 239, 274 | Merged #408 | CI guard: tests/plan-text-size.test.ts |
 | [276](276-owner-copy.md) | For Business and trust page copy: photos line, map line, review replies need Starter and up | V1.5 | P2 | 240, 244 | Merged #409 | Founder 2026-11-24; compare-table note unchanged; approval email fixed in 277 |
-| [277](277-owner-promise-copy.md) | Approval email and My Account claim box no longer promise Starter features to Free owners | V1.5 | P2 | 276 | In review | Founder 2026-11-24 |
+| [277](277-owner-promise-copy.md) | Approval email and My Account claim box no longer promise Starter features to Free owners | V1.5 | P2 | 276 | Merged #410 | Founder 2026-11-24 |
+| [281](281-review-events.md) | `listing_submitted` and `claim_submitted` analytics events save (lazy `void` inserts never sent) | V1.5 | P2 | 241 | In review | Founder 2026-11-24; 278 and 279 are PR #411, 280 is the site tour |
