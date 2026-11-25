@@ -269,3 +269,4 @@
 | [277](277-owner-promise-copy.md) | Approval email and My Account claim box no longer promise Starter features to Free owners | V1.5 | P2 | 276 | In review | Founder 2026-11-24 |
 | [278](278-collective-map-limit.md) | The Collective: every published business has a spot; spend totals read in full past the row cap | V1.5 | P1 | 171, 183 | Not started | Founder 2026-11-24 (ticket only); Creative DR-014: before the site tour's owner step |
 | [279](279-collective-method-page.md) | The Collective's method page: receipt photo is required, owners can approve, unlisted receipts don't count | V1.5 | P1 | 162, 183 | Not started | Founder 2026-11-24 (ticket only); wording needs Author, Marketing and founder |
+| [282](282-jobs-switch.md) | Jobs switched off stops new job drafts, submissions and charges on the server, not only on the page | V1.5 | P1 | 122, 152, 273 | In review | Founder 2026-11-24; paid jobs still go through |

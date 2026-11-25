@@ -62,7 +62,8 @@ vi.mock('@/lib/supabase/server', () => ({
 // paidPostings off: the payment ladder has its own suite
 // (job-posting-purchase.test.ts). What is under test here is which client
 // performs the transition once the ladder has passed.
-vi.mock('@/lib/env', () => ({ isFeatureEnabled: () => false }))
+// jobsOpen on: the switch has its own suite (jobs-switch.test.ts, ticket 282).
+vi.mock('@/lib/env', () => ({ isFeatureEnabled: (flag: string) => flag === 'jobsOpen' }))
 vi.mock('@/lib/listings/submitForReview', () => ({
   transitionToPendingReview: h.transitionToPendingReview,
 }))

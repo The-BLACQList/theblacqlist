@@ -7,6 +7,7 @@ const h = vi.hoisted(() => ({
   user: { id: 'u1', email: 'o@example.com' } as { id: string; email: string } | null,
   rate: true,
   flag: true,
+  jobsOpen: true,
   listingReads: 0,
 }))
 
@@ -31,7 +32,7 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }))
 vi.mock('@/lib/security/rate-limit', () => ({ checkRateLimit: async () => h.rate }))
-vi.mock('@/lib/env', () => ({ isFeatureEnabled: () => h.flag }))
+vi.mock('@/lib/env', () => ({ isFeatureEnabled: (f: string) => (f === 'jobsOpen' ? h.jobsOpen : h.flag) }))
 vi.mock('@/lib/listings/levelRows', () => ({ loadCategoryLevels: async () => null }))
 vi.mock('@/lib/services/listings/createJobDraft', () => ({ createJobDraft: h.createJobDraft }))
 vi.mock('@/lib/services/listings/submitJobForReview', () => ({ submitJobForReview: h.submitJobForReview }))
@@ -62,6 +63,7 @@ beforeEach(() => {
   h.user = { id: 'u1', email: 'o@example.com' }
   h.rate = true
   h.flag = true
+  h.jobsOpen = true
   h.listingReads = 0
   h.createJobDraft.mockReset().mockResolvedValue({ ok: true, listingId: ATTEMPT })
   h.submitJobForReview.mockReset().mockResolvedValue({ success: true, outcome: 'included' })
@@ -126,6 +128,14 @@ describe('postJobAction', () => {
     h.submitJobForReview.mockResolvedValue({ confirmPrice: true, notice: 'Nothing has been charged.', priceLine })
     const r = await postJobAction({ values, attemptId: ATTEMPT })
     expect(r).toEqual({ ok: false, error: 'Nothing has been charged.', priceLine })
+  })
+
+  it('stops before a draft is made when Jobs is switched off (282)', async () => {
+    h.jobsOpen = false
+    const r = await postJobAction({ values, attemptId: ATTEMPT, chargeShown: true })
+    expect(r).toEqual({ ok: false, error: 'Job submissions are not open yet.' })
+    expect(h.createJobDraft).not.toHaveBeenCalled()
+    expect(h.submitJobForReview).not.toHaveBeenCalled()
   })
 
   it('stops when signed out, rate limited, or the flag is off', async () => {
