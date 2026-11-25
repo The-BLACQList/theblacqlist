@@ -1,6 +1,6 @@
 # Ticket 282: The Jobs Switch Stops New Jobs on the Server
 
-**Status:** In review, 2026-11-24.
+**Status:** Merged #414 (`3f881fb`), 2026-11-24.
 
 ## Why
 

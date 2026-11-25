@@ -37,7 +37,7 @@ export interface SupportListing {
   name: string
   slug: string
   entity_type: string
-  cities: { name: string; state_abbr: string | null; slug: string } | null
+  cities: { name: string; slug: string; states: { code: string } | null } | null
 }
 
 /**
@@ -109,7 +109,7 @@ export function buildSupportPost(args: {
   const origin = args.origin.replace(/\/+$/, '')
   const city = listing.cities
   const cityLabel = city
-    ? [city.name.trim(), city.state_abbr?.trim()].filter(Boolean).join(', ') || null
+    ? [city.name.trim(), city.states?.code.trim()].filter(Boolean).join(', ') || null
     : null
   const collective = !receipt.aggregate_opt_out
   const path = buildEntityUrl(listing.entity_type, city?.slug, listing.slug)
