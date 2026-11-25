@@ -1,6 +1,6 @@
 # Ticket 284: Admin Unpublish for Pages
 
-**Status:** Proposed, not started. The founder approved writing this ticket on 2026-11-25. Building it needs a separate OK.
+**Status:** In review. The founder approved the ticket and then the build on 2026-11-25 ("ok to merge 418 and build 284"). The merge and each migration need their own OK.
 
 ## Why
 
@@ -32,7 +32,7 @@ Read on main `dc0f2d7`. No database was read or written, and nothing here was ru
 | Photos | Kept. **A direct link still opens:** the bucket is public (`20260524000000_storage_buckets.sql:3`) | No code or trigger removes the files. **They stay.** |
 | Claims, messages, booking requests, job payments | Kept | **Deleted** (`ON DELETE CASCADE`) |
 | Receipts and spend events | Kept | Kept, no longer linked to the Page (`20260511000001:11,44`, `ON DELETE SET NULL`) |
-| Paid plan | **Keeps billing.** Account deletion is the only place in `app/` or `lib/` that cancels a subscription (`lib/services/billing/accountDeletion.ts:47`). | **Keeps billing, and our subscription row for that Page is deleted** (`20260511000003:28`) |
+| Paid plan | **Keeps billing.** Account deletion is the only place in `app/` or `lib/` that cancels a subscription (`lib/services/billing/accountDeletion.ts:47`). | **Keeps billing.** Our subscription row stays and loses its link to the Page (`20261201000000_owner_plan_pages.sql:61-64`, `ON DELETE SET NULL`). The first version of this ticket said the row was deleted; that was wrong. |
 
 Almost every table that points to `listings` cascades. No app code deletes a published Page today.
 
@@ -76,3 +76,27 @@ A migration (the mark table, the function, the review rule) on staging and then 
 - Database tests: the mark survives deleting its Page; signed-out and signed-in users can't read the marks; reviews of a hidden Page aren't readable.
 - Staging: hide and put back one made-up Page. While hidden, check its Page, search, map, sitemap and reviews signed out, then run the seed and confirm it stays hidden.
 - The admin panel at 375px and 1280px, by keyboard.
+
+## Build Notes
+
+Written during the build, 2026-11-25.
+
+- **Migration first.** `20261207000000_admin_page_unpublish.sql` works with the code before this ticket. Until it is applied, the new buttons report an error, review of a new Page says the marks couldn't be checked, and `seed-launch-listings.ts` stops, so apply it before the merge.
+- **Mark on by default for Owner Asked,** off for the other reasons. The admin can change it either way. Reason list as in Scope. Photos unchanged. All three still wait on the founder.
+- **The table refuses a marked Page.** Once a marked Page is fully deleted, a published row with its slug can't be inserted. A SQL seed file that still holds it stops with an error. The app never inserts a published row. While the hidden Page exists, seeds skip it as before.
+- **Reviewer names** (`review_author_names`) follow the new review rule. Page owners and review authors keep reading what is theirs; the names list is for owners only while hidden.
+- **The note stays in the audit log.** `moderation_notes` isn't written, since owners can read it.
+- **A hidden Page keeps its place in the owner's plan.** Plan coverage looks at `deleted_at`, not status.
+- **Map:** its data is cached for up to about an hour, so the success message says so.
+- **No button clears a mark for a fully deleted Page,** and approving a new Page doesn't clear an old mark. Both take a one-off.
+
+### Checked
+
+- Migration tests (`tests/migrations/admin-page-unpublish.test.ts`) on a throwaway local Postgres 14. They skip in CI, which has no database for them.
+- Unit tests for the actions, mark matching, plan notice, approval refusal, owner card and the launch seed (the real script against a fake client).
+- The two forms and the warning at 375px and 1280px by keyboard, in a throwaway local page with made-up data.
+
+### Not Checked Yet
+
+- Staging hide and put back, signed-out checks and the seed run (see Checks for the Build). Needs the staging migration.
+- The admin page itself, signed in.

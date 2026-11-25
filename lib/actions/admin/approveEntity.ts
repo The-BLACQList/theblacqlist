@@ -45,6 +45,9 @@ export async function approveEntityAction(
   if (listing.status === 'published') return { error: 'This listing is already published.' }
   if (listing.status === 'rejected')
     return { error: 'This listing has been rejected. Restore it before approving.' }
+  // Ticket 284: Put Back is the only way a hidden page returns.
+  if (listing.status === 'unpublished')
+    return { error: 'This listing was taken down, so it can’t be approved here.' }
 
   // Ticket 158: the owner added this page and attested they own it, and this
   // review is the same check a claim gets, so it goes live as Claimed.

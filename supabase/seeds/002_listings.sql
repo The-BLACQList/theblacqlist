@@ -10,6 +10,8 @@
 -- ATL target: 150 total (40 existing + 110 new = 150)
 -- HOU target: 49 total (20 existing + 29 new; +1 planned for seed 003)
 -- CHI target: 50 total (20 existing + 30 new = 50)
+-- Ticket 284: a Page marked do-not-re-add and then fully deleted can't be
+-- inserted again; this file stops with an error. Take its row out first.
 -- =============================================================================
 
 BEGIN;

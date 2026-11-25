@@ -8,6 +8,9 @@ import { createServiceClient } from '@/lib/supabase/server'
 import { AdminStatusBadge } from '@/components/admin/AdminStatusBadge'
 import { EntityApprovalActions } from '@/components/admin/EntityApprovalActions'
 import { JobUnpublishAction } from '@/components/admin/JobUnpublishAction'
+import { PageVisibilityAction } from '@/components/admin/PageUnpublishAction'
+import { PageMarkWarning } from '@/components/admin/PageMarkWarning'
+import { loadMarkMatch, loadPageHide, loadPlanNotice } from '@/lib/admin/pageVisibility'
 import { TrustTierActions } from '@/components/admin/TrustTierActions'
 
 interface PageProps {
@@ -40,7 +43,7 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
   const { data: listing } = await serviceClient
     .from('listings')
     .select(
-      'id, name, entity_type, status, trust_tier, tagline, created_at, submitted_by, source, admin_notes, category_id, ownership_label, ownership_attested, ownership_attested_at, categories(name), listing_details_business(description, email, phone, website_url, city_text, state, cta_type, social_instagram, social_facebook)'
+      'id, name, entity_type, status, trust_tier, tagline, created_at, submitted_by, source, admin_notes, category_id, ownership_label, ownership_attested, ownership_attested_at, slug, tier, owner_user_id, cities!listings_city_id_fkey(slug, name), categories(name), listing_details_business(description, email, phone, website_url, city_text, state, cta_type, social_instagram, social_facebook)'
     )
     .eq('id', id)
     .maybeSingle()
@@ -60,6 +63,25 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
   } | null
 
   const category = listing.categories as { name: string } | null
+
+  const city = listing.cities as { slug: string; name: string } | null
+
+  // Ticket 284. Jobs keep their own Unpublish and have no Put Back.
+  const isPage = listing.entity_type !== 'job'
+  const isLivePage = isPage && listing.status === 'published'
+  const isHiddenPage = isPage && listing.status === 'unpublished'
+  const [plan, hide, markMatch] = await Promise.all([
+    isLivePage ? loadPlanNotice(serviceClient, listing) : null,
+    isHiddenPage ? loadPageHide(serviceClient, listing.id) : null,
+    listing.status === 'pending' && isPage
+      ? loadMarkMatch(serviceClient, {
+          slug: listing.slug,
+          name: listing.name,
+          citySlug: city?.slug,
+          cityName: city?.name ?? details?.city_text,
+        })
+      : null,
+  ])
 
   // Submitter label: display_name → auth email. Never the raw UUID — that is
   // what the "Submitted by" row used to render (Finding 8).
@@ -182,9 +204,26 @@ export default async function AdminEntityDetailPage({ params }: PageProps) {
           <div className="rounded-xl border border-charcoal/10 bg-white p-5">
             <h2 className="font-headline text-base text-brand-black mb-4">Admin Actions</h2>
             {listing.status === 'pending' ? (
-              <EntityApprovalActions listingId={listing.id} listingName={listing.name} />
+              <div className="space-y-4">
+                {markMatch && <PageMarkWarning match={markMatch} />}
+                <EntityApprovalActions listingId={listing.id} listingName={listing.name} />
+              </div>
             ) : listing.status === 'published' && listing.entity_type === 'job' ? (
               <JobUnpublishAction listingId={listing.id} listingName={listing.name} />
+            ) : isLivePage || hide?.kind === 'hidden' ? (
+              <PageVisibilityAction
+                listingId={listing.id}
+                listingName={listing.name}
+                plan={plan ?? { kind: 'none' }}
+                hide={hide?.kind === 'hidden' ? hide.info : null}
+              />
+            ) : hide?.kind === 'unknown' ? (
+              <div role="alert" className="rounded-lg bg-red-50 border border-red-200 px-4 py-3">
+                <p className="font-body text-sm text-red-800">
+                  We couldn’t check how this Page was hidden, so Put Back isn’t shown. Reload to try
+                  again.
+                </p>
+              </div>
             ) : (
               <div className="rounded-lg bg-[#f5f5f7] px-4 py-3">
                 <p className="font-subhead text-sm text-charcoal-soft">

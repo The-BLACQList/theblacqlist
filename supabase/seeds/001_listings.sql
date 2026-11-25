@@ -9,6 +9,8 @@
 -- Requires: seed.sql (states, cities, categories) already applied.
 -- Idempotency: ON CONFLICT DO NOTHING on both tables.
 -- UUIDs: ATL 00a00001-...-001–040, HOU 00b00002-...-001–020, CHI 00c00003-...-001–020
+-- Ticket 284: a Page marked do-not-re-add and then fully deleted can't be
+-- inserted again; this file stops with an error. Take its row out first.
 -- =============================================================================
 
 BEGIN;

@@ -2947,6 +2947,36 @@ export type Database = {
         }
         Relationships: []
       }
+      page_do_not_re_add: {
+        Row: {
+          city_name: string | null
+          city_slug: string | null
+          marked_at: string
+          name: string
+          page_id: string
+          reason: string
+          slug: string
+        }
+        Insert: {
+          city_name?: string | null
+          city_slug?: string | null
+          marked_at?: string
+          name: string
+          page_id: string
+          reason: string
+          slug: string
+        }
+        Update: {
+          city_name?: string | null
+          city_slug?: string | null
+          marked_at?: string
+          name?: string
+          page_id?: string
+          reason?: string
+          slug?: string
+        }
+        Relationships: []
+      }
       plan_covered_pages: {
         Row: {
           added_at: string
@@ -4115,6 +4145,29 @@ export type Database = {
       activity_decay: {
         Args: { p_at: string; p_window_days: number }
         Returns: number
+      }
+      admin_hide_page: {
+        Args: {
+          p_admin_id: string
+          p_listing_id: string
+          p_mark: boolean
+          p_note: string
+          p_reason: string
+        }
+        Returns: string
+      }
+      admin_page_hide: {
+        Args: { p_listing_id: string }
+        Returns: {
+          hidden_at: string
+          marked: boolean
+          note: string | null
+          reason: string | null
+        }[]
+      }
+      admin_put_back_page: {
+        Args: { p_admin_id: string; p_listing_id: string; p_reason: string }
+        Returns: string
       }
       aggregate_entity_analytics: {
         Args: { target_date?: string }

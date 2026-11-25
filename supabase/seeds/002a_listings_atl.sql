@@ -1,3 +1,5 @@
+-- Ticket 284: a Page marked do-not-re-add and then fully deleted can't be
+-- inserted again; this file stops with an error. Take its row out first.
 INSERT INTO listings (
   id, name, slug, tagline, entity_type, category_id, city_id,
   location_type, status, tier, trust_tier, is_featured,
