@@ -11,6 +11,8 @@
  * Testers and the team are left out of sign-ups, subscriptions and named events
  * (ticket 271, the same rule as weekly-kpis.ts). Page views, top listings and top
  * searches are stored as totals, so they cannot be filtered.
+ * claim_submitted and listing_submitted were never saved before ticket 281, so a
+ * window that starts before it shipped undercounts both.
  * Exits 1 with a clear message if Supabase env is not set.
  */
 import { createClient } from '@supabase/supabase-js'
