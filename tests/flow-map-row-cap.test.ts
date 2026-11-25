@@ -76,8 +76,10 @@ import FlowMapPage from '@/app/(public)/flow-map/page'
 
 interface MapProps {
   businesses: { id: string }[]
-  totalSpentCents: number
-  receiptCount: number
+  totalSpentCents: number | null
+  receiptCount: number | null
+  ticker: unknown[]
+  headline: string
 }
 
 /** The map's props, or null when the page shows its load-failed state instead. */
@@ -124,6 +126,26 @@ describe('/flow-map past the row cap', () => {
     const map = findMap(await renderPage())!
     expect(map.receiptCount).toBe(2345)
     expect(map.totalSpentCents).toBe(2345 * 2500)
+  })
+
+  // Ticket 286. Held figures and rows must not reach the browser at all.
+  it.each([0, 1, 4])('holds the totals and the Latest list at %i receipts', async (n) => {
+    state.businesses = 3
+    state.receipts = n
+    const map = findMap(await renderPage())!
+    expect(map.totalSpentCents).toBeNull()
+    expect(map.receiptCount).toBeNull()
+    expect(map.ticker).toEqual([])
+    expect(map.headline).toBe('Where Does Our Money Go?')
+  })
+
+  it('publishes them at 5 receipts', async () => {
+    state.businesses = 3
+    state.receipts = 5
+    const map = findMap(await renderPage())!
+    expect(map.totalSpentCents).toBe(5 * 2500)
+    expect(map.receiptCount).toBe(5)
+    expect(map.headline).toBe('$125 spent with businesses on the list')
   })
 
   it.each(['listings', 'spend_events'])(

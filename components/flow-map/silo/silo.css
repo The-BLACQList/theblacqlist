@@ -2388,3 +2388,63 @@ html.silo-full-lock body {
   font-size: 11px;
   color: var(--ink-3);
 }
+
+/* ── Spent and Receipts held until enough receipts are counted (ticket 286) ── */
+
+.kpi.kpi-held {
+  flex-direction: row;
+  justify-content: flex-start;
+}
+.kpi.kpi-held dd {
+  font-family: inherit;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--ink-2);
+  text-shadow: none;
+}
+
+@media (min-width: 760px) and (max-width: 1279px), (max-width: 759px), (max-height: 500px) {
+  .kpis:has(.kpi-held) {
+    align-items: center;
+  }
+  .kpis:has(.kpi-held) .kpi:not(.kpi-held) {
+    flex: none;
+    padding-right: 14px;
+  }
+  .kpi.kpi-held {
+    flex: 1;
+    padding-left: 14px;
+  }
+}
+
+@media (max-width: 759px) and (min-height: 501px), (max-height: 500px) {
+  .silo-track[data-mode='map'] .kpis:has(.kpi-held) .kpi:not(.kpi-held) {
+    padding-right: 0;
+  }
+  .silo-track[data-mode='map'] .kpi.kpi-held {
+    flex: 1;
+    flex-direction: row;
+  }
+  .silo-track[data-mode='map'] .kpi.kpi-held dd {
+    font-size: 14px;
+  }
+}
+
+@media (max-height: 500px) {
+  .silo-track[data-mode='map'] .kpi.kpi-held {
+    flex: none;
+    white-space: nowrap;
+  }
+}
+
+/* No room beside More. The Shoppers card still says it. */
+@media (max-height: 500px) and (max-width: 760px) {
+  .silo-track[data-mode='map'] .kpi.kpi-held {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+}

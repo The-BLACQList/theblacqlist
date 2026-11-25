@@ -6,7 +6,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { EmptyState } from '@/components/ui/empty-state'
 import { readInBatches } from '@/lib/supabase/read-all'
 import { readCountedSpend } from '@/lib/spend/counted-spend'
-import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
+import { AGGREGATE_MIN_TRANSACTIONS, communityTotals } from '@/lib/spend/aggregate-privacy'
 
 export const metadata: Metadata = {
   title: 'The Collective | The BLACQList',
@@ -54,8 +54,8 @@ export default async function CommunitySpendPage() {
 
   const { data: spendRows } = await readCountedSpend(serviceClient)
 
-  const totalAmountCents = spendRows.reduce((sum, r) => sum + r.amount_cents, 0)
-  const totalTransactions = spendRows.length
+  // Null until enough receipts are counted site-wide (ticket 286).
+  const totals = communityTotals(spendRows)
 
   // Top businesses. Gated at the same threshold /flow-map publishes — this page
   // names a business next to its exact dollar total, which is the disclosure the
@@ -119,14 +119,13 @@ export default async function CommunitySpendPage() {
   )
 
   let topCategories: SpendNode[] = []
-  if (spentListingIds.length > 0) {
+  // Held with the totals: one receipt in a category is that receipt's amount.
+  if (totals && spentListingIds.length > 0) {
     const { data: listingCategories } = await readInBatches(spentListingIds, (ids) =>
       supabase.from('listings').select('id, category_id').in('id', ids)
     )
 
-    const categoryByListing = new Map(
-      listingCategories.map((l) => [l.id, l.category_id as string])
-    )
+    const categoryByListing = new Map(listingCategories.map((l) => [l.id, l.category_id as string]))
 
     const totals = new Map<string, { amount: number; count: number }>()
     for (const row of spendRows) {
@@ -160,8 +159,6 @@ export default async function CommunitySpendPage() {
     }
   }
 
-  const hasData = totalAmountCents > 0
-
   // A receipt only feeds the breakdowns when it was matched to a listing at
   // submission: approveReceipt creates flow nodes `if (spendEvent &&
   // receipt.listing_id)`, and the category rollup above needs the same id.
@@ -186,25 +183,28 @@ export default async function CommunitySpendPage() {
 
         {/* Hero stat */}
         <div className="rounded-2xl bg-brand-black text-white p-8">
-          {hasData ? (
+          {totals ? (
             <>
               <p className="font-subhead text-sm text-white/50 font-semibold uppercase tracking-wide">
                 Total spent by The Collective
               </p>
-              <p className="font-headline text-5xl mt-2">{formatDollars(totalAmountCents)}</p>
+              <p className="font-headline text-5xl mt-2">{formatDollars(totals.amountCents)}</p>
               <p className="font-body text-sm text-white/50 mt-2">
-                Across {totalTransactions} verified{' '}
-                {totalTransactions === 1 ? 'receipt' : 'receipts'} submitted by our community
+                Across {totals.receipts} verified {totals.receipts === 1 ? 'receipt' : 'receipts'}{' '}
+                submitted by our community
               </p>
             </>
           ) : (
             <>
-              <p className="font-subhead text-sm text-white/50 font-semibold uppercase tracking-wide">
+              <p className="font-subhead text-sm text-white/70 font-semibold uppercase tracking-wide">
                 The Collective
               </p>
-              <p className="font-headline text-3xl mt-2">Be the first to contribute</p>
-              <p className="font-body text-sm text-white/50 mt-2">
-                Add a receipt from a business on the list to start building The Collective.
+              <p className="font-headline text-3xl mt-2">
+                Totals Show at {AGGREGATE_MIN_TRANSACTIONS} Receipts
+              </p>
+              <p className="font-body text-sm text-white/70 mt-2">
+                That means {AGGREGATE_MIN_TRANSACTIONS} counted receipts from everyone together. Add
+                one from a business on the list to help build The Collective.
               </p>
             </>
           )}
@@ -219,7 +219,7 @@ export default async function CommunitySpendPage() {
           </div>
         </div>
 
-        {hasData && !hasBreakdowns && (
+        {totals && !hasBreakdowns && (
           <div className="rounded-xl bg-white border border-charcoal/10">
             <EmptyState
               icon={Building2}
@@ -232,7 +232,7 @@ export default async function CommunitySpendPage() {
           </div>
         )}
 
-        {hasData && hasBreakdowns && (
+        {totals && hasBreakdowns && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Top businesses */}
             {topBusinesses.length > 0 && (

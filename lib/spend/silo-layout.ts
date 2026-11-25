@@ -8,7 +8,8 @@
  *
  * Honest to the data (Collective workshop rules, spec §20 round 17):
  * - Only the first stop is tracked: shopper to business. The Shoppers floor
- *   shows the total spent. Every floor past it says "Not tracked yet" and
+ *   shows the total spent, once the site-wide total is published (ticket 286).
+ *   Every floor past it says "Not tracked yet" and
  *   never shows an invented amount.
  * - Shoppers are one group. No shopper is ever a dot.
  * - Every published business is a node, so the spread of businesses shows
@@ -55,7 +56,7 @@ export interface SiloFloor extends SiloFloorDef {
   index: number
   /** True only for the floor we have real numbers for. */
   tracked: boolean
-  /** Cents spent, for the tracked floor. Null everywhere else, never zero. */
+  /** Cents spent, for the tracked floor. Null everywhere else, and while held. Never zero. */
   amountCents: number | null
   /** Share of the gauge bar, 0 to 1. */
   barShare: number
@@ -63,15 +64,20 @@ export interface SiloFloor extends SiloFloorDef {
 
 export const NOT_TRACKED_TEXT = 'Not tracked yet'
 
-export function buildFloors(totalSpentCents: number): SiloFloor[] {
+/** The Shoppers floor while the community total is held (ticket 286). */
+export const SPENT_HELD_TEXT = `Shows at ${AGGREGATE_MIN_TRANSACTIONS} receipts`
+export const SPENT_HELD_SENTENCE = `Spending shows once ${AGGREGATE_MIN_TRANSACTIONS} receipts are counted.`
+
+/** `null` is a held total (ticket 286): not published yet, never zero. */
+export function buildFloors(totalSpentCents: number | null): SiloFloor[] {
   return SILO_FLOORS.map((def, index) => {
     const tracked = index === 0
     return {
       ...def,
       index,
       tracked,
-      amountCents: tracked ? Math.max(0, totalSpentCents) : null,
-      barShare: tracked && totalSpentCents > 0 ? 1 : 0,
+      amountCents: tracked && totalSpentCents !== null ? Math.max(0, totalSpentCents) : null,
+      barShare: tracked && (totalSpentCents ?? 0) > 0 ? 1 : 0,
     }
   })
 }
@@ -86,18 +92,22 @@ export function formatDollars(cents: number): string {
 
 /** Short words that sit next to a floor bar. */
 export function floorValueText(floor: SiloFloor): string {
-  if (!floor.tracked || floor.amountCents === null) return NOT_TRACKED_TEXT
+  if (!floor.tracked) return NOT_TRACKED_TEXT
+  if (floor.amountCents === null) return SPENT_HELD_TEXT
   return `${formatDollars(floor.amountCents)} spent`
 }
 
 /** What a screen reader hears for a floor, so the bar never relies on color. */
 export function floorSpokenLabel(floor: SiloFloor, businessCount: number): string {
-  if (!floor.tracked || floor.amountCents === null) {
+  if (!floor.tracked) {
     const dots =
       floor.key === 'shoppers'
         ? ''
         : `, ${businessCount} ${businessCount === 1 ? 'business' : 'businesses'} on this floor`
     return `${floor.short}: money passed on here is not tracked yet${dots}`
+  }
+  if (floor.amountCents === null) {
+    return `${floor.short}: ${SPENT_HELD_SENTENCE.charAt(0).toLowerCase()}${SPENT_HELD_SENTENCE.slice(1, -1)}`
   }
   return `${floor.short}: ${formatDollars(floor.amountCents)} spent with businesses on the list`
 }

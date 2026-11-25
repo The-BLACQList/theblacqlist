@@ -1,6 +1,6 @@
 # Ticket 286: Hold the Collective's Latest List and Totals Until 5 Receipts Are Counted
 
-**Status:** Proposed, not started. Founder 2026-11-25: "Hold until 5" (Latest list), then "yes" to holding Spent and Receipts until 5 too. Building it needs its own OK. [Needs professional review] for the Privacy Policy question.
+**Status:** Built 2026-11-25 on `feat/286-five-receipt-hold`, not merged. Founder 2026-11-25: "Hold until 5" (Latest list), then "yes" to holding Spent and Receipts until 5 too, then "yes" to building it before launch. Open: the founder's approval of the words, then the merge, each its own OK. [Needs professional review] for the Privacy Policy question.
 
 ## Why
 
@@ -36,6 +36,18 @@ Read from the code on main `def4a2c`; nothing was run.
 4. The Latest rows and the totals must not reach the browser while held. `SiloTicker` already renders nothing for an empty list.
 5. Method page section 5 (the community-wide paragraph and the Latest list sentences) and section 10 change together, with the same words steps as ticket 279. Same change in `docs/blacqlist/flow-map/data-sourcing-and-methodology.md`.
 6. Tests: 0, 1, 4 and 5 counted receipts on each place; the number comes from the constant; Demo unaffected. Update `tests/aggregate-privacy.test.ts` and `tests/flow-map-methodology.test.ts`.
+
+## As Built
+
+- `communityTotals()` in `lib/spend/aggregate-privacy.ts` returns `null` under 5 counted receipts. All five places use it.
+- The Collective keeps Links, and one line where Spent and Receipts were (Creative's held look, 2026-11-25). The Shoppers floor and its card say when spending shows. The headline falls back to "Where Does Our Money Go?".
+- Home and Community Spend have one state that is true at 0 to 4 receipts. "Waiting on its first dollar", "be the first in" and "Be the first to contribute" are gone: receipts may be counted.
+- Home's drawing stays unlit while held. Creative would light it from 1; not decided.
+- Community Spend's Top Categories had no bar at all. They are held with the totals. A bar of 5 per category after that is a separate founder decision.
+- The APIs return `null` for `total_amount_cents`, `total_transactions` and `unique_businesses`. No code in this repo fetches them.
+- Method page sections 5 and 10 use Author's and Marketing's wording.
+- "Verified receipts" on Community Spend contradicts the method page ("reported spend, not verified spend"). Not changed here.
+- The site tour's owner step 4 picture needs a redraw: the held desktop column is 64px shorter. The tour is off in production.
 
 ## Not Fixed by This
 

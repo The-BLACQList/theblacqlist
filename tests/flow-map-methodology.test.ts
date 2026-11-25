@@ -119,9 +119,8 @@ describe('the privacy promise cannot drift from the query that enforces it', () 
   it('states the promise the threshold actually buys', () => {
     const copy = renderedCopy(METHODOLOGY)
     expect(copy).toContain('or more separate purchases')
-    // The community-wide figures are deliberately ungated. Saying so is the
-    // difference between a threshold and an inconsistency.
-    expect(copy).toContain('The community-wide totals are not held to that rule.')
+    // Ticket 286: the community-wide figures wait for the same number.
+    expect(copy).toContain('The community-wide totals wait too.')
   })
 })
 
@@ -313,7 +312,7 @@ describe('what the figures leave out', () => {
   })
 
   it('does not promise that no single amount can be worked out', () => {
-    expect(words()).toContain('could work out the amount of a single receipt')
+    expect(words()).toContain('could still work out the amount of a single receipt')
     expect(words()).not.toMatch(/buy nobody any privacy|no path from a published figure/)
   })
 

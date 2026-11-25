@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { readCountedSpend } from '@/lib/spend/counted-spend'
-import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
+import { AGGREGATE_MIN_TRANSACTIONS, communityTotals } from '@/lib/spend/aggregate-privacy'
 
 // GET /api/flow-map/summary
 // Public. Returns anonymized aggregate flow data.
@@ -26,9 +26,8 @@ export async function GET() {
     )
   }
 
-  const totalAmountCents = rows.reduce((sum, r) => sum + r.amount_cents, 0)
-  const totalTransactions = rows.length
-  const uniqueBusinessCount = new Set(rows.map((r) => r.listing_id).filter(Boolean)).size
+  // Null while too few receipts are counted site-wide (ticket 286).
+  const totals = communityTotals(rows)
 
   // Top business nodes
   const { data: businessNodes } = await serviceClient
@@ -92,9 +91,9 @@ export async function GET() {
 
   return NextResponse.json({
     data: {
-      total_amount_cents: totalAmountCents,
-      total_transactions: totalTransactions,
-      unique_businesses: uniqueBusinessCount,
+      total_amount_cents: totals?.amountCents ?? null,
+      total_transactions: totals?.receipts ?? null,
+      unique_businesses: totals?.businesses ?? null,
       top_businesses: topBusinesses,
       top_cities: topCities,
       edges: edges ?? [],

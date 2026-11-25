@@ -6,7 +6,11 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { buildEntityUrl } from '@/lib/listings/url'
 import { readAllRows, readInBatches } from '@/lib/supabase/read-all'
 import { readCountedSpend } from '@/lib/spend/counted-spend'
-import { AGGREGATE_MIN_TRANSACTIONS, LINK_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
+import {
+  AGGREGATE_MIN_TRANSACTIONS,
+  LINK_MIN_TRANSACTIONS,
+  communityTotals,
+} from '@/lib/spend/aggregate-privacy'
 import {
   businessDisplayName,
   buildSiloBusinesses,
@@ -70,8 +74,9 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
         .order('total_amount_cents', { ascending: false })
         .limit(500),
     ])
-  const totalAmountCents = spendData.reduce((sum, r) => sum + r.amount_cents, 0)
-  const totalTransactions = spendData.length
+  // Null until enough receipts are counted site-wide (ticket 286). Held figures
+  // and the Latest rows never leave the server.
+  const totals = communityTotals(spendData)
 
   // ── Collective businesses (tickets 167 and 171) ──────────────────────────────
   //
@@ -219,9 +224,11 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
   })
 
   // The latest three receipts at linked businesses (from 1 counted receipt,
-  // ticket 250), by name and the day only. Never an amount.
+  // ticket 250), by name and the day only. Never an amount. Held with the
+  // totals (ticket 286): beside one counted receipt's total, a name and a day
+  // are that receipt.
   const siloById = new Map(siloBusinesses.map((b) => [b.id, b]))
-  const ticker: SiloTickerItem[] = spendData
+  const ticker: SiloTickerItem[] = (totals ? spendData : [])
     .filter((r) => r.listing_id && siloById.get(r.listing_id)?.linked)
     .sort((a, b) => b.created_at.localeCompare(a.created_at))
     .slice(0, 3)
@@ -234,8 +241,6 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
   // A failed read and an empty read both arrive as []. The page never explains
   // a failure as a finding, so a failed read gets its own state.
   const siloLoadFailed = !!spendError || !!businessError || listingsError
-
-  const hasAnyData = totalAmountCents > 0
 
   // Ticket 249: while few businesses have a line, the map opens on sample data,
   // with a Demo / Live switch. A reader with a line of their own opens on Live.
@@ -258,8 +263,8 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
   // that word means multi-hop velocity, and the schema cannot express a second
   // hop (flow_nodes.node_type CHECKs to 'business' | 'city'). See
   // docs/blacqlist/flow-map/data-sourcing-and-methodology.md §2.
-  const headline = hasAnyData
-    ? `${formatDollars(totalAmountCents)} spent with businesses on the list`
+  const headline = totals
+    ? `${formatDollars(totals.amountCents)} spent with businesses on the list`
     : 'Where Does Our Money Go?'
 
   // Ticket 247: no light hero. The page is dark end to end, the map starts
@@ -294,8 +299,8 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
         </div>
       ) : (
         <SiloExperience
-          totalSpentCents={totalAmountCents}
-          receiptCount={totalTransactions}
+          totalSpentCents={totals?.amountCents ?? null}
+          receiptCount={totals?.receipts ?? null}
           businesses={siloBusinesses}
           cities={topCities}
           ticker={ticker}

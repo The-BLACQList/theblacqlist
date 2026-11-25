@@ -137,8 +137,9 @@ function writeSheetLift(section: HTMLElement, sheetPx: number, liftPx: number, s
 }
 
 interface Props {
-  totalSpentCents: number
-  receiptCount: number
+  /** Both null while the community totals are held (ticket 286). */
+  totalSpentCents: number | null
+  receiptCount: number | null
   businesses: readonly SiloBusiness[]
   cities: readonly SiloCityRow[]
   ticker: readonly SiloTickerItem[]
@@ -193,6 +194,9 @@ function rememberView(view: CollectiveView) {
   }
 }
 
+/** Short, so it fits one line on a phone. Its hidden label names the two it means (ticket 286). */
+const KPIS_HELD_LINE = `Totals show at ${AGGREGATE_MIN_TRANSACTIONS} receipts.`
+
 export function SiloExperience({
   totalSpentCents: realSpentCents,
   receiptCount: realReceiptCount,
@@ -217,8 +221,8 @@ export function SiloExperience({
   const [view, setView] = useState<CollectiveView>(initialView)
   const demo = useMemo(() => (view === 'demo' ? buildDemoCollective() : null), [view])
   const businesses = demo?.businesses ?? realBusinesses
-  const totalSpentCents = demo?.totalSpentCents ?? realSpentCents
-  const receiptCount = demo?.receiptCount ?? realReceiptCount
+  const totalSpentCents = demo ? demo.totalSpentCents : realSpentCents
+  const receiptCount = demo ? demo.receiptCount : realReceiptCount
   const cities = demo ? [] : realCities
   // The sample's newest arrival, counted in DEMO_ARRIVAL.everyMs steps.
   const [arrivalSeq, setArrivalSeq] = useState<number | null>(null)
@@ -1133,18 +1137,28 @@ export function SiloExperience({
             </div>
 
             <dl className="kpis">
-              <div className="kpi">
-                <dt>Spent</dt>
-                <dd>{formatDollars(totalSpentCents)}</dd>
-              </div>
-              <div className="kpi">
-                <dt>Receipts</dt>
-                <dd>{receiptCount.toLocaleString('en-US')}</dd>
-              </div>
+              {totalSpentCents !== null && receiptCount !== null && (
+                <>
+                  <div className="kpi">
+                    <dt>Spent</dt>
+                    <dd>{formatDollars(totalSpentCents)}</dd>
+                  </div>
+                  <div className="kpi">
+                    <dt>Receipts</dt>
+                    <dd>{receiptCount.toLocaleString('en-US')}</dd>
+                  </div>
+                </>
+              )}
               <div className="kpi">
                 <dt>Links</dt>
                 <dd>{linkedCount.toLocaleString('en-US')}</dd>
               </div>
+              {(totalSpentCents === null || receiptCount === null) && (
+                <div className="kpi kpi-held">
+                  <dt className="sr-only">Spent and Receipts</dt>
+                  <dd>{KPIS_HELD_LINE}</dd>
+                </div>
+              )}
             </dl>
 
             <SiloGauge

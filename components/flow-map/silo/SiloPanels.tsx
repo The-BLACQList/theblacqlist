@@ -14,6 +14,7 @@ import {
   businessFiguresText,
   floorSpokenLabel,
   floorValueText,
+  SPENT_HELD_SENTENCE,
   gapKinds,
   formatDollars,
   type ColorBy,
@@ -274,7 +275,7 @@ interface CardProps {
   liveFloor: number
   /** The reader's own business, for the resting card. */
   you: SiloBusiness | null
-  totalSpentCents: number
+  totalSpentCents: number | null
   onClear: () => void
   /** The color key, for the resting card on a phone. */
   legend: ReactNode
@@ -466,7 +467,9 @@ export function SiloCard({
         </div>
         <p>
           {focusFloor.tracked
-            ? `${formatDollars(totalSpentCents)} spent by shoppers with businesses on the list.`
+            ? totalSpentCents === null
+              ? SPENT_HELD_SENTENCE
+              : `${formatDollars(totalSpentCents)} spent by shoppers with businesses on the list.`
             : `${floorCount} ${floorCount === 1 ? 'business' : 'businesses'} on this floor. Money they pass on: ${NOT_TRACKED_TEXT.toLowerCase()}.`}
         </p>
       </aside>
