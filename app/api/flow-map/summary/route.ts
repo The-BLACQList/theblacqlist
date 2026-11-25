@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { readCountedSpend } from '@/lib/spend/counted-spend'
 import { AGGREGATE_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 
 // GET /api/flow-map/summary
@@ -16,12 +17,7 @@ export async function GET() {
   const serviceClient = createServiceClient()
 
   // Total spend from non-opt-out spend_events
-  const { data: spendRows, error: spendError } = await serviceClient
-    .from('spend_events')
-    .select('amount_cents, listing_id')
-    .eq('aggregate_opt_out', false)
-    // Only businesses on The BLACQList count (ticket 183).
-    .not('listing_id', 'is', null)
+  const { data: rows, error: spendError } = await readCountedSpend(serviceClient)
 
   if (spendError) {
     return NextResponse.json(
@@ -30,7 +26,6 @@ export async function GET() {
     )
   }
 
-  const rows = spendRows ?? []
   const totalAmountCents = rows.reduce((sum, r) => sum + r.amount_cents, 0)
   const totalTransactions = rows.length
   const uniqueBusinessCount = new Set(rows.map((r) => r.listing_id).filter(Boolean)).size

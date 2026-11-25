@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { readCountedSpend } from '@/lib/spend/counted-spend'
 import { NESTED_SELECT, mapRow, type RawRow } from '@/lib/listings/query'
 import { attachLevels } from '@/lib/listings/levelRows'
 import { buildEntityUrl } from '@/lib/listings/url'
@@ -92,12 +93,7 @@ export default async function HomePage() {
       .order('is_featured', { ascending: false })
       .order('save_count', { ascending: false })
       .limit(12),
-    service
-      .from('spend_events')
-      .select('amount_cents, listing_id')
-      .eq('aggregate_opt_out', false)
-      // Only businesses on The BLACQList count (ticket 183).
-      .not('listing_id', 'is', null),
+    readCountedSpend(service),
     // Editorial: the newest article anchors the `BlacqlightFeature` hero and
     // the rest fall into the rail beneath it, so this needs the hero's one
     // row plus a rail's worth. Both editorial tables carry a
@@ -211,7 +207,7 @@ export default async function HomePage() {
     tagline: l.tagline ?? '',
   }))
 
-  const spendRows = spendRes.data ?? []
+  const spendRows = spendRes.data
   const collectiveSoon = isCovered('collective')
   const totalAmountCents = spendRows.reduce((sum, r) => sum + (r.amount_cents ?? 0), 0)
   const uniqueBusinesses = new Set(spendRows.map((r) => r.listing_id)).size

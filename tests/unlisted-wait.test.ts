@@ -57,20 +57,25 @@ const PUBLIC_READERS = [
   'app/account/community-spend/page.tsx',
 ]
 
+const SHARED_READ = 'lib/spend/counted-spend.ts'
+
 describe('public totals', () => {
-  it.each(PUBLIC_READERS)('%s leaves out spend from businesses not on The BLACQList', (file) => {
-    const src = read(file)
-    const reads = src.split(".from('spend_events')").slice(1)
-    expect(reads.length).toBeGreaterThan(0)
-    for (const chain of reads) {
-      const head = chain.slice(0, 400)
-      expect(head).toContain(".eq('aggregate_opt_out', false)")
-      expect(head).toContain(".not('listing_id', 'is', null)")
-    }
+  it('the shared read leaves out spend from businesses not on The BLACQList', () => {
+    const reads = read(SHARED_READ).split(".from('spend_events')").slice(1)
+    expect(reads.length).toBe(1)
+    const head = reads[0]!.slice(0, 400)
+    expect(head).toContain(".eq('aggregate_opt_out', false)")
+    expect(head).toContain(".not('listing_id', 'is', null)")
+  })
+
+  // Ticket 278: one shared read, so no total can stop at the API's row cap.
+  it.each(PUBLIC_READERS)('%s adds up the shared read, never its own', (file) => {
+    expect(read(file)).toContain('readCountedSpend(service')
+    expect(read(file)).not.toContain(".from('spend_events')")
   })
 
   it('covers every app reader of spend_events', () => {
-    // A new public reader must join PUBLIC_READERS. The writer isn't one.
+    // Public figures go through SHARED_READ. The writer is the only other one.
     const NOT_PUBLIC = ['lib/spend/applyReceiptReview.ts']
     const found = execSync('grep -rl "from(\'spend_events\')" app lib components', { cwd: ROOT })
       .toString()
@@ -78,7 +83,7 @@ describe('public totals', () => {
       .split('\n')
       .filter((f) => !f.startsWith('lib/supabase/types'))
       .sort()
-    expect(found).toEqual([...PUBLIC_READERS, ...NOT_PUBLIC].sort())
+    expect(found).toEqual([SHARED_READ, ...NOT_PUBLIC].sort())
   })
 })
 

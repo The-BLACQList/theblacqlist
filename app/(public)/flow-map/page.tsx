@@ -4,6 +4,8 @@ import { cookies } from 'next/headers'
 
 import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { buildEntityUrl } from '@/lib/listings/url'
+import { readAllRows, readInBatches } from '@/lib/supabase/read-all'
+import { readCountedSpend } from '@/lib/spend/counted-spend'
 import { AGGREGATE_MIN_TRANSACTIONS, LINK_MIN_TRANSACTIONS } from '@/lib/spend/aggregate-privacy'
 import {
   businessDisplayName,
@@ -56,14 +58,18 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
 
   // ── Public summary data ──────────────────────────────────────────────────────
 
-  const { data: spendRows, error: spendError } = await serviceClient
-    .from('spend_events')
-    .select('amount_cents, listing_id, created_at')
-    .eq('aggregate_opt_out', false)
-    // Only businesses on The BLACQList count (ticket 183).
-    .not('listing_id', 'is', null)
-
-  const spendData = spendRows ?? []
+  // The spend read is paged past the API's row cap (ticket 278).
+  const [{ data: spendData, error: spendError }, { data: businessNodes, error: businessError }] =
+    await Promise.all([
+      readCountedSpend(serviceClient),
+      serviceClient
+        .from('flow_nodes')
+        .select('entity_id, total_amount_cents, transaction_count')
+        .eq('node_type', 'business')
+        .gte('transaction_count', LINK_MIN_TRANSACTIONS)
+        .order('total_amount_cents', { ascending: false })
+        .limit(500),
+    ])
   const totalAmountCents = spendData.reduce((sum, r) => sum + r.amount_cents, 0)
   const totalTransactions = spendData.length
 
@@ -80,42 +86,42 @@ export default async function FlowMapPage({ searchParams }: FlowMapPageProps) {
 
   const LISTING_SELECT =
     'id, name, slug, entity_type, primary_level, category_id, cities!listings_city_id_fkey(slug)'
-  const MAP_LIMIT = 2000
-
-  const { data: businessNodes, error: businessError } = await serviceClient
-    .from('flow_nodes')
-    .select('entity_id, total_amount_cents, transaction_count')
-    .eq('node_type', 'business')
-    .gte('transaction_count', LINK_MIN_TRANSACTIONS)
-    .order('total_amount_cents', { ascending: false })
-    .limit(500)
 
   const businessIds = (businessNodes ?? []).map((n) => n.entity_id)
   const listingMeta: Record<string, BusinessListingMeta> = {}
   let listingsError = false
   {
-    const [allRes, linkedRes, { data: categoryRows }] = await Promise.all([
-      serviceClient
-        .from('listings')
-        .select(LISTING_SELECT)
-        .eq('status', 'published')
-        .is('deleted_at', null)
-        .not('entity_type', 'in', '(event,job)')
-        .order('created_at', { ascending: true })
-        .limit(MAP_LIMIT),
-      // A business with counted receipts is always on the map, even past the cap.
-      businessIds.length > 0
-        ? serviceClient
-            .from('listings')
-            .select(LISTING_SELECT)
-            .eq('status', 'published')
-            .is('deleted_at', null)
-            .in('id', businessIds)
-        : Promise.resolve({ data: [], error: null }),
+    // Every published business, past the API's row cap (ticket 278). Reading in
+    // id order is fine: buildSiloBusinesses sorts.
+    const [allRes, { data: categoryRows }] = await Promise.all([
+      readAllRows((afterId, limit) =>
+        serviceClient
+          .from('listings')
+          .select(LISTING_SELECT, { count: 'exact' })
+          .eq('status', 'published')
+          .is('deleted_at', null)
+          .not('entity_type', 'in', '(event,job)')
+          .gt('id', afterId)
+          .order('id', { ascending: true })
+          .limit(limit)
+      ),
       serviceClient.from('categories').select('id, slug, parent_id'),
     ])
+    // A published event or job with counted receipts keeps its dot. Everything
+    // else with receipts is already in the read above.
+    const readIds = new Set(allRes.data.map((l) => l.id))
+    const linkedRes = await readInBatches(
+      allRes.error ? [] : businessIds.filter((id) => !readIds.has(id)),
+      (ids) =>
+        serviceClient
+          .from('listings')
+          .select(LISTING_SELECT)
+          .eq('status', 'published')
+          .is('deleted_at', null)
+          .in('id', ids)
+    )
     listingsError = !!allRes.error || !!linkedRes.error
-    const listings = [...(linkedRes.data ?? []), ...(allRes.data ?? [])]
+    const listings = [...linkedRes.data, ...allRes.data]
 
     // A category's family comes from its top-level parent. If the categories
     // read fails, every dot falls back to the default family rather than failing
