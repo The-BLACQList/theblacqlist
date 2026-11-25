@@ -27,6 +27,33 @@ export function captionMode(
   return want
 }
 
+/**
+ * Enough map to light (DR-023). Two edges, so a window resting on one doesn't
+ * blink.
+ */
+export function mapRoom(room: number, was: boolean): boolean {
+  return room >= (was ? 44 : 52)
+}
+
+/**
+ * The map step's light (DR-006). Where the phone controls show, it is the map
+ * between them and the list or the card, so no filter or mark is lit.
+ */
+export function mapLight(input: {
+  map: Box
+  controlsBottom: number | null
+  /** The location button is the first thing inside the light, where it shows. */
+  locateTop: number | null
+  listTop: number
+  /** Where a low card comes to rest. */
+  cardTop: number | null
+}): Box {
+  const { map, controlsBottom, locateTop, listTop, cardTop } = input
+  const top = controlsBottom === null ? map.y : Math.max(controlsBottom, locateTop ?? controlsBottom + 8)
+  const bottom = Math.min(map.y + map.h, listTop, (cardTop ?? Infinity) - 12)
+  return { x: map.x, y: top, w: map.w, h: Math.max(0, bottom - top) }
+}
+
 export function inflate(box: Box, by: number): Box {
   return { x: box.x - by, y: box.y - by, w: box.w + by * 2, h: box.h + by * 2 }
 }

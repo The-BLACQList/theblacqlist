@@ -16,7 +16,7 @@ import {
   SITE_TOUR_QUIT_NOTE,
   SITE_TOUR_WAIT,
 } from '@/lib/site-tour/copy'
-import { captionMode, clip, lightPath, scrollFor, union } from '@/lib/site-tour/layout'
+import { captionMode, clip, lightPath, mapLight, mapRoom, scrollFor, union } from '@/lib/site-tour/layout'
 import { siteTourTotals } from '@/lib/site-tour/report'
 import { countsAsVisit, isSiteTourHiddenPath } from '@/lib/site-tour/routes'
 import {
@@ -33,6 +33,10 @@ import {
 import {
   buildItems,
   indexAfterAnswer,
+  indexOfKey,
+  itemKey,
+  mapStepFits,
+  nextIndex,
   previousIndex,
   visibleSteps,
   type SiteTourContext,
@@ -40,6 +44,7 @@ import {
 
 const ON: SiteTourContext = { cue: true, stories: true, collective: true, ownerReview: true }
 const OFF: SiteTourContext = { cue: false, stories: false, collective: false, ownerReview: false }
+const TALL = { width: 390, height: 844 }
 const keys = (path: 'shopper' | 'owner', ctx: SiteTourContext) =>
   visibleSteps(path, ctx).map((step) => step.key)
 
@@ -108,16 +113,69 @@ describe('paths', () => {
   it('goes Back over chapters and over the answer, and to the question from the first step', () => {
     const items = buildItems('shopper', ON)
     const at = (key: string) => items.findIndex((i) => i.kind === 'step' && i.step.key === key)
-    expect(previousIndex(items, at('cue'))).toBe(-1)
-    expect(previousIndex(items, at('map'))).toBe(at('cue'))
-    expect(previousIndex(items, at('blacqlight'))).toBe(at('map'))
+    expect(previousIndex(items, at('cue'), TALL)).toBe(-1)
+    expect(previousIndex(items, at('map'), TALL)).toBe(at('cue'))
+    expect(previousIndex(items, at('blacqlight'), TALL)).toBe(at('map'))
   })
 
   it('skips the answer after a stop or a timeout', () => {
     const items = buildItems('shopper', ON)
     const cue = items.findIndex((i) => i.kind === 'step' && i.step.key === 'cue')
-    const next = items[indexAfterAnswer(items, cue)]
+    const next = items[indexAfterAnswer(items, cue, TALL)]
     expect(next?.kind === 'step' && next.step.key).toBe('map')
+  })
+
+  it('leaves the map step out, both ways, where too little map shows (DR-023)', () => {
+    const items = buildItems('shopper', ON)
+    const sideways = { width: 844, height: 390 }
+    const at = (key: string) => indexOfKey(items, key)
+    expect(itemKey(items[nextIndex(items, at('answer'), TALL)])).toBe('map')
+    // On to the next chapter; the numbers keep the gap.
+    expect(nextIndex(items, at('answer'), sideways)).toBe(at('map') + 1)
+    expect(itemKey(items[indexAfterAnswer(items, at('cue'), sideways)])).not.toBe('map')
+    expect(previousIndex(items, at('blacqlight'), sideways)).toBe(at('cue'))
+    expect(items.find((i) => itemKey(i) === 'blacqlight')).toMatchObject({ number: 4 })
+  })
+
+  it('leaves a chapter card out with its only step', () => {
+    const items = buildItems('shopper', { ...ON, cue: false })
+    expect(itemKey(items[0])).toBe('shopper-1')
+    expect(nextIndex(items, -1, TALL)).toBe(0)
+    expect(nextIndex(items, -1, { width: 667, height: 375 })).toBe(indexOfKey(items, 'map') + 1)
+  })
+
+  it.each([
+    [1440, 900, true],
+    [390, 844, true],
+    [390, 664, true],
+    [360, 560, true],
+    [844, 390, false],
+    [667, 375, false],
+    [320, 256, false],
+    [195, 422, false],
+  ])('the map step in %i by %i: %s', (width, height, fits) => {
+    expect(mapStepFits({ width, height })).toBe(fits)
+  })
+
+  it('turns the map light on at 52px and off below 44px', () => {
+    expect(mapRoom(51, false)).toBe(false)
+    expect(mapRoom(52, false)).toBe(true)
+    expect(mapRoom(44, true)).toBe(true)
+    expect(mapRoom(43, true)).toBe(false)
+  })
+
+  it('lights only the map between the phone controls and the list or the card (DR-006)', () => {
+    const map = { x: 0, y: 56, w: 390, h: 788 }
+    const at = { map, controlsBottom: 176, locateTop: 184, listTop: 493, cardTop: 610 }
+    expect(mapLight(at)).toEqual({ x: 0, y: 184, w: 390, h: 309 })
+    expect(mapLight({ ...at, listTop: 492, cardTop: 430 })).toEqual({ x: 0, y: 184, w: 390, h: 234 })
+    // Very small windows have no location button.
+    expect(mapLight({ ...at, locateTop: null }).y).toBe(184)
+    expect(mapLight({ ...at, cardTop: 150 }).h).toBe(0)
+    // Desktop: the whole map, or down to 12px above a low card.
+    const wide = { map: { x: 480, y: 64, w: 960, h: 836 }, controlsBottom: null, locateTop: null, listTop: 900 }
+    expect(mapLight({ ...wide, cardTop: null })).toEqual(wide.map)
+    expect(mapLight({ ...wide, cardTop: 212 }).h).toBe(136)
   })
 })
 
@@ -182,7 +240,7 @@ describe('what it remembers', () => {
     expect(readMemory(broken)).toBeNull()
     expect(writeMemory({ seenAt: '2026-11-24' }, broken)).toBe(false)
     expect(readRun(broken)).toBeNull()
-    expect(() => writeRun({ path: 'owner', index: 1, start: 'home' }, broken)).not.toThrow()
+    expect(() => writeRun({ path: 'owner', key: 'owner-add', start: 'home' }, broken)).not.toThrow()
   })
 
   it('adds to what is there instead of replacing it', () => {
@@ -195,14 +253,14 @@ describe('what it remembers', () => {
   it('ignores junk', () => {
     expect(readMemory(store({ [SITE_TOUR_KEY]: '{' }))).toBeNull()
     expect(readMemory(store({ [SITE_TOUR_KEY]: '{"seenAt":5,"endedAt":"x"}' }))).toEqual({})
-    expect(readRun(store({ [SITE_TOUR_RUN_KEY]: '{"path":"x","index":1}' }))).toBeNull()
-    expect(readRun(store({ [SITE_TOUR_RUN_KEY]: '{"path":"owner","index":-1}' }))).toBeNull()
+    expect(readRun(store({ [SITE_TOUR_RUN_KEY]: '{"path":"x","key":"map"}' }))).toBeNull()
+    expect(readRun(store({ [SITE_TOUR_RUN_KEY]: '{"path":"owner","key":3}' }))).toBeNull()
   })
 
   it('keeps a run so a reload can resume it, and forgets it when told', () => {
     const s = store()
-    writeRun({ path: 'owner', index: 3, start: 'footer' }, s)
-    expect(readRun(s)).toEqual({ path: 'owner', index: 3, start: 'footer' })
+    writeRun({ path: 'owner', key: 'owner-free', start: 'footer' }, s)
+    expect(readRun(s)).toEqual({ path: 'owner', key: 'owner-free', start: 'footer' })
     writeRun(null, s)
     expect(readRun(s)).toBeNull()
   })
