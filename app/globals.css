@@ -494,6 +494,589 @@
   }
 }
 
+/* ─── Site tour (ticket 280, components/site-tour) ──────────────────────────
+   Look A, DR-007. Every moving rule is inside prefers-reduced-motion:
+   no-preference; with it on, the same cards cut in. The colours are the dark
+   card's own and don't follow the page under it. */
+.blq-tour-root {
+  --page: #0a0907;
+  --page-2: #131210;
+  --ink: #fcfaf4;
+  --ink-2: #cdc6b6;
+  --tour-gold: #c4a065;
+  --tour-gold-light: #ffd867;
+  --hair: rgba(196, 160, 101, 0.26);
+  outline: none;
+  color: var(--ink);
+}
+.blq-tour-root p,
+.blq-tour-root h2 {
+  margin: 0;
+}
+.blq-tour-root h2 {
+  font-family: var(--font-headline);
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  outline: none;
+}
+.blq-tour-root h2:focus-visible {
+  outline: 2px solid var(--tour-gold-light);
+  outline-offset: 4px;
+}
+.blq-tour-root.is-quiet-focus h2:focus-visible {
+  outline: none;
+}
+.blq-tour-root button:focus-visible {
+  outline: 2px solid var(--tour-gold-light);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--page);
+}
+html[data-site-tour-lock] {
+  overflow: hidden;
+}
+body[data-site-tour-on] {
+  padding-bottom: var(--blq-tour-pad, 0px);
+}
+html:has(body[data-site-tour-on]) {
+  scroll-padding-top: 5rem;
+  scroll-padding-bottom: calc(var(--blq-tour-pad, 0px) + 1rem);
+}
+body[data-site-tour-on] [data-assistant='on'],
+body[data-site-tour-on] .stack-over-assistant {
+  visibility: hidden;
+}
+
+/* The X */
+.blq-tour-x {
+  position: fixed;
+  z-index: 90;
+  top: 10px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--hair);
+  border-radius: 2px;
+  background: var(--page);
+  color: var(--ink);
+  cursor: pointer;
+}
+.blq-tour-cross {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+/* Full-screen cards */
+.blq-tour-full {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.blq-tour-card-title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 80px 112px;
+  background: radial-gradient(110% 90% at 30% 45%, #131210, #0a0907 62%) #0a0907;
+}
+.blq-tour-root .blq-tour-mark {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 28px;
+}
+.blq-tour-card-title h2 {
+  font-size: 72px;
+  line-height: 1.05;
+  max-width: 14ch;
+}
+.blq-tour-card-title.is-opening h2 {
+  font-size: 104px;
+  line-height: 1;
+}
+.blq-tour-eyebrow {
+  font-family: var(--font-subhead);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--tour-gold);
+  padding-bottom: 18px;
+}
+.blq-tour-card-title .blq-tour-btn {
+  margin-top: 36px;
+}
+
+/* The question */
+.blq-tour-welcome {
+  background: rgba(10, 9, 7, 0.88);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+}
+.blq-tour-welcome-in {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 600px;
+  min-height: 100%;
+  margin-left: 112px;
+  padding: max(72px, min(200px, 22vh)) 0 40px;
+}
+.blq-tour-welcome h2 {
+  font-size: 52px;
+  line-height: 1.1;
+  margin-bottom: 36px;
+}
+.blq-tour-answer {
+  display: flex;
+  width: 100%;
+  min-height: 76px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 12px 4px;
+  border-top: 1px solid var(--hair);
+  font-family: var(--font-headline);
+  font-size: 28px;
+  line-height: 1.2;
+  text-align: left;
+  color: var(--ink);
+  cursor: pointer;
+}
+.blq-tour-answer + .blq-tour-btn {
+  margin-top: 0;
+}
+.blq-tour-welcome .blq-tour-answer:nth-of-type(2) {
+  border-bottom: 1px solid var(--hair);
+  margin-bottom: 20px;
+}
+.blq-tour-answer:hover {
+  color: var(--tour-gold-light);
+}
+.blq-tour-answer .blq-tour-arrow {
+  color: var(--tour-gold);
+}
+.blq-tour-arrow {
+  flex: none;
+  width: 22px;
+  height: 14px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+}
+
+/* Buttons */
+.blq-tour-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 8px 18px;
+  border: 1px solid var(--hair);
+  border-radius: 2px;
+  background: transparent;
+  font-family: var(--font-subhead);
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+  cursor: pointer;
+}
+.blq-tour-btn:hover {
+  border-color: var(--tour-gold);
+}
+.blq-tour-btn.is-quiet {
+  border-color: transparent;
+  padding-inline: 4px;
+  color: var(--ink-2);
+  text-decoration: underline;
+  text-decoration-color: var(--hair);
+  text-underline-offset: 5px;
+}
+.blq-tour-btn.is-quiet:hover {
+  color: var(--ink);
+  text-decoration-color: currentColor;
+}
+.blq-tour-btn.is-go {
+  border-color: var(--tour-gold);
+  background: var(--tour-gold);
+  color: var(--page);
+}
+.blq-tour-btn.is-go:hover {
+  background: var(--tour-gold-light);
+  border-color: var(--tour-gold-light);
+}
+
+/* Dark and light */
+.blq-tour-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.blq-tour-shade {
+  fill: rgba(10, 9, 7, 0.84);
+  pointer-events: fill;
+}
+.blq-tour-ring {
+  fill: none;
+  stroke: #fcfaf4;
+  stroke-width: 2;
+}
+.blq-tour-cover {
+  position: fixed;
+  inset: 0;
+  z-index: 84;
+  background: #0a0907;
+  opacity: 0;
+  pointer-events: none;
+}
+.blq-tour-cover.is-on {
+  opacity: 1;
+}
+
+/* The caption: a bar, a column, or the phone sheet */
+.blq-tour-card {
+  position: fixed;
+  z-index: 85;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--page);
+}
+.blq-tour-text h2 {
+  font-size: 32px;
+  line-height: 1.15;
+}
+.blq-tour-count {
+  display: inline-block;
+  margin-bottom: 14px !important;
+  padding: 7px 10px 8px;
+  background: var(--ink);
+  color: var(--page);
+  font-family: var(--font-subhead);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1;
+}
+.blq-tour-root .blq-tour-end-mark {
+  display: block;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 14px;
+}
+.blq-tour-root .blq-tour-body {
+  max-width: 52ch;
+  margin-top: 10px;
+  font-family: var(--font-body);
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+.blq-tour-root .blq-tour-note {
+  max-width: 60ch;
+  margin-top: 8px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--ink-2);
+}
+.blq-tour-btns {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.blq-tour-card.is-bar-mode,
+.blq-tour-card.is-sheet {
+  inset: auto 0 0;
+  max-height: calc(100% - 64px);
+  border-top: 2px solid var(--ink);
+  box-shadow: 0 -2px 0 var(--page);
+}
+.blq-tour-card.is-bar-mode {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 48px;
+  min-height: 202px;
+  padding: 26px 112px 30px;
+}
+.blq-tour-card.is-bar-mode .blq-tour-btns {
+  flex: none;
+}
+.blq-tour-card.is-typing {
+  max-height: calc(100% - 64px - 96px);
+}
+.blq-tour-card.is-side-left,
+.blq-tour-card.is-collective {
+  display: flex;
+  flex-direction: column;
+  padding: 32px;
+}
+.blq-tour-card.is-side-left {
+  inset: 64px auto 0 0;
+  width: 456px;
+  justify-content: center;
+  border-right: 2px solid var(--ink);
+}
+.blq-tour-card.is-collective {
+  inset: var(--blq-tour-col-top, 76px) auto 0 0;
+  width: 320px;
+  justify-content: space-between;
+  border-right: 1px solid var(--hair);
+  border-top: 1px solid var(--hair);
+  padding: 24px;
+}
+.blq-tour-card.is-side-left .blq-tour-btns {
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+.blq-tour-card.is-collective .blq-tour-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  position: sticky;
+  bottom: -24px;
+  margin-top: 20px;
+  padding: 12px 0 24px;
+  margin-bottom: -24px;
+  background: var(--page);
+}
+.blq-tour-card.is-collective .is-end-tour {
+  order: 3;
+  grid-column: 1 / -1;
+}
+.blq-tour-card.is-sheet {
+  padding: 18px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+}
+.blq-tour-card.is-sheet h2 {
+  font-size: 24px;
+}
+.blq-tour-card.is-sheet .blq-tour-body {
+  max-width: none;
+  margin-top: 6px;
+  font-size: 16px;
+  line-height: 1.45;
+}
+.blq-tour-card.is-sheet .blq-tour-count,
+.blq-tour-card.is-sheet .blq-tour-end-mark {
+  margin-bottom: 10px !important;
+}
+.blq-tour-card.is-sheet .blq-tour-btns {
+  margin-top: 14px;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.blq-tour-card.is-sheet .is-end-tour {
+  margin-right: auto;
+}
+.blq-tour-card.is-sheet .blq-tour-btn {
+  font-size: 15px;
+  padding-inline: 14px;
+}
+.blq-tour-card.is-sheet .blq-tour-btn.is-quiet {
+  padding-inline: 2px;
+}
+.blq-tour-card.is-sheet .blq-tour-btn .blq-tour-arrow {
+  display: none;
+}
+.blq-tour-card.is-sheet.is-end .blq-tour-btns {
+  flex-direction: column-reverse;
+  align-items: stretch;
+}
+.blq-tour-card.is-sheet.is-end .blq-tour-btn {
+  min-height: 52px;
+  font-size: 16px;
+}
+
+/* After quitting */
+.blq-tour-quit {
+  position: fixed;
+  z-index: 85;
+  left: 24px;
+  bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  max-width: 480px;
+  padding: 14px 6px 14px 18px;
+  border: 1px solid rgba(252, 250, 244, 0.3);
+  border-top: 2px solid var(--ink);
+  background: var(--page);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+.blq-tour-quit-x,
+.blq-tour-prompt-x {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+/* The prompt */
+.blq-tour-prompt {
+  position: fixed;
+  z-index: 45;
+  top: 88px;
+  right: var(--blq-tour-prompt-right, max(16px, calc((100vw - 80rem) / 2 + 2rem)));
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  border: 1px solid rgba(252, 250, 244, 0.3);
+  border-top: 2px solid var(--ink);
+  background: var(--page);
+}
+.blq-tour-prompt-go {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 54px;
+  padding: 0 6px 0 16px;
+  font-family: var(--font-headline);
+  font-size: 20px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.blq-tour-root .blq-tour-prompt-mark {
+  width: 24px;
+  height: 24px;
+}
+
+@media (width <= 900px) {
+  .blq-tour-card-title {
+    padding: 80px 32px;
+  }
+  .blq-tour-card-title h2 {
+    font-size: 64px;
+  }
+  .blq-tour-card-title.is-opening h2 {
+    font-size: 72px;
+  }
+  .blq-tour-welcome-in {
+    width: auto;
+    margin: 0 auto;
+    max-width: 600px;
+    padding: 128px 24px 40px;
+  }
+}
+@media (width <= 600px) {
+  .blq-tour-x {
+    top: 6px;
+    right: 6px;
+  }
+  .blq-tour-card-title {
+    padding: 72px 24px;
+  }
+  .blq-tour-root .blq-tour-mark {
+    width: 46px;
+    height: 46px;
+  }
+  .blq-tour-card-title h2 {
+    font-size: 44px;
+  }
+  .blq-tour-card-title.is-opening h2 {
+    font-size: 48px;
+  }
+  .blq-tour-welcome {
+    background: #0a0907;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  .blq-tour-welcome h2 {
+    font-size: 36px;
+  }
+  .blq-tour-answer {
+    min-height: 66px;
+    font-size: 23px;
+  }
+  .blq-tour-quit {
+    left: 16px;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (width < 48rem) {
+  .blq-tour-prompt {
+    top: auto;
+    right: auto;
+    left: 16px;
+    bottom: var(--blq-tour-prompt-bottom, calc(16px + env(safe-area-inset-bottom, 0px)));
+  }
+}
+@media (height < 600px) {
+  .blq-tour-card-title {
+    justify-content: flex-start;
+  }
+  .blq-tour-card-title h2,
+  .blq-tour-card-title.is-opening h2 {
+    font-size: 44px;
+  }
+  .blq-tour-welcome-in {
+    padding-top: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .blq-tour-cover {
+    transition: opacity 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .blq-tour-full {
+    animation: blq-tour-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .blq-tour-card-title > *,
+  .blq-tour-welcome-in > * {
+    animation: blq-tour-rise 700ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+  .blq-tour-card-title > :nth-child(2),
+  .blq-tour-welcome-in > :nth-child(2) {
+    animation-delay: 80ms;
+  }
+  .blq-tour-card-title > :nth-child(3),
+  .blq-tour-welcome-in > :nth-child(n + 3) {
+    animation-delay: 160ms;
+  }
+  .blq-tour-card {
+    animation: blq-tour-slide 320ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .blq-tour-ring {
+    animation: blq-tour-in 200ms;
+  }
+  .blq-tour-prompt,
+  .blq-tour-quit {
+    animation: blq-tour-in 200ms;
+  }
+  @keyframes blq-tour-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes blq-tour-rise {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+  }
+  @keyframes blq-tour-slide {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+}
+
 /* ─── Edit page: "More below" pulse (components/listings/finish/MoreBelow) ──
    One soft pulse every 6 seconds, a faint gold glow and a slight swell, so the pill
    catches the eye without moving all the time. Same house pattern as below: no
@@ -725,6 +1308,13 @@ body:has([data-assistant='on']) .stack-over-assistant {
   }
 }
 
+/* /map under the `lg` layout on a short window (ticket 285): a phone with the
+   browser's bars showing, or one turned sideways. The sizes come from CSS alone,
+   so the sheet has its height on the first paint (ticket 272).
+   map-short: the strip's cards are rows. map-tiny: the sheet is one line. */
+@custom-variant map-short (@media (width < 64rem) and (height < 760px));
+@custom-variant map-tiny (@media (width < 64rem) and (height < 500px));
+
 /* On /map, a phone's card sheet (MapBottomSheet) fills the bottom edge, so the
    Ask button rides just above it and moves with it when the list opens. The
    sheet writes its height to --map-sheet-h; 22rem is the closed strip. */
@@ -735,6 +1325,29 @@ body:has([data-assistant='on']) .stack-over-assistant {
   }
   body:has([data-map-sheet]):has([data-assistant='on']) .stack-over-assistant {
     bottom: calc(var(--map-sheet-h, 22rem) + 4.5rem);
+  }
+}
+/* /map keeps its sheet up to `lg`, so a sideways phone needs the lift too. With
+   the list open on a short window there is no map left to ride on: Ask Cue and
+   what the list covers step out until Map is pressed (ticket 285). */
+@media (width < 64rem) {
+  body:has([data-tour='map'] [data-map-sheet]) .lift-over-map-sheet {
+    bottom: calc(var(--map-sheet-h, 22rem) + 0.75rem);
+    transition: bottom 200ms ease-out;
+  }
+  body:has([data-tour='map'] [data-map-sheet]):has([data-assistant='on']) .stack-over-assistant {
+    bottom: calc(var(--map-sheet-h, 22rem) + 4.5rem);
+  }
+}
+@media (width < 64rem) and (height < 760px) {
+  body:has([data-tour='map'] [data-map-sheet='open']) .lift-over-map-sheet,
+  [data-tour='map']:has([data-map-sheet='open']) [data-map-locate] {
+    visibility: hidden;
+  }
+}
+@media (width < 40rem) and (height < 500px) {
+  [data-tour='map']:has([data-map-sheet='open']) > [data-map-phonebar='']:not(:has(#map-phone-extras)) [data-map-chips] {
+    visibility: hidden;
   }
 }
 /* On The Collective, a sideways phone has floors down the left edge and the card

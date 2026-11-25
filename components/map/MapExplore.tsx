@@ -28,6 +28,7 @@ import { radiusBounds } from '@/lib/map/distance'
 import { NO_FILTERS, filterListings, sortByDistance } from '@/lib/map/filterListings'
 import { pickTiles, rankListings } from '@/lib/map/rankListings'
 import type { MapFilters, MapListing, MapPlace, NearMe } from '@/lib/map/types'
+import { phonePadding } from '@/components/map/phonePadding'
 import { useFollowSelection } from '@/components/map/useFollowSelection'
 import { useNearMeOverlay } from '@/components/map/useNearMeOverlay'
 
@@ -59,13 +60,11 @@ const TYPE_LABELS: Record<string, string> = {
  * The panel and sheet lists are the parallel accessible path to every business.
  */
 /**
- * Room around the lower 48 for the phone's floating bar and chips (top) and the
- * card strip (bottom, about 350px tall), so the Gulf cities sit above the sheet.
+ * Room around the lower 48, so the Gulf cities sit above the phone's sheet. On a
+ * phone it is measured: the bar and the sheet change with the window (ticket 285).
  */
-const PHONE_US_PADDING = { top: 150, bottom: 360, left: 16, right: 16 }
-
-function usPadding() {
-  return window.matchMedia('(min-width: 1024px)').matches ? 40 : PHONE_US_PADDING
+function usPadding(box: HTMLElement | null) {
+  return window.matchMedia('(min-width: 1024px)').matches ? 40 : phonePadding(box)
 }
 
 function readCityParam(): string {
@@ -253,7 +252,7 @@ export function MapExplore() {
       ),
       ...(opening
         ? { center: opening.center, zoom: opening.zoom }
-        : { bounds: US_BOUNDS, fitBoundsOptions: { padding: usPadding() } }),
+        : { bounds: US_BOUNDS, fitBoundsOptions: { padding: usPadding(mapBoxRef.current) } }),
       attributionControl: { compact: true },
     })
     mapRef.current = m
@@ -356,14 +355,14 @@ export function MapExplore() {
     writeCityParam(slug)
     const view = CITY_VIEWS[slug]
     if (view) moveTo(view.center, view.zoom)
-    else mapRef.current?.fitBounds(US_BOUNDS, { padding: usPadding(), duration: reduceMotion ? 0 : 1400 })
+    else mapRef.current?.fitBounds(US_BOUNDS, { padding: usPadding(mapBoxRef.current), duration: reduceMotion ? 0 : 1400 })
   }
 
   /** Frames the whole radius, leaving room for the phone bar and sheet. */
   function fitNear(near: NearMe) {
     const m = mapRef.current
     if (!m) return
-    const padding = isDesktop ? 40 : { top: 150, bottom: 280, left: 20, right: 20 }
+    const padding = isDesktop ? 40 : phonePadding(mapBoxRef.current)
     m.fitBounds(radiusBounds(near, near.radiusMiles), { padding, duration: reduceMotion ? 0 : 1200 })
   }
 

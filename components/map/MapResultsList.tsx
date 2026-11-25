@@ -61,13 +61,12 @@ export function MapResultsList({
   ) : null
 
   // The strip's message is as tall as a card, so the phone sheet holds its height
-  // (ticket 272). Not on a short screen, where it would cover the map.
+  // (ticket 272). On a short screen the card is a row (ticket 285).
   if (message)
     return (
       <div
         className={cn(
-          variant === 'strip' &&
-            '[@media(min-height:700px)]:grid [@media(min-height:700px)]:min-h-[271px] [@media(min-height:700px)]:place-items-center',
+          variant === 'strip' && 'grid min-h-[271px] place-items-center map-short:min-h-[92px]',
           className
         )}
       >

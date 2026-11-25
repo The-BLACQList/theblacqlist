@@ -4,6 +4,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ChevronDown } from 'lucide-react'
+import { TakeTheTourLink } from '@/components/site-tour/TakeTheTourLink'
 import type { NavLink } from '@/components/nav/nav-links'
 import { cn } from '@/lib/utils'
 
@@ -12,7 +13,14 @@ import { cn } from '@/lib/utils'
  * Business for owners, then My Account, Saved, Messages and Settings. Closes on
  * Esc (focus goes back to the button), a click outside, or a new page.
  */
-export function AccountMenu({ links }: { links: NavLink[] }) {
+export function AccountMenu({
+  links,
+  tour = null,
+}: {
+  links: NavLink[]
+  /** The site tour is on (ticket 280); the date this account first saw it. */
+  tour?: { seenAt: string | null } | null
+}) {
   const pathname = usePathname()
   // Open only on the page it was opened on, so a new page closes it.
   const [openOn, setOpenOn] = useState<string | null>(null)
@@ -85,6 +93,23 @@ export function AccountMenu({ links }: { links: NavLink[] }) {
               </li>
             )
           })}
+          {tour && (
+            <TakeTheTourLink
+              as="li"
+              from="menu"
+              accountSeenAt={tour.seenAt}
+              onStart={() => {
+                setOpen(false)
+                // The row is about to go; the tour gives focus back here.
+                buttonRef.current?.focus()
+              }}
+              className={cn(
+                'flex min-h-11 w-full items-center rounded-lg px-3 text-left font-subhead text-sm transition-colors',
+                'text-cream hover:bg-white/5 hover:text-gold',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold'
+              )}
+            />
+          )}
         </ul>
       )}
     </div>

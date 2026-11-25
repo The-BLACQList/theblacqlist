@@ -86,6 +86,7 @@ export type FeatureFlag =
   | 'receiptRead'
   | 'semanticSearch'
   | 'siteImport'
+  | 'siteTour'
   | 'testerTour'
 
 // The map is the registry. Adding a flag means adding it here and to the union
@@ -223,6 +224,12 @@ const FEATURE_FLAG_ENV_VARS: Record<FeatureFlag, string> = {
   // ever fetched. The default (on in preview, off in production) lets it be
   // reviewed on Previews; production waits for the privacy policy update.
   siteImport: 'FEATURE_SITE_IMPORT',
+  // Gates the first-visit site tour (ticket 280): the welcome, the steps, the
+  // Take the Tour links and the date on the account. Off, nothing mounts.
+  // Closed by default on EVERY deployment (see CLOSED_BY_DEFAULT): it opens on
+  // its own for every first-time visitor, and turning it on is the founder's
+  // call after the Preview walk-through.
+  siteTour: 'FEATURE_SITE_TOUR',
   // Gates the Tester Tour: the progress rail, the page-render witnesses, the
   // reflection action, and the tour-state API route. The default (on in
   // preview, off in production) is exactly right here — the tour is reviewed on
@@ -257,6 +264,7 @@ const CLOSED_BY_DEFAULT: ReadonlySet<FeatureFlag> = new Set<FeatureFlag>([
   'ownerReceiptReview',
   'receiptRead',
   'semanticSearch',
+  'siteTour',
 ])
 
 // `undefined` means "this env var said nothing usable" — unset, blank, or a

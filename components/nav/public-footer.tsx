@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import Link from 'next/link'
 import { X } from 'lucide-react'
 
@@ -5,6 +6,8 @@ import { cn } from '@/lib/utils'
 import { isFeatureEnabled } from '@/lib/env'
 import { Container } from '@/components/layout/container'
 import { GoldBrandMark } from '@/components/ui/gold-brand-mark'
+import { TakeTheTourLink } from '@/components/site-tour/TakeTheTourLink'
+import { createClient } from '@/lib/supabase/server'
 import { SoonPill } from '@/components/ui/soon-pill'
 import { isCovered } from '@/lib/features/covered'
 import type { SoonFeature } from '@/lib/features/opening-soon'
@@ -146,6 +149,21 @@ function resolveColumns(canPost: boolean): FooterColumn[] {
   )
 }
 
+// ─── Take the Tour (ticket 280, DR-009) ───────────────────────────────────────
+
+/** Signed out only: members have it in My Account. */
+async function FooterTour() {
+  const supabase = await createClient()
+  const { data } = await supabase.auth.getUser()
+  if (data.user) return null
+  return (
+    <TakeTheTourLink
+      from="footer"
+      className="text-gray-400 hover:text-white text-xs font-subhead transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-gold focus-visible:ring-offset-2 focus-visible:ring-offset-black"
+    />
+  )
+}
+
 // ─── PublicFooter ─────────────────────────────────────────────────────────────
 
 export function PublicFooter() {
@@ -280,6 +298,11 @@ export function PublicFooter() {
             >
               How Ranking Works
             </Link>
+            {isFeatureEnabled('siteTour') && (
+              <Suspense fallback={null}>
+                <FooterTour />
+              </Suspense>
+            )}
           </div>
         </div>
       </Container>

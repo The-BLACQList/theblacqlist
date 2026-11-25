@@ -147,16 +147,24 @@ const LINK_UNDER =
 // lands on #start, on one question: is your business already listed? Find
 // first, since claiming an existing Page avoids duplicates.] The id lives on
 // the hero only; the closing band repeats the buttons without it.
-function DoorButtons({ center = false }: { center?: boolean }) {
+function DoorButtons({ center = false, tour = false }: { center?: boolean; tour?: boolean }) {
   return (
     <div className={`flex gap-3 flex-wrap${center ? ' justify-center' : ''}`}>
-      <Link href="/claim" className={PILL_GOLD}>
+      <Link
+        href="/claim"
+        className={PILL_GOLD}
+        data-site-tour={tour ? 'owner-claim' : undefined}
+      >
         Find My Business
         <span aria-hidden="true" className="ml-2">
           →
         </span>
       </Link>
-      <Link href="/add-business" className={PILL_LINE}>
+      <Link
+        href="/add-business"
+        className={PILL_LINE}
+        data-site-tour={tour ? 'owner-add' : undefined}
+      >
         Add My Business
       </Link>
     </div>
@@ -247,7 +255,7 @@ export default async function ForBusinessPage() {
             Search for your business first. If it&apos;s here, claim it free. If not, add it free.
           </p>
           <div className="mt-7">
-            <DoorButtons />
+            <DoorButtons tour />
           </div>
           <ul className="mt-6 grid gap-1 font-body text-[15px] text-off-white/85 max-w-[52ch]">
             <li>A real person checks every claim.</li>

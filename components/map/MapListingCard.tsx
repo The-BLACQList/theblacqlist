@@ -16,13 +16,23 @@ interface Props {
   selected: boolean
   /** The pointer is on this business's square or dot on the map (ticket 244). */
   hovered: boolean
-  /** strip = fixed 250px card in the phone carousel. grid = fills its cell. */
+  /**
+   * strip = fixed-width card in the phone carousel, photo on top; on a short
+   * screen the photo sits beside the words. grid = fills its cell.
+   */
   variant: 'grid' | 'strip'
   /** Miles from the visitor while Near me is on, else null. */
   distance: number | null
   onSelect: (listing: MapListing) => void
   onHover: (id: string | null) => void
 }
+
+// The strip's card, and its shape on a short screen (ticket 285): a row, so the
+// sheet is about 180px tall instead of 350px. The skeleton uses the same four.
+const STRIP_CARD = 'w-[250px] shrink-0 snap-start map-short:w-[280px]'
+const STRIP_ROW = 'map-short:flex map-short:items-center map-short:gap-2'
+const STRIP_PHOTO = 'map-short:aspect-square map-short:w-20 map-short:shrink-0'
+const STRIP_WORDS = 'map-short:mt-0 map-short:min-w-0 map-short:flex-1 map-short:pb-0'
 
 function initials(name: string): string {
   return name
@@ -54,7 +64,7 @@ export function MapListingCard({ listing, selected, hovered, variant, distance, 
       data-listing-id={listing.id}
       className={cn(
         'rounded-[18px] bg-white p-1.5 transition-shadow duration-150',
-        variant === 'strip' ? 'w-[250px] shrink-0 snap-start' : 'w-full',
+        variant === 'strip' ? STRIP_CARD : 'w-full',
         selected ? 'ring-2 ring-gold shadow-md' : hovered ? 'ring-2 ring-ink' : 'ring-1 ring-hairline'
       )}
     >
@@ -67,9 +77,18 @@ export function MapListingCard({ listing, selected, hovered, variant, distance, 
         onBlur={() => onHover(null)}
         aria-label={listing.name}
         aria-pressed={selected}
-        className="block w-full rounded-[14px] text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber"
+        className={cn(
+          'block w-full rounded-[14px] text-left',
+          variant === 'strip' && STRIP_ROW,
+          'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber'
+        )}
       >
-        <span className="relative block aspect-[4/3] overflow-hidden rounded-[14px] bg-ink">
+        <span
+          className={cn(
+            'relative block aspect-[4/3] overflow-hidden rounded-[14px] bg-ink',
+            variant === 'strip' && STRIP_PHOTO
+          )}
+        >
           {photo ? (
             <Image
               src={photo.src}
@@ -85,7 +104,7 @@ export function MapListingCard({ listing, selected, hovered, variant, distance, 
             </span>
           )}
         </span>
-        <span className="mt-2 block px-1.5 pb-1">
+        <span className={cn('mt-2 block px-1.5 pb-1', variant === 'strip' && STRIP_WORDS)}>
           <span className="block truncate font-headline text-[17px] leading-tight text-ink">
             {listing.name}
           </span>
@@ -127,14 +146,16 @@ export function MapListingCardSkeleton({ variant }: Pick<Props, 'variant'>) {
       aria-hidden="true"
       className={cn(
         'rounded-[18px] bg-white p-1.5 ring-1 ring-hairline',
-        variant === 'strip' ? 'w-[250px] shrink-0 snap-start' : 'w-full'
+        variant === 'strip' ? STRIP_CARD : 'w-full'
       )}
     >
-      <Skeleton className="aspect-[4/3] w-full rounded-[14px]" />
-      <div className="mt-2 px-1.5 pb-1">
-        <SkeletonLine className="font-headline text-[17px] leading-tight" bar="w-3/4" />
-        <SkeletonLine className="mt-0.5 text-[13px]" bar="w-1/2" />
-        <SkeletonLine className="mt-1 text-[12.5px]" bar="w-2/5" />
+      <div className={cn(variant === 'strip' && STRIP_ROW)}>
+        <Skeleton className={cn('aspect-[4/3] w-full rounded-[14px]', variant === 'strip' && STRIP_PHOTO)} />
+        <div className={cn('mt-2 px-1.5 pb-1', variant === 'strip' && STRIP_WORDS)}>
+          <SkeletonLine className="font-headline text-[17px] leading-tight" bar="w-3/4" />
+          <SkeletonLine className="mt-0.5 text-[13px]" bar="w-1/2" />
+          <SkeletonLine className="mt-1 text-[12.5px]" bar="w-2/5" />
+        </div>
       </div>
     </div>
   )
