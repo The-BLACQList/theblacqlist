@@ -1,6 +1,6 @@
 # Ticket 279: The Collective's Method Page Matches How Receipts Work
 
-**Status:** In review. Founder 2026-11-24: "build 278 and 279". The wording, the merge and the deploy each still need their own OK.
+**Status:** Merged #415. Founder 2026-11-24: "build 278 and 279", then "Yes, merge #413 then #415, wording approved".
 
 ## Why
 
@@ -54,7 +54,7 @@ The internal note also said a rejected receipt is final and that the Privacy Pol
 
 ## Steps
 
-1. Author drafts the replacement lines; Marketing checks them; the founder approves. Author and Marketing checked the page on 2026-11-24 and their edits are in. The founder has not approved the wording yet.
+1. Author drafts the replacement lines; Marketing checks them; the founder approves. Author and Marketing checked the page on 2026-11-24 and their edits are in. The founder approved the wording the same day.
 2. Check the remaining sentences against the code, including "there is no business-to-business data" (section 3) and "up to an hour old" (section 7).
 3. Change the page and the internal note together.
 4. Extend `tests/flow-map-methodology.test.ts` so the photo rule and the reviewer wording are tied to the code that enforces them.
