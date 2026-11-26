@@ -308,7 +308,8 @@ describe("the owner's Visibility card", () => {
   )
 
   it('has a Taken Down state for a job an admin unpublished, with the support address', () => {
-    expect(src).toContain("currentStatus === 'unpublished' && entityType === 'job'")
+    expect(src).toContain("const isTakenDown = currentStatus === 'unpublished' && !isEnded")
+    expect(src).toContain('Our team took this job off the job board')
     expect(src).toContain('Taken Down')
     expect(src).toContain('SUPPORT_EMAIL')
   })

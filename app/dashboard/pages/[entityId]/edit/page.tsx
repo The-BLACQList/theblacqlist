@@ -18,6 +18,7 @@ import { EventDetailsSection } from '@/components/dashboard/EventDetailsSection'
 import { JobDetailsSection } from '@/components/dashboard/JobDetailsSection'
 import { SeoSection } from '@/components/dashboard/SeoSection'
 import { PublishSection } from '@/components/dashboard/PublishSection'
+import { isEventOver } from '@/lib/events/eventOver'
 import { loadFinishData } from '@/lib/listings/finishData'
 import { PageFinishView } from '@/components/listings/PageFinishView'
 import { getWritingAllowance } from '@/lib/ai/allowance'
@@ -115,6 +116,7 @@ export default async function EditPage({ params, searchParams }: Props) {
           status={listing.status}
           trustTier={listing.trust_tier}
           entityType={listing.entity_type}
+          eventOver={isEventOver(eventRow?.starts_at, eventRow?.ends_at)}
         />
 
         <BasicInfoSection listingId={listing.id} name={listing.name} tagline={listing.tagline} />

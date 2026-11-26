@@ -41,6 +41,11 @@ interface Props {
    * different things about one posting.
    */
   jobPrice?: JobPriceLine
+  /**
+   * The event is over, so the nightly sweep unpublished it (ticket 106). It gets
+   * no Taken Down card: nobody took it down.
+   */
+  eventOver?: boolean
 }
 
 export function PublishSection({
@@ -49,6 +54,7 @@ export function PublishSection({
   trustTier,
   entityType,
   jobPrice,
+  eventOver = false,
 }: Props) {
   // Inside the finish view, publishing or sending for review saves every
   // changed card first (ticket 140). A failed save stops here; the save bar
@@ -97,10 +103,12 @@ export function PublishSection({
     currentStatus === 'draft' && trustTier === 'unclaimed' && isSelfSubmittable
   const isDraftUnsubmitted =
     currentStatus === 'draft' && trustTier === 'unclaimed' && !isSelfSubmittable
-  // Ticket 235: an admin took a live job down. The owner can't move it back
-  // themselves (the listings guard refuses any move out of 'unpublished'), so
-  // the card says what happened and who to ask instead of showing nothing.
-  const isTakenDown = currentStatus === 'unpublished' && entityType === 'job'
+  // Tickets 235 + 284: an admin took a live job or Page down. The owner can't
+  // move it back themselves (the listings guard refuses any move out of
+  // 'unpublished'), so the card says what happened and who to ask instead of
+  // showing nothing. An event that ended is 'unpublished' too, and just says so.
+  const isEnded = currentStatus === 'unpublished' && entityType === 'event' && eventOver
+  const isTakenDown = currentStatus === 'unpublished' && !isEnded
 
   return (
     <div className="rounded-xl border border-charcoal/10 bg-white">
@@ -138,6 +146,15 @@ export function PublishSection({
               </span>
             </>
           )}
+          {isEnded && (
+            <>
+              <Clock className="size-4 text-charcoal-soft shrink-0" aria-hidden="true" />
+              <span className="font-subhead text-sm font-semibold text-charcoal-soft">Ended</span>
+              <span className="font-body text-xs text-charcoal-soft">
+                · not visible to the public
+              </span>
+            </>
+          )}
           {isTakenDown && (
             <>
               <EyeOff className="size-4 text-charcoal-soft shrink-0" aria-hidden="true" />
@@ -150,7 +167,9 @@ export function PublishSection({
 
         {isTakenDown && (
           <p className="font-body text-sm text-charcoal-soft leading-relaxed">
-            Our team took this job off the job board, so it isn&apos;t visible to the public.
+            {entityType === 'job'
+              ? 'Our team took this job off the job board, so it isn’t visible to the public.'
+              : `Our team took this ${entityType === 'event' ? 'event' : 'Page'} down, so it isn’t visible to the public.`}{' '}
             Questions? Email{' '}
             <a
               href={`mailto:${SUPPORT_EMAIL}`}

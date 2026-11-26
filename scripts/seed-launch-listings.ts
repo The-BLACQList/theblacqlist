@@ -7,7 +7,10 @@
  *   npx tsx scripts/seed-launch-listings.ts [--yes] [--only=<city,...>] [--categories=<slug,...>]
  *
  * Idempotent: re-running does not create duplicates (ON CONFLICT DO NOTHING).
- * Logs "Inserted: N, Skipped: N, Errors: N" per city after completion.
+ * Logs "Inserted: N, Skipped: N, Marked: N, Errors: N" per city after completion.
+ *
+ * Businesses marked do-not-re-add (ticket 284) are skipped and listed. If the
+ * marks can't be read, the script stops before the first write.
  *
  * The cities seeded and their corpus files come from scripts/data/cities.ts —
  * add a city there, not here. Per-city launch thresholds live on the same
@@ -29,6 +32,7 @@ import { join, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { SEED_CITIES } from './data/cities'
 import { VALID_OWNERSHIP_LABELS, type OwnershipLabel } from '../lib/constants/listing'
+import { findPageMark, loadPageMarks, type PageMark } from '../lib/admin/pageMarks'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
@@ -245,7 +249,8 @@ async function resolveLookups(): Promise<{
 async function seedCity(
   cityFile: string,
   cityLabel: string,
-  lookups: { cities: Record<string, string>; categories: Record<string, string> }
+  lookups: { cities: Record<string, string>; categories: Record<string, string> },
+  marks: readonly PageMark[]
 ): Promise<void> {
   const filePath = join(__dirname, 'data', cityFile)
   let listings: ListingInput[]
@@ -277,6 +282,7 @@ async function seedCity(
 
   let inserted = 0
   let skipped = 0
+  let markedSkipped = 0
   let errors = 0
 
   for (const listing of listings) {
@@ -291,6 +297,22 @@ async function seedCity(
     if (!categoryId) {
       console.warn(`[${cityLabel}] Unknown category_slug: ${listing.category_slug} (${listing.name})`)
       errors++
+      continue
+    }
+
+    // Ticket 284: a business that came off and is marked do-not-re-add stays off.
+    const mark = findPageMark(marks, {
+      slug: listing.slug,
+      name: listing.name,
+      citySlug: listing.city_slug,
+      cityName: listing.city_text,
+    })
+    if (mark) {
+      console.warn(
+        `[${cityLabel}] Marked do-not-re-add, skipped: ${listing.name} (${listing.slug}); ` +
+          `mark is ${mark.name} (${mark.slug}), ${mark.reason}`
+      )
+      markedSkipped++
       continue
     }
 
@@ -407,7 +429,7 @@ async function seedCity(
   }
 
   console.log(
-    `[${cityLabel}] Done — Inserted: ${inserted}, Skipped: ${skipped}, Errors: ${errors} (total in file: ${listings.length})`
+    `[${cityLabel}] Done — Inserted: ${inserted}, Skipped: ${skipped}, Marked: ${markedSkipped}, Errors: ${errors} (total in file: ${listings.length})`
   )
 }
 
@@ -426,8 +448,11 @@ async function main() {
     process.exit(1)
   }
 
+  const marks = await loadPageMarks(supabase)
+  console.log(`Found ${marks.length} do-not-re-add marks`)
+
   for (const city of CITIES_TO_SEED) {
-    await seedCity(city.file, city.label, lookups)
+    await seedCity(city.file, city.label, lookups, marks)
   }
 
   console.log('\nSeed complete.')
