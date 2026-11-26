@@ -77,6 +77,10 @@ describe('community-spend vocabulary', () => {
     const source = read('app/account/spending/page.tsx')
     expect(source).not.toMatch(/verified/i)
     expect(source).toContain('Counted Spend')
+    // Follow-up, founder 2026-11-26: no timing promise, Title Case empty-state headings.
+    expect(source).not.toMatch(/business\s+days/i)
+    expect(source).toContain('Nothing Approved Yet')
+    expect(source).toContain('No Spending Tracked Yet')
   })
 })
 

@@ -145,14 +145,13 @@ export default async function MySpendingPage() {
             {totals.pendingReceiptCount > 0 ? (
               <>
                 <p className="font-subhead text-sm font-semibold text-brand-black">
-                  Nothing approved yet
+                  Nothing Approved Yet
                 </p>
                 <p className="font-body text-xs text-charcoal-soft mt-1 mb-4 max-w-[38ch] mx-auto">
                   You have {totals.pendingReceiptCount}{' '}
                   {totals.pendingReceiptCount === 1 ? 'receipt' : 'receipts'} awaiting review. Your
                   breakdown appears here once our team approves{' '}
-                  {totals.pendingReceiptCount === 1 ? 'it' : 'them'} — usually within 1–3 business
-                  days.
+                  {totals.pendingReceiptCount === 1 ? 'it' : 'them'}.
                 </p>
                 <Link
                   href="/account/receipts"
@@ -164,7 +163,7 @@ export default async function MySpendingPage() {
             ) : (
               <>
                 <p className="font-subhead text-sm font-semibold text-brand-black">
-                  No spending tracked yet
+                  No Spending Tracked Yet
                 </p>
                 <p className="font-body text-xs text-charcoal-soft mt-1 mb-4 max-w-[38ch] mx-auto">
                   Add a receipt from a Black-owned business and it shows up here, by month and by
