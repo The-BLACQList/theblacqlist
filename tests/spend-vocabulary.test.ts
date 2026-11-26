@@ -70,6 +70,14 @@ describe('community-spend vocabulary', () => {
     expect(source).not.toMatch(/Verified (community spend|receipts)/)
     expect(source).toContain('Reported community spend')
   })
+
+  it('My Spending never calls the shopper\'s receipts "verified" (ticket 287)', () => {
+    // Same reason as above, on the shopper's own page. Comments included: the
+    // page's own description should not make the claim either.
+    const source = read('app/account/spending/page.tsx')
+    expect(source).not.toMatch(/verified/i)
+    expect(source).toContain('Counted Spend')
+  })
 })
 
 // Deliberately NOT asserted here: that the methodology doc carries the

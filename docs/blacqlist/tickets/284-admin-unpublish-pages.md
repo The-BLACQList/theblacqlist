@@ -1,6 +1,6 @@
 # Ticket 284: Admin Unpublish for Pages
 
-**Status:** In review. The founder approved the ticket and then the build on 2026-11-25 ("ok to merge 418 and build 284"). The merge and each migration need their own OK.
+**Status:** Merged #419 `05c45a5` 2026-11-25. The founder approved the ticket and then the build on 2026-11-25 ("ok to merge 418 and build 284"), then the production migration and merge once a signed-in admin check passed on staging (18/18, made-up admin and Page, both removed). Production migration applied 2026-11-25 before the merge.
 
 ## Why
 

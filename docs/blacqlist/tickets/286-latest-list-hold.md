@@ -1,6 +1,6 @@
 # Ticket 286: Hold the Collective's Latest List and Totals Until 5 Receipts Are Counted
 
-**Status:** Built 2026-11-25 on `feat/286-five-receipt-hold`, not merged. Founder 2026-11-25: "Hold until 5" (Latest list), then "yes" to holding Spent and Receipts until 5 too, then "yes" to building it before launch. Open: the founder's approval of the words, then the merge, each its own OK. [Needs professional review] for the Privacy Policy question.
+**Status:** Merged #421 `a3ea033` 2026-11-25. Founder 2026-11-25: "Hold until 5" (Latest list), then "yes" to holding Spent and Receipts until 5 too, then "yes" to building it before launch. [Needs professional review] for the Privacy Policy question.
 
 ## Why
 

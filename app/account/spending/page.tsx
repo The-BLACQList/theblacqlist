@@ -17,7 +17,7 @@ import {
 export const metadata: Metadata = { title: 'My Spending' }
 
 /**
- * The user's own verified spend, by month and by category (ledger 4.1c).
+ * The user's own counted spend, by month and by category (ledger 4.1c).
  *
  * ── This is the private counterpart to /account/community-spend ─────────────
  * That page answers "where does the community's money go" and is deliberately
@@ -124,7 +124,7 @@ export default async function MySpendingPage() {
           <div>
             <h1 className="font-headline text-2xl text-brand-black">My Spending</h1>
             <p className="font-subhead text-sm text-charcoal-soft mt-0.5">
-              Where your verified support has gone
+              Where your support has gone
             </p>
           </div>
           <Link
@@ -145,7 +145,7 @@ export default async function MySpendingPage() {
             {totals.pendingReceiptCount > 0 ? (
               <>
                 <p className="font-subhead text-sm font-semibold text-brand-black">
-                  Nothing verified yet
+                  Nothing approved yet
                 </p>
                 <p className="font-body text-xs text-charcoal-soft mt-1 mb-4 max-w-[38ch] mx-auto">
                   You have {totals.pendingReceiptCount}{' '}
@@ -168,7 +168,7 @@ export default async function MySpendingPage() {
                 </p>
                 <p className="font-body text-xs text-charcoal-soft mt-1 mb-4 max-w-[38ch] mx-auto">
                   Add a receipt from a Black-owned business and it shows up here, by month and by
-                  category, once it&rsquo;s verified.
+                  category, once it&rsquo;s approved.
                 </p>
                 <Link
                   href="/account/receipts/new"
@@ -186,7 +186,7 @@ export default async function MySpendingPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="rounded-xl bg-white border border-charcoal/10 p-5 sm:col-span-1">
                 <p className="font-subhead text-[11px] text-charcoal-soft font-semibold uppercase tracking-wide">
-                  Verified spend
+                  Counted Spend
                 </p>
                 <p className="font-headline text-3xl text-brand-black mt-1">
                   {formatDollars(totals.approvedAmountCents)}
@@ -249,7 +249,7 @@ export default async function MySpendingPage() {
 
               {maxMonthAmount === 0 ? (
                 <p className="font-body text-xs text-charcoal-soft">
-                  Your verified receipts are all older than {PERSONAL_SPEND_MONTHS} months, so
+                  Your counted receipts are all older than {PERSONAL_SPEND_MONTHS} months, so
                   there&rsquo;s nothing to chart in this window. The totals above still include
                   them.
                 </p>
@@ -257,7 +257,7 @@ export default async function MySpendingPage() {
                 <>
                   <table className="w-full">
                     <caption className="sr-only">
-                      Verified spend by month for the last {PERSONAL_SPEND_MONTHS} months
+                      Counted spend by month for the last {PERSONAL_SPEND_MONTHS} months
                     </caption>
                     <thead className="sr-only">
                       <tr>
