@@ -1,6 +1,6 @@
 # Ticket 285: The Map on Short Screens
 
-**Status:** In review. Founder 2026-11-25: "fix the map page" (DR-023), and leave tour step 3 out only where too little map remains.
+**Status:** Merged #420 `fc5331b` 2026-11-25. Founder 2026-11-25: "fix the map page" (DR-023), and leave tour step 3 out only where too little map remains.
 
 ## Why
 
