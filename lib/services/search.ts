@@ -1,3 +1,4 @@
+import { isFeatureEnabled } from '@/lib/env'
 import { createClient } from '@/lib/supabase/server'
 import {
   resolveFacetParams,
@@ -34,6 +35,7 @@ export class UnknownFilterValueError extends Error {
     if (unresolved.attrs?.length) {
       fields.attrs = `No attribute with slug ${unresolved.attrs.map((s) => `"${s}"`).join(', ')}.`
     }
+    if (unresolved.type) fields.type = 'Jobs are not open yet.'
     if (unresolved.levels?.length) {
       fields.level = `No level ${unresolved.levels.map((s) => `"${s}"`).join(', ')}.`
     }
@@ -220,6 +222,8 @@ export async function searchListings(
         byId.set(raw.id, mapRow(raw))
       // .in() does not preserve order — restore the RPC's ranking.
       results = faceted.ids.map((id) => byId.get(id)).filter((r): r is SearchResult => !!r)
+      // Jobs closed (ticket 291): the RPC has no type exclusion, so drop job rows here.
+      if (!isFeatureEnabled('jobsOpen')) results = results.filter((r) => r.entity_type !== 'job')
     }
 
     // Coordinates are deliberately NOT passed here and must never be added.
@@ -242,6 +246,8 @@ export async function searchListings(
     .eq('status', 'published')
     .is('deleted_at', null)
     .eq('flag_status', 'none')
+  // Jobs closed (ticket 291): no job listings in a plain browse.
+  if (!isFeatureEnabled('jobsOpen')) query = query.neq('entity_type', 'job')
 
   if (cityId) query = query.eq('city_id', cityId)
   // A parent category means itself plus its subcategories, and a Type shortcut

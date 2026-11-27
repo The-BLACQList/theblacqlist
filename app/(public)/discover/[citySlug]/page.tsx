@@ -155,6 +155,7 @@ async function CityContent({
           hideCityFilter
           showDeals={isFeatureEnabled('coupons')}
           showOrderWhereSold={isFeatureEnabled('orderWhereSold')}
+          showJobs={isFeatureEnabled('jobsOpen')}
           categories={categories ?? []}
           groups={groups}
           counts={counts}
@@ -167,6 +168,7 @@ async function CityContent({
               hideCityFilter
               showDeals={isFeatureEnabled('coupons')}
               showOrderWhereSold={isFeatureEnabled('orderWhereSold')}
+              showJobs={isFeatureEnabled('jobsOpen')}
               categories={categories ?? []}
               groups={groups}
               counts={counts}

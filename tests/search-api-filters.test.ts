@@ -166,6 +166,9 @@ vi.mock('@/lib/supabase/server', () => {
       if (categoryIds) rows = rows.filter((r) => categoryIds.includes(r.category_id))
       const entityType = eqValue(calls, 'entity_type')
       if (entityType) rows = rows.filter((r) => r.entity_type === entityType)
+      // Jobs closed (ticket 291) arrives as `.neq('entity_type', 'job')`.
+      for (const c of calls.filter((c) => c[0] === 'neq'))
+        rows = rows.filter((r) => (r as unknown as Record<string, string>)[c[1] as string] !== c[2])
       // A mapped Type shortcut arrives as one PostgREST `.or()` string.
       const orFilter = calls.find((c) => c[0] === 'or')?.[1] as string | undefined
       if (orFilter)
@@ -182,6 +185,7 @@ vi.mock('@/lib/supabase/server', () => {
     for (const m of [
       'select',
       'eq',
+      'neq',
       'is',
       'in',
       'or',
