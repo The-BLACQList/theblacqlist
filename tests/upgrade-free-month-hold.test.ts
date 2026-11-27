@@ -28,7 +28,7 @@ describe('freeMonthHold', () => {
     expect(freeMonthHold({ status: 'waiting', hasPage: true })).toBe('waiting')
   })
 
-  it('holds when the month is ready, on whichever of the owner\'s pages (ticket 238)', () => {
+  it("holds when the month is ready, on whichever of the owner's pages (ticket 238)", () => {
     expect(freeMonthHold(ready(PAGE))).toBe('ready')
     expect(freeMonthHold(ready(OTHER))).toBe('ready')
   })
@@ -76,6 +76,7 @@ describe('UpgradePlans with a free month', () => {
         canManage: false,
         availability: { starter: { monthly: true, annual: true } },
         freeMonthHold: hold,
+        jobsOpen: true,
       })
     )
 
