@@ -1,6 +1,47 @@
 # Ticket 288: "Verified" on the Support Post and Share Flow
 
-**Status:** Words first, nothing built. Founder 2026-11-26: "Ticket 288, words first". Software lists every place. Author and Marketing propose words, Creative looks at the stamp, and the founder picks before anything is built.
+**Status:** Built, PR open (2026-11-27). Words first came on 2026-11-26 ("Ticket 288, words first"). The founder picked on 2026-11-27.
+
+## Founder's Picks (2026-11-27)
+
+- **The stamp:** "No stamp". The support post, its caption and its alt text never say "verified", whoever approved the receipt. The post looks the same before and after approval.
+- **The owner word:** "Switch to Approve". Receipts to Verify becomes **Receipts to Review**, and the button becomes **Approve / Approving…**.
+- **The confirm line:** "Owner confirm line". The line after Approve or Not Ours now shows (see Found While Testing below).
+
+## What Changed
+
+Words are Author's (2026-11-27), unless marked _Software_.
+
+| Where                             | Now                                                                                                                                                                                                      |
+| --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Share page heading, approved      | Your Receipt Is Approved                                                                                                                                                                                 |
+| Share page line, approved         | Share a post that you supported this business.                                                                                                                                                           |
+| Share page line, waiting          | Share a post that you supported this business. Your receipt is waiting for review.                                                                                                                       |
+| Counted page                      | Share Your Support Post                                                                                                                                                                                  |
+| My Receipts row                   | Share post                                                                                                                                                                                               |
+| "Your Receipt Is Counted" email   | Share your post                                                                                                                                                                                          |
+| Caption                           | No "Verified by The BLACQList." at the end                                                                                                                                                               |
+| Post image and alt text           | No stamp                                                                                                                                                                                                 |
+| Owner page title, heading and nav | Receipts to Review                                                                                                                                                                                       |
+| Owner intro                       | Shoppers upload receipts to show they supported you. Check each one against your own records. When you approve it, their purchase counts. If you haven't checked one in N days, The BLACQList team will. |
+| Owner footnote                    | …only so you can check it.                                                                                                                                                                               |
+| Owner button                      | Approve / Approving…                                                                                                                                                                                     |
+| Owner confirm line                | Approved. {buyer}'s purchase now counts, and we've let them know.                                                                                                                                        |
+| Own-receipt error                 | You can't approve your own receipt. We'll review it for you.                                                                                                                                             |
+| Owner email eyebrow               | A Receipt to Review                                                                                                                                                                                      |
+| Owner email body                  | They uploaded a receipt to show it. Check it against your own records. Once you approve it, their purchase counts.                                                                                       |
+| Owner email preview, button       | _Software:_ "Take a look and approve it.", "Review the Receipt"                                                                                                                                          |
+
+Author's waiting line was "We'll let you know when your receipt is approved." That isn't true for every shopper, because a shopper can turn off the counted email in Settings. So Author's fallback is used instead.
+
+**Left as is:**
+
+- The privacy policy line (counsel's list).
+- The receipt privacy note "…only to verify your purchase." (`lib/spend/owner-receipts.ts`).
+- The signed tour line "you can confirm it". Author suggests "you can approve it". That needs the founder's re-sign and Marketing's check first.
+- The internal stage name `'verified'`. It is code, not copy.
+
+`tests/spend-vocabulary.test.ts` guards both groups.
 
 ## Why
 
@@ -54,7 +95,7 @@ The business trust tier "Verified" is a real check of the business: the badge, G
 
 ## Found While Testing (2026-11-26, Staging)
 
-On Receipts to Verify, after an owner presses Verify the row goes straight to "You're all caught up". The line "Verified. {buyer}'s purchase now counts, and we've let them know." never shows: the page refreshes and the row is gone before it can. The approval, the totals and the shopper's email all work. Whether to fix this, and how, is a separate pick.
+On Receipts to Verify, after an owner presses Verify the row goes straight to "You're all caught up". The line "Verified. {buyer}'s purchase now counts, and we've let them know." never shows: the page refreshes and the row is gone before it can. The approval, the totals and the shopper's email all work. **Fixed 2026-11-27:** the line now lives in the list (`components/dashboard/ReceiptReviewList.tsx`), which stays on screen through the refresh. The same goes for the Not Ours line.
 
 ## Next
 

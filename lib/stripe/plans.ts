@@ -57,10 +57,30 @@ function pagesLine(slug: PlanSlug): string {
 // line is true because the agents behind it check the same gates
 // (lib/ai/agents.ts `gate`): Starter's from `ai_suggestions`, Growth's
 // write-ups from `ai_item_writeups`.
+// Ticket 289: the plan lines that name jobs. While FEATURE_JOBS_OPEN is off
+// (founder 2026-11-27: "We'll take jobs off altogether"), planFeatures() drops
+// or rewords them, so no plan sells something nobody can use.
+const GROWTH_AI_LINE = 'AI help with product, service, event, and job descriptions too'
+const GROWTH_JOB_LINE = '1 job posting every 30 days'
+const GROWTH_ANALYTICS_LINE =
+  'Advanced analytics: 12 months (Starter has 30 days), each number compared with the period before, and numbers for your events and jobs'
+const PREMIUM_JOB_LINE = '3 job postings every 30 days (Growth has 1)'
+
+/** What each job line becomes while jobs are closed. Null drops it. */
+const JOBS_CLOSED_LINES: ReadonlyMap<string, string | null> = new Map([
+  [GROWTH_AI_LINE, 'AI help with product, service, and event descriptions too'],
+  [GROWTH_JOB_LINE, null],
+  [
+    GROWTH_ANALYTICS_LINE,
+    'Advanced analytics: 12 months (Starter has 30 days), each number compared with the period before, and numbers for your events',
+  ],
+  [PREMIUM_JOB_LINE, null],
+])
+
 const AI_JOBS: Record<Exclude<PlanSlug, 'free'>, string> = {
   starter:
     'AI help with your page text, Instagram captions, review replies, and Happening now posts, plus a monthly read of your numbers',
-  growth: 'AI help with product, service, event, and job descriptions too',
+  growth: GROWTH_AI_LINE,
   premium: 'The most AI help of any plan',
 }
 
@@ -75,7 +95,8 @@ export function aiFinePrint(slug: PlanSlug): string | undefined {
   if (quota === null) return 'AI help with no monthly limit.'
   const below = slug === 'growth' ? 'starter' : slug === 'premium' ? 'growth' : null
   const belowQuota = below ? aiQuota(below) : null
-  const was = below && belowQuota ? ` (${below === 'starter' ? 'Starter' : 'Growth'} has ${belowQuota})` : ''
+  const was =
+    below && belowQuota ? ` (${below === 'starter' ? 'Starter' : 'Growth'} has ${belowQuota})` : ''
   return `AI help up to ${quota} times a month per page${was}.`
 }
 
@@ -144,13 +165,13 @@ export const PLANS: PlanMeta[] = [
       pagesLine('growth'),
       'A storefront for up to 25 products and services',
       'Up to 3 events at a time',
-      '1 job posting every 30 days',
+      GROWTH_JOB_LINE,
       'Up to 25 photos (Starter has 10)',
       'Up to 3 videos (Starter has 1)',
       'No limit on common questions or details customers filter by',
       'Up to 3 Happening now posts at a time (Starter has 1)',
       'Up to 2 extra buttons on your page (Starter has 1)',
-      'Advanced analytics: 12 months (Starter has 30 days), each number compared with the period before, and numbers for your events and jobs',
+      GROWTH_ANALYTICS_LINE,
     ],
     finePrint: aiFinePrint('growth'),
     cta: 'Upgrade to Growth',
@@ -169,7 +190,7 @@ export const PLANS: PlanMeta[] = [
       'Coupons and deals',
       'Booking requests',
       'Unlimited products, services, and events (Growth has 25 and 3)',
-      '3 job postings every 30 days (Growth has 1)',
+      PREMIUM_JOB_LINE,
       'Up to 50 photos (Growth has 25)',
       'Up to 5 Happening now posts at a time (Growth has 3)',
       'Up to 3 extra buttons on your page (Growth has 2)',
@@ -182,6 +203,24 @@ export const PLANS: PlanMeta[] = [
     highlighted: false,
   },
 ]
+
+/**
+ * A plan's lines as a visitor should see them today. With jobs closed
+ * (ticket 289) the job lines are dropped or reworded; open, it is the list as
+ * written. Every card, Cue's plan help and anything else that prints a plan's
+ * lines reads them through here.
+ */
+export function planFeatures(
+  plan: Pick<PlanMeta, 'features'>,
+  opts: { jobsOpen: boolean }
+): readonly string[] {
+  if (opts.jobsOpen) return plan.features
+  return plan.features.flatMap((line) => {
+    if (!JOBS_CLOSED_LINES.has(line)) return [line]
+    const swap = JOBS_CLOSED_LINES.get(line)
+    return swap ? [swap] : []
+  })
+}
 
 /** "Everything in Starter" when a list opens with it (ticket 239), else null. */
 export function leadIn(features: readonly string[]): string | null {

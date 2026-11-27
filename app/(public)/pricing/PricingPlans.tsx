@@ -6,7 +6,14 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { BillingCycleToggle } from '@/components/billing/BillingCycleToggle'
 import { isPlanPurchasable, type PlanAvailability } from '@/lib/stripe/availability'
-import { PLANS, addedLines, annualSavingsPct, leadIn, type BillingCycle } from '@/lib/stripe/plans'
+import {
+  PLANS,
+  addedLines,
+  planFeatures,
+  annualSavingsPct,
+  leadIn,
+  type BillingCycle,
+} from '@/lib/stripe/plans'
 
 // Free links to the free-signup path; paid tiers route through sign-in to the
 // dashboard upgrade page where the live Stripe checkout lives.
@@ -24,6 +31,8 @@ const CTA_HREF: Record<string, string> = {
 // the launch truth pass exists to remove.
 interface Props {
   availability: PlanAvailability
+  /** FEATURE_JOBS_OPEN. Closed, the cards drop their job lines (ticket 289). */
+  jobsOpen: boolean
   /** Show the "Most Popular" flag on the highlighted plan. /for-business turns it off. */
   showFeatured?: boolean
   /** Where the Free card's button goes. Defaults to /for-business. */
@@ -34,6 +43,7 @@ interface Props {
 
 export function PricingPlans({
   availability,
+  jobsOpen,
   showFeatured = true,
   freeHref = '/for-business',
   waitlistHref = '#pricing-waitlist',
@@ -106,13 +116,13 @@ export function PricingPlans({
                 <div className="mb-6 flex-1">
                   {/* Ticket 239: "Everything in {lower}" leads the list, so
                       the bullets read as what this plan adds. */}
-                  {leadIn(plan.features) && (
+                  {leadIn(planFeatures(plan, { jobsOpen })) && (
                     <p className="font-subhead text-sm font-semibold text-brand-black mb-2">
-                      {leadIn(plan.features)}, plus:
+                      {leadIn(planFeatures(plan, { jobsOpen }))}, plus:
                     </p>
                   )}
                   <ul className="space-y-2">
-                    {addedLines(plan.features).map((feature) => (
+                    {addedLines(planFeatures(plan, { jobsOpen })).map((feature) => (
                       <li
                         key={feature}
                         className="flex items-start gap-2 font-subhead text-sm text-charcoal"
@@ -126,7 +136,9 @@ export function PricingPlans({
                     ))}
                   </ul>
                   {/* Ticket 242: how often AI help can be used, as small print. */}
-                  {plan.finePrint && <p className="font-subhead text-sm text-charcoal-soft mt-3">{plan.finePrint}</p>}
+                  {plan.finePrint && (
+                    <p className="font-subhead text-sm text-charcoal-soft mt-3">{plan.finePrint}</p>
+                  )}
                 </div>
               )}
 

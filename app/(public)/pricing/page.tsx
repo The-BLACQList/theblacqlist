@@ -46,12 +46,12 @@ const WAITLIST_SOURCE: Record<string, string> = {
 // AI help leads while FEATURE_AI_BETA is on (ticket 146). Ticket 242: say what
 // it helps with, never "drafts"; the numbers come from aiQuota(), the same as
 // the plan cards' small print.
-function faqItems(growthOpen: boolean, aiOn: boolean) {
+function faqItems(growthOpen: boolean, aiOn: boolean, jobsOpen: boolean) {
   const starterAi = aiOn
     ? `AI help with your page text, Instagram captions, review replies, and Happening now posts (up to ${aiQuota('starter')} times a month per page), `
     : ''
   const growthAi = aiOn
-    ? `AI help with product, service, event, and job descriptions (up to ${aiQuota('growth')} times a month per page), `
+    ? `AI help with product, service, event${jobsOpen ? ', and job' : ', and'} descriptions (up to ${aiQuota('growth')} times a month per page), `
     : ''
   return [
     {
@@ -66,7 +66,7 @@ function faqItems(growthOpen: boolean, aiOn: boolean) {
       ? [
           {
             q: 'What does Growth add?',
-            a: `Growth adds ${growthAi}up to 25 photos, a storefront for up to 25 products and services, up to 3 events at a time, 1 job posting every 30 days, and advanced analytics: 12 months of numbers, each compared with the period before, plus your events and jobs.`,
+            a: `Growth adds ${growthAi}up to 25 photos, a storefront for up to 25 products and services, up to 3 events at a time, ${jobsOpen ? '1 job posting every 30 days, ' : ''}and advanced analytics: 12 months of numbers, each compared with the period before, plus your events${jobsOpen ? ' and jobs' : ''}.`,
           },
           {
             q: 'When is Premium available?',
@@ -83,7 +83,7 @@ function faqItems(growthOpen: boolean, aiOn: boolean) {
       ? [
           {
             q: 'How does AI help work?',
-            a: "Tap a Write button under your about text, search title, or search description, under a review reply, or on a Happening now post. Growth and Premium also get one under each product, service, event, and job description. AI writes it from what's already on your page and what you typed. Change any word: nothing goes on your page or gets sent until you save or send it yourself. Explain my numbers gives you a plain read on your last 30 days. Each use counts once toward your plan's monthly amount.",
+            a: `Tap a Write button under your about text, search title, or search description, under a review reply, or on a Happening now post. Growth and Premium also get one under each product, service, event${jobsOpen ? ', and job' : ', and'} description. AI writes it from what's already on your page and what you typed. Change any word: nothing goes on your page or gets sent until you save or send it yourself. Explain my numbers gives you a plain read on your last 30 days. Each use counts once toward your plan's monthly amount.`,
           },
         ]
       : []),
@@ -139,7 +139,8 @@ export default async function PricingPage() {
     .filter((o) => o.value !== 'pricing-addons')
     .map((o) => o.label)
   const stillBuilding = joinNames([...closedTiers, 'the visibility add-ons'])
-  const faq = faqItems(growthOpen, aiOn)
+  const jobsOpen = isFeatureEnabled('jobsOpen')
+  const faq = faqItems(growthOpen, aiOn, jobsOpen)
 
   return (
     <>
@@ -149,7 +150,7 @@ export default async function PricingPage() {
           title="The BLACQList Pricing"
           subtitle={
             growthOpen
-              ? `Getting listed is always free. ${aiLead}Starter adds the full page layout, more photos, review replies, and a simple analytics dashboard. Growth adds a storefront, events, job postings, and advanced analytics over 12 months. Pay monthly or save about 20% with annual billing. Premium is on the way.`
+              ? `Getting listed is always free. ${aiLead}Starter adds the full page layout, more photos, review replies, and a simple analytics dashboard. Growth adds a storefront, events, ${jobsOpen ? 'job postings, ' : ''}and advanced analytics over 12 months. Pay monthly or save about 20% with annual billing. Premium is on the way.`
               : `Getting listed is always free. ${aiLead}Starter adds the full page layout, more photos, review replies, and a simple analytics dashboard. Pay monthly or save about 20% with annual billing. Growth and Premium are on the way.`
           }
         />
@@ -161,7 +162,7 @@ export default async function PricingPage() {
           Plans for Every Stage of Growth
         </SectionHeading>
 
-        <PricingPlans availability={availability} />
+        <PricingPlans availability={availability} jobsOpen={jobsOpen} />
       </Section>
 
       {/* Ticket 239: every limit side by side, each step up marked in gold. */}
@@ -169,7 +170,11 @@ export default async function PricingPage() {
         <SectionHeading subtitle="Gold marks what each plan adds over the one before it.">
           Compare Every Plan
         </SectionHeading>
-        <PlanCompareTable open={compareOpen(availability)} className="mt-6 max-w-6xl mx-auto" />
+        <PlanCompareTable
+          open={compareOpen(availability)}
+          jobsOpen={jobsOpen}
+          className="mt-6 max-w-6xl mx-auto"
+        />
       </Section>
 
       {/* Waitlist for anything not yet purchasable */}

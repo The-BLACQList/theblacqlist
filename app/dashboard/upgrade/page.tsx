@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
+import { isFeatureEnabled } from '@/lib/env'
 import { requireOwner } from '@/lib/dashboard/guard'
 import { getPlanAvailability } from '@/lib/stripe/availability'
 import type { PlanSlug } from '@/lib/stripe/plans'
@@ -27,6 +28,8 @@ export default async function UpgradePage({
     data: { user },
   } = await supabase.auth.getUser()
   const { page: pageParam } = await searchParams
+  // Ticket 289: closed jobs take the job lines off the cards and the table.
+  const jobsOpen = isFeatureEnabled('jobsOpen')
 
   const { data: listings } = await supabase
     .from('listings')
@@ -90,6 +93,7 @@ export default async function UpgradePage({
         currentTier={currentTier}
         canManage={canManage}
         availability={availability}
+        jobsOpen={jobsOpen}
         freeMonthHold={freeMonthHold(freeMonth)}
       />
 
@@ -98,7 +102,11 @@ export default async function UpgradePage({
         <h2 id="compare-h" className="font-headline text-lg text-brand-black mb-3">
           Compare Every Plan
         </h2>
-        <PlanCompareTable open={compareOpen(availability, currentTier)} currentTier={currentTier} />
+        <PlanCompareTable
+          open={compareOpen(availability, currentTier)}
+          currentTier={currentTier}
+          jobsOpen={jobsOpen}
+        />
       </section>
     </div>
   )

@@ -31,7 +31,6 @@ export type SupportStage = 'supported' | 'verified'
 
 export interface SupportCaptionInput {
   businessName: string
-  stage: SupportStage
   /**
    * The receipt joins The Collective's map. False for a receipt with no
    * matched business or one kept out of the totals, so the caption doesn't
@@ -42,17 +41,12 @@ export interface SupportCaptionInput {
 
 /**
  * "I supported Mama's Kitchen 🖤 Adding to #TheCollective on @theblacqlist."
- * The verified stage adds the stamp line. Only ever called for a receipt the
- * business has confirmed, so "verified" is true when it says so.
+ * The same words before and after the receipt is approved. There is no
+ * "verified" stamp (ticket 288, founder 2026-11-27: "No stamp").
  */
-export function supportCaption({
-  businessName,
-  stage,
-  collective = true,
-}: SupportCaptionInput): string {
+export function supportCaption({ businessName, collective = true }: SupportCaptionInput): string {
   const tail = collective
     ? `Adding to #TheCollective on ${BLACQLIST_HANDLE}.`
     : `Found on ${BLACQLIST_HANDLE}.`
-  const base = `I supported ${businessName.trim()} 🖤 ${tail}`
-  return stage === 'verified' ? `${base} Verified by The BLACQList.` : base
+  return `I supported ${businessName.trim()} 🖤 ${tail}`
 }
