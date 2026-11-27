@@ -197,7 +197,7 @@ const h = vi.hoisted(() => {
 function fakeClient() {
   function builder() {
     const b: Record<string, unknown> = {}
-    for (const m of ['select', 'eq', 'is', 'in', 'or', 'lte', 'gt', 'order', 'limit', 'range', 'textSearch']) {
+    for (const m of ['select', 'eq', 'neq', 'is', 'in', 'or', 'lte', 'gt', 'order', 'limit', 'range', 'textSearch']) {
       b[m] = () => b
     }
     b.maybeSingle = () => Promise.resolve({ data: null, error: null })

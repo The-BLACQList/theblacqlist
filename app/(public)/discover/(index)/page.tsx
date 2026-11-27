@@ -95,6 +95,7 @@ async function DiscoverContent({
         <FacetSidebar
           showDeals={isFeatureEnabled('coupons')}
           showOrderWhereSold={isFeatureEnabled('orderWhereSold')}
+          showJobs={isFeatureEnabled('jobsOpen')}
           cities={cities ?? []}
           categories={categories ?? []}
           groups={groups}
@@ -110,6 +111,7 @@ async function DiscoverContent({
             <MobileFilterSheet
               showDeals={isFeatureEnabled('coupons')}
               showOrderWhereSold={isFeatureEnabled('orderWhereSold')}
+              showJobs={isFeatureEnabled('jobsOpen')}
               cities={cities ?? []}
               categories={categories ?? []}
               groups={groups}

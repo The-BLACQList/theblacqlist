@@ -10,6 +10,7 @@ import 'server-only'
 
 import type { AssistantCategory } from '@/lib/ai/assistant'
 import { businessPage, NO_PAGE, staticPage, type PageContext, type PageRef } from '@/lib/assistant/page'
+import { isFeatureEnabled } from '@/lib/env'
 import { parseWeeklyHours } from '@/lib/listings/hours'
 import { mapRow, NESTED_SELECT, queryListings, type RawRow } from '@/lib/listings/query'
 import type { AssistCity } from '@/lib/search/assist'
@@ -41,7 +42,12 @@ async function loadByIds(ids: readonly string[]): Promise<DiscoveryEntity[]> {
     .eq('status', 'published')
   if (error) throw new Error('CUE_LOAD_FAILED')
   const byId = new Map<string, DiscoveryEntity>()
-  for (const raw of (data as unknown as RawRow[]) ?? []) byId.set(raw.id, mapRow(raw))
+  // Jobs closed (ticket 291): Cue never offers a job, meaning search included.
+  const jobsOpen = isFeatureEnabled('jobsOpen')
+  for (const raw of (data as unknown as RawRow[]) ?? []) {
+    if (!jobsOpen && raw.entity_type === 'job') continue
+    byId.set(raw.id, mapRow(raw))
+  }
   return ids.map((id) => byId.get(id)).filter((e): e is DiscoveryEntity => !!e)
 }
 
@@ -67,6 +73,7 @@ export const cueDeps: CueToolDeps = {
     if (error) throw new Error('CUE_LOAD_FAILED')
     if (!data) return null
     const raw = data as unknown as RawRow & { listing_details_business: { hours?: unknown } | null }
+    if (raw.entity_type === 'job' && !isFeatureEnabled('jobsOpen')) return null
     return {
       entity: mapRow(raw),
       hours: parseWeeklyHours(raw.listing_details_business?.hours),

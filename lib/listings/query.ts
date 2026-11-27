@@ -1,3 +1,4 @@
+import { isFeatureEnabled } from '@/lib/env'
 import { createClient } from '@/lib/supabase/server'
 import { attachLevels } from '@/lib/listings/levelRows'
 import { attachJobCardData } from '@/lib/listings/jobCardQuery'
@@ -278,6 +279,7 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
   })
 
   const wantFacets = !!params.withFacets
+  const jobsOpen = isFeatureEnabled('jobsOpen')
 
   // A slug that does not exist is not "no filter" — it is a filter nothing can
   // satisfy. Falling through here would run the query with the bad filter simply
@@ -434,6 +436,8 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
     const byId = new Map<string, DiscoveryEntity>()
     for (const raw of (data as unknown as RawRow[]) ?? []) byId.set(raw.id, mapRow(raw))
     organicEntities = search.ids.map((id) => byId.get(id)).filter((e): e is DiscoveryEntity => !!e)
+    // Jobs closed (ticket 291): the RPC has no type exclusion, so drop job rows here.
+    if (!jobsOpen) organicEntities = organicEntities.filter((e) => e.entity_type !== 'job')
   }
 
   const facets =
@@ -460,6 +464,7 @@ export async function queryListings(params: ListingsParams): Promise<ListingsRes
       }>) {
         const raw = sp.listings as unknown as RawRow | null
         if (!raw) continue
+        if (!jobsOpen && raw.entity_type === 'job') continue
         if (activeType && !listingMatchesType(activeType, raw, typeIds)) continue
         const position = sp.position ?? 1
         const entity: DiscoveryEntity = {

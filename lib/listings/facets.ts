@@ -165,6 +165,11 @@ export interface UnresolvedFacets {
    * empty, not as the whole directory, the same rule as an unknown attribute.
    */
   levels?: string[]
+  /**
+   * A type that is closed right now. Only `job`, while the jobsOpen flag is off
+   * (ticket 291): `?type=job` comes back empty, not as job listings.
+   */
+  type?: string
 }
 
 /**
@@ -187,7 +192,8 @@ export function hasUnresolved(u: UnresolvedFacets): boolean {
     u.city ||
     u.category ||
     (u.attrs && u.attrs.length > 0) ||
-    (u.levels && u.levels.length > 0)
+    (u.levels && u.levels.length > 0) ||
+    !!u.type
   )
 }
 
@@ -445,6 +451,9 @@ export async function resolveFacetParams(
   const unknownLevels = (raw.level ?? []).filter((l) => l && !isBusinessLevel(l))
   if (unknownLevels.length > 0) unresolved.levels = unknownLevels
 
+  // Jobs closed (founder 2026-11-27: "We'll take jobs off altogether").
+  if (raw.type === 'job' && !isFeatureEnabled('jobsOpen')) unresolved.type = raw.type
+
   const whereSoldOn = isFeatureEnabled('orderWhereSold')
   const platforms = ORDER_PLATFORM_IDS.filter((p) => raw.order_on?.includes(p))
   const soldNear = isZip(raw.sold_near) ? raw.sold_near : null
@@ -533,6 +542,8 @@ export async function legacyFacetedIds(
     .eq('status', 'published')
     .is('deleted_at', null)
     .eq('flag_status', 'none')
+  // Jobs closed (ticket 291): no job listings mixed into a plain browse.
+  if (!isFeatureEnabled('jobsOpen')) q = q.neq('entity_type', 'job')
 
   // A category means itself plus its subcategories, the same as the RPC.
   if (resolved.p_category_id) {

@@ -62,6 +62,8 @@ export interface FacetSidebarProps {
   showDeals?: boolean
   /** Shows "Where to buy" (part D): the orderWhereSold flag, read on the server. */
   showOrderWhereSold?: boolean
+  /** Shows the Jobs type (ticket 291): the jobsOpen flag, read on the server. */
+  showJobs?: boolean
   className?: string
 }
 
@@ -73,6 +75,7 @@ export function FacetSidebar({
   hideCityFilter = false,
   showDeals = false,
   showOrderWhereSold = false,
+  showJobs = false,
   className,
 }: FacetSidebarProps) {
   const { searchParams, setParam, setParams, getCsv, toggleCsv } = useFacetParams()
@@ -87,6 +90,8 @@ export function FacetSidebar({
   const typeCounts = countsOff ? undefined : counts.type
 
   const activeType = searchParams.get('type') ?? ''
+  // Jobs closed (founder 2026-11-27, "take jobs off altogether"): no Jobs type.
+  const typeOptions = showJobs ? ENTITY_TYPES : ENTITY_TYPES.filter(({ value }) => value !== 'job')
   const activeCategory = searchParams.get('category') ?? ''
   const activeCity = searchParams.get('city') ?? ''
   const activeTrust = searchParams.get('trust_tier') ?? ''
@@ -194,7 +199,7 @@ export function FacetSidebar({
           results (e2e/keyboard-a11y.spec.ts J7). */}
       <FilterSection title="Type" defaultOpen active={!!activeType}>
         <div className="flex flex-col gap-1" role="group" aria-label="Filter by type">
-          {ENTITY_TYPES.map(({ value, label }) => {
+          {typeOptions.map(({ value, label }) => {
             const isActive = activeType === value
             const n = typeCounts ? (typeCounts[value] ?? 0) : null
             const disabled = !countsOff && !isActive && n === 0
