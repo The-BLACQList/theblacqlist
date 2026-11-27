@@ -156,14 +156,14 @@ export function ReceiptListRow({
               <span className="sr-only"> for your {businessName} receipt</span>
             </Link>
           )}
-          {/* The support post (ticket 183): "Supported" while waiting,
-              "Verified" once approved. Never shows the receipt or amount. */}
+          {/* The support post (ticket 183). No stamp (ticket 288). Never
+              shows the receipt or amount. */}
           {isMatched && (counted || status === 'pending_review') && (
             <Link
               href={supportShareHref(id)}
               className="inline-flex items-center min-h-11 px-2 font-subhead text-xs font-semibold text-amber-700 underline underline-offset-2 hover:text-brand-black"
             >
-              {counted ? 'Share verified post' : 'Share'}
+              {counted ? 'Share post' : 'Share'}
               <span className="sr-only"> that you supported {businessName}</span>
             </Link>
           )}

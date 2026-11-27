@@ -16,8 +16,8 @@ const linkCls =
 
 /**
  * The support post (ticket 183): after adding a receipt, the shopper can post
- * that they supported the business. Right after the upload it says
- * "Supported"; once the business verifies it, "Verified by The BLACQList".
+ * that they supported the business. The post looks the same before and after
+ * approval: no stamp (ticket 288, founder 2026-11-27: "No stamp").
  *
  * This page reads only what the post shows. It never selects the amount or
  * the receipt photo, so neither can reach the card.
@@ -97,13 +97,13 @@ export default async function SupportSharePage({
       ? 'You just added to The Collective 🖤'
       : 'Receipt added 🖤'
     : post.stage === 'verified'
-      ? 'Your support is verified'
+      ? 'Your Receipt Is Approved'
       : 'Share your support'
 
   const sub =
     post.stage === 'verified'
-      ? 'Your receipt is verified, so your post gets the verified stamp.'
-      : 'Share a post that you supported this business. Once your receipt is verified, you can share it again with the verified stamp.'
+      ? 'Share a post that you supported this business.'
+      : 'Share a post that you supported this business. Your receipt is waiting for review.'
 
   return (
     <main>

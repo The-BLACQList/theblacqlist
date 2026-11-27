@@ -74,7 +74,7 @@ export async function loadReceiptForOwner(
 
 export const OWNER_REVIEW_ERRORS: Record<Exclude<OwnerReviewCheck, 'ok'>, string> = {
   not_found: 'Receipt not found.',
-  own_receipt: "You can't verify your own receipt. We'll review it for you.",
+  own_receipt: "You can't approve your own receipt. We'll review it for you.",
   not_pending: 'This receipt was already reviewed.',
 }
 

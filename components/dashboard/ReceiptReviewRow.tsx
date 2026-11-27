@@ -14,14 +14,36 @@ function dollars(cents: number) {
   return (cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' })
 }
 
-/** One receipt waiting for the owner: what they need to check, and two answers. */
-export function ReceiptReviewRow({ receipt }: { receipt: ReceiptToVerify }) {
+/**
+ * One receipt waiting for the owner: what they need to check, and two answers.
+ * On success it hands the confirm line to the list (`onDone`), which outlives
+ * the refresh that removes this row.
+ */
+export function ReceiptReviewRow({
+  receipt,
+  onDone,
+}: {
+  receipt: ReceiptToVerify
+  onDone: (notice: string) => void
+}) {
   const [verifyState, verify, verifying] = useActionState<OwnerReceiptState, FormData>(
-    ownerVerifyReceiptAction,
+    async (prev, formData) => {
+      const result = await ownerVerifyReceiptAction(prev, formData)
+      if (result && 'success' in result) {
+        onDone(`Approved. ${receipt.buyer}'s purchase now counts, and we've let them know.`)
+      }
+      return result
+    },
     null
   )
   const [rejectState, reject, rejecting] = useActionState<OwnerReceiptState, FormData>(
-    ownerRejectReceiptAction,
+    async (prev, formData) => {
+      const result = await ownerRejectReceiptAction(prev, formData)
+      if (result && 'success' in result) {
+        onDone(`Done. We've asked ${receipt.buyer} to check their receipt.`)
+      }
+      return result
+    },
     null
   )
   const [showReject, setShowReject] = useState(false)
@@ -36,19 +58,9 @@ export function ReceiptReviewRow({ receipt }: { receipt: ReceiptToVerify }) {
     (rejectState && 'error' in rejectState && rejectState.error) ||
     null
 
-  if (verifyState && 'success' in verifyState) {
-    return (
-      <p role="status" className="p-5 font-subhead text-sm text-brand-black">
-        Verified. {receipt.buyer}&apos;s purchase now counts, and we&apos;ve let them know.
-      </p>
-    )
-  }
-  if (rejectState && 'success' in rejectState) {
-    return (
-      <p role="status" className="p-5 font-subhead text-sm text-brand-black">
-        Done. We&apos;ve asked {receipt.buyer} to check their receipt.
-      </p>
-    )
+  // Done: the list shows the confirm line, and the refresh removes this row.
+  if ((verifyState && 'success' in verifyState) || (rejectState && 'success' in rejectState)) {
+    return null
   }
 
   return (
@@ -80,7 +92,7 @@ export function ReceiptReviewRow({ receipt }: { receipt: ReceiptToVerify }) {
             disabled={busy}
             className="min-h-11 px-5 rounded-full bg-amber-gold hover:bg-light-gold text-brand-black font-subhead font-bold text-sm transition-colors disabled:opacity-60"
           >
-            {verifying ? 'Verifying…' : 'Verify'}
+            {verifying ? 'Approving…' : 'Approve'}
           </button>
         </form>
         {!showReject && (

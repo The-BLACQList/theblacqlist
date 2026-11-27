@@ -119,10 +119,10 @@ describe('buildSupportPost', () => {
     expect(buildSupportPost({ origin: ORIGIN, receipt: receipt({ listings: null }) })).toBeNull()
   })
 
-  it('says verified only once approved', () => {
+  it('moves to the approved stage with no stamp in the caption (ticket 288)', () => {
     const post = buildSupportPost({ origin: ORIGIN, receipt: receipt({ status: 'approved' }) })!
     expect(post.stage).toBe('verified')
-    expect(post.caption).toContain('Verified by The BLACQList')
+    expect(post.caption).not.toMatch(/verified/i)
   })
 
   it('has no post for a needs-a-fix receipt', () => {

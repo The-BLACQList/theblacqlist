@@ -214,7 +214,6 @@ export function SupportPostStudio({ post }: Props) {
     `I supported ${post.businessLabel}`,
     post.cityLabel,
     post.dateLabel,
-    post.stage === 'verified' ? 'Verified by The BLACQList' : null,
   ]
     .filter(Boolean)
     .join(', ')

@@ -13,7 +13,9 @@
 //     `[Decision — founder, 2026-11-13]` "The support card should always name
 //     the business." This replaces the earlier opt-in rule for support posts;
 //     the counted screen's text share (ticket 166) still follows the opt-in.
-//   * "Verified" only when the receipt is approved.
+//   * No "verified" stamp on the post. Approval only moves the stage, which
+//     the share page uses for its heading. Ticket 288, founder 2026-11-27:
+//     "No stamp".
 //   * "Collective Member" only when the receipt will be on the map.
 // `[Decision — founder, 2026-11-13]`
 // =============================================================================
@@ -121,7 +123,7 @@ export function buildSupportPost(args: {
     dateLabel: supportDateLabel(receipt.purchase_date),
     collective,
     url: `${origin}${path}`,
-    caption: supportCaption({ businessName: businessLabel, stage, collective }),
+    caption: supportCaption({ businessName: businessLabel, collective }),
     listingId: receipt.listing_id,
   }
 }
