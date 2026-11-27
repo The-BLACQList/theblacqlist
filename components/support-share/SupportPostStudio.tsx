@@ -210,11 +210,7 @@ export function SupportPostStudio({ post }: Props) {
   }
 
   const { width: W, height: H } = SUPPORT_CARD_SIZES[format]
-  const cardDescription = [
-    `I supported ${post.businessLabel}`,
-    post.cityLabel,
-    post.dateLabel,
-  ]
+  const cardDescription = [`I supported ${post.businessLabel}`, post.cityLabel, post.dateLabel]
     .filter(Boolean)
     .join(', ')
 
