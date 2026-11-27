@@ -1,6 +1,6 @@
 # Ticket 290: Tour Close X and Tap Colour
 
-**Status:** Built, PR open. Founder 2026-11-27 picked "Tour X + tap colour" from the park queue. The tour stays off in production (ticket 280).
+**Status:** Merged #426 `00a75f7` 2026-11-27. Founder 2026-11-27 picked "Tour X + tap colour" from the park queue. The tour stays off in production (ticket 280).
 
 ## Why
 

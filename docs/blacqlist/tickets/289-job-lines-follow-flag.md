@@ -1,6 +1,6 @@
 # Ticket 289: Plan Lines Follow the Jobs Switch
 
-**Status:** Built, PR open. Founder 2026-11-27: "I changed my mind for the final time. We'll take jobs off altogether."
+**Status:** Merged #425 `e1efdce` 2026-11-27. Founder 2026-11-27: "I changed my mind for the final time. We'll take jobs off altogether."
 
 ## Why
 

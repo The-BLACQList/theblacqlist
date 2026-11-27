@@ -1,6 +1,6 @@
 # Ticket 288: "Verified" on the Support Post and Share Flow
 
-**Status:** Built, PR open (2026-11-27). Words first came on 2026-11-26 ("Ticket 288, words first"). The founder picked on 2026-11-27.
+**Status:** Merged #424 `35848ea` 2026-11-27. Words first came on 2026-11-26 ("Ticket 288, words first"). The founder picked on 2026-11-27.
 
 ## Founder's Picks (2026-11-27)
 
