@@ -107,16 +107,14 @@ describe('profileCaption', () => {
 
 describe('supportCaption', () => {
   it('celebrates without an amount', () => {
-    const caption = supportCaption({ businessName: "Mama's Kitchen", stage: 'supported' })
+    const caption = supportCaption({ businessName: "Mama's Kitchen" })
     expect(caption).toBe("I supported Mama's Kitchen 🖤 Adding to #TheCollective on @theblacqlist.")
     expect(caption).not.toMatch(/\$|\d+\.\d{2}/)
     expect(caption).not.toMatch(/verified/i)
   })
 
-  it('adds the verified line only at the verified stage', () => {
-    expect(supportCaption({ businessName: "Mama's Kitchen", stage: 'verified' })).toMatch(
-      /Verified by The BLACQList\.$/
-    )
+  it('never adds a verified stamp (ticket 288: "No stamp")', () => {
+    expect(supportCaption({ businessName: "Mama's Kitchen" })).not.toMatch(/verified/i)
   })
 })
 

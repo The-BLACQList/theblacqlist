@@ -82,6 +82,42 @@ describe('community-spend vocabulary', () => {
     expect(source).toContain('Nothing Approved Yet')
     expect(source).toContain('No Spending Tracked Yet')
   })
+
+  it('the support post and share flow carry no "verified" stamp (ticket 288)', () => {
+    // Founder 2026-11-27: "No stamp". A team-approved receipt got the same
+    // "Verified by The BLACQList" stamp as an owner-approved one, and neither
+    // was checked against a payment. The internal stage name 'verified' is code,
+    // so the check is on the words the shopper sees, not the identifier.
+    const shopperFiles = [
+      'lib/share/captions.ts',
+      'lib/share/composeSupportCard.ts',
+      'components/support-share/SupportPostStudio.tsx',
+      'app/account/receipts/[id]/share/page.tsx',
+      'app/account/receipts/[id]/counted/page.tsx',
+      'components/spend/ReceiptListRow.tsx',
+      'lib/email/templates/receipt-counted.tsx',
+    ]
+    for (const file of shopperFiles) {
+      const source = read(file)
+      expect(source, file).not.toMatch(/Verified by The BLACQList/)
+      expect(source, file).not.toMatch(/verified (post|stamp|support)/i)
+      expect(source, file).not.toMatch(/support is verified/i)
+    }
+  })
+
+  it('owners approve receipts, they do not "verify" them (ticket 288)', () => {
+    // Founder 2026-11-27: "Switch to Approve".
+    const page = read('app/dashboard/receipts/page.tsx')
+    expect(page).toContain('Receipts to Review')
+    expect(page).not.toMatch(/\bverif(y|ied)\b/i)
+    const row = read('components/dashboard/ReceiptReviewRow.tsx')
+    expect(row).toContain("'Approve'")
+    expect(row).not.toMatch(/'Verify'|Verifying…/)
+    const email = read('lib/email/templates/receipt-to-verify.tsx')
+    expect(email).toContain('A Receipt to Review')
+    expect(email).not.toMatch(/you verif(y|ied)|Verify the Receipt|A Receipt to Verify/)
+    expect(read('lib/account/shellNav.ts')).not.toContain('Receipts to Verify')
+  })
 })
 
 // Deliberately NOT asserted here: that the methodology doc carries the

@@ -187,7 +187,7 @@ export default async function CountedReceiptPage({ params }: { params: Promise<{
           {/* Support posts only name businesses on The BLACQList (ticket 183). */}
           {receipt.listing_id !== null && (
             <Link href={supportShareHref(receipt.id)} className={`${linkCls} mt-4`}>
-              Share a Verified Support Post
+              Share Your Support Post
             </Link>
           )}
 
