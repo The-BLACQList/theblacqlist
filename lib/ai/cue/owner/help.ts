@@ -11,7 +11,8 @@
 
 import { RATE_LIMIT_PER_LISTING_24H } from '@/lib/ai/provider'
 import { aiQuota, photoLimit } from '@/lib/stripe/features'
-import { PLANS, type PlanSlug } from '@/lib/stripe/plans'
+import { isFeatureEnabled } from '@/lib/env'
+import { PLANS, planFeatures, type PlanSlug } from '@/lib/stripe/plans'
 
 export const OWNER_HELP_TOPICS = [
   'plans',
@@ -36,11 +37,15 @@ function count(n: number | null, noun: string): string {
 }
 
 function plansText(openTiers: ReadonlySet<PlanSlug>): string {
+  // Ticket 289: the same lines the cards show, so Cue never sells job postings
+  // while jobs are closed.
+  const jobsOpen = isFeatureEnabled('jobsOpen')
   const lines = PLANS.map((p) => {
-    if (p.slug === 'free') return `Free ($0): ${p.features.join('; ')}.`
+    const features = planFeatures(p, { jobsOpen }).join('; ')
+    if (p.slug === 'free') return `Free ($0): ${features}.`
     if (!openTiers.has(p.slug)) return `${p.name}: not on sale yet.`
     const small = p.finePrint ? ` ${p.finePrint}` : ''
-    return `${p.name} ($${p.price_monthly} a month, or $${p.price_yearly} a year): ${p.features.join('; ')}.${small}`
+    return `${p.name} ($${p.price_monthly} a month, or $${p.price_yearly} a year): ${features}.${small}`
   })
   return [
     ...lines,

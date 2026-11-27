@@ -1,10 +1,6 @@
 import { cn } from '@/lib/utils'
 import { PLANS, type PlanSlug } from '@/lib/stripe/plans'
-import {
-  COMPARE_TIERS,
-  visibleCompareGroups,
-  type CompareCell,
-} from '@/lib/stripe/planCompare'
+import { COMPARE_TIERS, visibleCompareGroups, type CompareCell } from '@/lib/stripe/planCompare'
 
 // Ticket 239: every plan side by side, row by row, with each step up from the
 // plan to the left marked in gold. Used on /pricing and /dashboard/upgrade.
@@ -21,17 +17,22 @@ interface Props {
   /** Marks the owner's plan on Upgrade. */
   currentTier?: PlanSlug
   className?: string
+  /** FEATURE_JOBS_OPEN. Closed, no row sells job postings (ticket 289). */
+  jobsOpen: boolean
 }
 
-export function PlanCompareTable({ open, currentTier, className }: Props) {
-  const groups = visibleCompareGroups(open)
+export function PlanCompareTable({ open, currentTier, className, jobsOpen }: Props) {
+  const groups = visibleCompareGroups(open, { jobsOpen })
   const names = Object.fromEntries(PLANS.map((p) => [p.slug, p.name])) as Record<PlanSlug, string>
 
   return (
     <div
       // `relative` keeps the cells' sr-only labels (position: absolute) inside
       // this scroll box; without it they pushed the phone page 200px wide.
-      className={cn('relative overflow-x-auto rounded-xl border border-charcoal/15 bg-white', className)}
+      className={cn(
+        'relative overflow-x-auto rounded-xl border border-charcoal/15 bg-white',
+        className
+      )}
       data-plan-compare=""
     >
       <table className="w-full min-w-[600px] border-collapse text-left">
@@ -101,7 +102,11 @@ export function PlanCompareTable({ open, currentTier, className }: Props) {
                       tier === currentTier && 'bg-amber-gold/10'
                     )}
                   >
-                    {open[tier] ? <Cell cell={row.cells[tier]} /> : <span className="sr-only">Coming soon</span>}
+                    {open[tier] ? (
+                      <Cell cell={row.cells[tier]} />
+                    ) : (
+                      <span className="sr-only">Coming soon</span>
+                    )}
                   </td>
                 ))}
               </tr>

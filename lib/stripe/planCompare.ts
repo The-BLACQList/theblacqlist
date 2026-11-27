@@ -97,7 +97,15 @@ function toCell(v: Raw, prev: Raw, fmt: (n: number) => string): CompareCell {
 
 const gate = (feature: GatedFeature) => (tier: PlanSlug) => canAccess(tier, feature)
 
-export function planCompareGroups(): CompareGroup[] {
+/**
+ * Every row, by group. With jobs closed (ticket 289, founder 2026-11-27: "We'll
+ * take jobs off altogether") the job postings row goes and the two rows that
+ * name jobs drop the word, the same as the plan cards (planFeatures).
+ */
+export function planCompareGroups(
+  opts: { jobsOpen: boolean } = { jobsOpen: true }
+): CompareGroup[] {
+  const { jobsOpen } = opts
   return [
     {
       title: 'Your Page',
@@ -149,7 +157,12 @@ export function planCompareGroups(): CompareGroup[] {
         row('Page text and Instagram captions', gate('ai_suggestions')),
         row('Review replies and Happening Now posts', gate('ai_suggestions')),
         row('A monthly read of your numbers', gate('ai_suggestions')),
-        row('Product, service, event, and job descriptions', gate('ai_item_writeups')),
+        row(
+          jobsOpen
+            ? 'Product, service, event, and job descriptions'
+            : 'Product, service, and event descriptions',
+          gate('ai_item_writeups')
+        ),
         row('Times a month, per page', (t) => aiQuota(t) ?? null),
       ],
     },
@@ -164,22 +177,29 @@ export function planCompareGroups(): CompareGroup[] {
         // Ticket 241. Storefront item numbers are not listed: they show only
         // while the marketplace is open, and a plan line has to be true today.
         row('Compared with the period before', gate('analytics_advanced')),
-        row('Numbers for your events and jobs', gate('analytics_advanced')),
+        row(
+          jobsOpen ? 'Numbers for your events and jobs' : 'Numbers for your events',
+          gate('analytics_advanced')
+        ),
       ],
     },
     {
-      title: 'Selling and Hiring',
+      title: jobsOpen ? 'Selling and Hiring' : 'Selling',
       rows: [
         row('Storefront products and services', (t) =>
           canAccess(t, 'storefront') ? productLimit(t) : false
         ),
         row('Events at a time', (t) => (canAccess(t, 'events') ? eventLimit(t) : false)),
-        row(
-          'Job postings every 30 days',
-          jobLimit,
-          (n) => String(n),
-          'More can be bought on any plan'
-        ),
+        ...(jobsOpen
+          ? [
+              row(
+                'Job postings every 30 days',
+                jobLimit,
+                (n) => String(n),
+                'More can be bought on any plan'
+              ),
+            ]
+          : []),
         row('Coupons and deals', gate('coupons')),
         row('Booking requests', gate('booking_requests')),
         row('Linked locations', (t) => (canAccess(t, 'multi_location') ? locationLimit(t) : false)),
@@ -202,8 +222,11 @@ export function planCompareGroups(): CompareGroup[] {
  * that only a closed tier would fill is dropped, so it never reads as a
  * feature nobody has.
  */
-export function visibleCompareGroups(open: Record<PlanSlug, boolean>): CompareGroup[] {
-  return planCompareGroups()
+export function visibleCompareGroups(
+  open: Record<PlanSlug, boolean>,
+  opts: { jobsOpen: boolean } = { jobsOpen: true }
+): CompareGroup[] {
+  return planCompareGroups(opts)
     .map((g) => ({
       ...g,
       rows: g.rows.filter((r) => COMPARE_TIERS.some((t) => open[t] && r.cells[t].kind !== 'no')),
