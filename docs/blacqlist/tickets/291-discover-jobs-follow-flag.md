@@ -37,7 +37,7 @@ With jobs open, everything works as before.
 - Other types are untouched.
 - Source checks cover the sidebar default, both Discover pages, query.ts, the plain browse queries, /api/search and Cue.
 
-All of these fail on the code before this ticket.
+The closed-type check and the source checks fail on the code before this ticket.
 
 ## To Go Live
 
