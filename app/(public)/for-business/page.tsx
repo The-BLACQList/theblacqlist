@@ -150,11 +150,7 @@ const LINK_UNDER =
 function DoorButtons({ center = false, tour = false }: { center?: boolean; tour?: boolean }) {
   return (
     <div className={`flex gap-3 flex-wrap${center ? ' justify-center' : ''}`}>
-      <Link
-        href="/claim"
-        className={PILL_GOLD}
-        data-site-tour={tour ? 'owner-claim' : undefined}
-      >
+      <Link href="/claim" className={PILL_GOLD} data-site-tour={tour ? 'owner-claim' : undefined}>
         Find My Business
         <span aria-hidden="true" className="ml-2">
           →
@@ -407,6 +403,7 @@ export default async function ForBusinessPage() {
             <div className="mt-8" data-fb-plans>
               <PricingPlans
                 availability={availability}
+                jobsOpen={isFeatureEnabled('jobsOpen')}
                 showFeatured={false}
                 freeHref="/for-business#start"
                 waitlistHref="/pricing#pricing-waitlist"

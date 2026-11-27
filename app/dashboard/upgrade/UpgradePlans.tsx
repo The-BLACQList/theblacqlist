@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import {
   PLANS,
+  planFeatures,
   addedLines,
   annualSavingsPct,
   leadIn,
@@ -26,6 +27,8 @@ interface Props {
   canManage: boolean
   // Per paid plan, whether a Stripe price ID exists for each cycle.
   availability: PlanAvailability
+  /** FEATURE_JOBS_OPEN. Closed, the cards drop their job lines (ticket 289). */
+  jobsOpen: boolean
   /** Set while a tester's free month is unclaimed for this listing. The paid
    *  checkout charges today, so the cards point at the free month instead. */
   freeMonthHold?: FreeMonthHold
@@ -38,6 +41,7 @@ export function UpgradePlans({
   currentTier,
   canManage,
   availability,
+  jobsOpen,
   freeMonthHold = null,
 }: Props) {
   const [cycle, setCycle] = useState<BillingCycle>('monthly')
@@ -119,13 +123,13 @@ export function UpgradePlans({
                 <div className="mb-5 flex-1">
                   {/* Ticket 239: the lead-in makes the bullets read as what
                       this plan adds over the one before it. */}
-                  {leadIn(plan.features) && (
+                  {leadIn(planFeatures(plan, { jobsOpen })) && (
                     <p className="font-subhead text-sm font-semibold text-brand-black mb-1.5">
-                      {leadIn(plan.features)}, plus:
+                      {leadIn(planFeatures(plan, { jobsOpen }))}, plus:
                     </p>
                   )}
                   <ul className="space-y-1.5">
-                    {addedLines(plan.features).map((f) => (
+                    {addedLines(planFeatures(plan, { jobsOpen })).map((f) => (
                       <li
                         key={f}
                         className="flex items-start gap-1.5 font-subhead text-sm text-charcoal-soft"
@@ -139,7 +143,9 @@ export function UpgradePlans({
                     ))}
                   </ul>
                   {/* Ticket 242: how often AI help can be used, as small print. */}
-                  {plan.finePrint && <p className="font-subhead text-sm text-charcoal-soft mt-2">{plan.finePrint}</p>}
+                  {plan.finePrint && (
+                    <p className="font-subhead text-sm text-charcoal-soft mt-2">{plan.finePrint}</p>
+                  )}
                 </div>
               )}
 
@@ -148,9 +154,7 @@ export function UpgradePlans({
                   <span className="font-subhead text-sm text-charcoal-faint">
                     Your current plan
                   </span>
-                  {!isFree && canManage && (
-                    <ManageSubscriptionButton />
-                  )}
+                  {!isFree && canManage && <ManageSubscriptionButton />}
                 </div>
               ) : isPurchasable && freeMonthHold === 'ready' ? (
                 <a
@@ -169,7 +173,10 @@ export function UpgradePlans({
                       behind a link, and match the cycle the toggle shows. */}
                   <p className="font-subhead text-sm text-charcoal-soft">
                     {renewalLine(plan.slug, cycle)}{' '}
-                    <Link href={`/terms#${TERMS_PAID_PLANS.anchor}`} className="underline underline-offset-2 hover:text-brand-black">
+                    <Link
+                      href={`/terms#${TERMS_PAID_PLANS.anchor}`}
+                      className="underline underline-offset-2 hover:text-brand-black"
+                    >
                       See our Terms.
                     </Link>
                   </p>
