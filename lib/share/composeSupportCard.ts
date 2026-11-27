@@ -13,7 +13,6 @@
 //   │ Mama's Kitchen       │   Jost Light, shrinks to fit 3 lines
 //   │ ───                  │
 //   │ Atlanta, GA · Nov 3  │
-//   │ ✓ Verified by …      │   approved receipts only
 //   │ COLLECTIVE MEMBER · THEBLACQLIST.COM
 //   └──────────────────────┘
 //
@@ -235,8 +234,6 @@ export function drawSupportCard(
   let y = bottom
   const footerY = y
   y -= 72
-  const verifiedY = text.stage === 'verified' ? y : null
-  if (verifiedY !== null) y -= 76
   const metaY = meta ? y : null
   if (metaY !== null) y -= 70
   const ruleY = y
@@ -269,29 +266,6 @@ export function drawSupportCard(
     ctx.fillStyle = CREAM
     ctx.font = `400 38px ${assets.body}`
     ctx.fillText(meta, pad, metaY)
-  }
-
-  if (verifiedY !== null) {
-    // Gold circle with a check, then the stamp line.
-    const r = 22
-    const cx = pad + r
-    const cy = verifiedY - 13
-    ctx.fillStyle = GOLD
-    ctx.beginPath()
-    ctx.arc(cx, cy, r, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.strokeStyle = DEEP_BG
-    ctx.lineWidth = 5
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-    ctx.beginPath()
-    ctx.moveTo(cx - 10, cy + 1)
-    ctx.lineTo(cx - 3, cy + 8)
-    ctx.lineTo(cx + 11, cy - 7)
-    ctx.stroke()
-    ctx.fillStyle = GOLD
-    ctx.font = `600 34px ${assets.body}`
-    ctx.fillText('Verified by The BLACQList', pad + r * 2 + 18, verifiedY)
   }
 
   ctx.fillStyle = INK_SOFT

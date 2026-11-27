@@ -32,7 +32,7 @@ export function ReceiptToVerifyEmail({
   return (
     <Html lang="en">
       <Head />
-      <Preview>{line} Take a look and verify it.</Preview>
+      <Preview>{line} Take a look and approve it.</Preview>
       <Body style={body}>
         <Container style={container}>
           <Section style={header}>
@@ -40,16 +40,15 @@ export function ReceiptToVerifyEmail({
           </Section>
 
           <Section style={content}>
-            <Text style={eyebrow}>A Receipt to Verify</Text>
+            <Text style={eyebrow}>A Receipt to Review</Text>
             <Text style={heading}>{line}</Text>
             <Text style={paragraph}>
-              They uploaded a receipt to show it. Check it against your own records. Once you verify
-              it, their purchase counts toward The Collective and they can share that you verified
-              it.
+              They uploaded a receipt to show it. Check it against your own records. Once you
+              approve it, their purchase counts.
             </Text>
 
             <Button href={`${siteUrl}/dashboard/receipts`} style={button}>
-              Verify the Receipt
+              Review the Receipt
             </Button>
 
             <Hr style={divider} />

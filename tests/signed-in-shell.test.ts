@@ -72,7 +72,7 @@ describe('buildShellGroups', () => {
       'Get Verified',
       'Credentials',
       'Documents',
-      'Receipts to Verify',
+      'Receipts to Review',
     ])
     expect(labels(groups, 'business')).toEqual([
       'Home',
@@ -86,7 +86,7 @@ describe('buildShellGroups', () => {
     expect(business.find((i) => i.label === 'Insights')?.href).toBe('/dashboard/pages/p1/analytics')
     expect(business.find((i) => i.label === 'Messages')?.badge).toBe(3)
     const trust = groups.find((g) => g.slug === 'trust')!.items
-    expect(trust.find((i) => i.label === 'Receipts to Verify')?.badge).toBe(2)
+    expect(trust.find((i) => i.label === 'Receipts to Review')?.badge).toBe(2)
     const show = groups.find((g) => g.slug === 'show')!.items
     expect(show.find((i) => i.label === 'Team')?.href).toBe('/dashboard/pages/p1/team')
   })
@@ -101,7 +101,7 @@ describe('buildShellGroups', () => {
       flags: off,
     })
     const all = allItems(groups).map((i) => i.label)
-    expect(all).not.toContain('Receipts to Verify')
+    expect(all).not.toContain('Receipts to Review')
     expect(all).not.toContain('Happening Now')
     expect(all).not.toContain('Bookings')
   })
@@ -185,7 +185,7 @@ describe('the shared rail helpers', () => {
   })
 
   it('totals waiting badges, not plain counts', () => {
-    // Messages 3 + Receipts to Verify 2 + Claims pending 1.
+    // Messages 3 + Receipts to Review 2 + Claims pending 1.
     expect(railTotal(groups)).toBe(6)
     expect(pillText(120)).toBe('99+')
   })

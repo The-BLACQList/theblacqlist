@@ -59,10 +59,10 @@ export function ReceiptCountedEmail({
               {joinedMap ? 'See It on the Map' : 'See Your Receipt'}
             </Button>
 
-            {/* Ticket 183: the verified support post. No amount on it, ever. */}
+            {/* Ticket 183: the support post. No amount on it, ever. */}
             <Text style={paragraph}>
               <a href={`${siteUrl}${supportShareHref(receiptId)}`} style={link}>
-                Share your verified post
+                Share your post
               </a>{' '}
               to celebrate supporting {businessName}.
             </Text>

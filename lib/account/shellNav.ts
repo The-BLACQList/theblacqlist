@@ -31,7 +31,7 @@ export interface ShellCounts {
 }
 
 export interface ShellFlags {
-  /** ownerReceiptReview: Receipts to Verify shows. */
+  /** ownerReceiptReview: Receipts to Review shows. */
   ownerReceipts: boolean
   /** happeningNow: Happening Now shows under the page tools. */
   posts: boolean
@@ -152,7 +152,7 @@ export function pageToolGroups(
           ? [
               {
                 href: '/dashboard/receipts',
-                label: 'Receipts to Verify',
+                label: 'Receipts to Review',
                 badge: counts.receiptsToVerify,
                 badgeLabel: 'waiting',
               },
