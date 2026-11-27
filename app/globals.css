@@ -505,6 +505,7 @@
   --ink-2: #cdc6b6;
   --tour-gold: #c4a065;
   --tour-gold-light: #ffd867;
+  --tour-gold-press: #a3834f;
   --hair: rgba(196, 160, 101, 0.26);
   outline: none;
   color: var(--ink);
@@ -548,11 +549,13 @@ body[data-site-tour-on] .stack-over-assistant {
   visibility: hidden;
 }
 
-/* The X */
+/* The X. Just under the site header (h-14, md:h-16), so it never sits on
+   the header's own buttons (ticket 290). On phones it takes the menu
+   button's place instead; see the 600px rule below. */
 .blq-tour-x {
   position: fixed;
   z-index: 90;
-  top: 10px;
+  top: 72px;
   right: 24px;
   width: 44px;
   height: 44px;
@@ -563,6 +566,11 @@ body[data-site-tour-on] .stack-over-assistant {
   background: var(--page);
   color: var(--ink);
   cursor: pointer;
+}
+@media (width < 768px) {
+  .blq-tour-x {
+    top: 64px;
+  }
 }
 .blq-tour-cross {
   width: 16px;
@@ -690,9 +698,6 @@ body[data-site-tour-on] .stack-over-assistant {
   color: var(--ink);
   cursor: pointer;
 }
-.blq-tour-btn:hover {
-  border-color: var(--tour-gold);
-}
 .blq-tour-btn.is-quiet {
   border-color: transparent;
   padding-inline: 4px;
@@ -701,18 +706,37 @@ body[data-site-tour-on] .stack-over-assistant {
   text-decoration-color: var(--hair);
   text-underline-offset: 5px;
 }
-.blq-tour-btn.is-quiet:hover {
-  color: var(--ink);
-  text-decoration-color: currentColor;
-}
 .blq-tour-btn.is-go {
   border-color: var(--tour-gold);
   background: var(--tour-gold);
   color: var(--page);
 }
-.blq-tour-btn.is-go:hover {
-  background: var(--tour-gold-light);
-  border-color: var(--tour-gold-light);
+/* Hover only where there is a mouse: on a phone a tap left Next stuck in the
+   light hover gold (ticket 290). A press shows a darker gold instead. */
+@media (hover: hover) {
+  .blq-tour-btn:hover {
+    border-color: var(--tour-gold);
+  }
+  .blq-tour-btn.is-quiet:hover {
+    border-color: transparent;
+    color: var(--ink);
+    text-decoration-color: currentColor;
+  }
+  .blq-tour-btn.is-go:hover {
+    background: var(--tour-gold-light);
+    border-color: var(--tour-gold-light);
+  }
+}
+.blq-tour-btn:active {
+  border-color: var(--tour-gold);
+}
+.blq-tour-btn.is-quiet:active {
+  border-color: transparent;
+  color: var(--ink);
+}
+.blq-tour-btn.is-go:active {
+  background: var(--tour-gold-press);
+  border-color: var(--tour-gold-press);
 }
 
 /* Dark and light */
