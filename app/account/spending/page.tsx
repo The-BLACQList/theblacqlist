@@ -150,8 +150,8 @@ export default async function MySpendingPage() {
                 <p className="font-body text-xs text-charcoal-soft mt-1 mb-4 max-w-[38ch] mx-auto">
                   You have {totals.pendingReceiptCount}{' '}
                   {totals.pendingReceiptCount === 1 ? 'receipt' : 'receipts'} awaiting review. Your
-                  breakdown appears here once our team approves{' '}
-                  {totals.pendingReceiptCount === 1 ? 'it' : 'them'}.
+                  breakdown appears here once{' '}
+                  {totals.pendingReceiptCount === 1 ? "it's" : "they're"} approved.
                 </p>
                 <Link
                   href="/account/receipts"

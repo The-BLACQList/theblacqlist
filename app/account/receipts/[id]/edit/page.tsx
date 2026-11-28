@@ -7,6 +7,7 @@ import { createClient, createServiceClient } from '@/lib/supabase/server'
 import { ReceiptSubmissionForm } from '@/components/spend/ReceiptSubmissionForm'
 import { isFeatureEnabled } from '@/lib/env'
 import { pendingReviewLine } from '@/lib/spend/owner-receipts'
+import { unlistedWait } from '@/lib/spend/unlisted'
 
 export const metadata: Metadata = { title: 'Edit Your Receipt' }
 
@@ -42,6 +43,8 @@ export default async function EditReceiptPage({ params }: { params: Promise<{ id
       status,
       file_path,
       rejection_reason,
+      listing_id,
+      created_at,
       listings ( id, name, cities ( name ) )
     `
     )
@@ -58,6 +61,11 @@ export default async function EditReceiptPage({ params }: { params: Promise<{ id
   // to the list instead of rendering a form whose save can only fail. A
   // rejected one can be fixed and resent (ticket 164).
   if (receipt.status !== 'pending_review' && receipt.status !== 'rejected') {
+    redirect('/account/receipts')
+  }
+  // Ticket 293: an unlisted receipt past its wait can't be saved either (the
+  // action refuses it), so don't show a form whose save can only fail.
+  if (unlistedWait(receipt, new Date()) === 'stopped') {
     redirect('/account/receipts')
   }
   const needsFix = receipt.status === 'rejected'

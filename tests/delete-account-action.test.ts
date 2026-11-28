@@ -14,6 +14,8 @@ const h = vi.hoisted(() => {
     return { error: null }
   })
   const user = { id: 'user-1', email: 'owner@example.com' }
+  // Ticket 293: receipt rows cascade with the account; their photos don't.
+  const receiptRows: { file_path: string | null }[] = []
 
   const service = {
     from(table: string) {
@@ -25,16 +27,28 @@ const h = vi.hoisted(() => {
         },
         eq: () => builder,
         maybeSingle: async () => ({ data: null, error: null }),
-        then: (resolve: (v: unknown) => unknown) => resolve({ data: [], error: null }),
+        then: (resolve: (v: unknown) => unknown) =>
+          resolve({
+            data: table === 'receipt_uploads' ? receiptRows : [],
+            error: null,
+          }),
       }
       return builder
     },
     auth: { admin: { deleteUser } },
-    storage: { from: () => ({ remove: vi.fn(async () => ({})) }) },
+    storage: {
+      from: (bucket: string) => ({
+        remove: vi.fn(async (paths: string[]) => {
+          calls.push(`remove:${bucket}:${paths.join(',')}`)
+          return {}
+        }),
+      }),
+    },
   }
 
   return {
     calls,
+    receiptRows,
     cancelPlans,
     deleteUser,
     user,
@@ -71,6 +85,7 @@ function form(confirm: string) {
 beforeEach(() => {
   vi.clearAllMocks()
   h.calls.length = 0
+  h.receiptRows.length = 0
 })
 
 describe('deleteAccountAction and the paid plan', () => {
@@ -98,5 +113,27 @@ describe('deleteAccountAction and the paid plan', () => {
     const res = await deleteAccountAction(null, form('delete me'))
     expect(res).toEqual({ error: 'Type DELETE to confirm.' })
     expect(h.cancelPlans).not.toHaveBeenCalled()
+  })
+})
+
+describe('deleteAccountAction and receipts (ticket 293)', () => {
+  it('removes the receipt photos after the account is gone', async () => {
+    h.receiptRows.push({ file_path: 'user-1/a.jpg' }, { file_path: null }, { file_path: 'user-1/b.pdf' })
+
+    await expect(deleteAccountAction(null, form('DELETE'))).rejects.toThrow('NEXT_REDIRECT')
+
+    const remove = 'remove:receipt-uploads:user-1/a.jpg,user-1/b.pdf'
+    expect(h.calls).toContain(remove)
+    expect(h.calls.indexOf('deleteUser')).toBeLessThan(h.calls.indexOf(remove))
+  })
+
+  it('leaves the photos alone when the delete fails', async () => {
+    h.receiptRows.push({ file_path: 'user-1/a.jpg' })
+    h.deleteUser.mockResolvedValueOnce({ error: { message: 'db' } } as never)
+
+    const res = await deleteAccountAction(null, form('DELETE'))
+
+    expect(res).toHaveProperty('error')
+    expect(h.calls.some((c) => c.startsWith('remove:'))).toBe(false)
   })
 })

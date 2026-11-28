@@ -159,7 +159,7 @@ export async function approvePendingReceipt(
   }
 
   // 3. Insert spend_event
-  const { data: spendEvent } = await serviceClient
+  const { data: spendEvent, error: spendError } = await serviceClient
     .from('spend_events')
     .insert({
       receipt_upload_id: receipt.id,
@@ -173,6 +173,24 @@ export async function approvePendingReceipt(
     .select('id')
     .single()
 
+  // 3b. Ticket 293: if the spend didn't save, the receipt must not read as
+  //     counted. Put it back to pending so it can be approved again, and tell
+  //     the caller it failed, so no "counted" email goes out. No spend row
+  //     exists, so a later approval can't count it twice.
+  if (spendError || !spendEvent) {
+    await serviceClient
+      .from('receipt_uploads')
+      .update({
+        status: 'pending_review',
+        reviewed_by: null,
+        reviewed_at: null,
+        verified_by_role: null,
+      })
+      .eq('id', receipt.id)
+      .eq('status', 'approved')
+    return { ok: false, reason: 'failed' }
+  }
+
   // 4. Accumulate the flow graph: a business node, a city node when the listing
   //    has one, and the business -> city edge between them. All three feed
   //    /account/community-spend and /api/flow-map/summary.
@@ -184,7 +202,7 @@ export async function approvePendingReceipt(
   //    the named-business table directly beneath it reads flow_nodes. Without
   //    this guard a user who opted out is excluded from the total and still
   //    counted in the ranking under it. One rule, both figures.
-  if (spendEvent && receipt.listing_id && !receipt.aggregate_opt_out) {
+  if (receipt.listing_id && !receipt.aggregate_opt_out) {
     const businessNodeId = await upsertFlowNode(
       serviceClient,
       'business',
