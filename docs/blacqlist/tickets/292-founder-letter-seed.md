@@ -1,6 +1,6 @@
 # Ticket 292: Founder Letter, "The List I Could Not Find"
 
-**Status:** Prod updated 2026-11-28. Seed PR open.
+**Status:** Prod updated 2026-11-28. Seed PR merged #428 `06d56e9` 2026-11-28.
 
 ## Why
 

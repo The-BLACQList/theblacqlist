@@ -3,8 +3,17 @@ import type { Metadata } from 'next'
 
 import { requireAdmin } from '@/lib/admin/guard'
 import { createServiceClient } from '@/lib/supabase/server'
-import { approveReceiptAction } from '@/lib/actions/spend/approveReceipt'
-import { rejectReceiptAction } from '@/lib/actions/spend/rejectReceipt'
+import {
+  adminApproveReceiptForm,
+  adminRejectReceiptForm,
+} from '@/lib/actions/spend/adminReceiptForms'
+import {
+  ADMIN_RECEIPT_RESULTS,
+  isResultOk,
+  parseAdminReceiptResult,
+  parseAdminReceiptTab,
+  type AdminReceiptTab,
+} from '@/lib/admin/receiptReviewResult'
 import { ReceiptStatusBadge } from '@/components/spend/ReceiptStatusBadge'
 import { ReceiptImageButton } from '@/components/spend/ReceiptImageButton'
 import {
@@ -24,10 +33,10 @@ export const metadata: Metadata = { title: 'Receipts — Admin' }
 // "All pending". A receipt for a business that isn't on The BLACQList can't be
 // approved by anyone; it sits in "Waiting for the business" until the shopper
 // links it to a listing (lib/spend/unlisted.ts).
-type StatusFilter = 'needs_admin' | 'waiting' | 'pending_review' | 'approved' | 'rejected' | 'all'
+type StatusFilter = AdminReceiptTab
 
 interface Props {
-  searchParams: Promise<{ status?: string }>
+  searchParams: Promise<{ status?: string; result?: string }>
 }
 
 function formatDollars(cents: number) {
@@ -44,19 +53,10 @@ function formatDate(iso: string) {
 
 export default async function AdminReceiptsPage({ searchParams }: Props) {
   await requireAdmin()
-  const { status: statusParam } = await searchParams
-  const activeFilter: StatusFilter =
-    statusParam === 'waiting'
-      ? 'waiting'
-      : statusParam === 'pending_review'
-        ? 'pending_review'
-        : statusParam === 'approved'
-          ? 'approved'
-          : statusParam === 'rejected'
-            ? 'rejected'
-            : statusParam === 'all'
-              ? 'all'
-              : 'needs_admin'
+  const { status: statusParam, result: resultParam } = await searchParams
+  const activeFilter: StatusFilter = parseAdminReceiptTab(statusParam)
+  // Ticket 293: the line after Approve or Reject (fixed codes only).
+  const result = parseAdminReceiptResult(resultParam)
 
   const serviceClient = createServiceClient()
 
@@ -142,6 +142,19 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
           Not on the List
         </Link>
       </div>
+
+      {result && (
+        <p
+          role="status"
+          className={`rounded-xl border px-4 py-3 font-subhead text-sm ${
+            isResultOk(result)
+              ? 'border-amber-gold/40 bg-amber-gold/10 text-brand-black'
+              : 'border-red-200 bg-red-50 text-red-800'
+          }`}
+        >
+          {ADMIN_RECEIPT_RESULTS[result]}
+        </p>
+      )}
 
       {/* Status filter tabs */}
       <div className="flex gap-6 border-b border-charcoal/10">
@@ -267,13 +280,7 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
                           )}
                         </p>
                       ) : (
-                        <form
-                          action={
-                            approveReceiptAction.bind(null, null) as unknown as (
-                              formData: FormData
-                            ) => Promise<void>
-                          }
-                        >
+                        <form action={adminApproveReceiptForm.bind(null, activeFilter)}>
                           <input type="hidden" name="receipt_id" value={receipt.id} />
                           <button
                             type="submit"
@@ -284,11 +291,7 @@ export default async function AdminReceiptsPage({ searchParams }: Props) {
                         </form>
                       )}
                       <form
-                        action={
-                          rejectReceiptAction.bind(null, null) as unknown as (
-                            formData: FormData
-                          ) => Promise<void>
-                        }
+                        action={adminRejectReceiptForm.bind(null, activeFilter)}
                         className="flex flex-wrap items-center gap-2"
                       >
                         <input type="hidden" name="receipt_id" value={receipt.id} />
