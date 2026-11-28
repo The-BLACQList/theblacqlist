@@ -285,7 +285,7 @@ export const PHOTO_FOCAL: Readonly<Record<string, string>> = {
   // bottom; centered clips the raised hand that makes it read as drumming.
   '/images/editorial/hands-and-drums.webp': 'object-[50%_38%]',
 
-  // Story cover for The List We Could Not Find. The one horizontal entry: the
+  // Story cover for The List I Could Not Find. The one horizontal entry: the
   // tablet sits at the right edge of the frame (~71-98%) and the teacup left of
   // center, and the founder ruled the tablet matters more (2026-10-08). Only
   // frames narrower than 3:2 crop sideways (the home feature tile at 4:5 and
