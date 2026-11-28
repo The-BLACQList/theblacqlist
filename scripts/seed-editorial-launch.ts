@@ -210,50 +210,206 @@ That is the whole practice. One line item at a time, on purpose.`,
     // Published last on purpose. This is the founding piece and it takes the hero.
     // author_name is set explicitly: the column defaults to 'The BLACQList Team',
     // and this is the one piece in the set that carries a personal byline.
-    title: 'The List We Could Not Find',
-    slug: 'the-list-we-could-not-find',
-    subtitle: 'Why I started The BLACQList.',
+    // Founder's letter, replaced 2026-11-28 with the text they gave (ticket 292),
+    // word for word. Prod was updated by hand the same day; this keeps a re-run
+    // from bringing back the old letter.
+    title: 'The List I Could Not Find',
+    slug: 'the-list-i-could-not-find',
+    subtitle: 'A letter from the founder of The BLACQList',
     authorName: 'Chalece DeLaCoudray',
     metaDescription:
-      'Everybody had a list of Black-owned businesses. Nobody had the list. Why I stopped looking for it and started building it.',
+      'I spent years turning detective to find a stylist, creators, and a dermatologist who knew my hair and skin. Why I started building the list instead.',
     tags: ['founder', 'why we exist'],
     publishedOffsetMinutes: 0,
     body: `I went looking for the list long before I ever thought about building one.
 
-I wanted to spend my money with Black-owned businesses in my own city, and I assumed the hard part would be choosing between them. It was not. The hard part was finding out who was out there at all.
+And, funny enough, it all started with my hair.
 
-What I found was pieces. A screenshot somebody posted in 2019. A group thread with forty replies and not one address in any of them. A roundup post where half the links were dead and the other half went to businesses that had moved, rebranded, or closed years ago. Everybody had a list. Nobody had the list.
+I was looking for a hairstylist. Not just someone who could give me a beautiful style for the weekend, but someone who understood my hair, who could help me grow it, maintain it, and care for its health along the way. Someone I could build a relationship with and trust with my hair over time.
 
-## The businesses were never the problem
+For those of us with 4C hair, you probably already understand how difficult that search can be. It's something I'm still navigating today, and my hair has certainly paid the price a few times along the way.
 
-They were there. They are there. That is the part that kept nagging at me.
+When I wanted to learn more about caring for my hair and skin, finding creators who shared meaningful, reliable information that actually applied to me required another level of research. When I needed a dermatologist who understood melanated skin, I found myself starting an entirely different search from scratch.
 
-They were open, they were good, and they were invisible to anyone who did not already know somebody who knew. Discovery was running entirely on word of mouth, and word of mouth only travels as far as your group chat.
+And it wasn't for a lack of trying.
 
-That is a distribution problem wearing the costume of a scarcity problem. From the outside it can look like there are not enough Black-owned businesses to choose from. There are plenty. They are just scattered across a hundred screenshots, and keeping any of it current was nobody's job.
+Between Atlanta, South Georgia, and Coastal Georgia, I'd spent more time than I'd care to admit turning into a full-fledged detective just to find someone who could meet a fairly ordinary need.
 
-## So I built the thing I kept looking for
+I'd search Google, scroll through Instagram, dig through Facebook groups, read through comment sections, and ask friends who would then ask their friends.
 
-I create, I build, and I teach. For more than a decade I have taken complicated things apart and put them back together so that other people can actually use them. This turned out to be that same work in different clothes.
+Sometimes, I'd find a screenshot of a recommendation somebody shared years ago. Other times, I'd come across a group thread with forty comments, plenty of enthusiastic recommendations, and not a single address. I'd find beautifully curated roundups of Black-owned businesses, only to discover that half the links no longer worked and some of the businesses had moved, rebranded, or closed.
 
-My approach is simple. Start from what a person has to be able to do, build the shortest clear path to get them there, and judge the result by whether it holds up in practice.
+And after all of that, I still wasn't necessarily any closer to finding what I needed.
 
-What a person has to be able to do here is find a Black-owned business that sells what they need, today, in the city they are standing in, and trust what they are looking at when they arrive.
+What made it even more frustrating was realizing how many other people were doing the exact same thing. We were all sharing recommendations, saving posts, collecting screenshots, and making mental notes of businesses we wanted to support.
 
-Everything else comes out of that one sentence. Pages instead of listings, because a row of data has never helped anybody decide anything. Trust shown honestly instead of assumed, because the day it stops being true the whole thing is worthless. Atlanta-born and national from day one, because the woman looking for a barber in a city I have never set foot in deserves the same answer I wanted.
+Everybody had a list of some kind.
 
-## What I am asking
+But nobody seemed to have the list.
 
-We are early. I would rather say that plainly than pretend otherwise.
+## The businesses were never the problem.
 
-A directory becomes useful the way a neighborhood does, slowly and then all at once, and only if people actually show up. So here is the ask, and it is small.
+The people I was looking for were out there. They still are.
 
-If you own a business, claim your Page and make it yours. If you know a business that belongs here, tell them, or add them yourself. If you are buying something this week, find one place here and go.
+There were talented stylists, knowledgeable healthcare professionals, incredible creatives, innovative entrepreneurs, and people who'd spent years becoming exceptionally good at what they do.
 
-The list we could not find is the one we are building. It only works if we build it together.
+I just couldn't consistently find them.
 
-With gratitude,
-Chalece`,
+And the more I thought about my own experiences, the more I began to wonder about the people on the other side of those searches.
+
+How many business owners were working tirelessly to build something meaningful, completely unaware that someone just a few miles away was actively looking for exactly what they offered?
+
+How many customers had settled for something that didn't quite meet their needs because they didn't know a better option existed?
+
+How many relationships, opportunities, and transactions never happened simply because two people who needed one another never found each other?
+
+That bothered me.
+
+When businesses are difficult to discover, it can create the impression that they don't exist. But what I'd experienced wasn't necessarily a shortage of businesses, talent, or expertise. It was a disconnect between the people providing those things and the people looking for them.
+
+Word of mouth has always been a beautiful and important part of how we support one another. There's something special about having someone you trust put you on to something good. I don't want us to lose that.
+
+But what happens when you're new to a city? When you're the first person in your circle to need a particular service? When your needs are a little more specific than those of the people around you?
+
+What happens when you don't know somebody who knows somebody?
+
+Word of mouth is powerful, but it shouldn't be the only way we find one another.
+
+## Supporting Black-owned should be easier.
+
+I think a lot about the difference between wanting to do something and having the tools to actually do it.
+
+There are so many of us who genuinely want to be more intentional about where we spend our money. We want to support Black-owned businesses, discover new brands, invest in our communities, and introduce the people we love to the businesses we've come to love.
+
+But we're also living our lives.
+
+We're working, raising families, pursuing degrees, building careers, managing households, and trying to find a little time for ourselves somewhere in between.
+
+Sometimes, we just need to get our hair done. We need someone to fix something in our home, a birthday gift, a good place to eat, or everything on our grocery list before the week starts.
+
+We don't always have an extra hour to research every purchasing decision we make. And we shouldn't have to.
+
+I've often wondered what it would look like if supporting Black-owned businesses were simply a more accessible part of our everyday lives. Not something we had to plan an entire Saturday around or reserve for a special occasion, but something we could do naturally as we went about our day.
+
+What if discovering a Black-owned alternative was just as convenient as discovering any other business?
+
+What if, when we traveled, moved to a new city, or entered a new stage of life, we could find the people, products, and services we needed without having to rebuild our entire network of recommendations?
+
+Those were some of the questions that eventually became the foundation for The BLACQList.
+
+## So, I started building the thing I kept looking for.
+
+I didn't originally set out to build a technology company. I certainly didn't imagine that my search for someone to care for my hair would lead me here.
+
+I just wanted something to exist that didn't.
+
+I wanted a place where I could discover Black-owned businesses, professionals, and creatives without having to piece together information from a dozen different sources. Somewhere I could learn about the people behind those businesses, understand what they offered, and make informed decisions about whether they were right for me.
+
+And I wanted that experience to be available to other people, too.
+
+Maybe your search doesn't start with a hairstylist.
+
+Maybe you're a parent looking for a pediatrician who understands how certain skin conditions present on melanated skin. Maybe you're looking for a therapist who understands the cultural nuances of your experiences, a photographer who knows how to beautifully capture your complexion, or a financial professional who can help your family navigate a new chapter.
+
+Maybe you're simply looking for a really good bakery.
+
+Whatever brings you here, I want The BLACQList to help you find it. And I want you to discover some wonderful things you didn't even know you were looking for along the way.
+
+That's why we've been intentional about building something that goes beyond a traditional directory.
+
+Every business deserves more than a name, a phone number, and a brief description tucked away somewhere on a website. Behind each business are people who've poured their time, resources, creativity, and energy into building something.
+
+They deserve the space to show us what they've built.
+
+That's why businesses on The BLACQList have their own Pages, where they can share their offerings, tell their stories, showcase their work, and build connections with the people discovering them.
+
+It's also why we're intentional about trust and verification. I know what it's like to make a decision based on incomplete, outdated, or unreliable information. Where information is verified, we want you to know it. Where it isn't, we want you to know that, too.
+
+And it's why, although The BLACQList was born in Atlanta, we're building it for communities across the country.
+
+The person looking for a stylist in a small town I've never visited deserves the same opportunity to find what they need as someone living in the middle of a major city.
+
+## There's something bigger we're building toward.
+
+As I continued building The BLACQList, I started thinking about what happens after we find a business.
+
+When we purchase something from a Black-owned business, that transaction is part of a much larger story. That business may employ people in our community, purchase supplies from another business, hire a creative professional, or reinvest its earnings into something new.
+
+And those businesses, in turn, have needs of their own.
+
+What if we could make more of those connections possible? What if we could better understand how our individual purchasing decisions contribute to a larger economic ecosystem?
+
+That's part of the vision behind The Collective, an experience we're building to help visualize the connections within our community and the movement of money throughout it.
+
+I want us to see more than individual businesses standing independently of one another. I want us to see the relationships between them, the opportunities to work together, and the possibilities that emerge when those connections become stronger.
+
+We're also building toward a future where you can shop for physical and digital products from Black-owned businesses, discover alternatives to the things you're already buying, and use intelligent tools to make everyday decisions a little easier.
+
+Imagine bringing your shopping list to The BLACQList and discovering Black-owned alternatives for the items you were already planning to purchase, whether they're available online or somewhere in your own neighborhood.
+
+Imagine being a business owner and discovering Black-owned suppliers, service providers, and potential collaborators just as easily as a customer can discover you.
+
+To me, that's one of the most exciting parts of what we're building.
+
+It's not about asking people to completely rearrange their lives around supporting Black-owned businesses. It's about creating the infrastructure that makes it easier for us to include one another in the lives we're already living.
+
+And there's room for all of us in that vision.
+
+## I hope The BLACQList becomes a place where we can appreciate the fullness of what our community creates.
+
+Black-owned businesses aren't a single category of business. We're building across industries, across disciplines, across generations, and across every imaginable area of interest.
+
+We're scientists, designers, farmers, engineers, educators, artists, healthcare professionals, manufacturers, restaurateurs, developers, and so much more.
+
+There are businesses that have served their neighborhoods for generations and businesses that are just beginning to introduce themselves to the world. There are people building from their kitchen tables, opening their first storefronts, and creating companies with the potential to transform entire industries.
+
+I want there to be room here for all of them.
+
+I also want The BLACQList to be a welcoming space for anyone who wants to discover, appreciate, and support what those businesses have to offer.
+
+You don't have to know everything about the history or economics of Black entrepreneurship to participate. You don't have to get every purchasing decision right, and you don't have to wait until you have more time or money to make a meaningful contribution.
+
+Sometimes, supporting a business looks like making a purchase. Sometimes, it looks like leaving a thoughtful review, sharing a recommendation, making an introduction, or telling someone about a business they would've never discovered on their own.
+
+All of those things matter.
+
+## An invitation to build with us.
+
+We're still early in this journey, and I'd rather be open about that than pretend we've already become everything we aspire to be.
+
+There are businesses we haven't discovered yet, communities we still need to reach, and experiences we'll continue improving as we learn from the people who use them.
+
+That's part of building something that's genuinely meant to serve people. We have to leave room to listen, learn, and grow alongside the community we're building for.
+
+I think of The BLACQList a little like a neighborhood. You can build the streets, create the spaces, and put up all the signs, but it's the people who give it life.
+
+So, I'd love for you to be a part of it.
+
+The next time you're looking for something, whether it's a product, a service, a professional, or somewhere new to spend your afternoon, start here.
+
+If you discover a business you love, share it. If you know of an incredible business we haven't found yet, introduce us. If you own a business, let us get to know what you're building. And if something isn't quite right, tell us that, too.
+
+We need your experiences just as much as we need your support.
+
+More than anything, I hope The BLACQList becomes one of those resources you instinctively reach for. Something you share with a friend who's moving to a new city, send to a family member looking for a particular service, or introduce to someone who's just started a business and is looking for their community.
+
+I hope it becomes a place where you find what you need, discover something unexpected, and leave knowing a little more about the incredible things being built around you.
+
+Because somewhere right now, someone is searching for something that someone else in our community has already worked incredibly hard to create.
+
+I want to help them find each other.
+
+That's where this all started for me. And no matter how much The BLACQList grows, I hope we never lose sight of that.
+
+The list I went looking for all those years ago is the one we're building today.
+
+And I'd love for us to build it together.
+
+In Solidarity,
+
+Chalece D.
+
+Founder, The BLACQList`,
   },
 ]
 
@@ -550,10 +706,10 @@ async function verify(): Promise<void> {
 
   if (hero) {
     console.log(`\nHomepage hero: "${hero.title}" by ${hero.author_name}`)
-    if (hero.title !== 'The List We Could Not Find') {
+    if (hero.title !== 'The List I Could Not Find') {
       console.warn('WARNING: the hero is not the founding piece. Check published_at ordering.')
     }
-    if (hero.author_name === 'The BLACQList Team' && hero.title === 'The List We Could Not Find') {
+    if (hero.author_name === 'The BLACQList Team' && hero.title === 'The List I Could Not Find') {
       console.warn('WARNING: the founding piece lost its byline. author_name fell back to the default.')
     }
   } else {
